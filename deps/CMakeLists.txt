@@ -1,0 +1,21 @@
+set(BUILD_SHARED_LIBS ON)
+set(TGUI_SHARED_LIBS ON)
+
+set(BOX2D_SAMPLES OFF)
+set(BOX2D_UNIT_TESTS OFF)
+add_subdirectory("box2d")
+add_subdirectory("glad/cmake")
+add_subdirectory("glm")
+
+set(TGUI_INSTALL OFF)
+set(SDL_TESTS OFF)
+set(SDL_EXAMPLES OFF)
+# keep the below in order
+set(TGUI_STATIC true)
+set(TGUI_BACKEND "SDL_OPENGL3")
+set(TGUI_BUILD_GUI_BUILDER OFF)
+if(MSVC)
+	set(FREETYPE_WINDOWS_BINARIES_PATH "$ENV{FREETYPE_WINDOWS_BINARIES_PATH}")
+endif()
+add_subdirectory("SDL")
+add_subdirectory("TGUI")

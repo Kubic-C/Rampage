@@ -1,0 +1,156 @@
+#pragma once
+
+#include "base.hpp"
+
+struct Vec2 : glm::vec2 {
+  Vec2() {}
+
+  Vec2(float scalar)
+    : glm::vec2(scalar) {}
+
+  Vec2(float x, float y)
+    : glm::vec2(x, y) {}
+
+  Vec2(const glm::vec2& other)
+    : glm::vec2(other) {}
+
+  Vec2(const b2Vec2& other)
+    : glm::vec2(other.x, other.y) {}
+
+  Vec2& operator=(const b2Vec2& other) {
+    x = other.x;
+    y = other.y;
+    return *this;
+  }
+
+  b2Vec2 b2() const {
+    return b2Vec2(x, y);
+  }
+
+  operator b2Vec2() const {
+    return b2();
+  }
+};
+
+struct Rot : b2Rot {
+  Rot() {
+    s = b2Rot_identity.s;
+    c = b2Rot_identity.c;
+  }
+
+  Rot(const b2Rot& other) {
+    s = other.s;
+    c = other.c;
+  }
+
+  Rot(float angle) {
+    s = sinf(angle);
+    c = cosf(angle);
+  }
+
+  float radians() const {
+    return b2Rot_GetAngle(*this);
+  }
+
+  operator float() const {
+    return radians();
+  }
+
+  bool operator==(const b2Rot& other) const {
+    return
+      s == other.s &&
+      c == other.c;
+  }
+
+  bool operator!=(const b2Rot& other) const {
+    return
+      s != other.s ||
+      c != other.c;
+  }
+
+  Rot operator-(const Rot& other) const {
+    Rot dif;
+    dif.s = s * other.c - c * other.s;
+    dif.c = c * other.c + s * other.s;
+    return dif;
+  }
+
+  Rot operator+(const Rot& other) const {
+    Rot dif;
+    dif.s = s * other.c + c * other.s;
+    dif.c = c * other.c - s * other.s;
+    return dif;
+  }
+};
+
+struct Transform {
+  Vec2 pos;
+  Rot rot;
+
+  Transform() = default;
+  
+  Transform(const Vec2& pos, const Rot& rot)
+    : pos(pos), rot(rot) {}
+
+  Transform(const b2Transform& other)
+    : pos(other.p), rot(other.q) {}
+
+  operator b2Transform() const {
+    return b2Transform(pos.b2(), rot);
+  }
+  
+  Transform& operator=(const b2Transform& other) {
+    pos = other.p;
+    rot = other.q;
+    return *this;
+  }
+
+  bool operator==(const b2Transform& other) const {
+    return 
+      pos.x == other.p.x && 
+      pos.y == other.p.y && 
+      rot == other.q;
+  }
+
+  bool operator!=(const b2Transform& other) const {
+    return 
+      pos.x != other.p.x || 
+      pos.y != other.p.y || 
+      rot != other.q;
+  }
+
+  Vec2 getWorldPoint(const Vec2& localPos) {
+    return b2TransformPoint((b2Transform)*this, localPos);
+  }
+};
+
+inline bool isApprox(Vec2 value1, Vec2 value2, float max) {
+  return isApprox(value1.x, value2.x, max) && isApprox(value1.y, value2.y, max);
+}
+
+inline Vec2 fast2DRotate(const Vec2& vec, float angle) {
+  Vec2 rotVec;
+
+  float cs = glm::cos(angle);
+  float sn = glm::sin(angle);
+
+  rotVec.x = vec.x * cs - vec.y * sn;
+  rotVec.y = vec.x * sn + vec.y * cs;
+
+  return rotVec;
+}
+
+template<typename T>
+void callInGrid(int startx, int starty, int w, int h, T&& callback) {
+  int x = startx;
+  int y = starty;
+  while (y < h) {
+    if (x > w) {
+      x = startx;
+      y++;
+    }
+
+    callback(x, y);
+    x++;
+  }
+}

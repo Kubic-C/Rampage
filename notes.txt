@@ -1,0 +1,20 @@
+Tilemap:
+	Map<Coords, Tile> 
+	helper methods
+
+TilemapComponent:
+	std::shared_ptr<Tilemap> tm
+
+
+Tile
+	ShapeId
+	flags
+	entityId entity
+
+
+
+// PATHFINDING
+
+xx Use A star
+Vector Flow fields
+Super units
