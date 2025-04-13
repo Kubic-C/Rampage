@@ -2,12 +2,14 @@
 
 #include "utility/base.hpp"
 #include "render/render.hpp"
+#include "render/shapes.hpp"
 #include "utility/log.hpp"
 #include "tilemap.hpp"
 #include "player.hpp"
 #include "physics.hpp"
 #include "seekPlayer.hpp"
 #include "worldMap.hpp"
+#include "tilemapRender.hpp"
 
 class App {
 public:
@@ -43,8 +45,15 @@ public:
       return;
     }
 
+    if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress)) {
+      m_localAppStatus = Status::CriticalError;
+      logError(1, "Failed to load OpenGL Context: %i %i", Render::MinimumMajorGLVersion, Render::MinimumMinorGLVersion);
+      return;
+    }
+
+    /* Camera and rendering */
     m_player.add(m_world.set<PosComponent, RotComponent, CameraComponent>());
-    m_player.get<PosComponent>() = { 0 };
+    m_player.get<PosComponent>() = { 0, 0 };
     m_player.get<RotComponent>() = { 0 };
     m_player.get<CameraComponent>().m_zoom = 100.0f;
 
@@ -56,23 +65,34 @@ public:
     }
 
     m_world.addContext<Render*>(m_render);
+    m_world.addModule<ShapeRenderModule>();
+    m_player.add<RectangleRenderComponent>();
+    RectangleRenderComponent& renderRect = m_player.get<RectangleRenderComponent>();
+    renderRect.hw = 0.12f;
+    renderRect.hh = 0.12f;
 
     /* Tile drawing ... */
-    if (!m_render->loadSprite(0, "./res/unknown.png")) {
-      logError(1, "Failed to load resource.\n");
-      m_localAppStatus = Status::CriticalError;
-      return;
-    }
+    std::vector<const char*> spritesToLoad = {
+      "./res/unknown.png",
+      "./res/stone.png",
+      "./res/highStone.png",
+      "./res/fence.png"
+    };
 
-    if (!m_render->loadSprite(1, "./res/stone.png")) {
-      logError(1, "Failed to load resource.\n");
-      m_localAppStatus = Status::CriticalError;
-      return;
-    }
+    TilemapRender* tilemapRender = new TilemapRender(m_world, 32, 32, 256);
+    m_render->addRenderer(tilemapRender);
+    for(int i = 0; i < spritesToLoad.size(); i++)
+      if (!tilemapRender->loadSprite(i, spritesToLoad[i])) {
+        logError(1, "Failed to load resource: %s.\n", spritesToLoad[i]);
+        m_localAppStatus = Status::CriticalError;
+        return;
+      }
 
     /* Player Component ... */
+    m_world.addModule<PathfindingModule>();
     m_world.addModule<PlayerModule>();
     m_player.add<PlayerComponent>();
+    m_player.add<PrimaryTargetTag>();
 
     m_player.add<BodyComponent>();
     b2BodyDef bodyDef = b2DefaultBodyDef();
@@ -86,14 +106,16 @@ public:
     b2Polygon rect = b2MakeBox(0.12f, 0.12f);
     b2CreatePolygonShape(bodyId, &shapeDef, &rect);
 
-    m_player.get<PosComponent>() = { -1.0f, 0.0f };
+    m_player.get<PosComponent>() = { 5.0f, -7.0f };
 
-    /* Tilemap Component */
+    /* WorldMap & Tilemap Component */
+    m_world.component<WorldMapTag>();
     m_world.component<TilemapComponent>();
     m_world.component<SpriteComponent>();
     
     { // World Map
       Entity tm = m_world.create();
+      logGeneric("World tilemap @ %u\n", tm.id());
       tm.add<PosComponent>();
       tm.add<RotComponent>();
       tm.add<BodyComponent>();
@@ -116,8 +138,8 @@ public:
           e.add<ArrowComponent>();
           e.get<SpriteComponent>().texIndex = 1;
 
-          if (x <= -90 || x >= 90 || y <= -90 || y >= 90) {
-            e.get<SpriteComponent>().texIndex = 0;
+          if (rand() % 100 < 5 || x <= -35 || x >= 35 || y <= -35 || y >= 35 || (x == -3 && y < 20 && -20 < y) || (y == -3 && x < 20 && -20 < x)) {
+            e.get<SpriteComponent>().texIndex = 2;
             tilemap.insert({ x, y }, bodyId, e, TileFlags::IS_COLLIDABLE);
           }
           else {
@@ -125,31 +147,36 @@ public:
           }
         };
 
-      callInGrid(-100, -100, 100, 100, tileCallback);
+      callInGrid(-40, -40, 40, 40, tileCallback);
     }
 
     auto bodyCallback =
       [&](int x, int y) {
-        Entity tm = m_world.create();
-        tm.add<PosComponent>();
-        tm.add<RotComponent>();
-        tm.add<BodyComponent>();
-        tm.add<TilemapComponent>();
+      Entity seeker = m_world.create();
+      seeker.add<RotComponent>();
+      seeker.add<PosComponent>();
+      seeker.add<BodyComponent>();
+      seeker.add<SeekPrimaryTargetTag>();
+      seeker.add<RectangleRenderComponent>();
 
-        tm.get<PosComponent>() = { x * 0.3f, y * 0.3f };
-        tm.get<RotComponent>() = Rot(0);
-        b2BodyDef bodyDef = b2DefaultBodyDef();
-        bodyDef.type = b2_dynamicBody;
-        bodyDef.position = Vec2(0, 0);
-        tm.get<BodyComponent>().id = b2CreateBody(m_physicsWorld, &bodyDef);
+      RectangleRenderComponent& rectRender = seeker.get<RectangleRenderComponent>();
+      rectRender.hw = 0.025f;
+      rectRender.hh = 0.025f;
 
-        TilemapComponent& tilemap = tm.get<TilemapComponent>();
-        tilemap.insert({ 0, 0 }, tm.get<BodyComponent>().id);
-
-        b2Body_ApplyAngularImpulse(tm.get<BodyComponent>().id, 100, true);
+      seeker.get<PosComponent>() = { x * 0.3f - 7, y * 0.3f + 7 };
+      seeker.get<RotComponent>() = Rot(0);
+      b2BodyDef bodyDef = b2DefaultBodyDef();
+      bodyDef.type = b2_dynamicBody;
+      bodyDef.position = Vec2(0, 0);
+      bodyDef.linearDamping = 10;
+      b2ShapeDef shapeDef = b2DefaultShapeDef();
+      b2Polygon polygon = b2MakeOffsetBox(0.025, 0.025, Vec2(0), Rot(0));
+      b2BodyId bodyId = b2CreateBody(m_physicsWorld, &bodyDef);
+      seeker.get<BodyComponent>().id = bodyId;
+      b2CreatePolygonShape(bodyId, &shapeDef, &polygon);
       };
 
-    callInGrid(-40, -40, 40, 40, bodyCallback);
+    callInGrid(-2, -2, 2, 2, bodyCallback);
   }
 
   Status getStatus() {
@@ -176,21 +203,34 @@ public:
       }
     }
 
-    PlayerComponent& player = m_player.get<PlayerComponent>();
-    EntityIterator it = m_world.getWith(m_world.set<BodyComponent>());
-    while (it.hasNext() && SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F2]) {
-      Entity e = it.next();
+    if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F3]) {
+      auto bodyCallback =
+        [&](int x, int y) {
+        Entity seeker = m_world.create();
+        seeker.add<RotComponent>();
+        seeker.add<PosComponent>();
+        seeker.add<BodyComponent>();
+        seeker.add<SeekPrimaryTargetTag>();
+        seeker.add<RectangleRenderComponent>();
 
-      if (e.has<PlayerComponent>())
-        continue;
-      b2BodyId bodyId = e.get<BodyComponent>().id;
-      if(!b2Body_IsValid(bodyId))
-        continue;
+        RectangleRenderComponent& rectRender = seeker.get<RectangleRenderComponent>();
+        rectRender.hw = 0.05f;
+        rectRender.hh = 0.05f;
 
-      glm::vec2 dir = (Vec2)b2Normalize(b2Sub((Vec2)player.mouse, b2Body_GetPosition(bodyId))) * deltaTime;
+        seeker.get<PosComponent>() = { x * 0.3f - 7, y * 0.3f + 7};
+        seeker.get<RotComponent>() = Rot(0);
+        b2BodyDef bodyDef = b2DefaultBodyDef();
+        bodyDef.type = b2_dynamicBody;
+        bodyDef.position = Vec2(0, 0);
+        bodyDef.linearDamping = 10;
+        b2ShapeDef shapeDef = b2DefaultShapeDef();
+        b2Polygon polygon = b2MakeOffsetBox(0.05, 0.05, Vec2(0), Rot(0));
+        b2BodyId bodyId = b2CreateBody(m_physicsWorld, &bodyDef);
+        seeker.get<BodyComponent>().id = bodyId;
+        b2CreatePolygonShape(bodyId, &shapeDef, &polygon);
+        };
 
-      if(b2Length(b2Body_GetLinearVelocity(bodyId)) < 100.0f)
-        b2Body_ApplyLinearImpulseToCenter(bodyId, Vec2(dir), true);
+      callInGrid(-2, -2, 2, 2, bodyCallback);
     }
 
     m_world.run(deltaTime);
@@ -200,102 +240,8 @@ public:
     static float dt = 0;
     dt += frameTime;
 
-    m_render->clear();
-
-    /* Tilemap drawing */
-    {
-      EntityIterator it = m_world.getWith(m_world.set<TilemapComponent, PosComponent, RotComponent>());
-      while (it.hasNext()) {
-        Entity e = it.next();
-        TilemapComponent& tm = e.get<TilemapComponent>();
-        PosComponent& pos = e.get<PosComponent>();
-        RotComponent& rot = e.get<RotComponent>();
-
-        m_render->startTileBatch();
-        for (glm::i16vec2 pos : tm) {
-          Tile& tile = tm.find(pos);
-          if (!(tile.flags & TileFlags::IS_MAIN_TILE))
-            continue;
-
-          u16 index = 0;
-          if(tile.entity)
-            index = m_world.get(tile.entity).get<SpriteComponent>().texIndex;
-
-          m_render->addTile(index, pos, { tile.width, tile.height });
-        }
-        m_render->drawTileBatch(Transform(pos, rot));
-      }
-    }
-
-    /* Player drawing */
-    {
-      EntityIterator it = m_world.getWith(m_world.set<PlayerComponent, PosComponent, RotComponent>());
-      while (it.hasNext()) {
-        Entity e = it.next();
-        PlayerComponent& tm = e.get<PlayerComponent>();
-        PosComponent& pos = e.get<PosComponent>();
-        RotComponent& rot = e.get<RotComponent>();
-
-        m_render->drawCircle(Transform(pos, rot), glm::vec3(1.0f, 0.5f, 0.25f), 0.1f, 6, 0);
-      }
-    }
-
-    /* Debug physics drawing */
-    if(SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F1]) {
-      PlayerComponent& player = m_player.get<PlayerComponent>();
-      const int testRadius = 1.0f;
-      const Vec2 rayPoint = player.mouse;
-
-      m_render->drawHollowCircle(Transform(rayPoint, 0), glm::vec3(0.0f, 1.0f, 0.0f), testRadius);
-
-      std::vector<b2BodyId> nearbyBodies;
-      auto overlapClbk =
-        [](b2ShapeId shapeId, void* context) -> bool {
-          reinterpret_cast<std::vector<b2BodyId>*>(context)->push_back(b2Shape_GetBody(shapeId));
-          return true;
-        };
-
-      b2Circle circle;
-      circle.radius = testRadius;
-      circle.center = Vec2(0);
-      b2World_OverlapCircle(m_physicsWorld, &circle, Transform(rayPoint, 0), b2DefaultQueryFilter(), overlapClbk, &nearbyBodies);
-      for(b2BodyId& id : nearbyBodies) {
-        std::vector<b2ShapeId> shapes;
-        shapes.resize(b2Body_GetShapeCount(id));
-        b2Body_GetShapes(id, shapes.data(), shapes.size());
-
-        for (int i = 0; i < shapes.size(); i++) {
-          b2ShapeId shape = shapes[i];
-
-          b2ShapeType type = b2Shape_GetType(shape);
-          switch (type) {
-          case b2_polygonShape: {
-            b2Polygon polygon = b2Shape_GetPolygon(shape);
-            static std::vector<Vec2> points;
-            points.clear();
-            for (int i = 0; i < polygon.count; i++) {
-              points.push_back(b2Body_GetWorldPoint(id, polygon.vertices[i]));
-            }
-
-            for (int i = 0; i < points.size(); i++) {
-              Vec2 cur = points[i];
-              Vec2 next = points[(i + 1) % points.size()];
-
-              m_render->drawLine(cur, next, glm::vec3(1.0f, 0.0f, 0.0f), 0.009f);
-            }
-          } break;
-
-          case b2_circleShape: {
-            b2Circle circle = b2Shape_GetCircle(shape);
-
-            m_render->drawCircle(b2Body_GetTransform(id), glm::vec3(1.0f, 0.0f, 0.0f), circle.radius, 20);
-          } break;
-          }
-        }
-      }
-    }
-       
-    m_render->display();
+    m_render->mesh();
+    m_render->render();
   }
 
   int run() {

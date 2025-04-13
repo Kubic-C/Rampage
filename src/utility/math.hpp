@@ -119,13 +119,29 @@ struct Transform {
       rot != other.q;
   }
 
-  Vec2 getWorldPoint(const Vec2& localPos) {
+  Vec2 getWorldPoint(const Vec2& localPos) const {
     return b2TransformPoint((b2Transform)*this, localPos);
+  }
+
+  Vec2 getLocalPoint(const Vec2& worldPos) const {
+    return b2InvTransformPoint((b2Transform)*this, worldPos);
+  }
+
+  glm::mat4 matrix() const {
+    glm::mat4 model = glm::identity<glm::mat4>();
+    model = glm::translate(model, glm::vec3(pos, 0.0f));
+    model = glm::rotate(model, rot.radians(), glm::vec3(0.0f, 0.0f, 1.0f));
+    
+    return model;
   }
 };
 
 inline bool isApprox(Vec2 value1, Vec2 value2, float max) {
   return isApprox(value1.x, value2.x, max) && isApprox(value1.y, value2.y, max);
+}
+
+inline float angleOf(const Vec2& vec) {
+  return atan2(vec.y, vec.x);
 }
 
 inline Vec2 fast2DRotate(const Vec2& vec, float angle) {

@@ -114,6 +114,10 @@ struct TilemapComponent {
     return (glm::vec2)tilePos * tileSize + (dim * tileSize * 0.5f);
   }
 
+  glm::i16vec2 getNearestTile(const glm::vec2& localPos) const {
+    return glm::i16vec2(glm::floor(localPos / tileSize));
+  }
+
 public:
   template<typename ItType>
   class Iterator {

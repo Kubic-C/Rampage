@@ -76,7 +76,7 @@ void log(int ec, const char* fmt, va_list args) {
 	FILE* stream = stdout;
 
 	if (ec != 0)
-		format = std::to_string(ec) + format;
+		format = "[" + std::to_string(ec) + "]" + format;
 
 	format = formatStr(format);
 
