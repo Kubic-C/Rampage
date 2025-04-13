@@ -14,7 +14,8 @@ struct ArrowComponent {
   // Normalized vector
   // points up, down, left, or right
   Vec2 dir = { 1.0f, 0.0f };
-  size_t cost = SIZE_MAX;
+  float cost = std::numeric_limits<float>::max();
+  u32 generation = 0;
 };
 
 struct SeekPrimaryTargetTag {};
@@ -47,6 +48,14 @@ struct PathfindingModule : Module {
     }
   }
 
+  using QueueItem = std::pair<float, glm::i16vec2>;
+
+  struct CompareQueueItem {
+    bool operator()(const QueueItem& a, const QueueItem& b) const {
+      return a.first > b.first; // min-heap based on cost
+    }
+  };
+
   void updateFlowField(EntityWorld& world) {
     Entity map = world.getWith(world.set<PosComponent, RotComponent, TilemapComponent, WorldMapTag>()).next();
     PosComponent& mapPos = map.get<PosComponent>();
@@ -58,70 +67,92 @@ struct PathfindingModule : Module {
 
     Vec2 localMapPos = Transform(mapPos, mapRot).getLocalPoint(playerPos);
     glm::i16vec2 localTilePos = tilemap.getNearestTile(localMapPos);
-    if(m_oldTarget == localTilePos)
+
+    Tile& startTile = tilemap.find(localTilePos);
+    Entity startEntity = world.get(startTile.entity);
+    ArrowComponent& startArrow = startEntity.get<ArrowComponent>();
+    startArrow.dir = glm::normalize(playerPos - Transform(mapPos, mapRot).getWorldPoint(tilemap.getLocalTileCenter(localTilePos)));
+
+    if (m_oldTarget == localTilePos)
       return;
+
     m_oldTarget = localTilePos;
+    if (++m_currentGeneration == 0)
+      m_currentGeneration = 1;
 
-    for(glm::i16vec2 tilePos : tilemap) {
-      Entity e = world.get(tilemap.find(tilePos).entity);
-      if (!e.has<ArrowComponent>())
-        continue;
-      ArrowComponent& tile = e.get<ArrowComponent>();
-      tile.cost = SIZE_MAX;
-    }
+    using QueueItem = std::pair<float, glm::i16vec2>;
+    std::priority_queue<QueueItem, std::vector<QueueItem>, CompareQueueItem> openList;
 
-    std::queue<glm::i16vec2> openList;
-    openList.push(localTilePos); // Start from the target
-    world.get(tilemap.find(localTilePos).entity).get<ArrowComponent>().cost = 0;
+    startArrow.cost = 0;
+    startArrow.generation = m_currentGeneration;
+    openList.emplace(0.0f, localTilePos);
 
-    constexpr std::array<glm::i16vec2, 8> directions = {
-      { {1, 0}, {-1, 0}, { 0,  1}, {0, -1},
-        {1, 1}, {-1, 1}, {-1, -1}, {1, -1} }
-    };
-
-    const std::array<glm::vec2, 8> normalizedDirs = {
-      glm::normalize(glm::vec2(directions[0])),
-      glm::normalize(glm::vec2(directions[1])),
-      glm::normalize(glm::vec2(directions[2])),
-      glm::normalize(glm::vec2(directions[3])),
-      glm::normalize(glm::vec2(directions[4])),
-      glm::normalize(glm::vec2(directions[5])),
-      glm::normalize(glm::vec2(directions[6])),
-      glm::normalize(glm::vec2(directions[7]))
-    };
-
-    while(!openList.empty()) {
-      glm::i16vec2 current = openList.front();
+    while (!openList.empty()) {
+      auto [currentCost, current] = openList.top();
       openList.pop();
 
-      Entity currentEntity = world.get(tilemap.find(current).entity);
+      Tile& currentTile = tilemap.find(current);
+      Entity currentEntity = world.get(currentTile.entity);
       ArrowComponent& currentArrow = currentEntity.get<ArrowComponent>();
-      size_t currentCost = currentArrow.cost;
 
-      for(int i = 0; i < directions.size(); i++) {
+      for (int i = 0; i < directions.size(); ++i) {
         glm::i16vec2 neighbor = current + directions[i];
 
-        // Skip invalid or non-existent tiles
-        if(!tilemap.contains(neighbor))
+        if (!tilemap.contains(neighbor))
           continue;
 
-        auto neighborTile = tilemap.find(neighbor);
+        Tile& neighborTile = tilemap.find(neighbor);
+        if (neighborTile.flags & TileFlags::IS_COLLIDABLE)
+          continue;
+
         Entity neighborEntity = world.get(neighborTile.entity);
-        if(!neighborEntity.has<ArrowComponent>() || 
-           tilemap.find(neighbor).flags & TileFlags::IS_COLLIDABLE)
+        if (!neighborEntity.has<ArrowComponent>())
           continue;
 
         ArrowComponent& neighborArrow = neighborEntity.get<ArrowComponent>();
-        if(neighborArrow.cost <= currentCost + 1)
+
+        float newCost = currentCost + costs[i];
+        if (neighborArrow.generation == m_currentGeneration && neighborArrow.cost <= newCost)
           continue;
 
-        neighborArrow.cost = currentCost + 1;
+        neighborArrow.cost = newCost;
         neighborArrow.dir = -normalizedDirs[i];
-        openList.push(neighbor);
+        neighborArrow.generation = m_currentGeneration;
+
+        openList.emplace(newCost, neighbor);
       }
     }
   }
 
 private:
+  const std::array<glm::i16vec2, 8> directions = {
+  { {1, 0}, {-1, 0}, { 0,  1}, {0, -1},
+    {1, 1}, {-1, 1}, {-1, -1}, {1, -1} }
+  };
+
+  const std::array<glm::vec2, 8> normalizedDirs = {
+    glm::normalize(glm::vec2(directions[0])),
+    glm::normalize(glm::vec2(directions[1])),
+    glm::normalize(glm::vec2(directions[2])),
+    glm::normalize(glm::vec2(directions[3])),
+    glm::normalize(glm::vec2(directions[4])),
+    glm::normalize(glm::vec2(directions[5])),
+    glm::normalize(glm::vec2(directions[6])),
+    glm::normalize(glm::vec2(directions[7]))
+  };
+
+  const std::array<float, 8> costs = {
+    1,
+    1,
+    1,
+    1,
+    sqrtf(2),
+    sqrtf(2),
+    sqrtf(2),
+    sqrtf(2)
+  };
+
+private:
+  u32 m_currentGeneration = 1;
   glm::i16vec2 m_oldTarget = { 0, 0 };
 };

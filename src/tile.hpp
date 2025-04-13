@@ -3,7 +3,7 @@
 #include "utility/base.hpp"
 #include "utility/ecs.hpp"
 
-constexpr float tileSidelength = 0.3f;
+constexpr float tileSidelength = 0.5f;
 constexpr glm::vec2 tileSize = glm::vec2(tileSidelength);
 
 enum TileFlags : u8 {

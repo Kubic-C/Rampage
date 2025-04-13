@@ -7,6 +7,7 @@ public:
 	BaseRender(EntityWorld& world)
 		: m_world(world) {}
 
+	virtual void preMesh() {}
 	virtual void onMesh() {}
 	virtual void preRender() {};
 	virtual void onRender(const glm::mat4& vp) = 0;

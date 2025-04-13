@@ -41,6 +41,10 @@ public:
 
   void mesh() {
     for (BaseRender* renderer : m_renderers) {
+      renderer->preMesh();
+    }
+
+    for (BaseRender* renderer : m_renderers) {
       renderer->onMesh();
     }
   }

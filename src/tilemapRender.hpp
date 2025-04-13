@@ -13,7 +13,8 @@ public:
   };
 
   TilemapRender(EntityWorld& world, u32 spriteWidth, u32 spriteHeight, u32 maxSprites)
-    : BaseRender(world), m_texArray(spriteWidth, spriteHeight, maxSprites) {
+    : BaseRender(world), m_texArray(spriteWidth, spriteHeight, maxSprites), 
+    m_sys(m_world.system(m_world.set<TilemapComponent, PosComponent, RotComponent>(), std::bind(&TilemapRender::meshTilemap, this, std::placeholders::_1, std::placeholders::_2))) {
     m_va.addVertexArrayAttrib(m_mesh.buffer, 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
     m_va.addVertexArrayAttrib(m_mesh.buffer, 1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), offsetof(Vertex, texCoords));
     if (!m_shader.loadShaderStr(tileVertexShaderSource, tileFragShaderSource)) {
@@ -29,27 +30,38 @@ public:
     m_sampler.parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
   }
 
-  void onMesh() override {
+  void preMesh() override {
     m_mesh.reset();
+  }
 
-    /* Tilemap drawing */
-    EntityIterator it = m_world.getWith(m_world.set<TilemapComponent, PosComponent, RotComponent>());
-    while (it.hasNext()) {
-      Entity e = it.next();
-      TilemapComponent& tm = e.get<TilemapComponent>();
-      PosComponent& pos = e.get<PosComponent>();
-      RotComponent& rot = e.get<RotComponent>();
+  void onMesh() override {
+    m_sys.run();
+  }
 
-      for (glm::i16vec2 tilePos: tm) {
-        Tile& tile = tm.find(tilePos);
-        if (!(tile.flags & TileFlags::IS_MAIN_TILE))
+  void meshTilemap(Entity e, float dt) {
+    ShapeRender& shapeRender = e.world().getContext<ShapeRender>();
+    TilemapComponent& tm = e.get<TilemapComponent>();
+    PosComponent& pos = e.get<PosComponent>();
+    RotComponent& rot = e.get<RotComponent>();
+    for (glm::i16vec2 tilePos : tm) {
+      Tile& tile = tm.find(tilePos);
+      if (!(tile.flags & TileFlags::IS_MAIN_TILE))
+        continue;
+
+      u16 index = 0;
+      if (tile.entity)
+        index = m_world.get(tile.entity).get<SpriteComponent>().texIndex;
+
+      addTile(index, tilePos, { tile.width, tile.height }, -1);
+
+      if (tile.entity && SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F1]) {
+        Entity tileE = e.world().get(tile.entity);
+        if (!tileE.has<ArrowComponent>())
           continue;
+        Vec2 worldPos = Transform(pos, rot).getWorldPoint(tm.getLocalTileCenter(tilePos));
+        ArrowComponent& arrow = tileE.get<ArrowComponent>();
 
-        u16 index = 0;
-        if(tile.entity)
-          index = m_world.get(tile.entity).get<SpriteComponent>().texIndex;
-
-        addTile(index, tilePos, { tile.width, tile.height }, -1);
+        shapeRender.drawLine(worldPos, worldPos + arrow.dir * 0.5f, glm::vec3(1.0f, (float)arrow.generation / 255, 0.0f), 0.01f);
       }
     }
   }
@@ -142,4 +154,5 @@ private:
   VertexArrayBuffer m_va;
   TextureArray m_texArray;
   Sampler m_sampler;
+  System m_sys;
 };

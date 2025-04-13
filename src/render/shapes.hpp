@@ -31,9 +31,11 @@ public:
     }
   }
 
-  void onMesh() override {
+  void preMesh() override {
     mesh.reset();
+  }
 
+  void onMesh() override {
     EntityIterator itCircle = m_world.getWith(m_world.set<CircleRenderComponent, PosComponent, RotComponent>());
     while (itCircle.hasNext()) {
       Entity e = itCircle.next();
@@ -193,7 +195,9 @@ struct ShapeRenderModule : Module {
     world.component<CircleRenderComponent>();
     world.component<RectangleRenderComponent>();
 
-    world.getContext<Render*>()->addRenderer(new ShapeRender(world));
+    world.addContext<ShapeRender>(world);
+    world.getContext<Render*>()->addRenderer(&world.getContext<ShapeRender>());
+    
   }
 
   void run(EntityWorld& world, float deltaTime) override final {

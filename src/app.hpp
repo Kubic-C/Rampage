@@ -138,7 +138,7 @@ public:
           e.add<ArrowComponent>();
           e.get<SpriteComponent>().texIndex = 1;
 
-          if (rand() % 100 < 5 || x <= -35 || x >= 35 || y <= -35 || y >= 35 || (x == -3 && y < 20 && -20 < y) || (y == -3 && x < 20 && -20 < x)) {
+          if (x <= -35 || x >= 35 || y <= -35 || y >= 35 || (x % 5 == 0 && y < 20 && y != -34)) {
             e.get<SpriteComponent>().texIndex = 2;
             tilemap.insert({ x, y }, bodyId, e, TileFlags::IS_COLLIDABLE);
           }
