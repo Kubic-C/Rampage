@@ -412,6 +412,19 @@ bool EntityWorld::isDefer() {
   return m_isDefer;
 }
 
+Entity EntityWorld::clone(EntityId entity) {
+  const ComponentSet& compSet = *getEntitySet(entity);
+
+  Entity cloned = create();
+  cloned.add(compSet);
+
+  for (ComponentId cid : compSet.list()) {
+    m_components.find(cid)->second.m_copyCtor(cloned.get(cid), get(entity).get(cid));
+  }
+
+  return cloned;
+}
+
 EntityWorld::ComponentData& EntityWorld::getComponentData(ComponentId id) {
   return m_components.at(id);
 }
@@ -591,8 +604,9 @@ void Entity::remove(const ComponentSet& remComps, bool notify ) {
 }
 
 u8* Entity::get(ComponentId compId) {
-  EntityWorld::ComponentData& compData = m_world.getComponentData(compId);
+  assert(has(compId));
 
+  EntityWorld::ComponentData& compData = m_world.getComponentData(compId);
   return compData.pool->get(m_id);
 }
 
@@ -610,6 +624,10 @@ void Entity::enable() {
 
 void Entity::disable() {
   remove<EntityWorld::Enabled>();
+}
+
+Entity Entity::clone() {
+  return m_world.clone(m_id);
 }
 
 const ComponentSet& Entity::set() const {

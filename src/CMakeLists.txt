@@ -42,7 +42,8 @@ target_sources(
 	"physics.hpp"
 	"seekPlayer.hpp"
 	"worldMap.hpp"
-	"guiRender.hpp")
+	"guiRender.hpp"
+	"tilePrefabs.hpp")
 
 target_sources(Rampage PUBLIC ${srcFiles})
 

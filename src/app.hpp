@@ -47,32 +47,12 @@ public:
       return;
     }
 
-    m_world.addModule<ShapeRenderModule>(0).add<IsRender>();
-
     /* Gui Setup */
     m_world.addContext<tgui::Gui>(window);
     tgui::Gui& gui = m_world.getContext<tgui::Gui>();
-    m_world.addModule<GuiRenderModule>(SIZE_MAX, gui).add<IsRender>();
     gui.loadWidgetsFromFile("./res/form.txt");
 
-    /* Tile drawing ... */
-    std::vector<const char*> spritesToLoad = {
-      "./res/unknown.png",
-      "./res/stone.png",
-      "./res/highStone.png",
-      "./res/fence.png"
-    };
-
-    m_world.addModule<TilemapRenderModule>(0, 32, 32, 256).add<IsRender>();
-    TilemapRenderModule& tilemapRender = m_world.getModule<TilemapRenderModule>();
-    for(int i = 0; i < spritesToLoad.size(); i++)
-      if (!tilemapRender.loadSprite(i, spritesToLoad[i])) {
-        logError(1, "Failed to load resource: %s.\n", spritesToLoad[i]);
-        m_localAppStatus = Status::CriticalError;
-        return;
-      }
-
-    /* Player Component ... */
+    /* Player Components ... */
     m_world.addModule<PathfindingModule>();
     m_world.addModule<PlayerModule>();
 
@@ -80,6 +60,46 @@ public:
     m_world.component<TilemapComponent>();
     m_world.component<SpriteComponent>();
 
+    /* Tile Prefabs */
+    m_world.addContext<TilePrefabs>(m_world);
+    TilePrefabs& tilePrefab = m_world.getContext<TilePrefabs>();
+    Entity unknown = m_world.create();
+    unknown.add<SpriteComponent>();
+    unknown.get<SpriteComponent>().texIndex = 0;
+    tilePrefab.createPrefab("Unknown", unknown, 0, { 1, 1 });
+    Entity stone = m_world.create();
+    stone.add<SpriteComponent>();
+    stone.add<ArrowComponent>();
+    stone.get<SpriteComponent>().texIndex = 1;
+    tilePrefab.createPrefab("StoneFloor", stone, 0, { 1, 1 });
+    Entity highStone = m_world.create();
+    highStone.add<SpriteComponent>();
+    highStone.get<SpriteComponent>().texIndex = 2;
+    tilePrefab.createPrefab("HighStone", highStone, TileFlags::IS_COLLIDABLE, { 1, 1 });
+
+    /* GUI renderer */
+    m_world.addModule<GuiRenderModule>(SIZE_MAX, gui).add<IsRender>();
+
+    /* Shape Renderer */
+    m_world.addModule<ShapeRenderModule>(0).add<IsRender>();
+
+    /* Tilemap Render */
+    std::vector<const char*> spritesToLoad = {
+      "./res/unknown.png",
+      "./res/stone.png",
+      "./res/highStone.png",
+      "./res/fence.png"
+    };
+    m_world.addModule<TilemapRenderModule>(0, 32, 32, 256).add<IsRender>();
+    TilemapRenderModule& tilemapRender = m_world.getModule<TilemapRenderModule>();
+    for (int i = 0; i < spritesToLoad.size(); i++)
+      if (!tilemapRender.loadSprite(i, spritesToLoad[i])) {
+        logError(1, "Failed to load resource: %s.\n", spritesToLoad[i]);
+        m_localAppStatus = Status::CriticalError;
+        return;
+      }
+
+    // Enable All rendering modules
     m_world.enableModule<GuiRenderModule>();
     m_world.enableModule<ShapeRenderModule>();
     m_world.enableModule<TilemapRenderModule>();

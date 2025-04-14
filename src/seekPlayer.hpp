@@ -16,6 +16,7 @@ struct ArrowComponent {
   Vec2 dir = { 1.0f, 0.0f };
   float cost = std::numeric_limits<float>::max();
   u32 generation = 0;
+  u32 tileCost = 0;
 };
 
 struct SeekPrimaryTargetTag {};
@@ -40,8 +41,11 @@ struct PathfindingModule : Module {
 
       Vec2 localMapPos = Transform(mapPos, mapRot).getLocalPoint(seekerPos);
       glm::i16vec2 localTilePos = tilemap.getNearestTile(localMapPos);
-      if (!tilemap.contains(localTilePos))
+      if (!tilemap.contains(localTilePos) || 
+          tilemap.find(localTilePos).entity == 0 || 
+          !world.get(tilemap.find(localTilePos).entity).has<ArrowComponent>())
         continue;
+
       ArrowComponent& arrow = world.get(tilemap.find(localTilePos).entity).get<ArrowComponent>();
 
       b2Body_ApplyLinearImpulseToCenter(seekerBody.id, Vec2(arrow.dir * b2Body_GetMass(seekerBody.id)), true);
@@ -70,6 +74,9 @@ struct PathfindingModule : Module {
 
     Tile& startTile = tilemap.find(localTilePos);
     Entity startEntity = world.get(startTile.entity);
+    if (!startEntity.has<ArrowComponent>())
+      return;
+
     ArrowComponent& startArrow = startEntity.get<ArrowComponent>();
     startArrow.dir = glm::normalize(playerPos - Transform(mapPos, mapRot).getWorldPoint(tilemap.getLocalTileCenter(localTilePos)));
 
@@ -111,7 +118,7 @@ struct PathfindingModule : Module {
 
         ArrowComponent& neighborArrow = neighborEntity.get<ArrowComponent>();
 
-        float newCost = currentCost + costs[i];
+        float newCost = currentCost + costs[i] + neighborArrow.tileCost;
         if (neighborArrow.generation == m_currentGeneration && neighborArrow.cost <= newCost)
           continue;
 

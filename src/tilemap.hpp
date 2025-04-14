@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tile.hpp"
+#include "tilePrefabs.hpp"
 
 template<>
 struct boost::hash<glm::i16vec2> {
@@ -13,6 +13,11 @@ struct boost::hash<glm::i16vec2> {
 };
 
 struct TilemapComponent {
+  // Ignores shapeId
+  bool insert(const glm::i16vec2& pos, b2BodyId body, const Tile& clone) {
+    return insert(pos, body, clone.entity, clone.flags, { clone.width, clone.height });
+  }
+
   bool insert(const glm::i16vec2& pos, b2BodyId body, EntityId entity = 0, u8 tileFlags = TileFlags::IS_COLLIDABLE, const glm::i16vec2& dim = { 1, 1 }) {
     if (contains(pos))
       return false;

@@ -115,23 +115,25 @@ public:
       bodyDef.position = Vec2(0, 0);
       b2BodyId bodyId = b2CreateBody(physicsWorld, &bodyDef);
       tm.get<BodyComponent>().id = bodyId;
-
+      
+      TilePrefabs& tilePrefabs = m_world.getContext<TilePrefabs>();
       TilemapComponent& tilemap = tm.get<TilemapComponent>();
       auto tileCallback =
         [&](int x, int y) {
-        Entity e = m_world.create();
-        e.add<SpriteComponent>();
-        e.add<ArrowComponent>();
-        e.add<OwnedBy<PlayState>>();
-        e.get<SpriteComponent>().texIndex = 1;
-
-        if (x <= -35 || x >= 35 || y <= -35 || y >= 35 || (x % 5 == 0 && y < 20 && y != -34)) {
-          e.get<SpriteComponent>().texIndex = 2;
-          tilemap.insert({ x, y }, bodyId, e, TileFlags::IS_COLLIDABLE);
-        }
-        else {
-          tilemap.insert({ x, y }, bodyId, e, 0);
-        }
+          if (x <= -35 || x >= 35 || y <= -35 || y >= 35 || (x % 5 == 0 && y < 20 && y != -34)) {
+            Tile highStone = tilePrefabs.clonePrefab("HighStone");
+            m_world.get(highStone.entity).add<OwnedBy<PlayState>>();
+            tilemap.insert({ x, y }, bodyId, highStone);
+          }
+          else if (rand() % 100 < 5) {
+            Tile unknown = tilePrefabs.clonePrefab("Unknown");
+            m_world.get(unknown.entity).add<OwnedBy<PlayState>>();
+            tilemap.insert({ x, y }, bodyId, unknown);
+          } else {
+            Tile stone = tilePrefabs.clonePrefab("StoneFloor");
+            m_world.get(stone.entity).add<OwnedBy<PlayState>>();
+            tilemap.insert({ x, y }, bodyId, stone);
+          }
         };
 
       callInGrid(-40, -40, 40, 40, tileCallback);

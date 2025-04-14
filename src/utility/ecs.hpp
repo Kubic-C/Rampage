@@ -201,6 +201,7 @@ public:
 
   struct ComponentData {
     std::string name;
+    void(*m_copyCtor)(u8* dst, u8* src);
     std::shared_ptr<IPool> pool;
   };
 
@@ -315,6 +316,10 @@ public:
     if (size != 0)
       compData.pool = Pool<T>::createPool();
 
+    compData.m_copyCtor = [](u8* dst, u8* src) {
+        new((T*)dst)T(*(T*)src);
+       };
+
     return compId;
   }
 
@@ -366,6 +371,8 @@ public:
   void beginDefer();
   void endDefer();
   bool isDefer();
+
+  Entity clone(EntityId entity);
 
   size_t getEntityCount() {
     return m_entities.size();
@@ -434,6 +441,7 @@ public:
   EntityWorld& world();
   void enable();
   void disable();
+  Entity clone();
 
   template<typename T>
   void add() {

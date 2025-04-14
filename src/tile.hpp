@@ -14,9 +14,9 @@ enum TileFlags : u8 {
 };
 
 struct Tile {
-  b2ShapeId shapeId;
-  u8 flags;
-  EntityId entity;
+  b2ShapeId shapeId = b2_nullShapeId;
+  u8 flags = 0;
+  EntityId entity = 0;
 
   union {
     u16 width; // the width of the multi tile
@@ -34,5 +34,5 @@ struct Tile {
 };
 
 struct SpriteComponent {
-  u16 texIndex;
+  u16 texIndex = 0;
 };

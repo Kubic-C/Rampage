@@ -49,7 +49,7 @@ public:
 
     float maxSpeed = player.maxSpeed;
     if (keyboard[SDL_SCANCODE_LSHIFT])
-      maxSpeed *= 2;
+      maxSpeed *= 8;
 
     glm::vec2 vel = (Vec2)b2Body_GetLinearVelocity(body.id);
     if (glm::length(vel) > maxSpeed) {
