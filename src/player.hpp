@@ -22,7 +22,7 @@ public:
   static void updatePlayer(Entity e, float deltaTime) {
     EntityWorld& world = e.world();
     SDL_Window* window = world.getContext<SDL_Window*>();
-    Render* render = world.getContext<Render*>();
+    Render& render = world.getContext<Render>();
     BodyComponent& body = e.get<BodyComponent>();
     RotComponent& rot = e.get<RotComponent>();
     PlayerComponent& player = e.get<PlayerComponent>();
@@ -60,7 +60,7 @@ public:
     {
       float x, y;
       SDL_GetMouseState(&x, &y);
-      player.mouse = render->getWorldCoords({x, y});
+      player.mouse = render.getWorldCoords({x, y});
     }
 
     glm::vec2 dir = glm::normalize((Vec2)b2Body_GetPosition(body.id) - player.mouse);

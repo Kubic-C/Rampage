@@ -24,49 +24,24 @@ public:
     /* Physics setup */
     b2WorldDef physicsWorldDef = b2DefaultWorldDef();
     physicsWorldDef.gravity = b2Vec2{ 0 };
-    m_physicsWorld = b2CreateWorld(&physicsWorldDef);
-
-    m_world.addContext<b2WorldId>(m_physicsWorld);
+    m_world.addContext<b2WorldId>(b2CreateWorld(&physicsWorldDef));
     m_world.addModule<PhysicsModule>(4);
 
     /* Window and render setup */
-    SDL_Init(SDL_INIT_VIDEO);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, Render::MinimumMajorGLVersion);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, Render::MinimumMinorGLVersion);
-    m_window = SDL_CreateWindow(appName.data(), 800, 600, Render::getNecessaryWindowFlags());
-    if (!m_window) {
+    m_world.addContext<SDL_Window*>();
+    Render::setNecessaryGLAttributes();
+    SDL_Window* window = SDL_CreateWindow(appName.data(), 800, 600, Render::getNecessaryWindowFlags());
+    if (!window) {
       m_localAppStatus = Status::CriticalError;
       logError(1, "Failed to create window. SDL_GetError(): %s\n", SDL_GetError());
       return;
     }
-
-    m_world.addContext<SDL_Window*>(m_window);
-
-    m_context = SDL_GL_CreateContext(m_window);
-    if (!m_context) {
-      m_localAppStatus = Status::CriticalError;
-      logError(1, "Failed to create context. SDL_GetError(): %s\n", SDL_GetError());
-      return;
-    }
-
-    if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress)) {
-      m_localAppStatus = Status::CriticalError;
-      logError(1, "Failed to load OpenGL Context: %i %i", Render::MinimumMajorGLVersion, Render::MinimumMinorGLVersion);
-      return;
-    }
+    m_world.getContext<SDL_Window*>() = window;
 
     /* Camera and rendering */
-    Entity camera = m_world.create();
-    camera.add(m_world.set<PosComponent, RotComponent, CameraComponent>());
-    camera.get<PosComponent>() = { 0, 0 };
-    camera.get<RotComponent>() = { 0 };
-    camera.get<CameraComponent>().m_zoom = 100.0f;
-
-    m_render = new Render(m_window, camera);
-    m_world.addContext<Render*>(m_render);
-    if (m_render->getStatus() == Status::CriticalError) {
+    m_world.addContext<Render>(m_world, false);
+    Render& render = m_world.getContext<Render>();
+    if (render.getStatus() == Status::CriticalError) {
       logError(1, "Failed to create render. SDL_GetError(): %s\n", SDL_GetError());
       m_localAppStatus = Status::CriticalError;
       return;
@@ -75,7 +50,7 @@ public:
     m_world.addModule<ShapeRenderModule>(0).add<IsRender>();
 
     /* Gui Setup */
-    m_world.addContext<tgui::Gui>(m_window);
+    m_world.addContext<tgui::Gui>(window);
     tgui::Gui& gui = m_world.getContext<tgui::Gui>();
     m_world.addModule<GuiRenderModule>(SIZE_MAX, gui).add<IsRender>();
     gui.loadWidgetsFromFile("./res/form.txt");
@@ -146,9 +121,10 @@ public:
       case SDL_EVENT_QUIT:
         m_world.getContext<DoExit>().exit = true;
         break;
-      case SDL_EVENT_WINDOW_RESIZED:
-        m_render->resizeViewportToScreenDim();
-        break;
+      case SDL_EVENT_WINDOW_RESIZED: {
+        Render& render = m_world.getContext<Render>();
+        render.resizeViewportToScreenDim();
+      } break;
       }
     }
 
@@ -156,22 +132,26 @@ public:
   }
 
   void update(float frameTime) {
+    Render& render = m_world.getContext<Render>();
     StateManager& stateMgr = m_world.getContext<StateManager>();
     stateMgr.onUpdate();
 
-    m_render->mesh();
-    m_render->render();
+    render.mesh();
+    render.render();
   }
 
   int run() {
     AppStats& appStats = m_world.getContext<AppStats>();
 
+    // For Frames
     float lastTime = 0;
     float ticksToGo = 0;
 
+    // For Ticks
     float tickLastTime = 0;
     u32 tickI = 0;
 
+    // For App Stats
     float culmTime = 0;
     u32 culmTicks = 0;
     u32 culmFrames = 0;
@@ -209,12 +189,7 @@ public:
 
 private:
   Status m_localAppStatus;
-  b2WorldId m_physicsWorld;
   EntityWorld m_world;
-  SDL_Window* m_window;
-  SDL_GLContext m_context;
-  Render* m_render;
-
   float m_ticksPerSecond;
 
   std::chrono::steady_clock::time_point start_time = std::chrono::high_resolution_clock::now();

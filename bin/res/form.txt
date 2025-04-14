@@ -2,23 +2,15 @@ Renderer.1 {
 }
 
 Renderer.2 {
-    BackgroundColor = white;
-    BorderColor = black;
-    Borders = (1, 1, 1, 1);
-    CaretColor = black;
-    CaretWidth = 1;
-    DefaultTextColor = #A0A0A0;
-    Padding = (0, 0, 0, 0);
-    SelectedTextBackgroundColor = #006EFF;
-    SelectedTextColor = white;
-    TextColor = #3C3C3C;
+    BorderColor = rgba(240, 240, 240, 215);
+    TextColor = rgba(255, 255, 255, 215);
     TextureBackground = None;
 
     Scrollbar {
-        ArrowBackgroundColor = #F5F5F5;
-        ArrowBackgroundColorHover = white;
-        ArrowColor = #3C3C3C;
-        ArrowColorHover = black;
+        ArrowBackgroundColor = rgba(160, 160, 160, 215);
+        ArrowBackgroundColorHover = rgba(170, 170, 170, 215);
+        ArrowColor = rgba(200, 200, 200, 215);
+        ArrowColorHover = rgba(225, 225, 225, 215);
         TextureArrowDown = None;
         TextureArrowDownHover = None;
         TextureArrowUp = None;
@@ -27,9 +19,10 @@ Renderer.2 {
         TextureThumbHover = None;
         TextureTrack = None;
         TextureTrackHover = None;
-        ThumbColor = #DCDCDC;
-        ThumbColorHover = #E6E6E6;
-        TrackColor = #F5F5F5;
+        ThumbColor = rgba(185, 185, 185, 215);
+        ThumbColorHover = rgba(195, 195, 195, 215);
+        TrackColor = rgba(160, 160, 160, 215);
+        TrackColorHover = rgba(170, 170, 170, 215);
     }
 }
 
@@ -59,51 +52,52 @@ Group.PlayMenu {
 
     VerticalLayout.VerticalLayout2 {
         Position = (90, 10);
-        Ratios = [1, 1, 1, 1];
+        Ratios = [1, 1, 1, 1, 1];
         Renderer = &1;
         Size = (150, 150);
 
-        TextArea.PlayTick {
-            HorizontalScrollbarPolicy = Never;
-            MaximumCharacters = 0;
+        Label.PlayTick {
             Renderer = &2;
-            Size = (150, 37.5);
-            Text = "";
+            ScrollbarPolicy = Never;
+            Size = (150, 30);
+            Text = Label;
             TextSize = 13;
-            VerticalScrollbarPolicy = Automatic;
         }
 
-        TextArea.PlayTPS {
-            HorizontalScrollbarPolicy = Never;
-            MaximumCharacters = 0;
-            Position = (0, 37.5);
+        Label.PlayTPS {
+            Position = (0, 30);
             Renderer = &2;
-            Size = (150, 37.5);
-            Text = "";
+            ScrollbarPolicy = Never;
+            Size = (150, 30);
+            Text = Label;
             TextSize = 13;
-            VerticalScrollbarPolicy = Automatic;
         }
 
-        TextArea.PlayFPS {
-            HorizontalScrollbarPolicy = Never;
-            MaximumCharacters = 0;
-            Position = (0, 75);
+        Label.PlayFPS {
+            Position = (0, 60);
             Renderer = &2;
-            Size = (150, 37.5);
-            Text = "";
+            ScrollbarPolicy = Never;
+            Size = (150, 30);
+            Text = Label;
             TextSize = 13;
-            VerticalScrollbarPolicy = Automatic;
         }
 
-        TextArea.PlayActiveBodies {
-            HorizontalScrollbarPolicy = Never;
-            MaximumCharacters = 0;
-            Position = (0, 112.5);
+        Label.PlayEntityCount {
+            Position = (0, 90);
             Renderer = &2;
-            Size = (150, 37.5);
-            Text = "";
+            ScrollbarPolicy = Never;
+            Size = (150, 30);
+            Text = Label;
             TextSize = 13;
-            VerticalScrollbarPolicy = Automatic;
+        }
+
+        Label.PlayActiveBodies {
+            Position = (0, 120);
+            Renderer = &2;
+            ScrollbarPolicy = Never;
+            Size = (150, 30);
+            Text = Label;
+            TextSize = 13;
         }
     }
 

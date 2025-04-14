@@ -2,9 +2,11 @@
 
 #include "../utility/math.hpp"
 
+struct CameraInUse {};
+
 struct CameraComponent {
 	CameraComponent()
-		: m_zoom(1.0f), m_rot(0) {
+		: m_zoom(100.0f), m_rot(0) {
 	}
 
 	glm::mat4 view(const b2Transform& transform, const Vec2& screenDim, float z = 1.0f) const {

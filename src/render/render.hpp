@@ -10,6 +10,16 @@ public:
   static constexpr int MinimumMajorGLVersion = 4;
   static constexpr int MinimumMinorGLVersion = 0;
 
+  static void setNecessaryGLAttributes() {
+    SDL_Init(SDL_INIT_VIDEO);
+#ifndef NDEBUG
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+#endif
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, MinimumMajorGLVersion);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, MinimumMinorGLVersion);
+  }
+
   static SDL_WindowFlags getNecessaryWindowFlags() {
     SDL_WindowFlags flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
 
@@ -17,8 +27,24 @@ public:
   }
 
 public:
-  Render(SDL_Window* window, Entity camera)
-    : m_window(window), m_camera(camera), m_status(Status::Ok) {
+  Render(EntityWorld& world, bool vsyncOn = true)
+    : m_camera(world.create()), m_window(world.getContext<SDL_Window*>()), m_status(Status::Ok) {
+    m_glcontext = SDL_GL_CreateContext(m_window);
+    if (!m_glcontext) {
+      m_status = Status::CriticalError;
+      logError(1, "Failed to create context. SDL_GetError(): %s\n", SDL_GetError());
+      return;
+    }
+
+    if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress)) {
+      m_status = Status::CriticalError;
+      logError(1, "Failed to load OpenGL Context: %i %i", MinimumMajorGLVersion, MinimumMinorGLVersion);
+      return;
+    }
+
+    if(!vsyncOn)
+      SDL_GL_SetSwapInterval(0);
+
     /* Basic state */
 #ifndef NDEBUG
     enableOpenglErrorCallback();
@@ -30,7 +56,12 @@ public:
 
     resizeViewportToScreenDim();
 
-    camera.world().component<IsRender>();
+    world.component<IsRender>();
+    world.component<CameraInUse>();
+
+    // Make the very important camera.
+    m_camera = world.create();
+    m_camera.add(world.set<PosComponent, RotComponent, CameraComponent, CameraInUse>());
   }
 
   Status getStatus() {
@@ -84,7 +115,9 @@ public:
   }
 
   void setCamera(Entity camera) {
+    m_camera.remove<CameraInUse>();
     m_camera = camera;
+    m_camera.add<CameraInUse>();
   }
 
   glm::mat4 getView() {
@@ -150,8 +183,9 @@ public:
 
 private:
   Status m_status;
+  SDL_GLContext m_glcontext;
+  SDL_Window* m_window;
   glm::mat4 m_proj;
   Entity m_camera;
   std::vector<BaseRenderModule*> m_renderers;
-  SDL_Window* m_window;
 };

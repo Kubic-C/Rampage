@@ -367,6 +367,10 @@ public:
   void endDefer();
   bool isDefer();
 
+  size_t getEntityCount() {
+    return m_entities.size();
+  }
+
   template<typename ... Params>
   ComponentSet set() {
     return ComponentSet({ component<Params>()... });

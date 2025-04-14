@@ -9,6 +9,7 @@ class PlayState : public State {
   const std::string& tpsTextName = "PlayTPS";
   const std::string& fpsTextName = "PlayFPS";
   const std::string& activeBodiesTextName = "PlayActiveBodies";
+  const std::string& playEntityCountTextName = "PlayEntityCount";
 public:
   PlayState(EntityWorld& world)
     : m_world(world) {
@@ -25,10 +26,11 @@ public:
       stateMgr.enableState("MenuState");
       });
 
-    m_tickText = gui.get(tickTextName)->cast<tgui::TextArea>();
-    m_tpsText = gui.get(tpsTextName)->cast<tgui::TextArea>();
-    m_fpsText = gui.get(fpsTextName)->cast<tgui::TextArea>();
-    m_activeBodiesText = gui.get(activeBodiesTextName)->cast<tgui::TextArea>();
+    m_tickText = gui.get(tickTextName)->cast<tgui::Label>();
+    m_tpsText = gui.get(tpsTextName)->cast<tgui::Label>();
+    m_fpsText = gui.get(fpsTextName)->cast<tgui::Label>();
+    m_activeBodiesText = gui.get(activeBodiesTextName)->cast<tgui::Label>();
+    m_entityCountText = gui.get(playEntityCountTextName)->cast<tgui::Label>();
 
     b2WorldId& physicsWorldId = m_world.getContext<b2WorldId>();
     m_bodyCallback =
@@ -39,6 +41,7 @@ public:
       seeker.add<BodyComponent>();
       seeker.add<SeekPrimaryTargetTag>();
       seeker.add<CircleRenderComponent>();
+      seeker.add<OwnedBy<PlayState>>();
 
       CircleRenderComponent& circleRender = seeker.get<CircleRenderComponent>();
       circleRender.radius = 0.1f;
@@ -61,7 +64,7 @@ public:
 
   void onEntry() {
     b2WorldId physicsWorld = m_world.getContext<b2WorldId>();
-    Entity player = m_world.getFirstWith(m_world.set<CameraComponent>());
+    Entity player = m_world.getFirstWith(m_world.set<CameraInUse>());
 
     m_menu->setEnabled(true);
     m_menu->setVisible(true);
@@ -119,6 +122,7 @@ public:
         Entity e = m_world.create();
         e.add<SpriteComponent>();
         e.add<ArrowComponent>();
+        e.add<OwnedBy<PlayState>>();
         e.get<SpriteComponent>().texIndex = 1;
 
         if (x <= -35 || x >= 35 || y <= -35 || y >= 35 || (x % 5 == 0 && y < 20 && y != -34)) {
@@ -145,6 +149,7 @@ public:
     m_tpsText->setText("TPS: " + std::to_string(appStats.tps));
     m_fpsText->setText("FPS: " + std::to_string(appStats.fps));
     m_activeBodiesText->setText("Active Rigid Bodies: " + std::to_string(activeBodies));
+    m_entityCountText->setText("Entity Count: " + std::to_string(m_world.getEntityCount()));
 
     b2WorldId physicsWorld = m_world.getContext<b2WorldId>();
     if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F3]) {
@@ -167,10 +172,11 @@ public:
 
 private:
   std::function<void(int, int)> m_bodyCallback;
-  tgui::TextArea::Ptr m_tickText;
-  tgui::TextArea::Ptr m_tpsText;
-  tgui::TextArea::Ptr m_fpsText;
-  tgui::TextArea::Ptr m_activeBodiesText;
+  tgui::Label::Ptr m_tickText;
+  tgui::Label::Ptr m_tpsText;
+  tgui::Label::Ptr m_fpsText;
+  tgui::Label::Ptr m_activeBodiesText;
+  tgui::Label::Ptr m_entityCountText;
   tgui::Widget::Ptr m_menu;
   ComponentSet m_addedPlayerComponents;
   EntityWorld& m_world;
