@@ -1,0 +1,177 @@
+#pragma once
+
+#include "state.hpp"
+
+class PlayState : public State {
+  const std::string& menuName = "PlayMenu";
+  const std::string& returnBtnName = "PlayReturn";
+  const std::string& tickTextName = "PlayTick";
+  const std::string& tpsTextName = "PlayTPS";
+  const std::string& fpsTextName = "PlayFPS";
+  const std::string& activeBodiesTextName = "PlayActiveBodies";
+public:
+  PlayState(EntityWorld& world)
+    : m_world(world) {
+    m_world.component<OwnedBy<PlayState>>();
+    m_addedPlayerComponents = m_world.set<PlayerComponent, PrimaryTargetTag, BodyComponent, RectangleRenderComponent>();
+
+    tgui::Gui& gui = m_world.getContext<tgui::Gui>();
+    m_menu = world.getContext<tgui::Gui>().get(menuName);
+    tgui::Button::Ptr returnBtn = gui.get(returnBtnName)->cast<tgui::Button>();
+
+    returnBtn->onMousePress([&]() {
+      StateManager& stateMgr = world.getContext<StateManager>();
+      stateMgr.disableState("PlayState");
+      stateMgr.enableState("MenuState");
+      });
+
+    m_tickText = gui.get(tickTextName)->cast<tgui::TextArea>();
+    m_tpsText = gui.get(tpsTextName)->cast<tgui::TextArea>();
+    m_fpsText = gui.get(fpsTextName)->cast<tgui::TextArea>();
+    m_activeBodiesText = gui.get(activeBodiesTextName)->cast<tgui::TextArea>();
+
+    b2WorldId& physicsWorldId = m_world.getContext<b2WorldId>();
+    m_bodyCallback =
+      [&](int x, int y) {
+      Entity seeker = m_world.create();
+      seeker.add<RotComponent>();
+      seeker.add<PosComponent>();
+      seeker.add<BodyComponent>();
+      seeker.add<SeekPrimaryTargetTag>();
+      seeker.add<CircleRenderComponent>();
+
+      CircleRenderComponent& circleRender = seeker.get<CircleRenderComponent>();
+      circleRender.radius = 0.1f;
+
+      seeker.get<PosComponent>() = { x * 0.3f - 7, y * 0.3f + 14 };
+      seeker.get<RotComponent>() = Rot(0);
+      b2BodyDef bodyDef = b2DefaultBodyDef();
+      bodyDef.type = b2_dynamicBody;
+      bodyDef.position = Vec2(0, 0);
+      bodyDef.linearDamping = 10;
+      b2ShapeDef shapeDef = b2DefaultShapeDef();
+      b2Circle circle;
+      circle.radius = 0.1f;
+      circle.center = Vec2(0);
+      b2BodyId bodyId = b2CreateBody(physicsWorldId, &bodyDef);
+      seeker.get<BodyComponent>().id = bodyId;
+      b2CreateCircleShape(bodyId, &shapeDef, &circle);
+      };
+  }
+
+  void onEntry() {
+    b2WorldId physicsWorld = m_world.getContext<b2WorldId>();
+    Entity player = m_world.getFirstWith(m_world.set<CameraComponent>());
+
+    m_menu->setEnabled(true);
+    m_menu->setVisible(true);
+
+    /* Needed Modules */
+    m_world.enableModule<PhysicsModule>();
+    m_world.enableModule<PathfindingModule>();
+    m_world.enableModule<PlayerModule>();
+
+    /* Player */
+    player.add(m_addedPlayerComponents);
+
+    // Render
+    RectangleRenderComponent& renderRect = player.get<RectangleRenderComponent>();
+    renderRect.hw = 0.12f;
+    renderRect.hh = 0.12f;
+
+    // Collider
+    b2BodyDef bodyDef = b2DefaultBodyDef();
+    bodyDef.type = b2_dynamicBody;
+    bodyDef.fixedRotation = true;
+    bodyDef.linearDamping = 10;
+    b2BodyId bodyId = b2CreateBody(physicsWorld, &bodyDef);
+    player.get<BodyComponent>().id = bodyId;
+    b2ShapeDef shapeDef = b2DefaultShapeDef();
+    shapeDef.density = 1000;
+    b2Polygon rect = b2MakeBox(0.12f, 0.12f);
+    b2CreatePolygonShape(bodyId, &shapeDef, &rect);
+
+    player.get<PosComponent>() = { 5.0f, -7.0f };
+
+    /* WorldMap & Tilemap Component */
+
+    { // World Map
+      Entity tm = m_world.create();
+      logGeneric("World tilemap @ %u\n", tm.id());
+      tm.add<PosComponent>();
+      tm.add<RotComponent>();
+      tm.add<BodyComponent>();
+      tm.add<TilemapComponent>();
+      tm.add<WorldMapTag>();
+      tm.add<OwnedBy<PlayState>>();
+
+      tm.get<PosComponent>() = { 0, 0 };
+      tm.get<RotComponent>() = Rot(0);
+      b2BodyDef bodyDef = b2DefaultBodyDef();
+      bodyDef.type = b2_staticBody;
+      bodyDef.position = Vec2(0, 0);
+      b2BodyId bodyId = b2CreateBody(physicsWorld, &bodyDef);
+      tm.get<BodyComponent>().id = bodyId;
+
+      TilemapComponent& tilemap = tm.get<TilemapComponent>();
+      auto tileCallback =
+        [&](int x, int y) {
+        Entity e = m_world.create();
+        e.add<SpriteComponent>();
+        e.add<ArrowComponent>();
+        e.get<SpriteComponent>().texIndex = 1;
+
+        if (x <= -35 || x >= 35 || y <= -35 || y >= 35 || (x % 5 == 0 && y < 20 && y != -34)) {
+          e.get<SpriteComponent>().texIndex = 2;
+          tilemap.insert({ x, y }, bodyId, e, TileFlags::IS_COLLIDABLE);
+        }
+        else {
+          tilemap.insert({ x, y }, bodyId, e, 0);
+        }
+        };
+
+      callInGrid(-40, -40, 40, 40, tileCallback);
+    }
+
+    callInGrid(-2, -2, 2, 2, m_bodyCallback);
+  }
+
+  void onTick(u32 tick, float deltaTime) override {
+    AppStats& appStats = m_world.getContext<AppStats>();
+    b2WorldId& physicsWorldId = m_world.getContext<b2WorldId>();
+    u32 activeBodies = b2World_GetAwakeBodyCount(physicsWorldId);
+
+    m_tickText->setText("Tick: " + std::to_string(tick));
+    m_tpsText->setText("TPS: " + std::to_string(appStats.tps));
+    m_fpsText->setText("FPS: " + std::to_string(appStats.fps));
+    m_activeBodiesText->setText("Active Rigid Bodies: " + std::to_string(activeBodies));
+
+    b2WorldId physicsWorld = m_world.getContext<b2WorldId>();
+    if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F3]) {
+      callInGrid(-2, -2, 2, 2, m_bodyCallback);
+    }
+  }
+
+  void onLeave() {
+    Entity player = m_world.getFirstWith(m_world.set<CameraComponent>());
+
+    m_world.destroyAllEntitiesWith(m_world.set<OwnedBy<PlayState>>());
+    player.remove(m_addedPlayerComponents);
+    m_world.disableModule<PhysicsModule>();
+    m_world.disableModule<PathfindingModule>();
+    m_world.disableModule<PlayerModule>();
+
+    m_menu->setEnabled(false);
+    m_menu->setVisible(false);
+  }
+
+private:
+  std::function<void(int, int)> m_bodyCallback;
+  tgui::TextArea::Ptr m_tickText;
+  tgui::TextArea::Ptr m_tpsText;
+  tgui::TextArea::Ptr m_fpsText;
+  tgui::TextArea::Ptr m_activeBodiesText;
+  tgui::Widget::Ptr m_menu;
+  ComponentSet m_addedPlayerComponents;
+  EntityWorld& m_world;
+};

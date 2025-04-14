@@ -29,10 +29,8 @@ public:
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     resizeViewportToScreenDim();
-  }
 
-  void addRenderer(BaseRender* renderer) {
-    m_renderers.push_back(renderer);
+    camera.world().component<IsRender>();
   }
 
   Status getStatus() {
@@ -40,11 +38,28 @@ public:
   }
 
   void mesh() {
-    for (BaseRender* renderer : m_renderers) {
+    /* collect active renderers */
+    m_renderers.clear();
+    EntityWorld& world = m_camera.world();
+    EntityIterator it = world.getWith(world.set<IsRender>());
+    while (it.hasNext()) {
+      Entity renderer = it.next();
+
+      Module* module = renderer.get<EntityWorld::ModuleData>().m_module.get();
+      BaseRenderModule* renderData = dynamic_cast<BaseRenderModule*>(module);
+      auto it = std::lower_bound(m_renderers.begin(), m_renderers.end(), renderData, 
+        [](BaseRenderModule* first, BaseRenderModule* other)
+        {
+          return first->getPriority() < other->getPriority();
+        });
+      m_renderers.insert(it, renderData);
+    }
+
+    for (auto renderer : m_renderers) {
       renderer->preMesh();
     }
 
-    for (BaseRender* renderer : m_renderers) {
+    for (auto renderer : m_renderers) {
       renderer->onMesh();
     }
   }
@@ -52,16 +67,16 @@ public:
   void render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    for (BaseRender* renderer : m_renderers) {
+    for (auto renderer : m_renderers) {
       renderer->preRender();
     }
     
     glm::mat4 vp = m_proj * getView();
-    for (BaseRender* renderer : m_renderers) {
+    for (auto renderer : m_renderers) {
       renderer->onRender(vp);
     }
 
-    for (BaseRender* renderer : m_renderers) {
+    for (auto renderer : m_renderers) {
       renderer->postRender();
     }
 
@@ -137,6 +152,6 @@ private:
   Status m_status;
   glm::mat4 m_proj;
   Entity m_camera;
-  std::vector<BaseRender*> m_renderers;
+  std::vector<BaseRenderModule*> m_renderers;
   SDL_Window* m_window;
 };

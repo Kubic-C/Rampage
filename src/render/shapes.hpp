@@ -14,21 +14,28 @@ struct RectangleRenderComponent {
   float hh = 0.0f;
 };
 
-class ShapeRender : public BaseRender {
+class ShapeRenderModule : public BaseRenderModule {
 public:
   struct Vertex {
     glm::vec3 pos;
     glm::vec3 color;
   };
 
-  ShapeRender(EntityWorld& world)
-    : BaseRender(world) {
+  ShapeRenderModule(EntityWorld& world, size_t priority)
+    : BaseRenderModule(world, priority) {
     va.addVertexArrayAttrib(mesh.buffer, 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
     va.addVertexArrayAttrib(mesh.buffer, 1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), offsetof(Vertex, color));
     if (!shader.loadShaderStr(triangleVertexShaderSource, triangleFragShaderSource)) {
       m_status = Status::CriticalError;
       return;
     }
+
+        world.component<CircleRenderComponent>();
+    world.component<RectangleRenderComponent>();
+  }
+
+  void run(EntityWorld& world, float deltaTime) override final {
+
   }
 
   void preMesh() override {
@@ -43,7 +50,7 @@ public:
       PosComponent& pos = e.get<PosComponent>();
       RotComponent& rot = e.get<RotComponent>();
 
-      drawCircle(Transform(pos + circle.offset, rot), glm::vec3(1.0f, 0.0f, 1.0f), circle.radius, 8);
+      drawCircle(Transform(pos + circle.offset, rot), glm::vec3(1.0f, 0.0f, 1.0f), circle.radius, 8, 0.0f);
     }
 
     EntityIterator it = m_world.getWith(m_world.set<RectangleRenderComponent, PosComponent, RotComponent>());
@@ -53,7 +60,7 @@ public:
       PosComponent& pos = e.get<PosComponent>();
       RotComponent& rot = e.get<RotComponent>();
 
-      drawRectangle(Transform(pos, rot), glm::vec3(1.0f, 0.0f, 1.0f), rect.hw, rect.hh);
+      drawRectangle(Transform(pos, rot), glm::vec3(1.0f, 0.0f, 1.0f), rect.hw, rect.hh, 0.0f);
     }
   }
 
@@ -64,12 +71,12 @@ public:
     glDrawArrays(GL_TRIANGLES, 0, mesh.verticesToRender);
   }
 
-  void drawRectangle(const Transform& transform, glm::vec3 color, float hw, float hh) {
+  void drawRectangle(const Transform& transform, glm::vec3 color, float hw, float hh, float z) {
     const glm::vec3 rect[4] = {
-        glm::vec3(-hw, -hh, -1.0f),
-        glm::vec3(hw, -hh, -1.0f),
-        glm::vec3(hw, hh, -1.0f),
-        glm::vec3(-hw, hh, -1.0f)
+        glm::vec3(-hw, -hh, z),
+        glm::vec3(hw, -hh,  z),
+        glm::vec3(hw, hh,   z),
+        glm::vec3(-hw, hh,  z)
     };
 
     Vertex vertices[] = {
@@ -188,19 +195,4 @@ private:
   Mesh<Vertex, 3, 3> mesh;
   Shader shader;
   VertexArrayBuffer va;
-};
-
-struct ShapeRenderModule : Module {
-  ShapeRenderModule(EntityWorld& world) {
-    world.component<CircleRenderComponent>();
-    world.component<RectangleRenderComponent>();
-
-    world.addContext<ShapeRender>(world);
-    world.getContext<Render*>()->addRenderer(&world.getContext<ShapeRender>());
-    
-  }
-
-  void run(EntityWorld& world, float deltaTime) override final {
-  
-  }
 };

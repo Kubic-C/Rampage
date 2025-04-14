@@ -5,16 +5,16 @@
 #include "transform.hpp"
 #include "tilemap.hpp"
 
-class TilemapRender : public BaseRender {
+class TilemapRenderModule : public BaseRenderModule {
 public:
   struct Vertex {
     glm::vec3 pos;
     glm::vec3 texCoords;
   };
 
-  TilemapRender(EntityWorld& world, u32 spriteWidth, u32 spriteHeight, u32 maxSprites)
-    : BaseRender(world), m_texArray(spriteWidth, spriteHeight, maxSprites), 
-    m_sys(m_world.system(m_world.set<TilemapComponent, PosComponent, RotComponent>(), std::bind(&TilemapRender::meshTilemap, this, std::placeholders::_1, std::placeholders::_2))) {
+  TilemapRenderModule(EntityWorld& world, size_t priority, u32 spriteWidth, u32 spriteHeight, u32 maxSprites)
+    : BaseRenderModule(world, priority), m_texArray(spriteWidth, spriteHeight, maxSprites),
+    m_sys(m_world.system(m_world.set<TilemapComponent, PosComponent, RotComponent>(), std::bind(&TilemapRenderModule::meshTilemap, this, std::placeholders::_1, std::placeholders::_2))) {
     m_va.addVertexArrayAttrib(m_mesh.buffer, 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
     m_va.addVertexArrayAttrib(m_mesh.buffer, 1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), offsetof(Vertex, texCoords));
     if (!m_shader.loadShaderStr(tileVertexShaderSource, tileFragShaderSource)) {
@@ -30,6 +30,10 @@ public:
     m_sampler.parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
   }
 
+  void run(EntityWorld& world, float deltaTime) override {
+
+  }
+     
   void preMesh() override {
     m_mesh.reset();
   }
@@ -39,7 +43,7 @@ public:
   }
 
   void meshTilemap(Entity e, float dt) {
-    ShapeRender& shapeRender = e.world().getContext<ShapeRender>();
+    ShapeRenderModule& shapeRender = e.world().getModule<ShapeRenderModule>();
     TilemapComponent& tm = e.get<TilemapComponent>();
     PosComponent& pos = e.get<PosComponent>();
     RotComponent& rot = e.get<RotComponent>();
@@ -61,7 +65,7 @@ public:
         Vec2 worldPos = Transform(pos, rot).getWorldPoint(tm.getLocalTileCenter(tilePos));
         ArrowComponent& arrow = tileE.get<ArrowComponent>();
 
-        shapeRender.drawLine(worldPos, worldPos + arrow.dir * 0.5f, glm::vec3(1.0f, (float)arrow.generation / 255, 0.0f), 0.01f);
+        shapeRender.drawLine(worldPos, worldPos + arrow.dir * 0.5f, glm::vec3(1.0f, (float)arrow.generation / 255, 0.0f), 0.01f, 1.0f);
       }
     }
   }

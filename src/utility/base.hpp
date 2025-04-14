@@ -41,6 +41,10 @@
 #include <glad/gl.h>
 #include <SDL3/SDL.h>
 
+/* TGUI */
+#include <TGUI/TGUI.hpp>
+#include <TGUI/Backend/SDL-OpenGL3.hpp>
+
 #ifndef NODISCARD 
 #define NODISCARD [[nodiscard]]
 #endif

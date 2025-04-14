@@ -1,20 +1,26 @@
 #pragma once
 
-#include "utility/base.hpp"
-#include "render/render.hpp"
-#include "render/shapes.hpp"
-#include "utility/log.hpp"
 #include "tilemap.hpp"
 #include "player.hpp"
 #include "physics.hpp"
 #include "seekPlayer.hpp"
 #include "worldMap.hpp"
+
+#include "render/shapes.hpp"
 #include "tilemapRender.hpp"
+#include "guiRender.hpp"
+
+#include "states/menuState.hpp"
+#include "states/playState.hpp"
 
 class App {
 public:
   App(const std::string_view& appName, float ticksPerSecond)
-    : m_player(m_world.create()), m_localAppStatus(Status::Ok), m_ticksPerSecond(ticksPerSecond) {
+    : m_localAppStatus(Status::Ok), m_ticksPerSecond(ticksPerSecond) {
+    /* Really dont wanna forget this ... */
+    m_world.addContext<AppStats>();
+    m_world.addContext<DoExit>();
+
     /* Physics setup */
     b2WorldDef physicsWorldDef = b2DefaultWorldDef();
     physicsWorldDef.gravity = b2Vec2{ 0 };
@@ -52,24 +58,27 @@ public:
     }
 
     /* Camera and rendering */
-    m_player.add(m_world.set<PosComponent, RotComponent, CameraComponent>());
-    m_player.get<PosComponent>() = { 0, 0 };
-    m_player.get<RotComponent>() = { 0 };
-    m_player.get<CameraComponent>().m_zoom = 100.0f;
+    Entity camera = m_world.create();
+    camera.add(m_world.set<PosComponent, RotComponent, CameraComponent>());
+    camera.get<PosComponent>() = { 0, 0 };
+    camera.get<RotComponent>() = { 0 };
+    camera.get<CameraComponent>().m_zoom = 100.0f;
 
-    m_render = new Render(m_window, m_player);
+    m_render = new Render(m_window, camera);
+    m_world.addContext<Render*>(m_render);
     if (m_render->getStatus() == Status::CriticalError) {
       logError(1, "Failed to create render. SDL_GetError(): %s\n", SDL_GetError());
       m_localAppStatus = Status::CriticalError;
       return;
     }
 
-    m_world.addContext<Render*>(m_render);
-    m_world.addModule<ShapeRenderModule>();
-    m_player.add<RectangleRenderComponent>();
-    RectangleRenderComponent& renderRect = m_player.get<RectangleRenderComponent>();
-    renderRect.hw = 0.12f;
-    renderRect.hh = 0.12f;
+    m_world.addModule<ShapeRenderModule>(0).add<IsRender>();
+
+    /* Gui Setup */
+    m_world.addContext<tgui::Gui>(m_window);
+    tgui::Gui& gui = m_world.getContext<tgui::Gui>();
+    m_world.addModule<GuiRenderModule>(SIZE_MAX, gui).add<IsRender>();
+    gui.loadWidgetsFromFile("./res/form.txt");
 
     /* Tile drawing ... */
     std::vector<const char*> spritesToLoad = {
@@ -79,10 +88,10 @@ public:
       "./res/fence.png"
     };
 
-    TilemapRender* tilemapRender = new TilemapRender(m_world, 32, 32, 256);
-    m_render->addRenderer(tilemapRender);
+    m_world.addModule<TilemapRenderModule>(0, 32, 32, 256).add<IsRender>();
+    TilemapRenderModule& tilemapRender = m_world.getModule<TilemapRenderModule>();
     for(int i = 0; i < spritesToLoad.size(); i++)
-      if (!tilemapRender->loadSprite(i, spritesToLoad[i])) {
+      if (!tilemapRender.loadSprite(i, spritesToLoad[i])) {
         logError(1, "Failed to load resource: %s.\n", spritesToLoad[i]);
         m_localAppStatus = Status::CriticalError;
         return;
@@ -91,92 +100,27 @@ public:
     /* Player Component ... */
     m_world.addModule<PathfindingModule>();
     m_world.addModule<PlayerModule>();
-    m_player.add<PlayerComponent>();
-    m_player.add<PrimaryTargetTag>();
 
-    m_player.add<BodyComponent>();
-    b2BodyDef bodyDef = b2DefaultBodyDef();
-    bodyDef.type = b2_dynamicBody;
-    bodyDef.fixedRotation = true;
-    bodyDef.linearDamping = 10;
-    b2BodyId bodyId = b2CreateBody(m_physicsWorld, &bodyDef);
-    m_player.get<BodyComponent>().id = bodyId;
-    b2ShapeDef shapeDef = b2DefaultShapeDef();
-    shapeDef.density = 1000;
-    b2Polygon rect = b2MakeBox(0.12f, 0.12f);
-    b2CreatePolygonShape(bodyId, &shapeDef, &rect);
-
-    m_player.get<PosComponent>() = { 5.0f, -7.0f };
-
-    /* WorldMap & Tilemap Component */
     m_world.component<WorldMapTag>();
     m_world.component<TilemapComponent>();
     m_world.component<SpriteComponent>();
-    
-    { // World Map
-      Entity tm = m_world.create();
-      logGeneric("World tilemap @ %u\n", tm.id());
-      tm.add<PosComponent>();
-      tm.add<RotComponent>();
-      tm.add<BodyComponent>();
-      tm.add<TilemapComponent>();
-      tm.add<WorldMapTag>();
 
-      tm.get<PosComponent>() = { 0, 0 };
-      tm.get<RotComponent>() = Rot(0);
-      b2BodyDef bodyDef = b2DefaultBodyDef();
-      bodyDef.type = b2_staticBody;
-      bodyDef.position = Vec2(0, 0);
-      b2BodyId bodyId = b2CreateBody(m_physicsWorld, &bodyDef);
-      tm.get<BodyComponent>().id = bodyId;
+    m_world.enableModule<GuiRenderModule>();
+    m_world.enableModule<ShapeRenderModule>();
+    m_world.enableModule<TilemapRenderModule>();
 
-      TilemapComponent& tilemap = tm.get<TilemapComponent>();
-      auto tileCallback =
-        [&](int x, int y) {
-          Entity e = m_world.create();
-          e.add<SpriteComponent>();
-          e.add<ArrowComponent>();
-          e.get<SpriteComponent>().texIndex = 1;
+    /* State Management, init starts with menuState */
+    m_world.addContext<StateManager>();
+    StateManager& stateMgr = m_world.getContext<StateManager>();
+    stateMgr.createState<PlayState>("PlayState", m_world);
+    stateMgr.createState<MenuState>("MenuState", m_world);
+    stateMgr.enableState("MenuState");
+  }
 
-          if (x <= -35 || x >= 35 || y <= -35 || y >= 35 || (x % 5 == 0 && y < 20 && y != -34)) {
-            e.get<SpriteComponent>().texIndex = 2;
-            tilemap.insert({ x, y }, bodyId, e, TileFlags::IS_COLLIDABLE);
-          }
-          else {
-            tilemap.insert({ x, y }, bodyId, e, 0);
-          }
-        };
-
-      callInGrid(-40, -40, 40, 40, tileCallback);
-    }
-
-    auto bodyCallback =
-      [&](int x, int y) {
-      Entity seeker = m_world.create();
-      seeker.add<RotComponent>();
-      seeker.add<PosComponent>();
-      seeker.add<BodyComponent>();
-      seeker.add<SeekPrimaryTargetTag>();
-      seeker.add<RectangleRenderComponent>();
-
-      RectangleRenderComponent& rectRender = seeker.get<RectangleRenderComponent>();
-      rectRender.hw = 0.025f;
-      rectRender.hh = 0.025f;
-
-      seeker.get<PosComponent>() = { x * 0.3f - 7, y * 0.3f + 7 };
-      seeker.get<RotComponent>() = Rot(0);
-      b2BodyDef bodyDef = b2DefaultBodyDef();
-      bodyDef.type = b2_dynamicBody;
-      bodyDef.position = Vec2(0, 0);
-      bodyDef.linearDamping = 10;
-      b2ShapeDef shapeDef = b2DefaultShapeDef();
-      b2Polygon polygon = b2MakeOffsetBox(0.025, 0.025, Vec2(0), Rot(0));
-      b2BodyId bodyId = b2CreateBody(m_physicsWorld, &bodyDef);
-      seeker.get<BodyComponent>().id = bodyId;
-      b2CreatePolygonShape(bodyId, &shapeDef, &polygon);
-      };
-
-    callInGrid(-2, -2, 2, 2, bodyCallback);
+  ~App() {
+    // tgui does not like the backend be destroyed first (Opengl/Render)
+    m_world.destroyContext<StateManager>();
+    m_world.destroyContext<tgui::Gui>();
   }
 
   Status getStatus() {
@@ -190,12 +134,17 @@ public:
   }
 
   void tick(u32 tick, float deltaTime) {
+    StateManager& stateMgr = m_world.getContext<StateManager>();
+    stateMgr.onTick(tick, deltaTime);
+
+    tgui::Gui& gui = m_world.getContext<tgui::Gui>();
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
+      gui.handleEvent(event);
       switch (event.type) {
       case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
       case SDL_EVENT_QUIT:
-        m_exit = true;
+        m_world.getContext<DoExit>().exit = true;
         break;
       case SDL_EVENT_WINDOW_RESIZED:
         m_render->resizeViewportToScreenDim();
@@ -203,55 +152,31 @@ public:
       }
     }
 
-    if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F3]) {
-      auto bodyCallback =
-        [&](int x, int y) {
-        Entity seeker = m_world.create();
-        seeker.add<RotComponent>();
-        seeker.add<PosComponent>();
-        seeker.add<BodyComponent>();
-        seeker.add<SeekPrimaryTargetTag>();
-        seeker.add<RectangleRenderComponent>();
-
-        RectangleRenderComponent& rectRender = seeker.get<RectangleRenderComponent>();
-        rectRender.hw = 0.05f;
-        rectRender.hh = 0.05f;
-
-        seeker.get<PosComponent>() = { x * 0.3f - 7, y * 0.3f + 7};
-        seeker.get<RotComponent>() = Rot(0);
-        b2BodyDef bodyDef = b2DefaultBodyDef();
-        bodyDef.type = b2_dynamicBody;
-        bodyDef.position = Vec2(0, 0);
-        bodyDef.linearDamping = 10;
-        b2ShapeDef shapeDef = b2DefaultShapeDef();
-        b2Polygon polygon = b2MakeOffsetBox(0.05, 0.05, Vec2(0), Rot(0));
-        b2BodyId bodyId = b2CreateBody(m_physicsWorld, &bodyDef);
-        seeker.get<BodyComponent>().id = bodyId;
-        b2CreatePolygonShape(bodyId, &shapeDef, &polygon);
-        };
-
-      callInGrid(-2, -2, 2, 2, bodyCallback);
-    }
-
     m_world.run(deltaTime);
   }
 
   void update(float frameTime) {
-    static float dt = 0;
-    dt += frameTime;
+    StateManager& stateMgr = m_world.getContext<StateManager>();
+    stateMgr.onUpdate();
 
     m_render->mesh();
     m_render->render();
   }
 
   int run() {
+    AppStats& appStats = m_world.getContext<AppStats>();
+
     float lastTime = 0;
     float ticksToGo = 0;
 
     float tickLastTime = 0;
     u32 tickI = 0;
 
-    while (!m_exit) {
+    float culmTime = 0;
+    u32 culmTicks = 0;
+    u32 culmFrames = 0;
+   
+    while (!m_world.getContext<DoExit>().exit) {
       float nowTime = now();
       float deltaTime = nowTime - lastTime;
       ticksToGo += deltaTime * m_ticksPerSecond;
@@ -266,9 +191,17 @@ public:
 
         ticksToGo--;
         tickI++;
+        culmTicks++;
       }
 
       update(deltaTime);
+      culmFrames++;
+      culmTime += deltaTime;
+      if (culmTime >= 1.0f) {
+        appStats.tps = (float)culmTicks;
+        appStats.fps = (float)culmFrames;
+        culmTicks = culmFrames = culmTime = 0;
+      }
     }
 
     return 0;
@@ -282,10 +215,7 @@ private:
   SDL_GLContext m_context;
   Render* m_render;
 
-  Entity m_player;
-
   float m_ticksPerSecond;
-  bool m_exit = false;
 
   std::chrono::steady_clock::time_point start_time = std::chrono::high_resolution_clock::now();
 };

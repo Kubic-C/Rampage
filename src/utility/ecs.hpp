@@ -75,6 +75,8 @@ public:
   ComponentSetId getSetId() const;
   const std::vector<ComponentId>& list() const;
      
+  ComponentSet& operator=(const ComponentSet& other) = default;
+
   bool operator==(const ComponentSet& other) const {
     return getSetId() == other.getSetId();
   }
@@ -129,7 +131,16 @@ namespace std {
   };
 }
 
-class Module;
+class EntityWorld;
+
+class Module {
+public:
+  virtual ~Module() {}
+
+  virtual void run(EntityWorld& world, float deltaTime) {}
+private:
+};
+
 class Entity;
 class System;
 class IteratedEntity;
@@ -219,22 +230,64 @@ public:
   };
 
   struct Destroy {};
+  struct Enabled {};
 
   using SystemFunc = std::function<void(Entity entity, float deltaTime)>;
+
+  template<typename T>
+  struct ModuleType {};
+
+  struct ModuleData {
+    std::shared_ptr<Module> m_module;
+  };
 
 public:
   EntityWorld();
   ~EntityWorld();
 
   template<typename T, typename ... Params>
-  void addModule(Params&& ... args) {
-    m_modules.push_back(std::make_shared<T>(*this, args...));
+  Entity addModule(Params&& ... args);
+
+  template<typename T>
+  void enableModule() {
+    EntityIterator it = getWithDisabled(set<ModuleType<T>>());
+    beginDefer();
+    while (it.hasNext()) {
+      it.next().add<Enabled>();
+    }
+    endDefer();
+  }
+
+  template<typename T>
+  void disableModule() {
+    EntityIterator it = getWithDisabled(set<ModuleType<T>>());
+    beginDefer();
+    while (it.hasNext()) {
+      it.next().remove<Enabled>();
+    }
+    endDefer();
+  }
+
+  template<typename T>
+  T& getModule() {
+    EntityIterator it = getWithDisabled(set<ModuleType<T>>());
+    while (it.hasNext())
+      return *(T*)it.next().get<ModuleData>().m_module.get();
+
+    throw std::exception("Module does not exist\n");
   }
 
   template<typename T, typename ... Params>
   void addContext(Params&& ... args) {
     m_contexts[typeid(T).hash_code()].bytes = (u8*)new T(args...);
     m_contexts[typeid(T).hash_code()].destroy = [](u8* bytes) { delete (T*)bytes;  };
+  }
+
+  template<typename T>
+  void destroyContext() {
+    size_t hashCode = typeid(T).hash_code();
+    m_contexts[hashCode].destroy(m_contexts[hashCode].bytes);
+    m_contexts.erase(hashCode);
   }
 
   template<typename T>
@@ -288,13 +341,23 @@ public:
    * Destroy the entity */
   EntityListIterator destroy(EntityId id);
 
+  void enable(EntityId entity);
+  void disable(EntityId entity);
+
   // remove all type of components
   void removeAll(const ComponentSet& components, bool notify = true);
+  // destroy all 
+  void destroyAllEntitiesWith(const ComponentSet& components, bool notify = true);
   EntityIterator getWith(const ComponentSet& components);
+  // Gets all entities regardless if they are disabled or enabled
+  EntityIterator getWithDisabled(const ComponentSet& components);
+  // Gets first found enabled entity with components
+  Entity getFirstWith(const ComponentSet& components);
 
   // Run them thing homey
   void run(float deltaTime);
   System system(const ComponentSet& components, const SystemFunc& func);
+  System systemWithDisabled(const ComponentSet& components, const SystemFunc& func);
 
   void setLocalRange(EntityId startingId);
   void enableRangeCheck(bool enable);
@@ -330,8 +393,7 @@ private:
   std::vector<EntityId> m_deferredDestroy;
 
   Map<EventType, Map<ComponentId, std::vector<ObserverData>>> m_observers;
-
-  std::vector<std::shared_ptr<Module>> m_modules;  
+  
   Map<size_t, ContextData> m_contexts;
 
   // A map that keeps track of super sets, meaning sets that contain the same or more components
@@ -366,6 +428,8 @@ public:
   u8* get(ComponentId compId);
   bool has(ComponentId compId);
   EntityWorld& world();
+  void enable();
+  void disable();
 
   template<typename T>
   void add() {
@@ -396,12 +460,20 @@ private:
   EntityId m_id;
 };
 
-class Module {
-public:
-  virtual void run(EntityWorld& world, float deltaTime) {}
+template<typename T, typename ... Params>
+Entity EntityWorld::addModule(Params&& ... args) {
+  component<ModuleType<T>>();
 
-private:
-};
+  Entity moduleEntity = create();
+  moduleEntity.add<ModuleData>();
+  moduleEntity.add<ModuleType<T>>();
+  ModuleData& moduleT = moduleEntity.get<ModuleData>();
+  moduleT.m_module = std::make_shared<T>(*this, args...);
+  
+  disable(moduleEntity);
+
+  return moduleEntity;
+}
 
 using EntityIterator = EntityWorld::EntityIterator;
 

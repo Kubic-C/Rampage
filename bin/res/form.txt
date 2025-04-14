@@ -1,0 +1,185 @@
+Renderer.1 {
+}
+
+Renderer.2 {
+    BackgroundColor = white;
+    BorderColor = black;
+    Borders = (1, 1, 1, 1);
+    CaretColor = black;
+    CaretWidth = 1;
+    DefaultTextColor = #A0A0A0;
+    Padding = (0, 0, 0, 0);
+    SelectedTextBackgroundColor = #006EFF;
+    SelectedTextColor = white;
+    TextColor = #3C3C3C;
+    TextureBackground = None;
+
+    Scrollbar {
+        ArrowBackgroundColor = #F5F5F5;
+        ArrowBackgroundColorHover = white;
+        ArrowColor = #3C3C3C;
+        ArrowColorHover = black;
+        TextureArrowDown = None;
+        TextureArrowDownHover = None;
+        TextureArrowUp = None;
+        TextureArrowUpHover = None;
+        TextureThumb = None;
+        TextureThumbHover = None;
+        TextureTrack = None;
+        TextureTrackHover = None;
+        ThumbColor = #DCDCDC;
+        ThumbColorHover = #E6E6E6;
+        TrackColor = #F5F5F5;
+    }
+}
+
+Renderer.3 {
+    BackgroundColor = rgb(80, 80, 80);
+    BackgroundColorHover = rgb(100, 100, 100);
+    BorderColor = Black;
+    TextColor = rgb(190, 190, 190);
+    TextColorDisabled = rgb(125, 125, 125);
+    TextColorHover = rgb(250, 250, 250);
+    Texture = "themes/Black.png" Part(140, 53, 45, 50) Middle(10, 0) Smooth;
+    TextureDisabled = None;
+    TextureDown = "themes/Black.png" Part(125, 105, 45, 50) Middle(10, 0) Smooth;
+    TextureDownFocused = None;
+    TextureDownHover = None;
+    TextureFocused = "themes/Black.png" Part(93, 53, 45, 50) Middle(10, 0) Smooth;
+    TextureHover = "themes/Black.png" Part(140, 1, 45, 50) Middle(10, 0) Smooth;
+}
+
+Group.PlayMenu {
+    Enabled = false;
+    Size = (100%, 100%);
+    Visible = false;
+
+    Renderer {
+    }
+
+    VerticalLayout.VerticalLayout2 {
+        Position = (90, 10);
+        Ratios = [1, 1, 1, 1];
+        Renderer = &1;
+        Size = (150, 150);
+
+        TextArea.PlayTick {
+            HorizontalScrollbarPolicy = Never;
+            MaximumCharacters = 0;
+            Renderer = &2;
+            Size = (150, 37.5);
+            Text = "";
+            TextSize = 13;
+            VerticalScrollbarPolicy = Automatic;
+        }
+
+        TextArea.PlayTPS {
+            HorizontalScrollbarPolicy = Never;
+            MaximumCharacters = 0;
+            Position = (0, 37.5);
+            Renderer = &2;
+            Size = (150, 37.5);
+            Text = "";
+            TextSize = 13;
+            VerticalScrollbarPolicy = Automatic;
+        }
+
+        TextArea.PlayFPS {
+            HorizontalScrollbarPolicy = Never;
+            MaximumCharacters = 0;
+            Position = (0, 75);
+            Renderer = &2;
+            Size = (150, 37.5);
+            Text = "";
+            TextSize = 13;
+            VerticalScrollbarPolicy = Automatic;
+        }
+
+        TextArea.PlayActiveBodies {
+            HorizontalScrollbarPolicy = Never;
+            MaximumCharacters = 0;
+            Position = (0, 112.5);
+            Renderer = &2;
+            Size = (150, 37.5);
+            Text = "";
+            TextSize = 13;
+            VerticalScrollbarPolicy = Automatic;
+        }
+    }
+
+    Button.PlayReturn {
+        Position = (10, 10);
+        Renderer = &3;
+        Text = Return;
+        TextSize = 13;
+    }
+}
+
+VerticalLayout.MainMenu {
+    Enabled = false;
+    Ratios = [1, 1];
+    Renderer = &1;
+    Size = (100%, 100%);
+    Visible = false;
+
+    Label.MainRampage {
+        HorizontalAlignment = Center;
+        ScrollbarPolicy = Automatic;
+        Size = (800, 300);
+        Text = Rampage;
+        TextSize = 80;
+        VerticalAlignment = Center;
+
+        Renderer {
+            BorderColor = Black;
+            TextColor = rgb(190, 190, 190);
+            TextureBackground = None;
+
+            Scrollbar {
+                ArrowBackgroundColor = rgb(80, 80, 80);
+                ArrowColor = rgb(190, 190, 190);
+                TextureArrowDown = "themes/Black.png" Part(1, 230, 20, 20) Middle(0, 1, 20, 19) Smooth;
+                TextureArrowDownHover = "themes/Black.png" Part(306, 225, 20, 20) Middle(0, 1, 20, 19) Smooth;
+                TextureArrowUp = "themes/Black.png" Part(284, 225, 20, 20) Middle(0, 0, 20, 19) Smooth;
+                TextureArrowUpHover = "themes/Black.png" Part(285, 171, 20, 20) Middle(0, 0, 20, 19) Smooth;
+                TextureThumb = "themes/Black.png" Part(23, 230, 20, 20) Smooth;
+                TextureThumbHover = "themes/Black.png" Part(306, 193, 20, 20) Smooth;
+                TextureTrack = "themes/Black.png" Part(255, 1, 20, 20) Smooth;
+                TextureTrackHover = "themes/Black.png" Part(284, 203, 20, 20) Smooth;
+                ThumbColor = rgb(190, 190, 190);
+                TrackColor = rgb(80, 80, 80);
+            }
+        }
+    }
+
+    VerticalLayout.VerticalLayout1 {
+        Position = (0, 300);
+        Ratios = [1, 1, 1];
+        Renderer = &1;
+        Size = (800, 300);
+        TextSize = 20;
+
+        Button.MainLoadScene {
+            Renderer = &3;
+            Size = (800, 100);
+            Text = "Load Scene";
+            TextSize = 20;
+        }
+
+        Button.MainPlayScene {
+            Position = (0, 100);
+            Renderer = &3;
+            Size = (800, 100);
+            Text = "Play Scene";
+            TextSize = 20;
+        }
+
+        Button.MainExit {
+            Position = (0, 200);
+            Renderer = &3;
+            Size = (800, 100);
+            Text = Exit;
+            TextSize = 20;
+        }
+    }
+}

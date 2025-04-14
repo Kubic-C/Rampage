@@ -197,6 +197,7 @@ void EntityWorld::EntityIterator::reset() {
 bool EntityWorld::EntityIterator::hasNext() const {
   EntityListIterator next = m_next;
   
+  // If you are getting an error from here, make sure beginDefer() and endDefer() are being used.
   return (m_list != nullptr &&
       ++next != m_list->end()) ||
     m_setIt.hasNext();
@@ -221,6 +222,8 @@ EntityWorld::EntityWorld() {
   m_sets.insert(std::make_pair(findOrCreateSet(ComponentSet()), EntityList()));
 
   component<Destroy>();
+  component<ModuleData>();
+  component<Enabled>();
 }
 
 EntityWorld::~EntityWorld() {
@@ -251,10 +254,10 @@ Entity EntityWorld::create(EntityId explicitId) {
     m_idMgr.ensure(id);
   }
 
-  const ComponentSet* emptySet = findOrCreateSet(ComponentSet());
+  const ComponentSet* enabledSet = findOrCreateSet(set<Enabled>());
   EntityData data;
-  data.comps = emptySet;
-  data.pos = m_sets[emptySet].emplace(m_sets[emptySet].end(), id);
+  data.comps = enabledSet;
+  data.pos = m_sets[enabledSet].emplace(m_sets[enabledSet].end(), id);
 
   m_entities.insert(std::make_pair(id, data));
 
@@ -304,30 +307,69 @@ EntityWorld::EntityListIterator EntityWorld::destroy(EntityId id) {
   return next;
 }
 
+void EntityWorld::enable(EntityId entity) {
+  Entity(*this, entity).enable();
+}
+
+void EntityWorld::disable(EntityId entity) {
+  Entity(*this, entity).disable();
+}
+
 void EntityWorld::removeAll(const ComponentSet& components, bool notify) {
-  EntityIterator it = getWith(components);
+  EntityIterator it = getWithDisabled(components);
   
+  beginDefer();
   while (it.hasNext()) {
     it.next().remove(components, notify);
   }
+  endDefer();
+}
+void EntityWorld::destroyAllEntitiesWith(const ComponentSet& components, bool notify) {
+  EntityIterator it = getWithDisabled(components);
+
+  beginDefer();
+  while (it.hasNext()) {
+    destroy(it.next());
+  }
+  endDefer();
 }
 
 EntityWorld::EntityIterator EntityWorld::getWith(const ComponentSet& components) {
+  return getWithDisabled(components.add(component<Enabled>()));
+}
+
+EntityWorld::EntityIterator EntityWorld::getWithDisabled(const ComponentSet& components) {
   return EntityIterator(SetIterator(*this, findOrCreateSet(components)));
+}
+
+Entity EntityWorld::getFirstWith(const ComponentSet& components) {
+  EntityIterator it = getWith(components);
+  while (it.hasNext())
+    return it.next();
+
+  return Entity(*this, 0);
 }
 
 struct EntityChanged {
   ComponentSetBuilder removed, added;
 };
 
-// runs all registered modules 
 void EntityWorld::run(float deltaTime) {
-  for (std::shared_ptr<Module> module : m_modules)
-    module->run(*this, deltaTime);
+  EntityIterator it = getWith(set<ModuleData>());
+  while (it.hasNext()) {
+    Entity e = it.next();
+    ModuleData& data = e.get<ModuleData>();
+
+    data.m_module->run(*this, deltaTime);
+  }
 }
 
 System EntityWorld::system(const ComponentSet& set, const SystemFunc& func) {
-  return System(getWith(set), func);
+  return systemWithDisabled(set.add(component<Enabled>()), func);
+}
+
+System EntityWorld::systemWithDisabled(const ComponentSet& components, const SystemFunc& func) {
+  return System(getWithDisabled(components), func);
 }
 
 void EntityWorld::setLocalRange(EntityId startingId) {
@@ -560,6 +602,14 @@ bool Entity::has(ComponentId compId) {
 
 EntityWorld& Entity::world() {
   return m_world;
+}
+
+void Entity::enable() {
+  add<EntityWorld::Enabled>();
+}
+
+void Entity::disable() {
+  remove<EntityWorld::Enabled>();
 }
 
 const ComponentSet& Entity::set() const {

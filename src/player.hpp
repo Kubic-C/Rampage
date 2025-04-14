@@ -12,7 +12,8 @@ struct PlayerComponent {
 class PlayerModule : public Module {
 public:
   PlayerModule(EntityWorld& world) 
-    :  m_system(world.system(world.set<BodyComponent, RotComponent, PlayerComponent, CameraComponent>(), &updatePlayer)) {}
+    :  m_system(world.system(world.set<BodyComponent, RotComponent, PlayerComponent, CameraComponent>(), &updatePlayer)) {
+  }
   
   void run(EntityWorld& world, float deltaTime) override {
     m_system.run();

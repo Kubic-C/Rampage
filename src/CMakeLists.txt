@@ -30,14 +30,19 @@ target_sources(
 	"render/textureArray.hpp"
 	"render/mesh.hpp"
 	"render/baseRender.hpp"
+	"states/menuState.hpp"
+	"states/playState.hpp"
+	"states/state.hpp"
 	"transform.hpp"
+	"contexts.hpp"
 	"app.hpp"
 	"tile.hpp"
 	"tilemap.hpp"
 	"tilemapRender.hpp"
 	"physics.hpp"
 	"seekPlayer.hpp"
-	"worldMap.hpp")
+	"worldMap.hpp"
+	"guiRender.hpp")
 
 target_sources(Rampage PUBLIC ${srcFiles})
 
