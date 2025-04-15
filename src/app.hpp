@@ -13,6 +13,8 @@
 #include "states/menuState.hpp"
 #include "states/playState.hpp"
 
+#include "item.hpp"
+
 class App {
 public:
   App(const std::string_view& appName, float ticksPerSecond)
@@ -54,6 +56,7 @@ public:
 
     /* Player Components ... */
     m_world.addModule<PathfindingModule>();
+    m_world.addModule<ItemModule>();
     m_world.addModule<PlayerModule>();
 
     m_world.component<WorldMapTag>();
@@ -103,6 +106,7 @@ public:
     m_world.enableModule<GuiRenderModule>();
     m_world.enableModule<ShapeRenderModule>();
     m_world.enableModule<TilemapRenderModule>();
+    m_world.enableModule<ItemModule>();
 
     /* State Management, init starts with menuState */
     m_world.addContext<StateManager>();
@@ -110,11 +114,32 @@ public:
     stateMgr.createState<PlayState>("PlayState", m_world);
     stateMgr.createState<MenuState>("MenuState", m_world);
     stateMgr.enableState("MenuState");
+
+    ItemManager& itemMgr = m_world.getContext<ItemManager>();
+    itemMgr.setDefaultItemIcon("./res/clear.png");
+    Entity stoneItem = m_world.create();
+    itemMgr.createItem("StoneItem", stoneItem, "./res/stone.png");
+    Entity highStoneItem = m_world.create();
+    highStoneItem.add<ItemAttrUnique>();
+    itemMgr.createItem("HighStoneItem", highStoneItem, "./res/highStone.png");
+    Entity fenceItem = m_world.create();
+    itemMgr.createItem("FenceItem", fenceItem, "./res/fence.png");
+
+    Inventory inv = itemMgr.createInventory("Test");
+    inv.setVisible(true);
+    inv.addItem(itemMgr.getItem("StoneItem"), 31);
+    inv.addItem(itemMgr.getItem("HighStoneItem").clone());
+    inv.addItem(itemMgr.getItem("HighStoneItem").clone());
+    inv.addItem(itemMgr.getItem("HighStoneItem").clone());
+    inv.addItem(itemMgr.getItem("HighStoneItem").clone());
+    inv.addItem(itemMgr.getItem("FenceItem"), 45);
+
   }
 
   ~App() {
     // tgui does not like the backend be destroyed first (Opengl/Render)
-    m_world.destroyContext<StateManager>();
+    m_world.destroyContext<ItemManager>(); // this holds shared_ptr to gui stuff
+    m_world.destroyContext<StateManager>(); // this holds shared_ptr to gui stuff
     m_world.destroyContext<tgui::Gui>();
   }
 
@@ -132,6 +157,8 @@ public:
     StateManager& stateMgr = m_world.getContext<StateManager>();
     stateMgr.onTick(tick, deltaTime);
 
+    m_world.run(deltaTime);
+
     tgui::Gui& gui = m_world.getContext<tgui::Gui>();
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -147,8 +174,6 @@ public:
       } break;
       }
     }
-
-    m_world.run(deltaTime);
   }
 
   void update(float frameTime) {

@@ -52,14 +52,6 @@ struct PathfindingModule : Module {
     }
   }
 
-  using QueueItem = std::pair<float, glm::i16vec2>;
-
-  struct CompareQueueItem {
-    bool operator()(const QueueItem& a, const QueueItem& b) const {
-      return a.first > b.first; // min-heap based on cost
-    }
-  };
-
   void updateFlowField(EntityWorld& world) {
     Entity map = world.getWith(world.set<PosComponent, RotComponent, TilemapComponent, WorldMapTag>()).next();
     PosComponent& mapPos = map.get<PosComponent>();
@@ -87,15 +79,14 @@ struct PathfindingModule : Module {
     if (++m_currentGeneration == 0)
       m_currentGeneration = 1;
 
-    using QueueItem = std::pair<float, glm::i16vec2>;
-    std::priority_queue<QueueItem, std::vector<QueueItem>, CompareQueueItem> openList;
+    std::queue<glm::i16vec2> openList;
 
     startArrow.cost = 0;
     startArrow.generation = m_currentGeneration;
-    openList.emplace(0.0f, localTilePos);
+    openList.emplace(localTilePos);
 
     while (!openList.empty()) {
-      auto [currentCost, current] = openList.top();
+      glm::i16vec2 current = openList.front();
       openList.pop();
 
       Tile& currentTile = tilemap.find(current);
@@ -118,7 +109,7 @@ struct PathfindingModule : Module {
 
         ArrowComponent& neighborArrow = neighborEntity.get<ArrowComponent>();
 
-        float newCost = currentCost + costs[i] + neighborArrow.tileCost;
+        float newCost = currentArrow.cost + costs[i] + neighborArrow.tileCost;
         if (neighborArrow.generation == m_currentGeneration && neighborArrow.cost <= newCost)
           continue;
 
@@ -126,7 +117,7 @@ struct PathfindingModule : Module {
         neighborArrow.dir = -normalizedDirs[i];
         neighborArrow.generation = m_currentGeneration;
 
-        openList.emplace(newCost, neighbor);
+        openList.emplace(neighbor);
       }
     }
   }

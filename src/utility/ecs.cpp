@@ -419,7 +419,10 @@ Entity EntityWorld::clone(EntityId entity) {
   cloned.add(compSet);
 
   for (ComponentId cid : compSet.list()) {
-    m_components.find(cid)->second.m_copyCtor(cloned.get(cid), get(entity).get(cid));
+    ComponentData& compData = m_components.find(cid)->second;
+
+    if(compData.m_copyCtor)
+      compData.m_copyCtor(cloned.get(cid), get(entity).get(cid));
   }
 
   return cloned;

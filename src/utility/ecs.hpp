@@ -201,7 +201,7 @@ public:
 
   struct ComponentData {
     std::string name;
-    void(*m_copyCtor)(u8* dst, u8* src);
+    void(*m_copyCtor)(u8* dst, u8* src) = nullptr;
     std::shared_ptr<IPool> pool;
   };
 
@@ -313,12 +313,13 @@ public:
 
     ComponentData& compData = m_components[compId];
     compData.name = name;
-    if (size != 0)
+    if (size != 0) {
       compData.pool = Pool<T>::createPool();
 
-    compData.m_copyCtor = [](u8* dst, u8* src) {
-        new((T*)dst)T(*(T*)src);
-       };
+      compData.m_copyCtor = [](u8* dst, u8* src) {
+          new((T*)dst)T(*(T*)src);
+         };
+    }
 
     return compId;
   }
