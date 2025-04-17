@@ -422,7 +422,6 @@ public:
     m_world.component<ItemAttrIcon>();
     m_world.component<ItemAttrTile>();
     m_world.component<TileItemComponent>();
-   
     m_world.addContext<ItemManager>(world);
 
     m_world.observe(EntityWorld::EventType::Remove, m_world.component<InventoryComponent>(), {},

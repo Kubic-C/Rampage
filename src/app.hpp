@@ -74,34 +74,22 @@ public:
     m_world.addModule<ShapeRenderModule>(0).add<IsRender>();
 
     /* Tilemap Render */
-    std::vector<const char*> spritesToLoad = {
-      "./res/unknown.png",
-      "./res/stone.png",
-      "./res/highStone.png",
-      "./res/fence.png",
-      "./res/basicTurretBase.png",
-      "./res/basicTurretTop.png"
-    };
     m_world.addModule<SpriteRenderModule>(0, 32, 32, 256).add<IsRender>();
-    SpriteRenderModule& spriteRender = m_world.getModule<SpriteRenderModule>();
-    for (int i = 0; i < spritesToLoad.size(); i++)
-      if (spriteRender.loadSprite(spritesToLoad[i]) == UINT32_MAX) {
-        logError(1, "Failed to load resource: %s.\n", spritesToLoad[i]);
-        m_localAppStatus = Status::CriticalError;
-        return;
-      }
 
     /* Tile Prefabs */
     m_world.addContext<TilePrefabs>(m_world);
     TilePrefabs& tilePrefab = m_world.getContext<TilePrefabs>();
     tilePrefab.loadFromFile("./res/tile.json");
 
-    // Enable All rendering modules
+    // Enable the core modules
     m_world.enableModule<GuiRenderModule>();
     m_world.enableModule<ShapeRenderModule>();
     m_world.enableModule<SpriteRenderModule>();
     m_world.enableModule<ItemModule>();
     m_world.enableModule<TurretModule>();
+
+    ItemManager& itemMgr = m_world.getContext<ItemManager>();
+    itemMgr.setDefaultItemIcon("./res/clear.png");
 
     /* State Management, init starts with menuState */
     m_world.addContext<StateManager>();
@@ -109,12 +97,6 @@ public:
     stateMgr.createState<PlayState>("PlayState", m_world);
     stateMgr.createState<MenuState>("MenuState", m_world);
     stateMgr.enableState("MenuState");
-
-    ItemManager& itemMgr = m_world.getContext<ItemManager>();
-    itemMgr.setDefaultItemIcon("./res/clear.png");
-
-    Entity fenceItem = m_world.create();
-    itemMgr.createItem("FenceItem", fenceItem, "./res/fence.png");
   }
 
   Status getStatus() {
