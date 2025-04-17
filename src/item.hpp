@@ -63,6 +63,7 @@ struct InventoryData {
   u16 cols = 3;
   OpenMap<glm::u16vec2, ItemStack> items;
   tgui::ChildWindow::Ptr window;
+  bool m_visible = false;
 };
 
 class Inventory;
@@ -379,23 +380,20 @@ public:
   }
 
   void setVisible(bool visiblity) {
-    if (visiblity == m_visible)
+    InventoryData& inv = getData();
+    if (visiblity == inv.m_visible)
       return;
+    inv.m_visible = visiblity;
 
-    InventoryData& inv = m_mgr.getInventoryData(m_id);
     tgui::Gui& gui = m_mgr.m_world.getContext<tgui::Gui>();
-
-    if (m_visible) {
-      gui.remove(inv.window);
-    } else {
+    if (inv.m_visible)
       gui.add(inv.window);
-    }
-
-    m_visible = visiblity;
+    else
+      gui.remove(inv.window);
   }
 
   bool getVisible() const {
-    return m_visible;
+    return getData().m_visible;
   }
 
   operator InventoryId() const {
@@ -412,7 +410,6 @@ protected:
   }
 
 private:
-  bool m_visible = false;
   ItemManager& m_mgr;
   InventoryId m_id;
 };
@@ -467,14 +464,11 @@ inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& sta
   }
 
   Entity item = inv.removeItem(stackPos);
-  bool wasStackEmpty = inv.isStackEmpty(stackPos);
   TilePrefabs& tilePrefabs = world.getContext<TilePrefabs>();
   tilemap.insert(tilePos, body.id, tilePrefabs.clonePrefab(item.get<ItemAttrTile>().tileId));
 
-  if (wasStackEmpty) {
+  if (inv.isStackEmpty(stackPos))
     world.getContext<ItemManager>().clearHand();
-    logGeneric("cleared\n");
-  }
-
+  
   return true;
 }

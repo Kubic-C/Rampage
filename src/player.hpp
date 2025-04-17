@@ -56,6 +56,7 @@ public:
       camera.m_rot -= 0.1f;
     if (eventMgr.isKeyPressed(Key::Tab)) {
       inv.setVisible(!inv.getVisible());
+      logGeneric("inv: %i\n", inv.getVisible());
     }
 
     float maxSpeed = player.maxSpeed;
@@ -79,7 +80,6 @@ public:
         Render& renderer = world.getContext<Render>();
         tryPlaceItem(world.getFirstWith(world.set<WorldMapTag>()), itemMgr.getInventory(itemMgr.getHandInventory()), itemMgr.getHandInventoryPos(), renderer.getWorldCoords({x, y}));
       }
-
     }
 
     glm::vec2 dir = glm::normalize((Vec2)b2Body_GetPosition(body.id) - player.mouse);
