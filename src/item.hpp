@@ -216,17 +216,17 @@ public:
 
     // If the item is unique, it can only contain one slot.
     if (itemEntity.has<ItemAttrUnique>()) {
-      if (count > 1)
-        return false; // Unique items do not exist in multiples
-
        for (u16 y = 0; y < inv.rows; y++) {
         for (u16 x = 0; x < inv.cols; x++) {
+          if (count == 0)
+            return true;
+
           ItemStack& stack = inv.items.find({ x, y })->second;
           if (stack.item == 0) {
             stack.item = entity;
             stack.stackCount = 1;
             stack.ui->setImage(itemEntity.get<ItemAttrIcon>().icon);return true;
-            return true;
+            count--;
           }
         }
       }
@@ -445,24 +445,33 @@ private:
 
 inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& stackPos, const glm::vec2& coords) {
   EntityWorld& world = worldMap.world();
+  TilePrefabs& tilePrefabs = world.getContext<TilePrefabs>();
 
   const ItemStack stack = inv.getStack(stackPos);
   if (stack.item == 0 || !world.get(stack.item).has<ItemAttrTile>())
     return false;
 
-  TransformComponent& mapTransform = worldMap.get<TransformComponent>();
+  Entity item = world.get(stack.item);
   TilemapComponent& tilemap = worldMap.get<TilemapComponent>();
   BodyComponent& body = worldMap.get<BodyComponent>();
-  glm::i16vec2 tilePos = tilemap.getNearestTile(mapTransform.getLocalPoint(coords));
-  if (tilemap.contains(tilePos)) {
-    Entity tile = world.get(tilemap.erase(tilePos));
-    if (tile.has<TileItemComponent>())
-      inv.addItem(tile.get<TileItemComponent>().item);
-    world.destroy(tile);
+  glm::i16vec2 tilePos = tilemap.getNearestTile(worldMap.get<TransformComponent>().getLocalPoint(coords));
+  const TileDef& tileItemPrefab = tilePrefabs.getPrefab(item.get<ItemAttrTile>().tileId);
+  for (int x = tilePos.x; x < tilePos.x + tileItemPrefab.width; x++) {
+    for (int y = tilePos.y; y < tilePos.y + tileItemPrefab.height; y++) {
+      glm::i16vec2 tilePos = { x, y };
+
+      if (tilemap.contains(tilePos)) {
+        Tile oldTile = tilemap.find(tilePos);
+        Entity tile = world.get(tilemap.erase(tilePos));
+        if (tile.has<TileItemComponent>()) {
+          inv.addItem(tile.get<TileItemComponent>().item);
+        }
+        world.destroy(tile);
+      }
+    }
   }
 
-  Entity item = inv.removeItem(stackPos);
-  TilePrefabs& tilePrefabs = world.getContext<TilePrefabs>();
+  inv.removeItem(stackPos);
   tilemap.insert(tilePos, body.id, tilePrefabs.clonePrefab(item.get<ItemAttrTile>().tileId));
 
   if (inv.isStackEmpty(stackPos))

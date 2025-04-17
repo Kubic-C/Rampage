@@ -15,13 +15,16 @@ struct boost::hash<glm::i16vec2> {
 
 struct TilemapComponent {
   // Ignores shapeId
-  bool insert(const glm::i16vec2& pos, b2BodyId body, const Tile& clone) {
+  bool insert(const glm::i16vec2& pos, b2BodyId body, const TileDef& clone) {
     return insert(pos, body, clone.entity, clone.flags, { clone.width, clone.height });
   }
 
-  bool insert(const glm::i16vec2& pos, b2BodyId body, EntityId entity = 0, u8 tileFlags = TileFlags::IS_COLLIDABLE, const glm::i16vec2& dim = { 1, 1 }) {
+  bool insert(const glm::i16vec2& pos, b2BodyId body, EntityId entity = 0, u8 tileFlags = TileFlags::IS_COLLIDABLE, const glm::i16vec2& dim = { 1, 1 }, const b2ShapeDef& shapeDef = b2DefaultShapeDef()) {
     if (contains(pos))
       return false;
+
+    if (dim.x != 1 || dim.y != 1)
+      tileFlags |= TileFlags::IS_MULTI_TILE;
 
     Tile tile;
     tile.entity = entity;
@@ -35,10 +38,10 @@ struct TilemapComponent {
 
       Tile subTile;
       subTile.entity = NullEntityId;
-      subTile.flags = tileFlags;
+      subTile.flags = tileFlags & ~TileFlags::IS_MAIN_TILE;
       subTile.posx = pos.x;
       subTile.posy = pos.y;
-      subTile.shapeId = b2_nullShapeId;
+      subTile.shapeDef = b2_nullShapeId;
 
       for (i16 y = startPos.y; y < endPos.y; y++) {
         for (i16 x = startPos.x; x < endPos.x; x++) {
@@ -61,11 +64,10 @@ struct TilemapComponent {
       glm::vec2 fdim = dim;
       b2Vec2 tilePos = getLocalTileCenter(pos, fdim).b2();
       b2Polygon tilePolygon = b2MakeOffsetBox(fdim.x * tileSize.x * 0.5f, fdim.y * tileSize.y * 0.5f, tilePos, Rot(0.0f));
-      b2ShapeDef tileDef = b2DefaultShapeDef();
-      tile.shapeId = b2CreatePolygonShape(body, &tileDef, &tilePolygon);
+      tile.shapeDef = b2CreatePolygonShape(body, &shapeDef, &tilePolygon);
     }
     else {
-      tile.shapeId = b2_nullShapeId;
+      tile.shapeDef = b2_nullShapeId;
     }
 
     assert(!m_tiles.contains(pos));
@@ -82,18 +84,17 @@ struct TilemapComponent {
 
     if (copy.flags & TileFlags::IS_MULTI_TILE) {
       if (!(copy.flags & TileFlags::IS_MAIN_TILE)) {
-        erase(glm::i16vec2(copy.posx, copy.posy));
-        return 0;
+        return erase(glm::i16vec2(copy.posx, copy.posy));
       }
     }
 
     if (copy.flags & TileFlags::IS_COLLIDABLE) {
-      b2DestroyShape(copy.shapeId, true);
+      b2DestroyShape(copy.shapeDef, true);
     }
 
     for (i16 x = pos.x; x < pos.x + copy.width; x++) {
       for (i16 y = pos.y; y < pos.y + copy.height; y++) {
-        Tile& subtile = find(pos);
+        Tile& subtile = find({x, y});
 
         if (subtile.entity) {
           entity = subtile.entity;

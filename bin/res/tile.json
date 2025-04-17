@@ -21,12 +21,27 @@
   },
   {
     "name": "HighStone",
+    "shape": {
+      "restitution": 10.0,
+      "friction": 0.0
+    },
     "spritePaths": [ "highStone.png" ],
     "flags": [ "IS_COLLIDABLE" ],
     "size": [ 1, 1 ],
     "item": {
       "name": "HighStoneItem",
       "iconPath": "highStone.png"
+    }
+  },
+  {
+    "name": "BigHighStone",
+    "spritePaths": [ "highStone.png" ],
+    "flags": [ "IS_COLLIDABLE" ],
+    "size": [ 2, 2 ],
+    "item": {
+      "name": "BigHighStoneItem",
+      "iconPath": "highStone.png",
+      "unique": true
     }
   },
   {
@@ -37,7 +52,18 @@
     "turret": true,
     "item": {
       "name": "BasicTurretItem",
-      "iconPath": "basicTurretIcon.png"
+      "iconPath": "basicTurretIcon.png",
+      "unique": true
+    }
+  },
+  {
+    "name": "Fence",
+    "spritePaths": [ "fence.png" ],
+    "flags": [ "IS_COLLIDABLE" ],
+    "size": [ 2, 2 ],
+    "item": {
+      "name": "FenceItem",
+      "iconPath": "fence.png"
     }
   }
 ]

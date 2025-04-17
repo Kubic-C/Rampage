@@ -4,6 +4,19 @@
 #include "item.hpp"
 #include "seekPlayer.hpp"
 
+b2ShapeDef loadShapeFromFile(json& json) {
+  b2ShapeDef shapeDef = b2DefaultShapeDef();
+
+  if (json.contains("restitution"))
+    shapeDef.restitution = json["restitution"].get<float>();
+  if (json.contains("friction"))
+    shapeDef.friction = json["friction"].get<float>();
+
+  std::cout << shapeDef.friction << '\n';
+
+  return shapeDef;
+}
+
 bool TilePrefabs::loadFromFile(const std::string& filePath) {
   std::ifstream file(filePath);
   if (!file.is_open())
@@ -37,12 +50,14 @@ bool TilePrefabs::loadFromFile(const std::string& filePath) {
       logGeneric("Failed to load tile json. Flag was invalid\n");
       continue;
     }
-
     glm::i16vec2 size = { tileJson["size"][0].get<int>(), tileJson["size"][1].get<int>() };
     if (size.x < 0 || size.y < 0) {
       logGeneric("Failed to load tile json. Size was invalid\n");
       continue;
     }
+    b2ShapeDef shapeDef = b2DefaultShapeDef();
+    if(tileJson.contains("shape"))
+      shapeDef = loadShapeFromFile(tileJson["shape"]);
 
     Entity tileEntity = m_world.create();
     tileEntity.add<SpriteComponent>();
@@ -62,6 +77,9 @@ bool TilePrefabs::loadFromFile(const std::string& filePath) {
       itemEntity.add<ItemAttrTile>();
       itemEntity.get<ItemAttrTile>().tileId = tilePrefabId;
       itemMgr.createItem(itemName, itemEntity, itemIconPath.c_str());
+
+      if (itemJson.contains("unique") && itemJson["unique"].get<bool>())
+        itemEntity.add<ItemAttrUnique>();
 
       tileEntity.add<TileItemComponent>();
       TileItemComponent& tileItem = tileEntity.get<TileItemComponent>();

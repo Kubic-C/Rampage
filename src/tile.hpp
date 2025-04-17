@@ -20,8 +20,28 @@ inline TileFlags getTileFlagFromString(const std::string& str) {
   return (TileFlags)std::numeric_limits<u8>::max();
 }
 
+struct TileDef {
+  b2ShapeDef shapeDef = b2DefaultShapeDef();
+  u8 flags = 0;
+  EntityId entity = 0;
+
+  union {
+    u16 width; // the width of the multi tile
+    i16 posx; // the x position of the main mutile tile
+  };
+
+  union {
+    u16 height; // the height of the multi tile
+    i16 posy; // the y position of the main multi tile
+  };
+
+  glm::vec2 size() const {
+    return { width, height };
+  }
+};
+
 struct Tile {
-  b2ShapeId shapeId = b2_nullShapeId;
+  b2ShapeId shapeDef = b2_nullShapeId;
   u8 flags = 0;
   EntityId entity = 0;
 

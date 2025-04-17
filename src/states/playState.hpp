@@ -53,6 +53,7 @@ public:
       bodyDef.position = Vec2(0, 0);
       bodyDef.linearDamping = 10;
       b2ShapeDef shapeDef = b2DefaultShapeDef();
+      shapeDef.friction = 0;
       b2Circle circle;
       circle.radius = 0.1f;
       circle.center = Vec2(0);
@@ -80,6 +81,7 @@ public:
     Inventory playerInvetory = itemMgr.createInventory("Player Inventory", 3, 5);
     player.get<InventoryComponent>().id = playerInvetory;
     playerInvetory.addItem(itemMgr.getItem("BasicTurretItem"), 5);
+    playerInvetory.addItem(itemMgr.getItem("BigHighStoneItem"), 5);
 
     // Render
     RectangleRenderComponent& renderRect = player.get<RectangleRenderComponent>();
@@ -126,16 +128,16 @@ public:
       auto tileCallback =
         [&](int x, int y) {
           if (x <= -35 || x >= 35 || y <= -35 || y >= 35 || (x % 5 == 0 && y < 20 && y != -34)) {
-            Tile highStone = tilePrefabs.clonePrefab("HighStone");
+            TileDef highStone = tilePrefabs.clonePrefab("HighStone");
             m_world.get(highStone.entity).add<OwnedBy<PlayState>>();
             tilemap.insert({ x, y }, bodyId, highStone);
           }
           else if (rand() % 100 < 5) {
-            Tile unknown = tilePrefabs.clonePrefab("Unknown");
+            TileDef unknown = tilePrefabs.clonePrefab("Unknown");
             m_world.get(unknown.entity).add<OwnedBy<PlayState>>();
             tilemap.insert({ x, y }, bodyId, unknown);
           } else {
-            Tile stone = tilePrefabs.clonePrefab("StoneFloor");
+            TileDef stone = tilePrefabs.clonePrefab("StoneFloor");
             m_world.get(stone.entity).add<OwnedBy<PlayState>>();
             tilemap.insert({ x, y }, bodyId, stone);
           }
