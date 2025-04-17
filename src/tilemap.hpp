@@ -1,6 +1,7 @@
 #pragma once
 
 #include "tilePrefabs.hpp"
+#include "transform.hpp"
 
 template<>
 struct boost::hash<glm::i16vec2> {
@@ -72,7 +73,9 @@ struct TilemapComponent {
 
     return true;
   }
+  
 
+  // !ATTENTION! this does not destroy the entity located with the tile
   EntityId erase(const glm::i16vec2& pos) {
     Tile copy = find(pos);
     EntityId entity = 0;
@@ -88,8 +91,8 @@ struct TilemapComponent {
       b2DestroyShape(copy.shapeId, true);
     }
 
-    for (i16 x = pos.x; x < copy.width; x++) {
-      for (i16 y = pos.y; y < copy.height; y++) {
+    for (i16 x = pos.x; x < pos.x + copy.width; x++) {
+      for (i16 y = pos.y; y < pos.y + copy.height; y++) {
         Tile& subtile = find(pos);
 
         if (subtile.entity) {

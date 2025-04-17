@@ -5,26 +5,30 @@
 
 struct BodyComponent {
   b2BodyId id = b2_nullBodyId;
+
+  ~BodyComponent() {
+    b2DestroyBody(id);
+  }
 };
 
-inline void copyTransformsIntoBodies(PosComponent& pos, RotComponent& rot, BodyComponent& body) {
+inline void copyTransformsIntoBodies(TransformComponent& transform, BodyComponent& body) {
   if (!b2Body_IsValid(body.id))
     return;
 
   /* SetTransform is expensive to call, only set the transform of the body if transform does not match*/
-  if (Transform(pos, rot) != b2Body_GetTransform(body.id)) {
-    b2Body_SetTransform(body.id, pos, rot);
+  if (transform != b2Body_GetTransform(body.id)) {
+    b2Body_SetTransform(body.id, transform.pos, transform.rot);
   }
 }
 
-inline void copyBodiesIntoTransforms(PosComponent& pos, RotComponent& rot, BodyComponent& body) {
+inline void copyBodiesIntoTransforms(TransformComponent& transform, BodyComponent& body) {
   if (!b2Body_IsValid(body.id))
     return;
 
   b2Transform bodyTransform = b2Body_GetTransform(body.id);
-  if (Transform(pos, rot) != bodyTransform) {
-    pos = bodyTransform.p;
-    rot = bodyTransform.q;
+  if (transform != bodyTransform) {
+    transform.pos = bodyTransform.p;
+    transform.rot = bodyTransform.q;
   }
 }
 
@@ -32,18 +36,17 @@ struct PhysicsModule : Module {
   PhysicsModule(EntityWorld& world, int steps)
     : m_steps(steps) {
     world.component<BodyComponent>();
-    world.component<PosComponent>();
-    world.component<RotComponent>();
+    world.component<TransformComponent>();
   }
 
   void run(EntityWorld& world, float deltaTime) override final {
-    EntityIterator iter = world.getWith(world.set<PosComponent, RotComponent, BodyComponent>());
+    EntityIterator iter = world.getWith(world.set<TransformComponent, BodyComponent>());
     b2WorldId physicsWorldId = world.getContext<b2WorldId>();
 
     while (iter.hasNext()) {
       Entity entity = iter.next();
 
-      copyTransformsIntoBodies(entity.get<PosComponent>(), entity.get<RotComponent>(), entity.get<BodyComponent>());
+      copyTransformsIntoBodies(entity.get<TransformComponent>(), entity.get<BodyComponent>());
     }
 
     b2World_Step(physicsWorldId, deltaTime, m_steps);
@@ -52,7 +55,7 @@ struct PhysicsModule : Module {
     while (iter.hasNext()) {
       Entity entity = iter.next();
 
-      copyBodiesIntoTransforms(entity.get<PosComponent>(), entity.get<RotComponent>(), entity.get<BodyComponent>());
+      copyBodiesIntoTransforms(entity.get<TransformComponent>(), entity.get<BodyComponent>());
     }
   }
 

@@ -3,6 +3,11 @@
 #include "physics.hpp"
 #include "render/render.hpp"
 
+#include "tilemap.hpp"
+#include "item.hpp"
+#include "worldMap.hpp"
+#include "eventManager.hpp"
+
 struct PlayerComponent {
   glm::vec2 mouse = { 0, 0 };
   float accel = 1.0f;
@@ -12,7 +17,7 @@ struct PlayerComponent {
 class PlayerModule : public Module {
 public:
   PlayerModule(EntityWorld& world) 
-    :  m_system(world.system(world.set<BodyComponent, RotComponent, PlayerComponent, CameraComponent>(), &updatePlayer)) {
+    :  m_system(world.system(world.set<BodyComponent, TransformComponent, PlayerComponent, CameraComponent, InventoryComponent>(), &updatePlayer)) {
   }
   
   void run(EntityWorld& world, float deltaTime) override {
@@ -23,32 +28,38 @@ public:
     EntityWorld& world = e.world();
     SDL_Window* window = world.getContext<SDL_Window*>();
     Render& render = world.getContext<Render>();
+    ItemManager& itemMgr = world.getContext<ItemManager>();
+    EventManager& eventMgr = world.getContext<EventManager>();
+
     BodyComponent& body = e.get<BodyComponent>();
-    RotComponent& rot = e.get<RotComponent>();
+    TransformComponent& transform = e.get<TransformComponent>();
     PlayerComponent& player = e.get<PlayerComponent>();
     CameraComponent& camera = e.get<CameraComponent>();
+    Inventory inv = itemMgr.getInventory(e.get<InventoryComponent>().id);
 
     float mass = b2Body_GetMass(body.id);
-    const bool* keyboard = SDL_GetKeyboardState(nullptr);
-    if (keyboard[SDL_SCANCODE_A])
+    if (eventMgr.isKeyHeld(Key::A))
       b2Body_ApplyLinearImpulseToCenter(body.id, fast2DRotate({ mass * -player.accel, 0.0f }, camera.m_rot), true);
-    if (keyboard[SDL_SCANCODE_D])
+    if (eventMgr.isKeyHeld(Key::D))
       b2Body_ApplyLinearImpulseToCenter(body.id, fast2DRotate({ mass * player.accel, 0.0f }, camera.m_rot), true);
-    if (keyboard[SDL_SCANCODE_W])
+    if (eventMgr.isKeyHeld(Key::W))
       b2Body_ApplyLinearImpulseToCenter(body.id, fast2DRotate({0.0f, mass * player.accel}, camera.m_rot), true);
-    if (keyboard[SDL_SCANCODE_S])
+    if (eventMgr.isKeyHeld(Key::S))
       b2Body_ApplyLinearImpulseToCenter(body.id, fast2DRotate({ 0.0f, mass * -player.accel }, camera.m_rot), true);
-    if (keyboard[SDL_SCANCODE_Z])
+    if (eventMgr.isKeyHeld(Key::Z))
       camera.safeZoom(10);
-    if (keyboard[SDL_SCANCODE_X])
+    if (eventMgr.isKeyHeld(Key::X))
       camera.safeZoom(-10);
-    if (keyboard[SDL_SCANCODE_Q])
+    if (eventMgr.isKeyHeld(Key::Q))
       camera.m_rot += 0.1f;
-    if (keyboard[SDL_SCANCODE_E])
+    if (eventMgr.isKeyHeld(Key::E))
       camera.m_rot -= 0.1f;
+    if (eventMgr.isKeyPressed(Key::Tab)) {
+      inv.setVisible(!inv.getVisible());
+    }
 
     float maxSpeed = player.maxSpeed;
-    if (keyboard[SDL_SCANCODE_LSHIFT])
+    if (eventMgr.isKeyHeld(Key::E))
       maxSpeed *= 8;
 
     glm::vec2 vel = (Vec2)b2Body_GetLinearVelocity(body.id);
@@ -59,13 +70,21 @@ public:
 
     {
       float x, y;
-      SDL_GetMouseState(&x, &y);
+      SDL_MouseButtonFlags flags = SDL_GetMouseState(&x, &y);
       player.mouse = render.getWorldCoords({x, y});
+
+      tgui::Gui& gui = world.getContext<tgui::Gui>();
+      ItemManager& itemMgr = world.getContext<ItemManager>();
+      if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F] && itemMgr.getHandInventory() != 0 && !gui.getWidgetAtPos({x, y}, false)) {
+        Render& renderer = world.getContext<Render>();
+        tryPlaceItem(world.getFirstWith(world.set<WorldMapTag>()), itemMgr.getInventory(itemMgr.getHandInventory()), itemMgr.getHandInventoryPos(), renderer.getWorldCoords({x, y}));
+      }
+
     }
 
     glm::vec2 dir = glm::normalize((Vec2)b2Body_GetPosition(body.id) - player.mouse);
     float angle = atan2(dir.y, dir.x);
-    rot = Rot(angle);
+    transform.rot = Rot(angle);
   }
 
 private:

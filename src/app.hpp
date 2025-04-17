@@ -5,14 +5,16 @@
 #include "physics.hpp"
 #include "seekPlayer.hpp"
 #include "worldMap.hpp"
+#include "eventManager.hpp"
 
 #include "render/shapes.hpp"
-#include "tilemapRender.hpp"
+#include "spriteRender.hpp"
 #include "guiRender.hpp"
 
 #include "states/menuState.hpp"
 #include "states/playState.hpp"
 
+#include "turret.hpp"
 #include "item.hpp"
 
 class App {
@@ -20,6 +22,7 @@ public:
   App(const std::string_view& appName, float ticksPerSecond)
     : m_localAppStatus(Status::Ok), m_ticksPerSecond(ticksPerSecond) {
     /* Really dont wanna forget this ... */
+    m_world.addContext<EventManager>();
     m_world.addContext<AppStats>();
     m_world.addContext<DoExit>();
 
@@ -54,31 +57,15 @@ public:
     tgui::Gui& gui = m_world.getContext<tgui::Gui>();
     gui.loadWidgetsFromFile("./res/form.txt");
 
-    /* Player Components ... */
     m_world.addModule<PathfindingModule>();
     m_world.addModule<ItemModule>();
     m_world.addModule<PlayerModule>();
+    m_world.addModule<TurretModule>();
 
     m_world.component<WorldMapTag>();
     m_world.component<TilemapComponent>();
-    m_world.component<SpriteComponent>();
-
-    /* Tile Prefabs */
-    m_world.addContext<TilePrefabs>(m_world);
-    TilePrefabs& tilePrefab = m_world.getContext<TilePrefabs>();
-    Entity unknown = m_world.create();
-    unknown.add<SpriteComponent>();
-    unknown.get<SpriteComponent>().texIndex = 0;
-    tilePrefab.createPrefab("Unknown", unknown, 0, { 1, 1 });
-    Entity stone = m_world.create();
-    stone.add<SpriteComponent>();
-    stone.add<ArrowComponent>();
-    stone.get<SpriteComponent>().texIndex = 1;
-    tilePrefab.createPrefab("StoneFloor", stone, 0, { 1, 1 });
-    Entity highStone = m_world.create();
-    highStone.add<SpriteComponent>();
-    highStone.get<SpriteComponent>().texIndex = 2;
-    tilePrefab.createPrefab("HighStone", highStone, TileFlags::IS_COLLIDABLE, { 1, 1 });
+    m_world.component<TileSpriteComponent>();
+    m_world.component<LayeredSpriteComponent>();
 
     /* GUI renderer */
     m_world.addModule<GuiRenderModule>(SIZE_MAX, gui).add<IsRender>();
@@ -91,10 +78,12 @@ public:
       "./res/unknown.png",
       "./res/stone.png",
       "./res/highStone.png",
-      "./res/fence.png"
+      "./res/fence.png",
+      "./res/basicTurretBase.png",
+      "./res/basicTurretTop.png"
     };
-    m_world.addModule<TilemapRenderModule>(0, 32, 32, 256).add<IsRender>();
-    TilemapRenderModule& tilemapRender = m_world.getModule<TilemapRenderModule>();
+    m_world.addModule<SpriteRenderModule>(0, 32, 32, 256).add<IsRender>();
+    SpriteRenderModule& tilemapRender = m_world.getModule<SpriteRenderModule>();
     for (int i = 0; i < spritesToLoad.size(); i++)
       if (!tilemapRender.loadSprite(i, spritesToLoad[i])) {
         logError(1, "Failed to load resource: %s.\n", spritesToLoad[i]);
@@ -102,11 +91,55 @@ public:
         return;
       }
 
+    /* Tile Prefabs */
+    m_world.addContext<TilePrefabs>(m_world);
+    TilePrefabs& tilePrefab = m_world.getContext<TilePrefabs>();
+    {
+      Entity unknown = m_world.create();
+      unknown.add<TileSpriteComponent>();
+      unknown.get<TileSpriteComponent>().texIndex = 0;
+      tilePrefab.createPrefab("Unknown", unknown, 0, { 1, 1 });
+    }
+    Entity stone = m_world.create();
+    TilePrefabId stoneId;
+    {
+      stone.add<TileSpriteComponent>();
+      stone.add<ArrowComponent>();
+      stone.get<TileSpriteComponent>().texIndex = 1;
+      stoneId = tilePrefab.createPrefab("StoneFloor", stone, 0, { 1, 1 });
+    }
+    Entity highStone = m_world.create();
+    TilePrefabId highStoneId;
+    {
+      highStone.add<TileSpriteComponent>();
+      highStone.get<TileSpriteComponent>().texIndex = 2;
+      highStoneId = tilePrefab.createPrefab("HighStone", highStone, TileFlags::IS_COLLIDABLE, { 1, 1 });
+    }
+    Entity basicTurret = m_world.create();
+    TilePrefabId basicTurretId;
+    {
+      basicTurret.add<LayeredSpriteComponent>();
+      LayeredSpriteComponent& ls = basicTurret.get<LayeredSpriteComponent>();
+      ls.count = 2;
+      ls.layers[BASE_LAYER].texIndex = 4;
+      ls.layers[TURRET_LAYER].texIndex = 5;
+      basicTurret.add<TurretComponent>();
+      TurretComponent& turretComp = basicTurret.get<TurretComponent>();
+      Entity bullet = m_world.create();
+      bullet.disable();
+      bullet.add<CircleRenderComponent>();
+      CircleRenderComponent& circle = bullet.get<CircleRenderComponent>();
+      circle.radius = turretComp.radius;
+      turretComp.summon = bullet;
+      basicTurretId = tilePrefab.createPrefab("BasicTurret", basicTurret, TileFlags::IS_COLLIDABLE, { 1, 1 });
+    } // TODO ADD POSITION TO TURRET COMPONENTS AND TILEMAP, MAYBE SOME TYPE OF PARENT COMPONENT?
+
     // Enable All rendering modules
     m_world.enableModule<GuiRenderModule>();
     m_world.enableModule<ShapeRenderModule>();
-    m_world.enableModule<TilemapRenderModule>();
+    m_world.enableModule<SpriteRenderModule>();
     m_world.enableModule<ItemModule>();
+    m_world.enableModule<TurretModule>();
 
     /* State Management, init starts with menuState */
     m_world.addContext<StateManager>();
@@ -117,30 +150,45 @@ public:
 
     ItemManager& itemMgr = m_world.getContext<ItemManager>();
     itemMgr.setDefaultItemIcon("./res/clear.png");
-    Entity stoneItem = m_world.create();
-    itemMgr.createItem("StoneItem", stoneItem, "./res/stone.png");
-    Entity highStoneItem = m_world.create();
-    highStoneItem.add<ItemAttrUnique>();
-    itemMgr.createItem("HighStoneItem", highStoneItem, "./res/highStone.png");
+
+    {
+      Entity stoneItem = m_world.create();
+
+      stoneItem.add<ItemAttrTile>();
+      ItemAttrTile& tile = stoneItem.get<ItemAttrTile>();
+      tile.tileId = stoneId;
+
+      stone.add<TileItemComponent>();
+      TileItemComponent& tileItem = stone.get<TileItemComponent>();
+      tileItem.item = itemMgr.createItem("StoneItem", stoneItem, "./res/stone.png");
+    }
+
+    {
+      Entity highStoneItem = m_world.create();
+
+      highStoneItem.add<ItemAttrTile>();
+      ItemAttrTile& tile = highStoneItem.get<ItemAttrTile>();
+      tile.tileId = highStoneId;
+
+      highStone.add<TileItemComponent>();
+      TileItemComponent& tileItem = highStone.get<TileItemComponent>();
+      tileItem.item = itemMgr.createItem("HighStoneItem", highStoneItem, "./res/highStone.png");
+    }
+
+    {
+      Entity basicTurretItem = m_world.create();
+
+      basicTurretItem.add<ItemAttrTile>();
+      ItemAttrTile& tile = basicTurretItem.get<ItemAttrTile>();
+      tile.tileId = basicTurretId;
+
+      basicTurret.add<TileItemComponent>();
+      TileItemComponent& tileItem = basicTurret.get<TileItemComponent>();
+      tileItem.item = itemMgr.createItem("BasicTurretItem", basicTurretItem, "./res/basicTurretIcon.png");
+    }
+
     Entity fenceItem = m_world.create();
     itemMgr.createItem("FenceItem", fenceItem, "./res/fence.png");
-
-    Inventory inv = itemMgr.createInventory("Test");
-    inv.setVisible(true);
-    inv.addItem(itemMgr.getItem("StoneItem"), 31);
-    inv.addItem(itemMgr.getItem("HighStoneItem").clone());
-    inv.addItem(itemMgr.getItem("HighStoneItem").clone());
-    inv.addItem(itemMgr.getItem("HighStoneItem").clone());
-    inv.addItem(itemMgr.getItem("HighStoneItem").clone());
-    inv.addItem(itemMgr.getItem("FenceItem"), 45);
-
-  }
-
-  ~App() {
-    // tgui does not like the backend be destroyed first (Opengl/Render)
-    m_world.destroyContext<ItemManager>(); // this holds shared_ptr to gui stuff
-    m_world.destroyContext<StateManager>(); // this holds shared_ptr to gui stuff
-    m_world.destroyContext<tgui::Gui>();
   }
 
   Status getStatus() {
@@ -154,25 +202,21 @@ public:
   }
 
   void tick(u32 tick, float deltaTime) {
+    EventManager& eventMgr = m_world.getContext<EventManager>();
+    tgui::Gui& gui = m_world.getContext<tgui::Gui>();
     StateManager& stateMgr = m_world.getContext<StateManager>();
-    stateMgr.onTick(tick, deltaTime);
+    Render& render = m_world.getContext<Render>();
+    DoExit& doExit = m_world.getContext<DoExit>();
 
+    stateMgr.onTick(tick, deltaTime);
     m_world.run(deltaTime);
 
-    tgui::Gui& gui = m_world.getContext<tgui::Gui>();
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
+    eventMgr.poll();
+    doExit.exit = eventMgr.shouldExit();
+    if (eventMgr.hasWindowReized())
+      render.resizeViewportToScreenDim();
+    for (SDL_Event event : eventMgr.getPolledEvents()) {
       gui.handleEvent(event);
-      switch (event.type) {
-      case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-      case SDL_EVENT_QUIT:
-        m_world.getContext<DoExit>().exit = true;
-        break;
-      case SDL_EVENT_WINDOW_RESIZED: {
-        Render& render = m_world.getContext<Render>();
-        render.resizeViewportToScreenDim();
-      } break;
-      }
     }
   }
 

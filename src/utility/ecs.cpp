@@ -227,8 +227,10 @@ EntityWorld::EntityWorld() {
 }
 
 EntityWorld::~EntityWorld() {
-  for (std::pair<const size_t, ContextData>& data : m_contexts) {
-    data.second.destroy(data.second.bytes);
+  for (int i = m_contextsLifo.size() - 1; i >= 0; i--) {
+    ContextData& data = m_contexts[m_contextsLifo[i]];
+
+    data.destroy(data.bytes);
   }
 }
 

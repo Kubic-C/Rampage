@@ -84,8 +84,8 @@ struct Rot : b2Rot {
 };
 
 struct Transform {
-  Vec2 pos;
-  Rot rot;
+  Vec2 pos = Vec2(0);
+  Rot rot = Rot(0);
 
   Transform() = default;
   

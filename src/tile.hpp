@@ -1,7 +1,6 @@
 #pragma once
 
-#include "utility/base.hpp"
-#include "utility/ecs.hpp"
+#include "transform.hpp"
 
 constexpr float tileSidelength = 0.5f;
 constexpr glm::vec2 tileSize = glm::vec2(tileSidelength);
@@ -33,6 +32,19 @@ struct Tile {
   }
 };
 
-struct SpriteComponent {
+struct TileSpriteComponent {
   u16 texIndex = 0;
+  Vec2 offset = Vec2(0);
+  float rot = 0;
+};
+
+enum BaseLayerIndex {
+  BASE_LAYER = 0,
+  TURRET_LAYER = 1
+};
+
+struct LayeredSpriteComponent {
+  static constexpr size_t maxLayered = 3;
+  size_t count = 0;
+  TileSpriteComponent layers[maxLayered];
 };

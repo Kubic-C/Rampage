@@ -2,8 +2,9 @@
 
 #include "utility/ecs.hpp"
 #include "utility/log.hpp"
+#include "tilemap.hpp"
+#include "physics.hpp"
 
-using ItemId = u32;
 using InventoryId = u32;
 
 template<>
@@ -30,16 +31,29 @@ struct ItemAttrIcon {
 
 struct ItemAttrUnique {};
 
+struct ItemAttrTile {
+  TilePrefabId tileId;
+};
+
+struct TileItemComponent {
+  EntityId item;
+};
+
 struct ItemStack {
   u32 maxStackCost = 64;
   i32 stackCount = 0;
   EntityId item = 0;
   tgui::BitmapButton::Ptr ui; // do not erase
+  
+  bool doesExceedMaxStackCost(u8 stackCost, i32 additional) {
+    return (stackCount + additional) * stackCost > maxStackCost;
+  }
 
   void reset(const tgui::Texture& defaultTexture) {
     stackCount = 0;
     item = 0;
     ui->setImage(defaultTexture);
+    ui->setText("");
   }
 };
 
@@ -72,9 +86,8 @@ public:
     m_handPicture->getRenderer()->setTexture(m_defaultTexture);
   }
 
-  ItemId createItem(const std::string& name, Entity entity, tgui::Texture icon, u8 stackCost = 1) {
-    ItemId id = m_idMgr.generate();
-    m_itemNames[name] = id;
+  EntityId createItem(const std::string& name, Entity entity, tgui::Texture icon, u8 stackCost = 1) {
+    m_itemNames[name] = entity;
 
     entity.disable();
     entity.add<ItemAttrStackCost>();
@@ -83,20 +96,14 @@ public:
     entity.add<ItemAttrIcon>();
     ItemAttrIcon& itemIcon = entity.get<ItemAttrIcon>();
     itemIcon.icon = icon;
-    m_items[id] = entity;
 
-    return id;
+    return entity;
   }
 
-  Entity getItem(ItemId id) const {
-    Entity e = m_world.get(m_items.at(id));
-
-    return e;
-  }
 
   Entity getItem(const std::string& name) const {
     assert(m_itemNames.contains(name));
-    return getItem(m_itemNames.at(name));
+    return m_world.get(m_itemNames.at(name));
   }
 
   Inventory createInventory(std::string name, u8 rows = 3, u8 cols = 3);
@@ -154,14 +161,12 @@ protected:
   }
 
 private:
+  EntityWorld& m_world;
+  
   tgui::Texture m_defaultTexture;
 
-  EntityWorld& m_world;
-  IdManager<ItemId> m_idMgr;
-
-  Map<ItemId, EntityId> m_items;
-  Map<std::string, ItemId> m_itemNames;
-
+  Map<std::string, EntityId> m_itemNames;
+  IdManager<InventoryId> m_idMgr;
   Map<InventoryId, InventoryData> m_inventories;
 
   InventoryId m_handInvId = 0;
@@ -175,51 +180,97 @@ public:
   Inventory(ItemManager& mgr, InventoryId id) 
     : m_mgr(mgr), m_id(id) {}
 
-  bool addItem(EntityId entity, u32 count = 1) {
+  bool addItem(EntityId entity, const glm::u16vec2& pos, u32 count = 1) {
     InventoryData& inv = getData();
     Entity itemEntity = m_mgr.getEntity(entity);
     u8 stackCost = itemEntity.get<ItemAttrStackCost>().stackCost;
-  
+
+    if (!inv.items.contains(pos))
+      return false;
+
+    ItemStack& stack = inv.items.find(pos)->second;
+    // If the item is unique, and the itemStack is not empty, return false
+    // If the itemStack does contain the same entity, return false
+    // If the added stackCost would exceed the maxStackCost, return false
+    if (itemEntity.has<ItemAttrUnique>() && stack.item != 0 || 
+      (entity != stack.item && stack.item != 0) || 
+      (stack.stackCount + count) * stackCost > stack.maxStackCost)
+      return false;
+
+    stack.stackCount += count;
+    if (itemEntity.has<ItemAttrUnique>() || stack.item == 0) {
+      stack.item = entity;
+      stack.ui->setImage(itemEntity.get<ItemAttrIcon>().icon);
+    }
+
+    if (!itemEntity.has<ItemAttrUnique>())
+      stack.ui->setText(std::to_string(stack.stackCount));
+
+    return true;
+  }
+
+  bool addItem(EntityId entity, u32 count = 1) {
+    InventoryData& inv = getData(); 
+    Entity itemEntity = m_mgr.getEntity(entity); 
+    u8 stackCost = itemEntity.get<ItemAttrStackCost>().stackCost;
+
     // If the item is unique, it can only contain one slot.
     if (itemEntity.has<ItemAttrUnique>()) {
-      if (count > 1) // Unique items do not exist in multiples
-        return false;
+      if (count > 1)
+        return false; // Unique items do not exist in multiples
 
-      for (u16 x = 0; x < inv.rows; x++) {
-        for (u16 y = 0; y < inv.cols; y++) {
+       for (u16 y = 0; y < inv.rows; y++) {
+        for (u16 x = 0; x < inv.cols; x++) {
           ItemStack& stack = inv.items.find({ x, y })->second;
           if (stack.item == 0) {
             stack.item = entity;
             stack.stackCount = 1;
+            stack.ui->setImage(itemEntity.get<ItemAttrIcon>().icon);return true;
+            return true;
+          }
+        }
+      }
+    } else {
+      // Search existing stacks to see if any can fit this item
+      for (u16 y = 0; y < inv.rows; y++) {
+        for (u16 x = 0; x < inv.cols; x++) {
+          ItemStack& stack = inv.items.find({ x, y })->second;
+          if (stack.doesExceedMaxStackCost(stackCost, count))
+            continue;
+          if (stack.item == itemEntity) {
+            stack.stackCount += count;
+            stack.ui->setText(std::to_string(stack.stackCount));
+            return true;
+          }
+        }
+      }
+
+      // Now find the first empty one
+      for (u16 y = 0; y < inv.rows; y++) {
+        for (u16 x = 0; x < inv.cols; x++) {
+          ItemStack& stack = inv.items.find({ x, y })->second;
+          if (stack.doesExceedMaxStackCost(stackCost, count))
+            continue;
+          if (stack.item == 0) {
+            stack.item = entity;
+            stack.stackCount = count;
             stack.ui->setImage(itemEntity.get<ItemAttrIcon>().icon);
+            stack.ui->setText(std::to_string(stack.stackCount));
             return true;
           }
         }
       }
     }
 
-    // Search existing stacks to see if any can fit this item, or find the first empty one
-    for (auto& [pos, stack] : inv.items) {
-      // Even if the entities are not the same, this condition must be checked
-      // for both conditionals below, so were essentially killing 2 birds with one stone.
-      if ((stack.stackCount + count) * stackCost > stack.maxStackCost)
-        continue;
-
-      if (stack.item == itemEntity) {
-        stack.stackCount += count;
-        stack.ui->setText(std::to_string(stack.stackCount));
-        return true;
-      }
-      else if (stack.item == 0) {
-        stack.item = entity;
-        stack.stackCount = count;
-        stack.ui->setImage(itemEntity.get<ItemAttrIcon>().icon);
-        stack.ui->setText(std::to_string(stack.stackCount));
-        return true;
-      }
-    }
-
     return false; // Inventory is full
+  }
+
+  const ItemStack getStack(const glm::u16vec2& pos) const {
+    return getData().items.find(pos)->second;
+  }
+
+  bool isStackEmpty(const glm::u16vec2& pos) {
+    return getData().items.find(pos)->second.item == 0;
   }
 
   bool swapItems(const glm::u16vec2& posA, InventoryId invIdB, const glm::u16vec2& posB) {
@@ -276,20 +327,49 @@ public:
     return true;
   }
 
-  Entity removeItem(const glm::u16vec2& pos) {
+  bool tryMergeSlots(const glm::u16vec2& posA, InventoryId invIdB, const glm::u16vec2& posB) {
+    ItemStack& aStack = getData().items.find(posA)->second;
+    ItemStack& bStack = m_mgr.getInventoryData(invIdB).items.find(posB)->second;
+
+    if (aStack.item != bStack.item || m_mgr.getEntity(aStack.item).has<ItemAttrUnique>())
+      return false;
+
+    Entity item = m_mgr.getEntity(aStack.item);
+    u8 stackCost = item.get<ItemAttrStackCost>().stackCost;
+    i32 aCurrentStackCost = stackCost * aStack.stackCount;
+    i32 bCurrentStackCost = stackCost * bStack.stackCount;
+    i32 combinedCost = aCurrentStackCost + bCurrentStackCost;
+
+    if (combinedCost <= bStack.maxStackCost) {
+      bStack.stackCount += aStack.stackCount; // order matters here
+      removeItem(posA, aStack.stackCount);
+      bStack.ui->setText(std::to_string(bStack.stackCount));
+      return true;
+    }
+
+    i32 overCount = (combinedCost - bStack.maxStackCost) / stackCost;
+
+    aStack.stackCount = overCount;
+    bStack.stackCount = bStack.maxStackCost / stackCost;
+
+    aStack.ui->setText(std::to_string(aStack.stackCount));
+    bStack.ui->setText(std::to_string(bStack.stackCount));
+
+    return false;
+  }
+
+  Entity removeItem(const glm::u16vec2& pos, u32 count = 1) {
     InventoryData& inv = getData();
     ItemStack& stack = inv.items.find(pos)->second;
     if (!stack.item)
       return Entity(m_mgr.m_world, 0);
 
     Entity stackEntity = m_mgr.getEntity(stack.item);
-
     if (stackEntity.has<ItemAttrUnique>()) {
       stack.reset(m_mgr.m_defaultTexture);
       return stackEntity;
     } else {
-      u8 stackCost = stackEntity.get<ItemAttrStackCost>().stackCost;
-      stack.stackCount -= 1;
+      stack.stackCount -= count;
       if (stack.stackCount == 0)
         stack.reset(m_mgr.m_defaultTexture);
       else
@@ -314,9 +394,20 @@ public:
     m_visible = visiblity;
   }
 
+  bool getVisible() const {
+    return m_visible;
+  }
+
+  operator InventoryId() const {
+    return m_id;
+  }
      
 protected:
   InventoryData& getData() {
+    return m_mgr.getInventoryData(m_id);
+  }
+
+  const InventoryData& getData() const {
     return m_mgr.getInventoryData(m_id);
   }
 
@@ -333,8 +424,15 @@ public:
     m_world.component<ItemAttrStackCost>();
     m_world.component<ItemAttrUnique>();
     m_world.component<ItemAttrIcon>();
+    m_world.component<ItemAttrTile>();
+    m_world.component<TileItemComponent>();
    
     m_world.addContext<ItemManager>(world);
+
+    m_world.observe(EntityWorld::EventType::Remove, m_world.component<InventoryComponent>(), {},
+      [](Entity e) {
+        e.world().getContext<ItemManager>().destroyInventory(e.get<InventoryComponent>().id);
+      });
   }
 
   void run(EntityWorld& world, float deltaTime) override {
@@ -342,7 +440,6 @@ public:
 
     itemMgr.updateHandPos();
     if (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_RMASK) {
-      static int i = 0;
       itemMgr.clearHand();
     }
   }
@@ -350,3 +447,34 @@ public:
 private:
   EntityWorld& m_world;
 };
+
+inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& stackPos, const glm::vec2& coords) {
+  EntityWorld& world = worldMap.world();
+
+  const ItemStack stack = inv.getStack(stackPos);
+  if (stack.item == 0 || !world.get(stack.item).has<ItemAttrTile>())
+    return false;
+
+  TransformComponent& mapTransform = worldMap.get<TransformComponent>();
+  TilemapComponent& tilemap = worldMap.get<TilemapComponent>();
+  BodyComponent& body = worldMap.get<BodyComponent>();
+  glm::i16vec2 tilePos = tilemap.getNearestTile(mapTransform.getLocalPoint(coords));
+  if (tilemap.contains(tilePos)) {
+    Entity tile = world.get(tilemap.erase(tilePos));
+    if (tile.has<TileItemComponent>())
+      inv.addItem(tile.get<TileItemComponent>().item);
+    world.destroy(tile);
+  }
+
+  Entity item = inv.removeItem(stackPos);
+  bool wasStackEmpty = inv.isStackEmpty(stackPos);
+  TilePrefabs& tilePrefabs = world.getContext<TilePrefabs>();
+  tilemap.insert(tilePos, body.id, tilePrefabs.clonePrefab(item.get<ItemAttrTile>().tileId));
+
+  if (wasStackEmpty) {
+    world.getContext<ItemManager>().clearHand();
+    logGeneric("cleared\n");
+  }
+
+  return true;
+}

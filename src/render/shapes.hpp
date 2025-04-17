@@ -43,24 +43,22 @@ public:
   }
 
   void onMesh() override {
-    EntityIterator itCircle = m_world.getWith(m_world.set<CircleRenderComponent, PosComponent, RotComponent>());
+    EntityIterator itCircle = m_world.getWith(m_world.set<CircleRenderComponent, TransformComponent>());
     while (itCircle.hasNext()) {
       Entity e = itCircle.next();
       CircleRenderComponent& circle = e.get<CircleRenderComponent>();
-      PosComponent& pos = e.get<PosComponent>();
-      RotComponent& rot = e.get<RotComponent>();
+      TransformComponent& transform = e.get<TransformComponent>();
 
-      drawCircle(Transform(pos + circle.offset, rot), glm::vec3(1.0f, 0.0f, 1.0f), circle.radius, 8, 0.0f);
+      drawCircle(Transform(transform.getWorldPoint(circle.offset), transform.rot), glm::vec3(1.0f, 0.0f, 1.0f), circle.radius, 8, 0.0f);
     }
 
-    EntityIterator it = m_world.getWith(m_world.set<RectangleRenderComponent, PosComponent, RotComponent>());
+    EntityIterator it = m_world.getWith(m_world.set<RectangleRenderComponent, TransformComponent>());
     while (it.hasNext()) {
       Entity e = it.next();
       RectangleRenderComponent& rect = e.get<RectangleRenderComponent>();
-      PosComponent& pos = e.get<PosComponent>();
-      RotComponent& rot = e.get<RotComponent>();
+      TransformComponent& transform = e.get<TransformComponent>();
 
-      drawRectangle(Transform(pos, rot), glm::vec3(1.0f, 0.0f, 1.0f), rect.hw, rect.hh, 0.0f);
+      drawRectangle(transform, glm::vec3(1.0f, 0.0f, 1.0f), rect.hw, rect.hh, 0.0f);
     }
   }
 

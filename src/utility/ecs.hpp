@@ -282,14 +282,15 @@ public:
   void addContext(Params&& ... args) {
     m_contexts[typeid(T).hash_code()].bytes = (u8*)new T(args...);
     m_contexts[typeid(T).hash_code()].destroy = [](u8* bytes) { delete (T*)bytes;  };
+    m_contextsLifo.push_back(typeid(T).hash_code());
   }
-
-  template<typename T>
-  void destroyContext() {
-    size_t hashCode = typeid(T).hash_code();
-    m_contexts[hashCode].destroy(m_contexts[hashCode].bytes);
-    m_contexts.erase(hashCode);
-  }
+    
+  //template<typename T>
+  //void destroyContext() {
+  //  size_t hashCode = typeid(T).hash_code();
+  //  m_contexts[hashCode].destroy(m_contexts[hashCode].bytes);
+  //  m_contexts.erase(hashCode);
+  //}
 
   template<typename T>
   T& getContext() {
@@ -406,6 +407,7 @@ private:
 
   Map<EventType, Map<ComponentId, std::vector<ObserverData>>> m_observers;
   
+  std::vector<size_t> m_contextsLifo;
   Map<size_t, ContextData> m_contexts;
 
   // A map that keeps track of super sets, meaning sets that contain the same or more components

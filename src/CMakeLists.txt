@@ -38,7 +38,7 @@ target_sources(
 	"app.hpp"
 	"tile.hpp"
 	"tilemap.hpp"
-	"tilemapRender.hpp"
+	"spriteRender.hpp"
 	"physics.hpp"
 	"seekPlayer.hpp"
 	"worldMap.hpp"

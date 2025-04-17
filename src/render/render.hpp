@@ -61,7 +61,7 @@ public:
 
     // Make the very important camera.
     m_camera = world.create();
-    m_camera.add(world.set<PosComponent, RotComponent, CameraComponent, CameraInUse>());
+    m_camera.add(world.set<TransformComponent, CameraComponent, CameraInUse>());
   }
 
   Status getStatus() {
@@ -124,10 +124,9 @@ public:
     glm::ivec2 screenDim;
     SDL_GetWindowSize(m_window, &screenDim.x, &screenDim.y);
     CameraComponent& camera = m_camera.get<CameraComponent>();
-    PosComponent pos = m_camera.get<PosComponent>();
-    RotComponent rot = m_camera.get<RotComponent>();
+    TransformComponent transform = m_camera.get<TransformComponent>();
 
-    return camera.view(Transform(pos, camera.m_rot), (glm::vec2)screenDim);
+    return camera.view(Transform(transform.pos, camera.m_rot), (glm::vec2)screenDim);
   }
 
   void resizeViewport(const glm::ivec2& size) {

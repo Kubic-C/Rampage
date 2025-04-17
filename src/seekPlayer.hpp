@@ -29,17 +29,16 @@ struct PathfindingModule : Module {
   void run(EntityWorld& world, float deltaTime) override final {
     updateFlowField(world);
 
-    Entity map = world.getWith(world.set<PosComponent, RotComponent, TilemapComponent, WorldMapTag>()).next();
-    PosComponent& mapPos = map.get<PosComponent>();
-    RotComponent& mapRot = map.get<RotComponent>();
+    Entity map = world.getWith(world.set<TransformComponent, TilemapComponent, WorldMapTag>()).next();
+    TransformComponent& mapTransform = map.get<TransformComponent>();
     TilemapComponent& tilemap = map.get<TilemapComponent>();
-    EntityIterator it = world.getWith(world.set<PosComponent, BodyComponent, SeekPrimaryTargetTag>());
+    EntityIterator it = world.getWith(world.set<TransformComponent, BodyComponent, SeekPrimaryTargetTag>());
     while (it.hasNext()) {
       Entity seeker = it.next();
-      PosComponent& seekerPos = seeker.get<PosComponent>();
+      TransformComponent& seekerTransform = seeker.get<TransformComponent>();
       BodyComponent& seekerBody = seeker.get<BodyComponent>();
 
-      Vec2 localMapPos = Transform(mapPos, mapRot).getLocalPoint(seekerPos);
+      Vec2 localMapPos = mapTransform.getLocalPoint(seekerTransform.pos);
       glm::i16vec2 localTilePos = tilemap.getNearestTile(localMapPos);
       if (!tilemap.contains(localTilePos) || 
           tilemap.find(localTilePos).entity == 0 || 
@@ -53,16 +52,16 @@ struct PathfindingModule : Module {
   }
 
   void updateFlowField(EntityWorld& world) {
-    Entity map = world.getWith(world.set<PosComponent, RotComponent, TilemapComponent, WorldMapTag>()).next();
-    PosComponent& mapPos = map.get<PosComponent>();
-    RotComponent& mapRot = map.get<RotComponent>();
+    Entity map = world.getWith(world.set<TransformComponent, TilemapComponent, WorldMapTag>()).next();
+    TransformComponent& mapTransform = map.get<TransformComponent>();
     TilemapComponent& tilemap = map.get<TilemapComponent>();
-    Entity player = world.getWith(world.set<PosComponent, RotComponent, PrimaryTargetTag>()).next();
-    PosComponent& playerPos = player.get<PosComponent>();
-    RotComponent& playerRot = player.get<RotComponent>();
+    Entity player = world.getWith(world.set<TransformComponent, PrimaryTargetTag>()).next();
+    TransformComponent& playerTransform = player.get<TransformComponent>();
 
-    Vec2 localMapPos = Transform(mapPos, mapRot).getLocalPoint(playerPos);
+    Vec2 localMapPos = mapTransform.getLocalPoint(playerTransform.pos);
     glm::i16vec2 localTilePos = tilemap.getNearestTile(localMapPos);
+    if (!tilemap.contains(localTilePos))
+      return;
 
     Tile& startTile = tilemap.find(localTilePos);
     Entity startEntity = world.get(startTile.entity);
@@ -70,7 +69,7 @@ struct PathfindingModule : Module {
       return;
 
     ArrowComponent& startArrow = startEntity.get<ArrowComponent>();
-    startArrow.dir = glm::normalize(playerPos - Transform(mapPos, mapRot).getWorldPoint(tilemap.getLocalTileCenter(localTilePos)));
+    startArrow.dir = glm::normalize(playerTransform.pos - mapTransform.getWorldPoint(tilemap.getLocalTileCenter(localTilePos)));
 
     if (m_oldTarget == localTilePos)
       return;

@@ -14,7 +14,7 @@ public:
   PlayState(EntityWorld& world)
     : m_world(world) {
     m_world.component<OwnedBy<PlayState>>();
-    m_addedPlayerComponents = m_world.set<PlayerComponent, PrimaryTargetTag, BodyComponent, RectangleRenderComponent>();
+    m_addedPlayerComponents = m_world.set<PlayerComponent, PrimaryTargetTag, BodyComponent, RectangleRenderComponent, InventoryComponent>();
 
     tgui::Gui& gui = m_world.getContext<tgui::Gui>();
     m_menu = world.getContext<tgui::Gui>().get(menuName);
@@ -36,8 +36,7 @@ public:
     m_bodyCallback =
       [&](int x, int y) {
       Entity seeker = m_world.create();
-      seeker.add<RotComponent>();
-      seeker.add<PosComponent>();
+      seeker.add<TransformComponent>();
       seeker.add<BodyComponent>();
       seeker.add<SeekPrimaryTargetTag>();
       seeker.add<CircleRenderComponent>();
@@ -46,8 +45,9 @@ public:
       CircleRenderComponent& circleRender = seeker.get<CircleRenderComponent>();
       circleRender.radius = 0.1f;
 
-      seeker.get<PosComponent>() = { x * 0.3f - 7, y * 0.3f + 14 };
-      seeker.get<RotComponent>() = Rot(0);
+      TransformComponent& transform = seeker.get<TransformComponent>();
+      transform.pos = { x * 0.3f - 7, y * 0.3f + 14 };
+      transform.rot = Rot(0);
       b2BodyDef bodyDef = b2DefaultBodyDef();
       bodyDef.type = b2_dynamicBody;
       bodyDef.position = Vec2(0, 0);
@@ -64,6 +64,7 @@ public:
 
   void onEntry() {
     b2WorldId physicsWorld = m_world.getContext<b2WorldId>();
+    ItemManager& itemMgr = m_world.getContext<ItemManager>();
     Entity player = m_world.getFirstWith(m_world.set<CameraInUse>());
 
     m_menu->setEnabled(true);
@@ -76,6 +77,9 @@ public:
 
     /* Player */
     player.add(m_addedPlayerComponents);
+    Inventory playerInvetory = itemMgr.createInventory("Player Inventory", 3, 5);
+    player.get<InventoryComponent>().id = playerInvetory;
+    playerInvetory.addItem(itemMgr.getItem("BasicTurretItem"), 5);
 
     // Render
     RectangleRenderComponent& renderRect = player.get<RectangleRenderComponent>();
@@ -94,22 +98,23 @@ public:
     b2Polygon rect = b2MakeBox(0.12f, 0.12f);
     b2CreatePolygonShape(bodyId, &shapeDef, &rect);
 
-    player.get<PosComponent>() = { 5.0f, -7.0f };
+    Transform& playerTransform = player.get<TransformComponent>();
+    playerTransform.pos = { 5.0f, -7.0f };
 
     /* WorldMap & Tilemap Component */
 
     { // World Map
       Entity tm = m_world.create();
       logGeneric("World tilemap @ %u\n", tm.id());
-      tm.add<PosComponent>();
-      tm.add<RotComponent>();
+      tm.add<TransformComponent>();
       tm.add<BodyComponent>();
       tm.add<TilemapComponent>();
       tm.add<WorldMapTag>();
       tm.add<OwnedBy<PlayState>>();
 
-      tm.get<PosComponent>() = { 0, 0 };
-      tm.get<RotComponent>() = Rot(0);
+      TransformComponent& transform = tm.get<TransformComponent>();
+      transform.pos = { 0, 0 };
+      transform.rot = Rot(0);
       b2BodyDef bodyDef = b2DefaultBodyDef();
       bodyDef.type = b2_staticBody;
       bodyDef.position = Vec2(0, 0);
@@ -138,8 +143,6 @@ public:
 
       callInGrid(-40, -40, 40, 40, tileCallback);
     }
-
-    callInGrid(-2, -2, 2, 2, m_bodyCallback);
   }
 
   void onTick(u32 tick, float deltaTime) override {
