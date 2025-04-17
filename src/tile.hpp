@@ -12,6 +12,14 @@ enum TileFlags : u8 {
   MAX_BITS = 3
 };
 
+inline TileFlags getTileFlagFromString(const std::string& str) {
+  if (str == "IS_MULTI_TILE")
+    return TileFlags::IS_MULTI_TILE;
+  if (str == "IS_COLLIDABLE")
+    return TileFlags::IS_COLLIDABLE;
+  return (TileFlags)std::numeric_limits<u8>::max();
+}
+
 struct Tile {
   b2ShapeId shapeId = b2_nullShapeId;
   u8 flags = 0;

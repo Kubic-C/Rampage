@@ -45,6 +45,10 @@
 #include <TGUI/TGUI.hpp>
 #include <TGUI/Backend/SDL-OpenGL3.hpp>
 
+/* JSOOOOOOOOOOOOOOOOOOOON */
+#include <nlohmann/json.hpp>
+using namespace nlohmann;
+
 #ifndef NODISCARD 
 #define NODISCARD [[nodiscard]]
 #endif
@@ -76,3 +80,35 @@ enum class Status {
   Warning,
   Ok
 };
+
+// gets the filename, excluding the file extension: file.*
+inline std::string getFilename(const std::string& path) {
+  size_t lastOfSlash = 0;
+  {
+    size_t forwardSlash = path.find_last_of('/');
+    size_t backSlash = path.find_last_of('\\');
+    lastOfSlash = std::max(forwardSlash == SIZE_MAX ? 0 : forwardSlash + 1,
+      backSlash == SIZE_MAX ? 0 : backSlash + 1);
+  }
+  size_t lastOfDot = path.find_last_of('.');
+
+  if (lastOfDot == SIZE_MAX)
+    lastOfDot = path.size();
+  if(lastOfSlash == 0)
+    return path.substr(0, lastOfDot);
+  else
+    return path.substr(lastOfSlash, lastOfDot - lastOfSlash);
+}
+
+// gets the directory a file is in
+inline std::string getPath(const std::string& path) {
+  size_t lastOfSlash = 0;
+  {
+    size_t forwardSlash = path.find_last_of('/');
+    size_t backSlash = path.find_last_of('\\');
+    lastOfSlash = std::max(forwardSlash == SIZE_MAX ? 0 : forwardSlash + 1,
+      backSlash == SIZE_MAX ? 0 : backSlash + 1);
+  }
+
+  return path.substr(0, lastOfSlash);
+}

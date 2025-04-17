@@ -83,9 +83,9 @@ public:
       "./res/basicTurretTop.png"
     };
     m_world.addModule<SpriteRenderModule>(0, 32, 32, 256).add<IsRender>();
-    SpriteRenderModule& tilemapRender = m_world.getModule<SpriteRenderModule>();
+    SpriteRenderModule& spriteRender = m_world.getModule<SpriteRenderModule>();
     for (int i = 0; i < spritesToLoad.size(); i++)
-      if (!tilemapRender.loadSprite(i, spritesToLoad[i])) {
+      if (spriteRender.loadSprite(spritesToLoad[i]) == UINT32_MAX) {
         logError(1, "Failed to load resource: %s.\n", spritesToLoad[i]);
         m_localAppStatus = Status::CriticalError;
         return;
@@ -94,35 +94,15 @@ public:
     /* Tile Prefabs */
     m_world.addContext<TilePrefabs>(m_world);
     TilePrefabs& tilePrefab = m_world.getContext<TilePrefabs>();
-    {
-      Entity unknown = m_world.create();
-      unknown.add<TileSpriteComponent>();
-      unknown.get<TileSpriteComponent>().texIndex = 0;
-      tilePrefab.createPrefab("Unknown", unknown, 0, { 1, 1 });
-    }
-    Entity stone = m_world.create();
-    TilePrefabId stoneId;
-    {
-      stone.add<TileSpriteComponent>();
-      stone.add<ArrowComponent>();
-      stone.get<TileSpriteComponent>().texIndex = 1;
-      stoneId = tilePrefab.createPrefab("StoneFloor", stone, 0, { 1, 1 });
-    }
-    Entity highStone = m_world.create();
-    TilePrefabId highStoneId;
-    {
-      highStone.add<TileSpriteComponent>();
-      highStone.get<TileSpriteComponent>().texIndex = 2;
-      highStoneId = tilePrefab.createPrefab("HighStone", highStone, TileFlags::IS_COLLIDABLE, { 1, 1 });
-    }
+    tilePrefab.loadFromFile("./res/tile.json");
     Entity basicTurret = m_world.create();
     TilePrefabId basicTurretId;
     {
       basicTurret.add<LayeredSpriteComponent>();
       LayeredSpriteComponent& ls = basicTurret.get<LayeredSpriteComponent>();
       ls.count = 2;
-      ls.layers[BASE_LAYER].texIndex = 4;
-      ls.layers[TURRET_LAYER].texIndex = 5;
+      ls.layers[BASE_LAYER].texIndex = spriteRender.getSprite("basicTurretBase");
+      ls.layers[TURRET_LAYER].texIndex = spriteRender.getSprite("basicTurretTop");
       basicTurret.add<TurretComponent>();
       TurretComponent& turretComp = basicTurret.get<TurretComponent>();
       Entity bullet = m_world.create();
@@ -150,30 +130,6 @@ public:
 
     ItemManager& itemMgr = m_world.getContext<ItemManager>();
     itemMgr.setDefaultItemIcon("./res/clear.png");
-
-    {
-      Entity stoneItem = m_world.create();
-
-      stoneItem.add<ItemAttrTile>();
-      ItemAttrTile& tile = stoneItem.get<ItemAttrTile>();
-      tile.tileId = stoneId;
-
-      stone.add<TileItemComponent>();
-      TileItemComponent& tileItem = stone.get<TileItemComponent>();
-      tileItem.item = itemMgr.createItem("StoneItem", stoneItem, "./res/stone.png");
-    }
-
-    {
-      Entity highStoneItem = m_world.create();
-
-      highStoneItem.add<ItemAttrTile>();
-      ItemAttrTile& tile = highStoneItem.get<ItemAttrTile>();
-      tile.tileId = highStoneId;
-
-      highStone.add<TileItemComponent>();
-      TileItemComponent& tileItem = highStone.get<TileItemComponent>();
-      tileItem.item = itemMgr.createItem("HighStoneItem", highStoneItem, "./res/highStone.png");
-    }
 
     {
       Entity basicTurretItem = m_world.create();

@@ -44,6 +44,8 @@ public:
     return clonePrefab(m_prefabNames.at(name));
   }
 
+  bool loadFromFile(const std::string& path);
+
 private:
   EntityWorld& m_world;
   IdManager<TilePrefabId> m_idMgr;

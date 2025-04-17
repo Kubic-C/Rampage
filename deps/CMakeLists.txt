@@ -19,3 +19,5 @@ if(MSVC)
 endif()
 add_subdirectory("SDL")
 add_subdirectory("TGUI")
+
+add_subdirectory("json")

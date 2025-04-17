@@ -47,7 +47,7 @@ inline uint32_t createShader(uint32_t shader_type, const char* file_path) {
   return createShaderFromSource(shader_type, file_data, &file_size);
 }
 
-void GLAPIENTRY glErrorCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
+inline void GLAPIENTRY glErrorCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
   GLsizei length, const GLchar* message, const void* userParam) {
   if (severity == GL_DEBUG_SEVERITY_NOTIFICATION)
     return;

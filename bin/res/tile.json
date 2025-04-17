@@ -1,0 +1,44 @@
+[
+  {
+    "name": "Unknown",
+    "spritePath": "unknown.png",
+    "flags": [],
+    "size": [ 1, 1 ],
+    "item": {
+      "name": "UnknownItem",
+      "iconPath": "unknown.png"
+    }
+  },
+  {
+    "name": "StoneFloor",
+    "spritePath": "stone.png",
+    "flags": [],
+    "size": [ 1, 1 ],
+    "item": {
+      "name": "StoneItem",
+      "iconPath": "stone.png"
+    }
+  },
+  {
+    "name": "HighStone",
+    "spritePath": "highStone.png",
+    "flags": [ "IS_COLLIDABLE" ],
+    "size": [ 1, 1 ],
+    "item": {
+      "name": "HighStoneItem",
+      "iconPath": "highStone.png"
+    }
+  },
+  {
+    "name": "BasicTurret",
+    "spritePath": "basicTurretBase.png",
+    //"layeredSprites": [ "basicTurretBase.png", "basicTurretTop.png" ],
+    "flags": [ "IS_COLLIDABLE" ],
+    "size": [ 1, 1 ],
+    "turret": true,
+    "item": {
+      "name": "BasicTurretItem",
+      "iconPath": "basicTurretIcon.png"
+    }
+  }
+]

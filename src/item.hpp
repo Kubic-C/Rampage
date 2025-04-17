@@ -101,7 +101,6 @@ public:
     return entity;
   }
 
-
   Entity getItem(const std::string& name) const {
     assert(m_itemNames.contains(name));
     return m_world.get(m_itemNames.at(name));

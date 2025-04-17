@@ -1,9 +1,9 @@
 #pragma once
 
-#include "render/baseRender.hpp"
-#include "render/opengl.hpp"
+#include "render/shapes.hpp"
 #include "transform.hpp"
 #include "tilemap.hpp"
+#include "seekPlayer.hpp"
 
 class SpriteRenderModule : public BaseRenderModule {
 public:
@@ -111,6 +111,37 @@ public:
     glDrawArrays(GL_TRIANGLES, 0, m_mesh.verticesToRender);
   }
 
+  u32 loadSprite(const std::string& path) {
+    std::string name = getFilename(path);
+    assert(!m_textureIds.contains(name));
+
+    u32 id = m_lastFreeTexture++;
+    if (!loadSprite(id, path)) {
+      m_lastFreeTexture--;
+      return UINT32_MAX; 
+    }
+    m_textureIds[name] = id;
+       
+    return id;
+  }
+
+  u32 getSprite(const std::string& name) {
+    assert(getFilename(name) == name && "When using getSprite, use only the core filename");
+    return m_textureIds.find(name)->second;
+  }
+
+  // Gets the sprite located at path, if the sprite with the core name does not exist yet
+  // it is created. if the core name already exists, that sprite will be grabbed instead.
+  u32 getSpriteFromPath(const std::string& path) {
+    std::string name = getFilename(path);
+    if (m_textureIds.contains(name))
+      return getSprite(name);
+
+    return loadSprite(path);
+  }
+
+
+private:
   bool loadSprite(uint32_t index, const std::string& path) {
     assert(index < 256);
 
@@ -126,7 +157,6 @@ public:
     return true;
   }
 
-private:
   void addTile(u16 textureId, const glm::ivec2& tilePos, const glm::ivec2& tileDim, const glm::vec2& offset, float rot, float z = -1) {
     constexpr float hSl = tileSidelength / 2.0f;
 
@@ -228,6 +258,8 @@ private:
         })###";
 
 private:
+  u32 m_lastFreeTexture = 0;
+  Map<std::string, u32> m_textureIds;
   Mesh<Vertex, 6, 6> m_mesh;
   Shader m_shader;
   VertexArrayBuffer m_va;
