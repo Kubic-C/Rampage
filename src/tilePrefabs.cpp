@@ -18,7 +18,7 @@ bool TilePrefabs::loadFromFile(const std::string& filePath) {
   SpriteRenderModule& spriteRender = m_world.getModule<SpriteRenderModule>();
   ItemManager& itemMgr = m_world.getContext<ItemManager>();
   const std::vector<std::string> requiredKeys = {
-    "name", "spritePath", "flags", "size"
+    "name", "flags", "size", "spritePaths"
   };
   for (auto& tileJson : json) {
     for (const std::string& key : requiredKeys) {
@@ -29,7 +29,7 @@ bool TilePrefabs::loadFromFile(const std::string& filePath) {
     }
 
     std::string name = tileJson["name"].get<std::string>();
-    std::string spritePath = parentDir + tileJson["spritePath"].get<std::string>();
+    std::vector<std::string> spritePaths = tileJson["spritePaths"];
     u8 tileFlags = 0;
     for (auto flag : tileJson["flags"])
       tileFlags |= getTileFlagFromString(flag.get<std::string>());
@@ -45,8 +45,10 @@ bool TilePrefabs::loadFromFile(const std::string& filePath) {
     }
 
     Entity tileEntity = m_world.create();
-    tileEntity.add<TileSpriteComponent>();
-    tileEntity.get<TileSpriteComponent>().texIndex = spriteRender.getSpriteFromPath(spritePath);
+    tileEntity.add<SpriteComponent>();
+    SpriteComponent& sprite = tileEntity.get<SpriteComponent>();
+    for (u8 i = 0; i < spritePaths.size(); i++)
+      sprite.addLayer(spriteRender.getSpriteFromPath(parentDir + spritePaths[i]));
     if (~tileFlags & IS_COLLIDABLE)
       tileEntity.add<ArrowComponent>();
     TilePrefabId tilePrefabId = createPrefab(name, tileEntity, tileFlags, size);

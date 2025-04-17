@@ -15,8 +15,7 @@ public:
   SpriteRenderModule(EntityWorld& world, size_t priority, u32 spriteWidth, u32 spriteHeight, u32 maxSprites)
     : BaseRenderModule(world, priority), m_texArray(spriteWidth, spriteHeight, maxSprites),
     m_tilemapSys(m_world.system(m_world.set<TransformComponent, TilemapComponent>(), std::bind(&SpriteRenderModule::meshTilemap, this, std::placeholders::_1, std::placeholders::_2))),
-    m_spriteSys(m_world.system(m_world.set<TransformComponent, TileSpriteComponent>(), std::bind(&SpriteRenderModule::meshSprite, this, std::placeholders::_1, std::placeholders::_2))),
-    m_layeredSpriteSys(m_world.system(m_world.set<TransformComponent, LayeredSpriteComponent>(), std::bind(&SpriteRenderModule::meshSpriteLayered, this, std::placeholders::_1, std::placeholders::_2))) {
+    m_spriteSys(m_world.system(m_world.set<TransformComponent, SpriteComponent>(), std::bind(&SpriteRenderModule::meshSprite, this, std::placeholders::_1, std::placeholders::_2))) {
     m_va.addVertexArrayAttrib(m_mesh.buffer, 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
     m_va.addVertexArrayAttrib(m_mesh.buffer, 1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), offsetof(Vertex, texCoords));
     if (!m_shader.loadShaderStr(tileVertexShaderSource, tileFragShaderSource)) {
@@ -43,7 +42,6 @@ public:
   void onMesh() override {
     m_tilemapSys.run();
     m_spriteSys.run();
-    m_layeredSpriteSys.run();
   }
 
   void meshTilemap(Entity e, float dt) {
@@ -59,17 +57,10 @@ public:
         addTile(0, tilePos, { tile.width, tile.height }, Vec2(0), 0, -1);
       } else {
         Entity tileEntity = e.world().get(tile.entity);
-        assert(tileEntity.has<TileSpriteComponent>() || tileEntity.has<LayeredSpriteComponent>());
-        
-        if (tileEntity.has<TileSpriteComponent>()) {
-          TileSpriteComponent& sprite = tileEntity.get<TileSpriteComponent>();
-          addTile(sprite.texIndex, tilePos, { tile.width, tile.height }, sprite.offset, sprite.rot, -1);
-        }
-        else {
-          LayeredSpriteComponent& ls = tileEntity.get<LayeredSpriteComponent>();
-          for (int i = 0; i < ls.count; i++)
-            addTile(ls.layers[i].texIndex, tilePos, { tile.width, tile.height }, ls.layers[i].offset, ls.layers[i].rot, -1 + i * 0.1f);
-        }
+        SpriteComponent& sprite = tileEntity.get<SpriteComponent>();
+
+        for (int i = 0; i < sprite.layerCount; i++)
+          addTile(sprite[i].texIndex, tilePos, { tile.width, tile.height }, sprite[i].offset, sprite[i].rot, sprite.zOffset + i * 0.1f);
       }
 
       if (tile.entity && SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F1]) {
@@ -86,19 +77,11 @@ public:
    
   void meshSprite(Entity e, float dt) {
     ShapeRenderModule& shapeRender = e.world().getModule<ShapeRenderModule>();
-    TileSpriteComponent& ts = e.get<TileSpriteComponent>();
+    SpriteComponent& sprite = e.get<SpriteComponent>();
     TransformComponent& transform = e.get<TransformComponent>();
 
-    addSprite(ts.texIndex, transform.pos, ts.offset, ts.rot);
-  }
-
-  void meshSpriteLayered(Entity e, float dt) {
-    ShapeRenderModule& shapeRender = e.world().getModule<ShapeRenderModule>();
-    LayeredSpriteComponent& ls = e.get<LayeredSpriteComponent>();
-    TransformComponent& transform = e.get<TransformComponent>();
-
-    for(int i = 0; i < ls.count; i++) 
-      addSprite(ls.layers[i].texIndex, transform.pos, ls.layers[i].offset, ls.layers[i].rot);
+    for (int i = 0; i < sprite.layerCount; i++)
+      addSprite(sprite[i].texIndex, transform.pos, sprite[i].offset, sprite[i].rot, sprite.zOffset + i * 0.1f);
   }
 
   void onRender(const glm::mat4& vp) override {
@@ -267,5 +250,4 @@ private:
   Sampler m_sampler;
   System m_tilemapSys;
   System m_spriteSys;
-  System m_layeredSpriteSys;
 };

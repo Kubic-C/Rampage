@@ -87,7 +87,7 @@ public:
     b2WorldId physicsWorld = e.world().getContext<b2WorldId>();
     TransformComponent& transform = e.get<TransformComponent>();
     TurretComponent& turret = e.get<TurretComponent>();
-    LayeredSpriteComponent& layeredSprite = e.get<LayeredSpriteComponent>();
+    SpriteComponent& sprite = e.get<SpriteComponent>();
     
     ClosestShape closestShape;
     closestShape.center = transform.pos;
@@ -131,7 +131,7 @@ public:
       turret.rot += dir;
     }
 
-    layeredSprite.layers[TURRET_LAYER].rot = turret.rot;
+    sprite.getLast().rot = turret.rot;
   }
 
   void run(EntityWorld& world, float deltaTime) override {

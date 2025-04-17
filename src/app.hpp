@@ -64,8 +64,7 @@ public:
 
     m_world.component<WorldMapTag>();
     m_world.component<TilemapComponent>();
-    m_world.component<TileSpriteComponent>();
-    m_world.component<LayeredSpriteComponent>();
+    m_world.component<SpriteComponent>();
 
     /* GUI renderer */
     m_world.addModule<GuiRenderModule>(SIZE_MAX, gui).add<IsRender>();

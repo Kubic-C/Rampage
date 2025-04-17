@@ -1,7 +1,7 @@
 [
   {
     "name": "Unknown",
-    "spritePath": "unknown.png",
+    "spritePaths": [ "unknown.png" ],
     "flags": [],
     "size": [ 1, 1 ],
     "item": {
@@ -11,7 +11,7 @@
   },
   {
     "name": "StoneFloor",
-    "spritePath": "stone.png",
+    "spritePaths": [ "stone.png" ],
     "flags": [],
     "size": [ 1, 1 ],
     "item": {
@@ -21,7 +21,7 @@
   },
   {
     "name": "HighStone",
-    "spritePath": "highStone.png",
+    "spritePaths": [ "highStone.png" ],
     "flags": [ "IS_COLLIDABLE" ],
     "size": [ 1, 1 ],
     "item": {
@@ -31,8 +31,7 @@
   },
   {
     "name": "BasicTurret",
-    "spritePath": "basicTurretBase.png",
-    //"layeredSprites": [ "basicTurretBase.png", "basicTurretTop.png" ],
+    "spritePaths": [ "basicTurretBase.png", "basicTurretTop.png" ],
     "flags": [ "IS_COLLIDABLE" ],
     "size": [ 1, 1 ],
     "turret": true,
