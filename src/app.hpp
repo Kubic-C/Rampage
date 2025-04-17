@@ -95,24 +95,6 @@ public:
     m_world.addContext<TilePrefabs>(m_world);
     TilePrefabs& tilePrefab = m_world.getContext<TilePrefabs>();
     tilePrefab.loadFromFile("./res/tile.json");
-    Entity basicTurret = m_world.create();
-    TilePrefabId basicTurretId;
-    {
-      basicTurret.add<LayeredSpriteComponent>();
-      LayeredSpriteComponent& ls = basicTurret.get<LayeredSpriteComponent>();
-      ls.count = 2;
-      ls.layers[BASE_LAYER].texIndex = spriteRender.getSprite("basicTurretBase");
-      ls.layers[TURRET_LAYER].texIndex = spriteRender.getSprite("basicTurretTop");
-      basicTurret.add<TurretComponent>();
-      TurretComponent& turretComp = basicTurret.get<TurretComponent>();
-      Entity bullet = m_world.create();
-      bullet.disable();
-      bullet.add<CircleRenderComponent>();
-      CircleRenderComponent& circle = bullet.get<CircleRenderComponent>();
-      circle.radius = turretComp.radius;
-      turretComp.summon = bullet;
-      basicTurretId = tilePrefab.createPrefab("BasicTurret", basicTurret, TileFlags::IS_COLLIDABLE, { 1, 1 });
-    } // TODO ADD POSITION TO TURRET COMPONENTS AND TILEMAP, MAYBE SOME TYPE OF PARENT COMPONENT?
 
     // Enable All rendering modules
     m_world.enableModule<GuiRenderModule>();
@@ -130,18 +112,6 @@ public:
 
     ItemManager& itemMgr = m_world.getContext<ItemManager>();
     itemMgr.setDefaultItemIcon("./res/clear.png");
-
-    {
-      Entity basicTurretItem = m_world.create();
-
-      basicTurretItem.add<ItemAttrTile>();
-      ItemAttrTile& tile = basicTurretItem.get<ItemAttrTile>();
-      tile.tileId = basicTurretId;
-
-      basicTurret.add<TileItemComponent>();
-      TileItemComponent& tileItem = basicTurret.get<TileItemComponent>();
-      tileItem.item = itemMgr.createItem("BasicTurretItem", basicTurretItem, "./res/basicTurretIcon.png");
-    }
 
     Entity fenceItem = m_world.create();
     itemMgr.createItem("FenceItem", fenceItem, "./res/fence.png");
