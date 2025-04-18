@@ -40,24 +40,19 @@ b2ShapeDef loadShapeFromJson(json& json) {
 
 Entity loadBulletFromJson(EntityWorld& world, const std::string& parentDir, json& json) {
   SpriteRenderModule& render = world.getModule<SpriteRenderModule>();
-  if(!keysExistAndLog("bullet", json, {"spritePaths", "damage", "lifetime"}))
+  if(!keysExistAndLog("bullet", json, {"damage", "lifetime"}))
     return Entity(world, 0);
 
-  std::vector<std::string> paths = json["spritePaths"];
   float damage = json["damage"];
   float lifetime = json["lifetime"];
 
   Entity e = world.create();
-  e.add<SpriteComponent>();
   e.add<DamageComponent>();
   e.add<LifetimeComponent>();
   e.add<TransformComponent>();
-  SpriteComponent& sprite = e.get<SpriteComponent>();
   DamageComponent& damageComp = e.get<DamageComponent>();
   LifetimeComponent& lifetimeComp = e.get<LifetimeComponent>();
 
-  sprite = loadSpriteFromPaths(render, parentDir, paths);
-  sprite.zOffset = 1.0f;
   damageComp.damage = damage;
   lifetimeComp.timeLeft = lifetime;
   

@@ -64,6 +64,9 @@ struct PathfindingModule : Module {
       return;
 
     Tile& startTile = tilemap.find(localTilePos);
+    if (!startTile.entity)
+      return;
+
     Entity startEntity = world.get(startTile.entity);
     if (!startEntity.has<ArrowComponent>())
       return;

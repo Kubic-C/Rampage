@@ -51,22 +51,20 @@
     "size": [ 1, 1 ],
     "turret": {
         "bullet": {
-          "spritePaths": [ "basicBullet.png" ],
           "damage": 10,
           "lifetime": 1.0
         },
         "fireRate": 1, // Per second
-        "radius": 2.0, // search radius
-        "turnSpeed": 0.1,
-        "shootRange": 0.4, // + or -
-        "stopRange": 0.2,
+        "radius": 10.0, // search radius
+        "turnSpeed": 0.02,
+        "shootRange": 0.2, // + or -
+        "stopRange": 0.04,
         "muzzleVelocity": 10.0,
         "bulletRadius": 0.25
     },
     "item": {
       "name": "BasicTurretItem",
-      "iconPath": "basicTurretIcon.png",
-      "unique": true
+      "iconPath": "basicTurretIcon.png"
     }
   },
   {

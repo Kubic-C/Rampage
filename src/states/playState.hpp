@@ -82,7 +82,7 @@ public:
     player.add(m_addedPlayerComponents);
     Inventory playerInvetory = itemMgr.createInventory("Player Inventory", 3, 5);
     player.get<InventoryComponent>().id = playerInvetory;
-    playerInvetory.addItem(itemMgr.getItem("BasicTurretItem"), 5);
+    playerInvetory.addItem(itemMgr.getItem("BasicTurretItem"), 20);
     playerInvetory.addItem(itemMgr.getItem("BigHighStoneItem"), 5);
 
     // Render

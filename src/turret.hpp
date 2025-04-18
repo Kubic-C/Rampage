@@ -67,7 +67,7 @@ class TurretModule : public Module {
     return diff;
   }
 
-  const Vec2 right = { 0.0f, 1.0f };
+  const Vec2 right = { 1.0f, 0.0f };
 public:
   TurretModule(EntityWorld& world) 
     : m_tilemapSys(world.system(world.set<TransformComponent, TurretComponent>(), std::bind(&TurretModule::turretSystem, this, std::placeholders::_1, std::placeholders::_2))),
@@ -116,7 +116,7 @@ public:
         SummonBullet bullet;
         bullet.id = turret.summon;
         bullet.pos = transform.pos;
-        bullet.shootVelocity = targetDir * turret.muzzleVelocity;
+        bullet.shootVelocity = fast2DRotate(right, turret.rot) * turret.muzzleVelocity;
         bullet.radius = turret.bulletRadius;
         m_summonBullets.push_back(bullet);
 
