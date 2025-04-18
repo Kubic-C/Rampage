@@ -57,14 +57,13 @@ public:
     tgui::Gui& gui = m_world.getContext<tgui::Gui>();
     gui.loadWidgetsFromFile("./res/form.txt");
 
+    m_world.addModule<TilemapModule>();
     m_world.addModule<PathfindingModule>();
     m_world.addModule<ItemModule>();
     m_world.addModule<PlayerModule>();
     m_world.addModule<TurretModule>();
 
     m_world.component<WorldMapTag>();
-    m_world.component<TilemapComponent>();
-    m_world.component<SpriteComponent>();
 
     /* GUI renderer */
     m_world.addModule<GuiRenderModule>(SIZE_MAX, gui).add<IsRender>();
@@ -81,6 +80,7 @@ public:
     tilePrefab.loadFromFile("./res/tile.json");
 
     // Enable the core modules
+    m_world.enableModule<TilemapModule>();
     m_world.enableModule<GuiRenderModule>();
     m_world.enableModule<ShapeRenderModule>();
     m_world.enableModule<SpriteRenderModule>();

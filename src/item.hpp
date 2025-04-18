@@ -225,7 +225,7 @@ public:
           if (stack.item == 0) {
             stack.item = entity;
             stack.stackCount = 1;
-            stack.ui->setImage(itemEntity.get<ItemAttrIcon>().icon);return true;
+            stack.ui->setImage(itemEntity.get<ItemAttrIcon>().icon);
             count--;
           }
         }
@@ -472,7 +472,7 @@ inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& sta
   }
 
   inv.removeItem(stackPos);
-  tilemap.insert(tilePos, body.id, tilePrefabs.clonePrefab(item.get<ItemAttrTile>().tileId));
+  tilemap.insert(world, body.id, tilePos, worldMap, tilePrefabs.clonePrefab(item.get<ItemAttrTile>().tileId));
 
   if (inv.isStackEmpty(stackPos))
     world.getContext<ItemManager>().clearHand();

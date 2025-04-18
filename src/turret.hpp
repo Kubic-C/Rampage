@@ -14,7 +14,7 @@ struct DamageComponent {
   float damage = 10.0f;
 };
 
-struct DestroyAfterComponent {
+struct LifetimeComponent {
   float timeLeft = 1.0f;
 };
 
@@ -71,12 +71,14 @@ class TurretModule : public Module {
 public:
   TurretModule(EntityWorld& world) 
     : m_tilemapSys(world.system(world.set<TransformComponent, TurretComponent>(), std::bind(&TurretModule::turretSystem, this, std::placeholders::_1, std::placeholders::_2))),
-    m_shouldDieSys(world.system(world.set<DestroyAfterComponent>(), &shouldDieSystem)) {
+    m_shouldDieSys(world.system(world.set<LifetimeComponent>(), &shouldDieSystem)) {
     world.component<TurretComponent>();
+    world.component<LifetimeComponent>();
+    world.component<DamageComponent>();
   }
 
   static void shouldDieSystem(Entity e, float dt) {
-    DestroyAfterComponent& destroyAfter = e.get<DestroyAfterComponent>();
+    LifetimeComponent& destroyAfter = e.get<LifetimeComponent>();
 
     if (destroyAfter.timeLeft < 0)
       e.world().destroy(e);
@@ -102,11 +104,12 @@ public:
       return;
 
     Vec2 targetPos = b2Body_GetPosition(b2Shape_GetBody(closestShape.shape));
-    Vec2 targetDir = glm::normalize(transform.pos - targetPos);
+    Vec2 targetDir = glm::normalize(targetPos - transform.pos);
     float targetRot = atan2f(targetDir.y, targetDir.x);
 
-    float dist = glm::abs(targetRot - turret.rot);
-    if (dist < turret.shootRange) {
+    float closestDistToRotate = signedAngleDiff(turret.rot, targetRot);
+    float distToRotate = glm::abs(closestDistToRotate);
+    if (distToRotate < turret.shootRange) {
       turret.timeSinceLastShot += dt;
 
       if (turret.timeSinceLastShot >= turret.fireRate) {
@@ -121,37 +124,46 @@ public:
       }
     }
 
-    if (dist > turret.stopRange) {
-      float closestDist = signedAngleDiff(turret.rot, targetRot);
+    if (distToRotate > turret.stopRange) {
       float dir = turret.turnSpeed;
-
-      if (closestDist < 0)
+      if (closestDistToRotate < 0)
         dir = -dir;
 
-      turret.rot += dir;
+      if (distToRotate < turret.turnSpeed)
+        turret.rot = targetRot;
+      else
+        turret.rot += dir;
     }
 
     sprite.getLast().rot = turret.rot;
   }
 
   void run(EntityWorld& world, float deltaTime) override {
-    m_tilemapSys.run();
-    m_shouldDieSys.run();
+    m_tilemapSys.run(deltaTime);
+    m_shouldDieSys.run(deltaTime);
 
     b2WorldId physicsWorld = world.getContext<b2WorldId>();
     for (SummonBullet& bullet : m_summonBullets) {
+      logGeneric("Created bullet\n");
       Entity bulletEntity = world.get(bullet.id).clone();
       bulletEntity.get<TransformComponent>().pos = bullet.pos;
       bulletEntity.add<BodyComponent>();
       b2BodyId& id = bulletEntity.get<BodyComponent>().id;
 
+      bulletEntity.add<CircleRenderComponent>();
+      CircleRenderComponent& cirlceRender = bulletEntity.get<CircleRenderComponent>();
+      cirlceRender.radius = bullet.radius;
+
       b2BodyDef bodyDef = b2DefaultBodyDef();
+      bodyDef.type = b2_dynamicBody;
       bodyDef.linearVelocity = bullet.shootVelocity;
+      bodyDef.position = bullet.pos;
       id = b2CreateBody(physicsWorld, &bodyDef);
       b2Circle circle;
       circle.center = Vec2(0);
       circle.radius = bullet.radius;
       b2ShapeDef shapeDef = b2DefaultShapeDef();
+      shapeDef.density = 100.0f;
       b2Filter filter;
       filter.categoryBits = Friendly;
       filter.maskBits = Enemy;
@@ -159,6 +171,7 @@ public:
       shapeDef.filter = filter;
       b2CreateCircleShape(id, &shapeDef, &circle);
     }
+    m_summonBullets.clear();
   }
 private:
   System m_tilemapSys;

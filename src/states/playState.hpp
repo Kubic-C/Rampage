@@ -1,6 +1,7 @@
 #pragma once
 
 #include "state.hpp"
+#include "../turret.hpp"
 
 class PlayState : public State {
   const std::string& menuName = "PlayMenu";
@@ -21,9 +22,9 @@ public:
     tgui::Button::Ptr returnBtn = gui.get(returnBtnName)->cast<tgui::Button>();
 
     returnBtn->onMousePress([&]() {
-      StateManager& stateMgr = world.getContext<StateManager>();
-      stateMgr.disableState("PlayState");
-      stateMgr.enableState("MenuState");
+        StateManager& stateMgr = world.getContext<StateManager>();
+        stateMgr.disableState("PlayState");
+        stateMgr.enableState("MenuState");
       });
 
     m_tickText = gui.get(tickTextName)->cast<tgui::Label>();
@@ -54,6 +55,7 @@ public:
       bodyDef.linearDamping = 10;
       b2ShapeDef shapeDef = b2DefaultShapeDef();
       shapeDef.friction = 0;
+      shapeDef.filter.categoryBits = Enemy;
       b2Circle circle;
       circle.radius = 0.1f;
       circle.center = Vec2(0);
@@ -130,16 +132,16 @@ public:
           if (x <= -35 || x >= 35 || y <= -35 || y >= 35 || (x % 5 == 0 && y < 20 && y != -34)) {
             TileDef highStone = tilePrefabs.clonePrefab("HighStone");
             m_world.get(highStone.entity).add<OwnedBy<PlayState>>();
-            tilemap.insert({ x, y }, bodyId, highStone);
+            tilemap.insert(m_world, bodyId, { x, y }, tm, highStone);
           }
           else if (rand() % 100 < 5) {
             TileDef unknown = tilePrefabs.clonePrefab("Unknown");
             m_world.get(unknown.entity).add<OwnedBy<PlayState>>();
-            tilemap.insert({ x, y }, bodyId, unknown);
+            tilemap.insert(m_world, bodyId, { x, y }, tm, unknown);
           } else {
             TileDef stone = tilePrefabs.clonePrefab("StoneFloor");
             m_world.get(stone.entity).add<OwnedBy<PlayState>>();
-            tilemap.insert({ x, y }, bodyId, stone);
+            tilemap.insert(m_world, bodyId, { x, y }, tm, stone);
           }
         };
 

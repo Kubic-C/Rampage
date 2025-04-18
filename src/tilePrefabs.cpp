@@ -3,8 +3,29 @@
 #include "spriteRender.hpp"
 #include "item.hpp"
 #include "seekPlayer.hpp"
+#include "turret.hpp"
 
-b2ShapeDef loadShapeFromFile(json& json) {
+bool keysExistAndLog(const std::string target, json& json, const std::vector<std::string>& keys) {
+  bool failed = false;
+  for (const std::string& key : keys) {
+    if (!json.contains(key)) {
+      logGeneric("Failed to %s from json. No %s\n", target.c_str(), key.c_str());
+      failed = true;
+      continue;
+    }
+  }
+
+  return !failed;
+}
+
+SpriteComponent loadSpriteFromPaths(SpriteRenderModule& render, const std::string& parentDir, const std::vector<std::string>& paths) {
+  SpriteComponent sprite;
+  for (u8 i = 0; i < paths.size(); i++)
+    sprite.addLayer(render.getSpriteFromPath(parentDir + paths[i]));
+  return sprite;
+}
+
+b2ShapeDef loadShapeFromJson(json& json) {
   b2ShapeDef shapeDef = b2DefaultShapeDef();
 
   if (json.contains("restitution"))
@@ -15,6 +36,61 @@ b2ShapeDef loadShapeFromFile(json& json) {
   std::cout << shapeDef.friction << '\n';
 
   return shapeDef;
+}
+
+Entity loadBulletFromJson(EntityWorld& world, const std::string& parentDir, json& json) {
+  SpriteRenderModule& render = world.getModule<SpriteRenderModule>();
+  if(!keysExistAndLog("bullet", json, {"spritePaths", "damage", "lifetime"}))
+    return Entity(world, 0);
+
+  std::vector<std::string> paths = json["spritePaths"];
+  float damage = json["damage"];
+  float lifetime = json["lifetime"];
+
+  Entity e = world.create();
+  e.add<SpriteComponent>();
+  e.add<DamageComponent>();
+  e.add<LifetimeComponent>();
+  e.add<TransformComponent>();
+  SpriteComponent& sprite = e.get<SpriteComponent>();
+  DamageComponent& damageComp = e.get<DamageComponent>();
+  LifetimeComponent& lifetimeComp = e.get<LifetimeComponent>();
+
+  sprite = loadSpriteFromPaths(render, parentDir, paths);
+  sprite.zOffset = 1.0f;
+  damageComp.damage = damage;
+  lifetimeComp.timeLeft = lifetime;
+  
+  // its essentially a prefab
+  e.disable();
+
+  return e;
+}
+
+TurretComponent loadTurretFromJson(EntityWorld& world, const std::string& parentDir, json& json) {
+  TurretComponent turret;
+
+  if (!keysExistAndLog("turret", json,
+      { "bullet",
+      "fireRate",
+      "radius",
+      "turnSpeed",
+      "shootRange",
+      "stopRange",
+      "muzzleVelocity",
+      "bulletRadius" }))
+    return turret;
+
+  turret.summon = loadBulletFromJson(world, parentDir, json["bullet"]);
+  turret.fireRate = json["fireRate"].get<float>();
+  turret.radius = json["radius"].get<float>();
+  turret.turnSpeed = json["turnSpeed"].get<float>();
+  turret.shootRange = json["shootRange"].get<float>();
+  turret.stopRange = json["stopRange"].get<float>();
+  turret.muzzleVelocity = json["muzzleVelocity"].get<float>();
+  turret.bulletRadius = json["bulletRadius"].get<float>();
+
+  return turret;
 }
 
 bool TilePrefabs::loadFromFile(const std::string& filePath) {
@@ -57,15 +133,20 @@ bool TilePrefabs::loadFromFile(const std::string& filePath) {
     }
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     if(tileJson.contains("shape"))
-      shapeDef = loadShapeFromFile(tileJson["shape"]);
+      shapeDef = loadShapeFromJson(tileJson["shape"]);
 
     Entity tileEntity = m_world.create();
     tileEntity.add<SpriteComponent>();
     SpriteComponent& sprite = tileEntity.get<SpriteComponent>();
-    for (u8 i = 0; i < spritePaths.size(); i++)
-      sprite.addLayer(spriteRender.getSpriteFromPath(parentDir + spritePaths[i]));
+    sprite = loadSpriteFromPaths(spriteRender, parentDir, spritePaths);
     if (~tileFlags & IS_COLLIDABLE)
       tileEntity.add<ArrowComponent>();
+    bool needsLocalTransform = false;
+    if (tileJson.contains("turret")) {
+      tileEntity.add<TurretComponent>();
+      tileEntity.get<TurretComponent>() = loadTurretFromJson(m_world, parentDir, tileJson["turret"]);
+      tileEntity.add<TransformComponent>(); // in order for turrets to match the turret system they need a transform
+    }
     TilePrefabId tilePrefabId = createPrefab(name, tileEntity, tileFlags, size);
 
     if (tileJson.contains("item")) {

@@ -5,6 +5,48 @@
 #include "tilemap.hpp"
 #include "seekPlayer.hpp"
 
+struct SpriteLayer {
+  SpriteLayer() = default;
+  SpriteLayer(u32 texIndex, glm::vec2 offset, float rot)
+    : texIndex(texIndex), offset(offset), rot(rot) {
+  }
+
+  u32 texIndex = 0;
+  glm::vec2 offset = { 0.0f, 0.0f };
+  float rot = 0.0f;
+};
+
+struct SpriteComponent {
+  static constexpr size_t MAX_SPRITE_LAYERS = 4;
+  SpriteLayer layers[MAX_SPRITE_LAYERS];
+  float zOffset = -1.0f;
+  u8 layerCount = 0;
+
+  void addLayer(const SpriteLayer& layer) {
+    assert(layerCount < MAX_SPRITE_LAYERS && "Too many sprite layers!");
+    layers[layerCount++] = layer;
+  }
+
+  void addLayer(u32 texIndex, glm::vec2 offset = Vec2(0), float rot = 0) {
+    assert(layerCount < MAX_SPRITE_LAYERS && "Too many sprite layers!");
+    layers[layerCount++] = SpriteLayer(texIndex, offset, rot);
+  }
+
+  SpriteLayer& getLast() {
+    return layers[layerCount - 1];
+  }
+
+  const SpriteLayer& operator[](size_t index) const {
+    assert(index < layerCount);
+    return layers[index];
+  }
+};
+
+struct TilePosComponent {
+  glm::i16vec2 pos;
+  EntityId parent;
+};
+
 class SpriteRenderModule : public BaseRenderModule {
 public:
   struct Vertex {
@@ -79,6 +121,8 @@ public:
     ShapeRenderModule& shapeRender = e.world().getModule<ShapeRenderModule>();
     SpriteComponent& sprite = e.get<SpriteComponent>();
     TransformComponent& transform = e.get<TransformComponent>();
+    if (e.has<TileBoundComponent>())
+      return;
 
     for (int i = 0; i < sprite.layerCount; i++)
       addSprite(sprite[i].texIndex, transform.pos, sprite[i].offset, sprite[i].rot, sprite.zOffset + i * 0.1f);
@@ -151,8 +195,8 @@ private:
     };
 
     for (glm::vec3& pos : tileRect) {
-      glm::vec2 pos2d = { pos.x, pos.y };
-      pos2d = fast2DRotate(pos2d, rot);
+      glm::vec2 pos2d = glm::vec2(pos.x, pos.y) - hSl;
+      pos2d = fast2DRotate(pos2d, rot) + hSl;
       pos2d *= tileDim;
       pos2d += (glm::vec2)tilePos * tileSidelength + offset;
       pos = glm::vec3(pos2d, z);
@@ -177,20 +221,20 @@ private:
     m_mesh.addMesh(vertices);
   }
 
-  void addSprite(u16 textureId, const glm::vec2& pos, const glm::vec2& offset, float rot, float z = -1) {
+  void addSprite(u16 textureId, const glm::vec2& transPos, const glm::vec2& offset, float rot, float z = -1) {
     constexpr float hSl = tileSidelength / 2.0f;
 
     std::array<glm::vec3, 4> tileRect = {
-        glm::vec3(glm::vec2(0             , 0) + (glm::vec2)pos, z),
-        glm::vec3(glm::vec2(tileSidelength, 0) + (glm::vec2)pos, z),
-        glm::vec3(glm::vec2(tileSidelength,  tileSidelength) + (glm::vec2)pos, z),
-        glm::vec3(glm::vec2(0             ,  tileSidelength) + (glm::vec2)pos, z)
+        glm::vec3(glm::vec2(0             , 0), z),
+        glm::vec3(glm::vec2(tileSidelength, 0), z),
+        glm::vec3(glm::vec2(tileSidelength,  tileSidelength), z),
+        glm::vec3(glm::vec2(0             ,  tileSidelength), z)
     };
 
     for (glm::vec3& pos : tileRect) {
-      glm::vec2 pos2d = { pos.x, pos.y };
+      glm::vec2 pos2d = glm::vec2(pos.x, pos.y) - hSl;
       pos2d = fast2DRotate(pos2d, rot);
-      pos2d += pos2d + offset;
+      pos2d += offset + transPos;
       pos = glm::vec3(pos2d, z);
     }
 

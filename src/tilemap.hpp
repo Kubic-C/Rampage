@@ -13,13 +13,18 @@ struct boost::hash<glm::i16vec2> {
   }
 };
 
+struct TileBoundComponent {
+  glm::i16vec2 pos;
+  EntityId parent;
+};
+
 struct TilemapComponent {
   // Ignores shapeId
-  bool insert(const glm::i16vec2& pos, b2BodyId body, const TileDef& clone) {
-    return insert(pos, body, clone.entity, clone.flags, { clone.width, clone.height });
+  bool insert(EntityWorld& world, b2BodyId body, const glm::i16vec2& pos, EntityId parent, const TileDef& clone) {
+    return insert(world, body, pos, parent, clone.entity, clone.flags, { clone.width, clone.height });
   }
 
-  bool insert(const glm::i16vec2& pos, b2BodyId body, EntityId entity = 0, u8 tileFlags = TileFlags::IS_COLLIDABLE, const glm::i16vec2& dim = { 1, 1 }, const b2ShapeDef& shapeDef = b2DefaultShapeDef()) {
+  bool insert(EntityWorld& world, b2BodyId body, const glm::i16vec2& pos, EntityId parent = 0, EntityId entity = 0, u8 tileFlags = TileFlags::IS_COLLIDABLE, const glm::i16vec2& dim = { 1, 1 }, const b2ShapeDef& shapeDef = b2DefaultShapeDef()) {
     if (contains(pos))
       return false;
 
@@ -31,6 +36,14 @@ struct TilemapComponent {
     tile.flags = tileFlags | TileFlags::IS_MAIN_TILE;
     tile.width = dim.x;
     tile.height = dim.y;
+
+    if (entity) {
+      Entity e = world.get(entity);
+      e.add<TileBoundComponent>();
+      TileBoundComponent& tileBound = e.get<TileBoundComponent>();
+      tileBound.parent = parent;
+      tileBound.pos = pos;
+    }
 
     if (tile.flags & TileFlags::IS_MULTI_TILE) {
       const glm::i16vec2 startPos = pos;
@@ -162,4 +175,32 @@ public:
   Iterator<MapType::const_iterator> end() const { return m_tiles.end(); }
 
   OpenMap<glm::i16vec2, Tile> m_tiles;
+};
+
+class TilemapModule : public Module {
+public:
+  TilemapModule(EntityWorld& world)
+    : m_calcTransforms(world.system(world.set<TransformComponent, TileBoundComponent>(), &updateTileBoundTransforms)) {
+    world.component<TilemapComponent>();
+    world.component<TileBoundComponent>();
+  }
+
+  static void updateTileBoundTransforms(Entity e, float dt) {
+    TransformComponent& transform = e.get<TransformComponent>();
+    TileBoundComponent& tileBound = e.get<TileBoundComponent>();
+
+    Entity parent = e.world().get(tileBound.parent);
+    TransformComponent& parentTransform = parent.get<TransformComponent>();
+    TilemapComponent& parentTilemap = parent.get<TilemapComponent>();
+    Tile& tile = parentTilemap.find(tileBound.pos);
+
+    transform = Transform(parentTransform.getWorldPoint(parentTilemap.getLocalTileCenter(tileBound.pos, tile.size())), transform.rot);
+  }
+
+  void run(EntityWorld& world, float deltaTime) override {
+    m_calcTransforms.run();
+  }
+
+private:
+  System m_calcTransforms;
 };

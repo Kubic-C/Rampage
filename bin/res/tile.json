@@ -49,7 +49,20 @@
     "spritePaths": [ "basicTurretBase.png", "basicTurretTop.png" ],
     "flags": [ "IS_COLLIDABLE" ],
     "size": [ 1, 1 ],
-    "turret": true,
+    "turret": {
+        "bullet": {
+          "spritePaths": [ "basicBullet.png" ],
+          "damage": 10,
+          "lifetime": 1.0
+        },
+        "fireRate": 1, // Per second
+        "radius": 2.0, // search radius
+        "turnSpeed": 0.1,
+        "shootRange": 0.4, // + or -
+        "stopRange": 0.2,
+        "muzzleVelocity": 10.0,
+        "bulletRadius": 0.25
+    },
     "item": {
       "name": "BasicTurretItem",
       "iconPath": "basicTurretIcon.png",
