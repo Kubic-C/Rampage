@@ -18,6 +18,10 @@ struct LifetimeComponent {
   float timeLeft = 1.0f;
 };
 
+struct HealthComponent {
+  float health = 5.0f;
+};
+
 struct TurretComponent {
   EntityId summon = 0;
   float fireRate = 1; // Per second
@@ -71,13 +75,25 @@ class TurretModule : public Module {
 public:
   TurretModule(EntityWorld& world) 
     : m_tilemapSys(world.system(world.set<TransformComponent, TurretComponent>(), std::bind(&TurretModule::turretSystem, this, std::placeholders::_1, std::placeholders::_2))),
-    m_shouldDieSys(world.system(world.set<LifetimeComponent>(), &shouldDieSystem)) {
+    m_shouldDieSys(world.system(world.set<LifetimeComponent>(), &lifetimeSystem)),
+    m_healthSys(world.system(world.set<HealthComponent>(), &healthSystem)), 
+    m_collisionQueue(world.create()) {
     world.component<TurretComponent>();
     world.component<LifetimeComponent>();
     world.component<DamageComponent>();
+    world.component<HealthComponent>();
+
+    m_collisionQueue.add<CollisionQueueComponent>();
   }
 
-  static void shouldDieSystem(Entity e, float dt) {
+  static void healthSystem(Entity e, float dt) {
+    HealthComponent& health = e.get<HealthComponent>();
+
+    if (health.health <= 0)
+      e.world().destroy(e);
+  }
+
+  static void lifetimeSystem(Entity e, float dt) {
     LifetimeComponent& destroyAfter = e.get<LifetimeComponent>();
 
     if (destroyAfter.timeLeft < 0)
@@ -139,12 +155,29 @@ public:
   }
 
   void run(EntityWorld& world, float deltaTime) override {
+    CollisionQueueComponent& queue = m_collisionQueue.get<CollisionQueueComponent>();
+    for (CollisionQueueComponent::Collision& collision : queue.queue) {
+      Entity bullet = world.get(collision.primary);
+      Entity other = world.get(collision.secondary);
+
+      assert(other.has<HealthComponent>());
+
+      HealthComponent& health = other.get<HealthComponent>();
+      DamageComponent& damage = bullet.get<DamageComponent>();
+      float speed = b2Length((b2Body_GetLinearVelocity(bullet.get<BodyComponent>().id)));
+      health.health -= (speed / 10.0f) * damage.damage;
+
+      HealthComponent& bulletHealth = bullet.get<HealthComponent>();
+      bulletHealth.health -= damage.damage * 0.1f;
+    }
+    queue.queue.clear();
+
     m_tilemapSys.run(deltaTime);
     m_shouldDieSys.run(deltaTime);
+    m_healthSys.run(deltaTime);
 
     b2WorldId physicsWorld = world.getContext<b2WorldId>();
     for (SummonBullet& bullet : m_summonBullets) {
-      logGeneric("Created bullet\n");
       Entity bulletEntity = world.get(bullet.id).clone();
       bulletEntity.get<TransformComponent>().pos = bullet.pos;
       bulletEntity.add<BodyComponent>();
@@ -154,16 +187,21 @@ public:
       CircleRenderComponent& cirlceRender = bulletEntity.get<CircleRenderComponent>();
       cirlceRender.radius = bullet.radius;
 
+      bulletEntity.add<SubmitToCollisionQueueComponent>();
+      bulletEntity.get<SubmitToCollisionQueueComponent>().queue = m_collisionQueue;
+
       b2BodyDef bodyDef = b2DefaultBodyDef();
       bodyDef.type = b2_dynamicBody;
       bodyDef.linearVelocity = bullet.shootVelocity;
       bodyDef.position = bullet.pos;
+      bodyDef.userData = (void*)bulletEntity.id();
       id = b2CreateBody(physicsWorld, &bodyDef);
       b2Circle circle;
       circle.center = Vec2(0);
       circle.radius = bullet.radius;
       b2ShapeDef shapeDef = b2DefaultShapeDef();
       shapeDef.density = 100.0f;
+      shapeDef.enableHitEvents = true;
       b2Filter filter;
       filter.categoryBits = Friendly;
       filter.maskBits = Enemy;
@@ -176,5 +214,7 @@ public:
 private:
   System m_tilemapSys;
   System m_shouldDieSys;
+  System m_healthSys;
   std::vector<SummonBullet> m_summonBullets;
+  Entity m_collisionQueue;
 };

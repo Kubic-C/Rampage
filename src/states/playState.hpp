@@ -42,6 +42,7 @@ public:
       seeker.add<SeekPrimaryTargetTag>();
       seeker.add<CircleRenderComponent>();
       seeker.add<OwnedBy<PlayState>>();
+      seeker.add<HealthComponent>();
 
       CircleRenderComponent& circleRender = seeker.get<CircleRenderComponent>();
       circleRender.radius = 0.1f;
@@ -53,6 +54,7 @@ public:
       bodyDef.type = b2_dynamicBody;
       bodyDef.position = Vec2(0, 0);
       bodyDef.linearDamping = 10;
+      bodyDef.userData = entityToB2Data(seeker);
       b2ShapeDef shapeDef = b2DefaultShapeDef();
       shapeDef.friction = 0;
       shapeDef.filter.categoryBits = Enemy;

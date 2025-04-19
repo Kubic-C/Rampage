@@ -24,8 +24,31 @@ public:
     }
   }
 
+  VertexBuffer& operator=(VertexBuffer&& other) {
+    m_id = other.m_id;
+    other.m_id = 0;
+
+    return *this;
+  }
+
+  void unmapBuffer() {
+    glUnmapNamedBuffer(m_id);
+  }
+
+  void* mapBufferRange(int offset, int length, int access) {
+    return glMapNamedBufferRange(m_id, offset, length, access);
+  }
+
+  void* mapBuffer(int access) {
+    return glMapNamedBuffer(m_id, access);
+  }
+
   void bufferData(u32 size, void* data, GLenum usage) const {
     glNamedBufferData(m_id, size, data, usage);
+  }
+
+  void bufferStorage(u32 size, void* data, GLenum usage) const {
+    glNamedBufferStorage(m_id, size, data, usage);
   }
 
   void subBufferData(u32 offset, u32 size, void* data) const {

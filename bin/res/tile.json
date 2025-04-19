@@ -37,7 +37,7 @@
     "name": "BigHighStone",
     "spritePaths": [ "highStone.png" ],
     "flags": [ "IS_COLLIDABLE" ],
-    "size": [ 2, 2 ],
+    "size": [ 500, 500 ],
     "item": {
       "name": "BigHighStoneItem",
       "iconPath": "highStone.png",
@@ -52,7 +52,8 @@
     "turret": {
         "bullet": {
           "damage": 10,
-          "lifetime": 1.0
+          "lifetime": 1.0,
+          "health":  20
         },
         "fireRate": 1, // Per second
         "radius": 10.0, // search radius

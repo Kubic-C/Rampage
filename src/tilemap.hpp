@@ -85,6 +85,7 @@ struct TilemapComponent {
 
     assert(!m_tiles.contains(pos));
     m_tiles.insert(std::make_pair(pos, tile));
+    m_mainTiles.insert(pos);
 
     return true;
   }
@@ -104,6 +105,8 @@ struct TilemapComponent {
     if (copy.flags & TileFlags::IS_COLLIDABLE) {
       b2DestroyShape(copy.shapeDef, true);
     }
+
+    m_mainTiles.erase(pos);
 
     for (i16 x = pos.x; x < pos.x + copy.width; x++) {
       for (i16 y = pos.y; y < pos.y + copy.height; y++) {
@@ -175,6 +178,7 @@ public:
   Iterator<MapType::const_iterator> end() const { return m_tiles.end(); }
 
   OpenMap<glm::i16vec2, Tile> m_tiles;
+  Set<glm::i16vec2> m_mainTiles;
 };
 
 class TilemapModule : public Module {

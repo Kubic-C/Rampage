@@ -50,9 +50,12 @@ public:
     enableOpenglErrorCallback();
 #endif 
 
-    glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_DST_ALPHA);
+
+    glEnable(GL_DEPTH_TEST);
+    glClearColor(0.2, 1, 0, 0);
 
     resizeViewportToScreenDim();
 

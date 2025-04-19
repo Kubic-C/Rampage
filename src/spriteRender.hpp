@@ -7,11 +7,11 @@
 
 struct SpriteLayer {
   SpriteLayer() = default;
-  SpriteLayer(u32 texIndex, glm::vec2 offset, float rot)
+  SpriteLayer(u16 texIndex, glm::vec2 offset, float rot)
     : texIndex(texIndex), offset(offset), rot(rot) {
   }
 
-  u32 texIndex = 0;
+  u16 texIndex = 0;
   glm::vec2 offset = { 0.0f, 0.0f };
   float rot = 0.0f;
 };
@@ -48,24 +48,78 @@ struct TilePosComponent {
 };
 
 class SpriteRenderModule : public BaseRenderModule {
+  static const int instanceBufferFlags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
+
+  void resizeInstanceBuffer(size_t minimumNeeded) {
+    capacity = std::max(capacity * 2, minimumNeeded);
+
+    VertexBuffer oldBuffer = std::move(instanceBuffer);
+    VertexBuffer newBuffer;
+    newBuffer.bufferStorage(sizeof(Instance) * capacity, nullptr, instanceBufferFlags);
+    oldBuffer.unmapBuffer();
+    oldBuffer.bind(GL_COPY_READ_BUFFER);
+    newBuffer.bind(GL_COPY_WRITE_BUFFER);
+    glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(Instance) * instanceCount);
+    instanceBuffer = std::move(newBuffer);
+
+    bindInstanceBufferAttribs();
+    instances = (Instance*)instanceBuffer.mapBuffer(GL_WRITE_ONLY);
+  }
+
+  void bindInstanceBufferAttribs() {
+    m_va.addVertexArrayAttrib(instanceBuffer, 2, 2, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, worldPos));
+    m_va.addIntegerVertexArrayAttrib(instanceBuffer, 3, 1, GL_UNSIGNED_SHORT, sizeof(Instance), offsetof(Instance, layer));
+    m_va.addVertexArrayAttrib(instanceBuffer, 4, 1, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, z));
+    m_va.addVertexArrayAttrib(instanceBuffer, 5, 1, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, localRot));
+    m_va.addVertexArrayAttrib(instanceBuffer, 6, 2, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, scale));
+    m_va.attribDivisor(2, 1);
+    m_va.attribDivisor(3, 1);
+    m_va.attribDivisor(4, 1);
+    m_va.attribDivisor(5, 1);
+    m_va.attribDivisor(6, 1);
+  }
+
 public:
-  struct Vertex {
-    glm::vec3 pos;
-    glm::vec3 texCoords;
+  struct MeshVertex {
+    glm::vec2 pos;
+    glm::vec2 texCoords;
+  };
+
+  struct Instance {
+    glm::vec2 worldPos;
+    u16 layer;
+    float z;
+    float localRot;
+    glm::vec2 scale;
   };
 
   SpriteRenderModule(EntityWorld& world, size_t priority, u32 spriteWidth, u32 spriteHeight, u32 maxSprites)
     : BaseRenderModule(world, priority), m_texArray(spriteWidth, spriteHeight, maxSprites),
     m_tilemapSys(m_world.system(m_world.set<TransformComponent, TilemapComponent>(), std::bind(&SpriteRenderModule::meshTilemap, this, std::placeholders::_1, std::placeholders::_2))),
     m_spriteSys(m_world.system(m_world.set<TransformComponent, SpriteComponent>(), std::bind(&SpriteRenderModule::meshSprite, this, std::placeholders::_1, std::placeholders::_2))) {
-    m_va.addVertexArrayAttrib(m_mesh.buffer, 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
-    m_va.addVertexArrayAttrib(m_mesh.buffer, 1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), offsetof(Vertex, texCoords));
+  
+    // Mesh Indicies
+    std::array<u32, 6> indicies = generateIndicies();
+    indexBuffer.bufferData(sizeof(indicies), indicies.data(), GL_STATIC_DRAW);
+
+    // Mesh
+    std::array<MeshVertex, 4> mesh = generateDefaultMesh();
+    meshBuffer.bufferData(sizeof(mesh), mesh.data(), GL_STATIC_DRAW);
+    m_va.addVertexArrayAttrib(meshBuffer, 0, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), 0);
+    m_va.addVertexArrayAttrib(meshBuffer, 1, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), offsetof(MeshVertex, texCoords));
+
+    // Per Instance
+    instanceBuffer.bufferStorage(sizeof(Instance) * capacity, nullptr, instanceBufferFlags);
+    instances = (Instance*)instanceBuffer.mapBuffer(GL_WRITE_ONLY);
+    bindInstanceBufferAttribs();
+
     if (!m_shader.loadShaderStr(tileVertexShaderSource, tileFragShaderSource)) {
       m_status = Status::CriticalError;
       return;
     }
     m_shader.use();
-    m_shader.setInt("u_sampler", 0);
+    m_shader.setInt("uSampler", 0);
+    m_shader.setFloat("uTileSideLength", tileSidelength);
 
     m_sampler.parameter(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     m_sampler.parameter(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -78,7 +132,7 @@ public:
   }
      
   void preMesh() override {
-    m_mesh.reset();
+    
   }
 
   void onMesh() override {
@@ -90,19 +144,32 @@ public:
     ShapeRenderModule& shapeRender = e.world().getModule<ShapeRenderModule>();
     TilemapComponent& tm = e.get<TilemapComponent>();
     TransformComponent& transform = e.get<TransformComponent>();
-    for (glm::i16vec2 tilePos : tm) {
+    for (glm::i16vec2 tilePos : tm.m_mainTiles) {
       Tile& tile = tm.find(tilePos);
-      if (!(tile.flags & TileFlags::IS_MAIN_TILE))
-        continue;
 
+      glm::vec2 dim = { tile.width, tile.height };
+      glm::vec2 tileWorldPos = transform.getWorldPoint(tm.getLocalTileCenter(tilePos, dim));
       if (!tile.entity) {
-        addTile(0, tilePos, { tile.width, tile.height }, Vec2(0), 0, -1);
+        Instance instance;
+        instance.worldPos = tileWorldPos;
+        instance.layer = 0;
+        instance.z = 0;
+        instance.localRot = 0;
+        instance.scale = { 1, 1 };
+        addInstance(instance);
       } else {
         Entity tileEntity = e.world().get(tile.entity);
         SpriteComponent& sprite = tileEntity.get<SpriteComponent>();
 
-        for (int i = 0; i < sprite.layerCount; i++)
-          addTile(sprite[i].texIndex, tilePos, { tile.width, tile.height }, sprite[i].offset, sprite[i].rot, sprite.zOffset + i * 0.1f);
+        for (int i = 0; i < sprite.layerCount; i++) {
+          Instance instance;
+          instance.worldPos = tileWorldPos;
+          instance.layer = sprite[i].texIndex;
+          instance.z = sprite.zOffset + i * 0.1f;
+          instance.localRot = sprite[i].rot;
+          instance.scale = dim;
+          addInstance(instance);
+        }
       }
 
       if (tile.entity && SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F1]) {
@@ -124,18 +191,31 @@ public:
     if (e.has<TileBoundComponent>())
       return;
 
-    for (int i = 0; i < sprite.layerCount; i++)
-      addSprite(sprite[i].texIndex, transform.pos, sprite[i].offset, sprite[i].rot, sprite.zOffset + i * 0.1f);
+    for (int i = 0; i < sprite.layerCount; i++) {
+      Instance instance;
+      instance.worldPos = transform.pos;
+      instance.layer = sprite[i].texIndex;
+      instance.z = sprite.zOffset + i * 0.1f;
+      instance.localRot = sprite[i].rot;
+      instance.scale = { 1, 1 };
+      addInstance(instance);
+    }
   }
 
   void onRender(const glm::mat4& vp) override {
+    instanceBuffer.unmapBuffer();
+
     m_shader.use();
     glActiveTexture(GL_TEXTURE0);
     m_texArray.bind();
     m_sampler.bind(0);
-    m_shader.setMat4("u_vp", vp);
+    m_shader.setMat4("uVP", vp);
     m_va.bind();
-    glDrawArrays(GL_TRIANGLES, 0, m_mesh.verticesToRender);
+    indexBuffer.bind(GL_ELEMENT_ARRAY_BUFFER);
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instanceCount);
+    
+    instanceCount = 0;
+    instances = (Instance*)instanceBuffer.mapBuffer(GL_WRITE_ONLY);
   }
 
   u32 loadSprite(const std::string& path) {
@@ -184,110 +264,119 @@ private:
     return true;
   }
 
-  void addTile(u16 textureId, const glm::ivec2& tilePos, const glm::ivec2& tileDim, const glm::vec2& offset, float rot, float z = -1) {
-    constexpr float hSl = tileSidelength / 2.0f;
+  void addInstance(Instance& instance) {
+    if (instanceCount + 1 > capacity)
+      resizeInstanceBuffer(instanceCount + 1);
 
-    std::array<glm::vec3, 4> tileRect = {
-        glm::vec3(glm::vec2(0             , 0), z),
-        glm::vec3(glm::vec2(tileSidelength, 0), z),
-        glm::vec3(glm::vec2(tileSidelength,  tileSidelength), z),
-        glm::vec3(glm::vec2(0             ,  tileSidelength), z)
-    };
-
-    for (glm::vec3& pos : tileRect) {
-      glm::vec2 pos2d = glm::vec2(pos.x, pos.y) - hSl;
-      pos2d = fast2DRotate(pos2d, rot) + hSl;
-      pos2d *= tileDim;
-      pos2d += (glm::vec2)tilePos * tileSidelength + offset;
-      pos = glm::vec3(pos2d, z);
-    }
-
-    std::array<glm::vec3, 4> texCoords = {
-      glm::vec3(0.0f, 0.0f, (float)textureId) * glm::vec3(tileDim, 1.0f),
-      glm::vec3(1.0f, 0.0f, (float)textureId) * glm::vec3(tileDim, 1.0f),
-      glm::vec3(1.0f, 1.0f, (float)textureId) * glm::vec3(tileDim, 1.0f),
-      glm::vec3(0.0f, 1.0f, (float)textureId) * glm::vec3(tileDim, 1.0f)
-    };
-
-    Vertex vertices[] = {
-      Vertex(tileRect[0], texCoords[0]),
-      Vertex(tileRect[1], texCoords[1]),
-      Vertex(tileRect[2], texCoords[2]),
-      Vertex(tileRect[2], texCoords[2]),
-      Vertex(tileRect[3], texCoords[3]),
-      Vertex(tileRect[0], texCoords[0])
-    };
-
-    m_mesh.addMesh(vertices);
+    instances[instanceCount] = instance;
+    instanceCount++;
   }
 
-  void addSprite(u16 textureId, const glm::vec2& transPos, const glm::vec2& offset, float rot, float z = -1) {
-    constexpr float hSl = tileSidelength / 2.0f;
-
-    std::array<glm::vec3, 4> tileRect = {
-        glm::vec3(glm::vec2(0             , 0), z),
-        glm::vec3(glm::vec2(tileSidelength, 0), z),
-        glm::vec3(glm::vec2(tileSidelength,  tileSidelength), z),
-        glm::vec3(glm::vec2(0             ,  tileSidelength), z)
+  std::array<MeshVertex, 4> generateDefaultMesh() {
+    std::array<glm::vec2, 4> tileRect = {
+      glm::vec2(-1, -1),
+      glm::vec2(1, -1),
+      glm::vec2(1,  1),
+      glm::vec2(-1,  1)
     };
 
-    for (glm::vec3& pos : tileRect) {
-      glm::vec2 pos2d = glm::vec2(pos.x, pos.y) - hSl;
-      pos2d = fast2DRotate(pos2d, rot);
-      pos2d += offset + transPos;
-      pos = glm::vec3(pos2d, z);
-    }
-
-    std::array<glm::vec3, 4> texCoords = {
-      glm::vec3(0.0f, 0.0f, (float)textureId),
-      glm::vec3(1.0f, 0.0f, (float)textureId),
-      glm::vec3(1.0f, 1.0f, (float)textureId),
-      glm::vec3(0.0f, 1.0f, (float)textureId)
+    std::array<glm::vec2, 4> texCoords = {
+      glm::vec2(0.0f, 0.0f),
+      glm::vec2(1.0f, 0.0f),
+      glm::vec2(1.0f, 1.0f),
+      glm::vec2(0.0f, 1.0f)
     };
 
-    Vertex vertices[] = {
-      Vertex(tileRect[0], texCoords[0]),
-      Vertex(tileRect[1], texCoords[1]),
-      Vertex(tileRect[2], texCoords[2]),
-      Vertex(tileRect[2], texCoords[2]),
-      Vertex(tileRect[3], texCoords[3]),
-      Vertex(tileRect[0], texCoords[0])
+    return {
+      MeshVertex(tileRect[0], texCoords[0]),
+      MeshVertex(tileRect[1], texCoords[1]),
+      MeshVertex(tileRect[2], texCoords[2]),
+      MeshVertex(tileRect[3], texCoords[3])
     };
+  }
 
-    m_mesh.addMesh(vertices);
+  std::array<u32, 6> generateIndicies() {
+    return {
+      0, 1, 2, 2, 3, 0
+    };
   }
 
 private:
+  //std::array<MeshVertex, 4> mesh = generateDefaultMesh();
+  //meshBuffer.bufferData(sizeof(mesh), mesh.data(), GL_STATIC_DRAW);
+  //std::array<u32, 6> indicies = generateIndicies();
+  //indexBuffer.bufferData(sizeof(indicies), indicies.data(), GL_STATIC_DRAW);
+  //m_va.addVertexArrayAttrib(meshBuffer, 0, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), 0);
+  //m_va.addVertexArrayAttrib(meshBuffer, 1, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), offsetof(MeshVertex, texCoords));
+
+  //instanceBuffer.bufferData(sizeof(Instance) * 1024, nullptr, GL_DYNAMIC_DRAW);
+  //m_va.addVertexArrayAttrib(meshBuffer, 2, 2, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, pos));
+  //m_va.addVertexArrayAttrib(meshBuffer, 3, 1, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(Instance), offsetof(Instance, layer));
+  //m_va.addVertexArrayAttrib(meshBuffer, 4, 1, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, z));
+  //m_va.addVertexArrayAttrib(meshBuffer, 5, 1, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, rot));
+  //glVertexAttribDivisor(2, 1);
+  //glVertexAttribDivisor(3, 1);
+  //glVertexAttribDivisor(4, 1);
+  //glVertexAttribDivisor(5, 1);
+
   const char* tileVertexShaderSource = R"###(
         #version 400 core
-        layout(location = 0) in vec3 a_pos;
-        layout(location = 1) in vec3 a_tex_coords;
+        layout(location = 0) in vec2 pos;
+        layout(location = 1) in vec2 texCoords;
+        layout(location = 2) in vec2 worldPos;
+        layout(location = 3) in uint layer;
+        layout(location = 4) in float z;
+        layout(location = 5) in float localRot;
+        layout(location = 6) in vec2 scale;
+        uniform mat4 uVP; 
+        uniform float uTileSideLength;
 
-        out vec3 v_tex_coords;
+        out vec3 vTexCoords;
 
-        uniform mat4 u_vp;
+        vec2 rotate(vec2 vec, float angle) {
+          vec2 rotVec;
+
+          float cs = cos(angle);
+          float sn = sin(angle);
+
+          rotVec.x = vec.x * cs - vec.y * sn;
+          rotVec.y = vec.x * sn + vec.y * cs;
+
+          return rotVec;
+        }
 
         void main() {
-            gl_Position = u_vp * vec4(a_pos, 1.0);
-            v_tex_coords = a_tex_coords;
+            gl_Position = uVP * vec4(worldPos + rotate(pos * (0.5 * uTileSideLength) * scale, localRot), z, 1.0);
+            vTexCoords = vec3(texCoords * scale, layer);
         })###";
 
   const char* tileFragShaderSource = R"###(
         #version 400 core
-        in vec3 v_tex_coords;
+        in vec3 vTexCoords;
 
-        uniform sampler2DArray u_sampler;
+        uniform sampler2DArray uSampler;
 
         out vec4 fragColor;
 
         void main() {
-            fragColor = texture(u_sampler, v_tex_coords);
+            vec4 frag = texture(uSampler, vTexCoords);
+            if (frag.a <= 0.01) 
+              discard;
+
+            fragColor = frag;
         })###";
 
 private:
   u32 m_lastFreeTexture = 0;
   Map<std::string, u32> m_textureIds;
-  Mesh<Vertex, 6, 6> m_mesh;
+
+  size_t capacity = 1024;
+  size_t instanceCount = 0;
+  Instance* instances;
+  VertexBuffer indexBuffer;
+  VertexBuffer meshBuffer;
+  VertexBuffer instanceBuffer;
+
   Shader m_shader;
   VertexArrayBuffer m_va;
   TextureArray m_texArray;

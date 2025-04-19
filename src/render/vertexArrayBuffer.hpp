@@ -34,11 +34,27 @@ public:
     glVertexAttribPointer(slot, size, type, (int)normalized, stride, (const void*)offset);
     glEnableVertexAttribArray(slot);
     VertexBuffer::unbind(GL_ARRAY_BUFFER);
-    VertexArrayBuffer::unbind();
+    unbind();
+  }
+
+
+  void addIntegerVertexArrayAttrib(const VertexBuffer& vertexBuffer, u32 slot, u32 size, GLenum type, u32 stride, u32 offset) {
+    bind();
+    vertexBuffer.bind(GL_ARRAY_BUFFER);
+    glVertexAttribIPointer(slot, size, type, stride, (const void*)offset);
+    glEnableVertexAttribArray(slot);
+    VertexBuffer::unbind(GL_ARRAY_BUFFER);
+    unbind();
   }
   
   void bind() {
     glBindVertexArray(m_id);
+  }
+
+  void attribDivisor(int attrib, int divisor) {
+    bind();
+    glVertexAttribDivisor(attrib, divisor);
+    unbind();
   }
 
 private:
