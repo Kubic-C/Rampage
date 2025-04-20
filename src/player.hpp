@@ -56,7 +56,6 @@ public:
       camera.m_rot -= 0.1f;
     if (eventMgr.isKeyPressed(Key::Tab)) {
       inv.setVisible(!inv.getVisible());
-      logGeneric("inv: %i\n", inv.getVisible());
     }
 
     float maxSpeed = player.maxSpeed;

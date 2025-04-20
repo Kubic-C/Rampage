@@ -125,7 +125,10 @@ bool TilePrefabs::loadFromFile(const std::string& filePath) {
       logGeneric("Failed to load tile json. Flag was invalid\n");
       continue;
     }
-    glm::i16vec2 size = { tileJson["size"][0].get<int>(), tileJson["size"][1].get<int>() };
+    glm::i16vec2 size = { 
+      glm::min((i16)maxDim.x, tileJson["size"][0].get<i16>()), 
+      glm::min((i16)maxDim.y, tileJson["size"][1].get<i16>()) 
+    };
     if (size.x < 0 || size.y < 0) {
       logGeneric("Failed to load tile json. Size was invalid\n");
       continue;

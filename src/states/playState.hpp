@@ -111,7 +111,6 @@ public:
 
     { // World Map
       Entity tm = m_world.create();
-      logGeneric("World tilemap @ %u\n", tm.id());
       tm.add<TransformComponent>();
       tm.add<BodyComponent>();
       tm.add<TilemapComponent>();
@@ -147,7 +146,7 @@ public:
           }
         };
 
-      callInGrid(-40, -40, 40, 40, tileCallback);
+      callInGrid(-37, -37, 37, 37, tileCallback);
     }
   }
 

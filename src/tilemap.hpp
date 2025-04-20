@@ -135,8 +135,8 @@ struct TilemapComponent {
     return m_tiles.contains(pos);
   }
 
-  Vec2 getLocalTileCenter(const glm::i16vec2& tilePos, const Vec2& dim = { 1, 1 }) const {
-    return (glm::vec2)tilePos * tileSize + (dim * tileSize * 0.5f);
+  Vec2 getLocalTileCenter(const glm::i16vec2& tilePos, const glm::u16vec2& dim = { 1, 1 }) const {
+    return (glm::vec2)tilePos * tileSize + ((Vec2)dim * tileSize * 0.5f);
   }
 
   glm::i16vec2 getNearestTile(const glm::vec2& localPos) const {

@@ -98,6 +98,10 @@ public:
     ItemAttrIcon& itemIcon = entity.get<ItemAttrIcon>();
     itemIcon.icon = icon;
 
+#ifndef NDEBUG
+    logGeneric("Created Item: %s @ %u\n", name.c_str(), entity.id());
+#endif
+
     return entity;
   }
 
@@ -108,6 +112,7 @@ public:
 
   Inventory createInventory(std::string name, u8 rows = 3, u8 cols = 3);
   Inventory getInventory(InventoryId id);
+  bool hasInventory(InventoryId id);
   void destroyInventory(InventoryId id);
 
   void updateHandPos() {
@@ -223,7 +228,7 @@ public:
 
           ItemStack& stack = inv.items.find({ x, y })->second;
           if (stack.item == 0) {
-            stack.item = entity;
+            stack.item = itemEntity.clone();
             stack.stackCount = 1;
             stack.ui->setImage(itemEntity.get<ItemAttrIcon>().icon);
             count--;
@@ -426,7 +431,9 @@ public:
 
     m_world.observe(EntityWorld::EventType::Remove, m_world.component<InventoryComponent>(), {},
       [](Entity e) {
-        e.world().getContext<ItemManager>().destroyInventory(e.get<InventoryComponent>().id);
+        ItemManager& mgr = e.world().getContext<ItemManager>();
+        if(mgr.hasInventory(e.get<InventoryComponent>().id))
+          mgr.destroyInventory(e.get<InventoryComponent>().id);
       });
   }
 

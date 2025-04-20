@@ -5,31 +5,65 @@
 #include "tilemap.hpp"
 #include "seekPlayer.hpp"
 
+constexpr size_t maxNumberBits(size_t numBits) {
+  size_t num = 0;
+
+  for (size_t n = 1; n <= numBits - 1; n++) {
+    size_t powerOf2 = 2;
+
+    for (size_t power = n - 1; power > 0; power--) {
+      powerOf2 *= 2;
+    }
+
+    num += powerOf2;
+  }
+
+  return num + 1;
+}
+
+enum class WorldLayer: u8 {
+  Invalid = 8,
+  Bottom = 7,
+  Floor = 6,
+  Wall = 5,
+  Turret = 4,
+  Item = 3,
+  Res = 2,  // RESERVED
+  Res2 = 1, // RESERVED
+  Top = 0,
+};
+
 struct SpriteLayer {
   SpriteLayer() = default;
-  SpriteLayer(u16 texIndex, glm::vec2 offset, float rot)
-    : texIndex(texIndex), offset(offset), rot(rot) {
+  SpriteLayer(u16 texIndex, glm::vec2 offset, float rot, WorldLayer layer)
+    : texIndex(texIndex), offset(offset), rot(rot), layer(layer) {
   }
 
   u16 texIndex = 0;
   glm::vec2 offset = { 0.0f, 0.0f };
   float rot = 0.0f;
+  WorldLayer layer = WorldLayer::Invalid;
 };
 
 struct SpriteComponent {
-  static constexpr size_t MAX_SPRITE_LAYERS = 4;
-  SpriteLayer layers[MAX_SPRITE_LAYERS];
-  float zOffset = -1.0f;
+  static constexpr size_t MaxSpriteLaters = maxNumberBits(3);
+  SpriteLayer layers[MaxSpriteLaters];
   u8 layerCount = 0;
 
   void addLayer(const SpriteLayer& layer) {
-    assert(layerCount < MAX_SPRITE_LAYERS && "Too many sprite layers!");
+    assert(layerCount < MaxSpriteLaters && "Too many sprite layers!");
     layers[layerCount++] = layer;
+    if (layer.layer == WorldLayer::Invalid) {
+      layers[layerCount - 1].layer = (WorldLayer)(MaxSpriteLaters - layerCount);
+    }
   }
 
-  void addLayer(u32 texIndex, glm::vec2 offset = Vec2(0), float rot = 0) {
-    assert(layerCount < MAX_SPRITE_LAYERS && "Too many sprite layers!");
-    layers[layerCount++] = SpriteLayer(texIndex, offset, rot);
+  void addLayer(u32 texIndex, glm::vec2 offset = Vec2(0), float rot = 0, WorldLayer layer = WorldLayer::Invalid) {
+    assert(layerCount < MaxSpriteLaters && "Too many sprite layers!");
+    if (layer == WorldLayer::Invalid) {
+      layer = (WorldLayer)(MaxSpriteLaters - layerCount);
+    }
+    layers[layerCount++] = SpriteLayer(texIndex, offset, rot, layer);
   }
 
   SpriteLayer& getLast() {
@@ -64,19 +98,17 @@ class SpriteRenderModule : public BaseRenderModule {
 
     bindInstanceBufferAttribs();
     instances = (Instance*)instanceBuffer.mapBuffer(GL_WRITE_ONLY);
-  }
+  } 
 
   void bindInstanceBufferAttribs() {
     m_va.addVertexArrayAttrib(instanceBuffer, 2, 2, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, worldPos));
     m_va.addIntegerVertexArrayAttrib(instanceBuffer, 3, 1, GL_UNSIGNED_SHORT, sizeof(Instance), offsetof(Instance, layer));
-    m_va.addVertexArrayAttrib(instanceBuffer, 4, 1, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, z));
-    m_va.addVertexArrayAttrib(instanceBuffer, 5, 1, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, localRot));
-    m_va.addVertexArrayAttrib(instanceBuffer, 6, 2, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, scale));
+    m_va.addIntegerVertexArrayAttrib(instanceBuffer, 4, 1, GL_UNSIGNED_BYTE, sizeof(Instance), offsetof(Instance, rot5z3));
+    m_va.addIntegerVertexArrayAttrib(instanceBuffer, 5, 1, GL_UNSIGNED_BYTE, sizeof(Instance), offsetof(Instance, scale));
     m_va.attribDivisor(2, 1);
     m_va.attribDivisor(3, 1);
     m_va.attribDivisor(4, 1);
     m_va.attribDivisor(5, 1);
-    m_va.attribDivisor(6, 1);
   }
 
 public:
@@ -86,11 +118,46 @@ public:
   };
 
   struct Instance {
+    static constexpr u8 zMask      = 0b00000111; // 7
+    static constexpr u8 rotMask    = 0b11111000; // 248 (31)
+    static constexpr u8 scaleXMask = 0b00001111; // 15
+    static constexpr u8 scaleYMask = 0b11110000; // 240 (15)
+
     glm::vec2 worldPos;
     u16 layer;
-    float z;
-    float localRot;
-    glm::vec2 scale;
+    u8 rot5z3;
+    u8 scale;
+
+    void setRot(float fRot) {
+      constexpr u8 rangeLimit = 31;
+      constexpr u8 bitShiftLeft = 3;
+      constexpr float pi2 = (2.0f * glm::pi<float>());
+      constexpr float inv2pi = 1.0f / pi2;
+
+      float zeroToOne = glm::mod(fRot, pi2) * inv2pi;
+      u8 rot = (u8)(zeroToOne * rangeLimit);
+      rot <<= bitShiftLeft;
+      rot5z3 &= ~rotMask;
+      rot5z3 |= rot;
+    }
+
+    void setZ(u8 z) {
+      constexpr u8 rangeLimit = 7;
+      assert(z <= rangeLimit);
+
+      rot5z3 &= ~zMask;
+      rot5z3 |= z;
+    }
+
+    void setScale(u8 scaleX, u8 scaleY) {
+      constexpr u8 rangeLimit = 15;
+      assert(scaleX <= rangeLimit);
+      assert(scaleY <= rangeLimit);
+
+      scale = 0;
+      scale |= scaleX;
+      scale |= scaleY << 4;
+    }
   };
 
   SpriteRenderModule(EntityWorld& world, size_t priority, u32 spriteWidth, u32 spriteHeight, u32 maxSprites)
@@ -147,15 +214,15 @@ public:
     for (glm::i16vec2 tilePos : tm.m_mainTiles) {
       Tile& tile = tm.find(tilePos);
 
-      glm::vec2 dim = { tile.width, tile.height };
+      glm::u16vec2 dim = { tile.width, tile.height };
       glm::vec2 tileWorldPos = transform.getWorldPoint(tm.getLocalTileCenter(tilePos, dim));
       if (!tile.entity) {
         Instance instance;
         instance.worldPos = tileWorldPos;
         instance.layer = 0;
-        instance.z = 0;
-        instance.localRot = 0;
-        instance.scale = { 1, 1 };
+        instance.setZ((u8)WorldLayer::Bottom);
+        instance.setRot(0);
+        instance.setScale(1, 1);
         addInstance(instance);
       } else {
         Entity tileEntity = e.world().get(tile.entity);
@@ -165,9 +232,9 @@ public:
           Instance instance;
           instance.worldPos = tileWorldPos;
           instance.layer = sprite[i].texIndex;
-          instance.z = sprite.zOffset + i * 0.1f;
-          instance.localRot = sprite[i].rot;
-          instance.scale = dim;
+          instance.setZ((u8)sprite[i].layer);
+          instance.setRot(sprite[i].rot);
+          instance.setScale(dim.x, dim.y);
           addInstance(instance);
         }
       }
@@ -195,9 +262,9 @@ public:
       Instance instance;
       instance.worldPos = transform.pos;
       instance.layer = sprite[i].texIndex;
-      instance.z = sprite.zOffset + i * 0.1f;
-      instance.localRot = sprite[i].rot;
-      instance.scale = { 1, 1 };
+      instance.setZ((u8)sprite[i].layer);
+      instance.setRot(sprite[i].rot);
+      instance.setScale(1, 1);
       addInstance(instance);
     }
   }
@@ -301,23 +368,12 @@ private:
     };
   }
 
-private:
-  //std::array<MeshVertex, 4> mesh = generateDefaultMesh();
-  //meshBuffer.bufferData(sizeof(mesh), mesh.data(), GL_STATIC_DRAW);
-  //std::array<u32, 6> indicies = generateIndicies();
-  //indexBuffer.bufferData(sizeof(indicies), indicies.data(), GL_STATIC_DRAW);
-  //m_va.addVertexArrayAttrib(meshBuffer, 0, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), 0);
-  //m_va.addVertexArrayAttrib(meshBuffer, 1, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), offsetof(MeshVertex, texCoords));
+private:/*
+  m_va.addIntegerVertexArrayAttrib(instanceBuffer, 2, 2, GL_SHORT, sizeof(Instance), offsetof(Instance, worldPos));
+  m_va.addIntegerVertexArrayAttrib(instanceBuffer, 3, 1, GL_UNSIGNED_SHORT, sizeof(Instance), offsetof(Instance, layer));
+  m_va.addVertexArrayAttrib(instanceBuffer, 4, 1, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, rot5z3));
+  m_va.addVertexArrayAttrib(instanceBuffer, 5, 1, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, scale));*/
 
-  //instanceBuffer.bufferData(sizeof(Instance) * 1024, nullptr, GL_DYNAMIC_DRAW);
-  //m_va.addVertexArrayAttrib(meshBuffer, 2, 2, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, pos));
-  //m_va.addVertexArrayAttrib(meshBuffer, 3, 1, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(Instance), offsetof(Instance, layer));
-  //m_va.addVertexArrayAttrib(meshBuffer, 4, 1, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, z));
-  //m_va.addVertexArrayAttrib(meshBuffer, 5, 1, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, rot));
-  //glVertexAttribDivisor(2, 1);
-  //glVertexAttribDivisor(3, 1);
-  //glVertexAttribDivisor(4, 1);
-  //glVertexAttribDivisor(5, 1);
 
   const char* tileVertexShaderSource = R"###(
         #version 400 core
@@ -325,9 +381,9 @@ private:
         layout(location = 1) in vec2 texCoords;
         layout(location = 2) in vec2 worldPos;
         layout(location = 3) in uint layer;
-        layout(location = 4) in float z;
-        layout(location = 5) in float localRot;
-        layout(location = 6) in vec2 scale;
+        layout(location = 4) in uint rot5z3;
+        layout(location = 5) in uint scaleByte;
+
         uniform mat4 uVP; 
         uniform float uTileSideLength;
 
@@ -346,7 +402,16 @@ private:
         }
 
         void main() {
-            gl_Position = uVP * vec4(worldPos + rotate(pos * (0.5 * uTileSideLength) * scale, localRot), z, 1.0);
+            const float pi = 3.141592653589793;
+            // zMask      = 0b00000111; // 7
+            // rotMask    = 0b11111000; // 248 
+            // scaleXMask = 0b00001111; // 15
+            // scaleYMask = 0b11110000; // 240
+            float z = rot5z3 & 7;
+            float localRot = (rot5z3 >> 3) / 31.0f * pi * 2;
+            vec2 scale = vec2(scaleByte & 15, (scaleByte & 240) >> 4);
+
+            gl_Position = uVP * vec4(worldPos + rotate(pos * (0.5 * uTileSideLength) * scale, localRot), -z, 1.0);
             vTexCoords = vec3(texCoords * scale, layer);
         })###";
 

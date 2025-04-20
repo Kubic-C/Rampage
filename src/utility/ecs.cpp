@@ -305,7 +305,7 @@ EntityWorld::EntityListIterator EntityWorld::destroy(EntityId id) {
   EntityListIterator next = m_sets[findOrCreateSet({ component<Destroy>() })].erase(data.pos);
   m_entities.erase(id);
   m_idMgr.destroy(id);
-
+     
   return next;
 }
 

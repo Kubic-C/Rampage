@@ -51,6 +51,10 @@ Inventory ItemManager::getInventory(InventoryId id) {
   return Inventory(*this, id);
 }
 
+bool ItemManager::hasInventory(InventoryId id) {
+  return m_inventories.contains(id);
+}
+
 void ItemManager::destroyInventory(InventoryId id) {
   for (auto& [pos, stack] : m_inventories.find(id)->second.items) {
     if (stack.item == 0)
