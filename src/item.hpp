@@ -459,28 +459,31 @@ inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& sta
     return false;
 
   Entity item = world.get(stack.item);
-  TilemapComponent& tilemap = worldMap.get<TilemapComponent>();
+  TilemapComponent& tmLayers = worldMap.get<TilemapComponent>();
+  Tilemap& topTilemap = tmLayers.getToptilemap();
+
   BodyComponent& body = worldMap.get<BodyComponent>();
-  glm::i16vec2 tilePos = tilemap.getNearestTile(worldMap.get<TransformComponent>().getLocalPoint(coords));
+  glm::i16vec2 tilePos = Tilemap::getNearestTile(worldMap.get<TransformComponent>().getLocalPoint(coords));
   const TileDef& tileItemPrefab = tilePrefabs.getPrefab(item.get<ItemAttrTile>().tileId);
   for (int x = tilePos.x; x < tilePos.x + tileItemPrefab.width; x++) {
     for (int y = tilePos.y; y < tilePos.y + tileItemPrefab.height; y++) {
       glm::i16vec2 tilePos = { x, y };
 
-      if (tilemap.contains(tilePos)) {
-        Tile oldTile = tilemap.find(tilePos);
-        Entity tile = world.get(tilemap.erase(tilePos));
-        if (tile.has<TileItemComponent>()) {
-          inv.addItem(tile.get<TileItemComponent>().item);
-        }
-        if (!tile.has<DestroyTileOnEntityRemovalTag>())
-          world.destroy(tile);
+      if (!topTilemap.contains(tilePos))
+        continue;
+
+      Tile oldTile = topTilemap.find(tilePos);
+      Entity tile = world.get(topTilemap.erase(tilePos));
+      if (tile.has<TileItemComponent>()) {
+        inv.addItem(tile.get<TileItemComponent>().item);
       }
+      if (!tile.has<DestroyTileOnEntityRemovalTag>())
+        world.destroy(tile);
     }
   }
 
   inv.removeItem(stackPos);
-  tilemap.insert(world, body.id, tilePos, worldMap, tilePrefabs.clonePrefab(item.get<ItemAttrTile>().tileId));
+  tmLayers.getToptilemap().insert(world, body.id, tilePos, worldMap, tilePrefabs.clonePrefab(item.get<ItemAttrTile>().tileId));
 
   if (inv.isStackEmpty(stackPos))
     world.getContext<ItemManager>().clearHand();

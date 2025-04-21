@@ -137,22 +137,23 @@ public:
       tm.get<BodyComponent>().id = bodyId;
       
       TilePrefabs& tilePrefabs = m_world.getContext<TilePrefabs>();
-      TilemapComponent& tilemap = tm.get<TilemapComponent>();
+      TilemapComponent& tilemapLayers = tm.get<TilemapComponent>();
+      Tilemap& worldLayer = tilemapLayers.getTilemap(TilemapWorldLayer);
       auto tileCallback =
         [&](int x, int y) {
           if (x <= -35 || x >= 35 || y <= -35 || y >= 35 || (x % 5 == 0 && y < 20 && y != -34)) {
             TileDef highStone = tilePrefabs.clonePrefab("HighStone");
             m_world.get(highStone.entity).add<OwnedBy<PlayState>>();
-            tilemap.insert(m_world, bodyId, { x, y }, tm, highStone);
+            worldLayer.insert(m_world, bodyId, { x, y }, tm, highStone);
           }
           else if (rand() % 100 < 5) {
             TileDef unknown = tilePrefabs.clonePrefab("Unknown");
             m_world.get(unknown.entity).add<OwnedBy<PlayState>>();
-            tilemap.insert(m_world, bodyId, { x, y }, tm, unknown);
+            worldLayer.insert(m_world, bodyId, { x, y }, tm, unknown);
           } else {
             TileDef stone = tilePrefabs.clonePrefab("StoneFloor");
             m_world.get(stone.entity).add<OwnedBy<PlayState>>();
-            tilemap.insert(m_world, bodyId, { x, y }, tm, stone);
+            worldLayer.insert(m_world, bodyId, { x, y }, tm, stone);
           }
         };
 

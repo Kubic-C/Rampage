@@ -18,10 +18,10 @@ bool keysExistAndLog(const std::string target, json& json, const std::vector<std
   return !failed;
 }
 
-SpriteComponent loadSpriteFromPaths(SpriteRenderModule& render, const std::string& parentDir, const std::vector<std::string>& paths) {
+SpriteComponent loadSpriteFromPaths(SpriteRenderModule& render, const std::string& parentDir, const std::vector<std::string>& paths, int startingLayer) {
   SpriteComponent sprite;
-  for (u8 i = 0; i < paths.size(); i++)
-    sprite.addLayer(render.getSpriteFromPath(parentDir + paths[i]));
+  for (u8 i = 0; i < paths.size() && i + startingLayer < SpriteComponent::MaxSpriteLaters; i++)
+    sprite.addLayer(render.getSpriteFromPath(parentDir + paths[i]), Vec2(0), Rot(0), (WorldLayer)(SpriteComponent::MaxSpriteLaters - (startingLayer + i)));
   return sprite;
 }
 
@@ -151,11 +151,14 @@ bool TilePrefabs::loadFromFile(const std::string& filePath) {
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     if(tileJson.contains("shape"))
       shapeDef = loadShapeFromJson(tileJson["shape"]);
+    int startingLayer = 0;
+    if (tileJson.contains("startingLayer"))
+      startingLayer = tileJson["startingLayer"];
 
     Entity tileEntity = m_world.create();
     tileEntity.add<SpriteComponent>();
     SpriteComponent& sprite = tileEntity.get<SpriteComponent>();
-    sprite = loadSpriteFromPaths(spriteRender, parentDir, spritePaths);
+    sprite = loadSpriteFromPaths(spriteRender, parentDir, spritePaths, startingLayer);
     if (~tileFlags & IS_COLLIDABLE)
       tileEntity.add<ArrowComponent>();
     bool needsLocalTransform = false;

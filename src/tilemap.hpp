@@ -23,11 +23,16 @@ struct boost::hash<glm::i16vec2> {
 };
 
 struct TileBoundComponent {
+  u32 layer;
   glm::i16vec2 pos;
   EntityId parent;
 };
 
-struct TilemapComponent {
+class TilemapComponent;
+
+class Tilemap {
+  friend class TilemapComponent;
+public:
   // Ignores shapeId
   bool insert(EntityWorld& world, b2BodyId body, const glm::i16vec2& pos, EntityId parent, const TileDef& clone) {
     return insert(world, body, pos, parent, clone.entity, clone.flags, { clone.width, clone.height });
@@ -52,6 +57,7 @@ struct TilemapComponent {
       TileBoundComponent& tileBound = e.get<TileBoundComponent>();
       tileBound.parent = parent;
       tileBound.pos = pos;
+      tileBound.layer = m_layer;
     }
 
     if (tile.flags & TileFlags::IS_MULTI_TILE) {
@@ -100,7 +106,7 @@ struct TilemapComponent {
 
     return true;
   }
-  
+
 
   // !ATTENTION! this does not destroy the entity located with the tile
   EntityId erase(const glm::i16vec2& pos) {
@@ -121,7 +127,7 @@ struct TilemapComponent {
 
     for (i16 x = pos.x; x < pos.x + copy.width; x++) {
       for (i16 y = pos.y; y < pos.y + copy.height; y++) {
-        Tile& subtile = find({x, y});
+        Tile& subtile = find({ x, y });
 
         if (subtile.entity) {
           entity = subtile.entity;
@@ -146,11 +152,11 @@ struct TilemapComponent {
     return m_tiles.contains(pos);
   }
 
-  Vec2 getLocalTileCenter(const glm::i16vec2& tilePos, const glm::u16vec2& dim = { 1, 1 }) const {
+  static Vec2 getLocalTileCenter(const glm::i16vec2& tilePos, const glm::u16vec2& dim = { 1, 1 }) {
     return (glm::vec2)tilePos * tileSize + ((Vec2)dim * tileSize * 0.5f);
   }
 
-  glm::i16vec2 getNearestTile(const glm::vec2& localPos) const {
+  static glm::i16vec2 getNearestTile(const glm::vec2& localPos) {
     return glm::i16vec2(glm::floor(localPos / tileSize));
   }
 
@@ -164,7 +170,7 @@ public:
     }
 
     const glm::i16vec2& operator*() const {
-      return m_it->first;
+      return *m_it;
     }
 
     Iterator<ItType>& operator++() {
@@ -182,14 +188,66 @@ public:
     }
   };
 
-  using MapType = OpenMap<glm::i16vec2, Tile>;
-  Iterator<MapType::iterator> begin() { return m_tiles.begin(); }
-  Iterator<MapType::iterator> end() { return m_tiles.end(); }
-  Iterator<MapType::const_iterator> begin() const { return m_tiles.begin(); }
-  Iterator<MapType::const_iterator> end() const { return m_tiles.end(); }
+  using MapType = Set<glm::i16vec2>;
+  Iterator<MapType::iterator> begin() { return m_mainTiles.begin(); }
+  Iterator<MapType::iterator> end() { return m_mainTiles.end(); }
+  Iterator<MapType::const_iterator> begin() const { return m_mainTiles.begin(); }
+  Iterator<MapType::const_iterator> end() const { return m_mainTiles.end(); }
 
+protected:
+  u32 m_layer = 0;
   OpenMap<glm::i16vec2, Tile> m_tiles;
   Set<glm::i16vec2> m_mainTiles;
+};
+
+enum TilemapLayers: u32 {
+  TilemapWorldLayer,
+  TilemapPlayerLayer
+};
+
+struct TilemapComponent {
+  TilemapComponent() {
+    for (u32 i = 0; i < m_tilemaps.size(); i++)
+      m_tilemaps[i].m_layer = i;
+  }
+
+  void addLayer() {
+    assert(m_layerCount + 1 <= 3);
+
+    m_layerCount += 1;
+  }
+
+  Tilemap& getTilemap(u32 layer) {
+    assert(layer <= m_layerCount);
+    
+    return m_tilemaps[layer];
+  }
+
+  Tilemap& getBottomtilemap() {
+    return m_tilemaps[0];
+  }
+
+  Tilemap& getToptilemap() {
+    return m_tilemaps[m_layerCount - 1];
+  }
+
+  // returns the tilemap thats top most and contains pos
+  u32 getTopTilemapWith(const glm::u16vec2& pos) {
+    for (u32 i = m_layerCount; i != 0; i--) {
+      if (m_tilemaps[i - 1].contains(pos))
+        return i - 1;
+    }
+
+    return UINT32_MAX;
+  }
+
+  u32 getTilemapCount() const {
+    return m_layerCount;
+  }
+
+private:
+  u32 m_layerCount = 2;
+  std::array<Tilemap, 3> m_tilemaps;
 };
 
 struct DestroyTileOnEntityRemovalTag {};
@@ -205,11 +263,12 @@ public:
     world.observe(EntityWorld::EventType::Remove, world.component<DestroyTileOnEntityRemovalTag>(), world.set<TileBoundComponent>(),
       [](Entity e) {
         TileBoundComponent& tileBound = e.get<TileBoundComponent>();
-        TilemapComponent& tm = e.world().get(tileBound.parent).get<TilemapComponent>();
+        TilemapComponent& tilemapLayers = e.world().get(tileBound.parent).get<TilemapComponent>();
+        Tilemap& tilemap = tilemapLayers.getTilemap(tileBound.layer);
 
         // Tiles may be destroyed already before we can delete them, hence the check
-        if (tm.contains(tileBound.pos))
-          tm.erase(tileBound.pos);
+        if (tilemap.contains(tileBound.pos))
+          tilemap.erase(tileBound.pos);
       });
 
     world.observe(EntityWorld::EventType::Remove, world.component<TileBoundComponent>(), {},
@@ -234,10 +293,11 @@ public:
 
     Entity parent = e.world().get(tileBound.parent);
     TransformComponent& parentTransform = parent.get<TransformComponent>();
-    TilemapComponent& parentTilemap = parent.get<TilemapComponent>();
-    Tile& tile = parentTilemap.find(tileBound.pos);
+    TilemapComponent& parentTilemapLayers = parent.get<TilemapComponent>();
+    Tilemap& tilemap = parentTilemapLayers.getTilemap(tileBound.layer);
+    Tile& tile = tilemap.find(tileBound.pos);
 
-    transform = Transform(parentTransform.getWorldPoint(parentTilemap.getLocalTileCenter(tileBound.pos, tile.size())), transform.rot);
+    transform = Transform(parentTransform.getWorldPoint(tilemap.getLocalTileCenter(tileBound.pos, tile.size())), transform.rot);
   }
 
   void run(EntityWorld& world, float deltaTime) override {

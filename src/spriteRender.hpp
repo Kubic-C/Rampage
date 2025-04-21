@@ -209,44 +209,48 @@ public:
 
   void meshTilemap(Entity e, float dt) {
     ShapeRenderModule& shapeRender = e.world().getModule<ShapeRenderModule>();
-    TilemapComponent& tm = e.get<TilemapComponent>();
+    TilemapComponent& tmLayers = e.get<TilemapComponent>();
     TransformComponent& transform = e.get<TransformComponent>();
-    for (glm::i16vec2 tilePos : tm.m_mainTiles) {
-      Tile& tile = tm.find(tilePos);
+    for (int i = 0; i < tmLayers.getTilemapCount(); i++) {
+      Tilemap& tm = tmLayers.getTilemap(i);
 
-      glm::u16vec2 dim = { tile.width, tile.height };
-      glm::vec2 tileWorldPos = transform.getWorldPoint(tm.getLocalTileCenter(tilePos, dim));
-      if (!tile.entity) {
-        Instance instance;
-        instance.worldPos = tileWorldPos;
-        instance.layer = 0;
-        instance.setZ((u8)WorldLayer::Bottom);
-        instance.setRot(0);
-        instance.setScale(1, 1);
-        addInstance(instance);
-      } else {
-        Entity tileEntity = e.world().get(tile.entity);
-        SpriteComponent& sprite = tileEntity.get<SpriteComponent>();
+      for (glm::i16vec2 tilePos : tm) {
+        Tile& tile = tm.find(tilePos);
 
-        for (int i = 0; i < sprite.layerCount; i++) {
+        glm::u16vec2 dim = { tile.width, tile.height };
+        glm::vec2 tileWorldPos = transform.getWorldPoint(tm.getLocalTileCenter(tilePos, dim));
+        if (!tile.entity) {
           Instance instance;
           instance.worldPos = tileWorldPos;
-          instance.layer = sprite[i].texIndex;
-          instance.setZ((u8)sprite[i].layer);
-          instance.setRot(sprite[i].rot);
-          instance.setScale(dim.x, dim.y);
+          instance.layer = 0;
+          instance.setZ((u8)WorldLayer::Bottom);
+          instance.setRot(0);
+          instance.setScale(1, 1);
           addInstance(instance);
+        } else {
+          Entity tileEntity = e.world().get(tile.entity);
+          SpriteComponent& sprite = tileEntity.get<SpriteComponent>();
+
+          for (int i = 0; i < sprite.layerCount; i++) {
+            Instance instance;
+            instance.worldPos = tileWorldPos;
+            instance.layer = sprite[i].texIndex;
+            instance.setZ((u8)sprite[i].layer);
+            instance.setRot(sprite[i].rot);
+            instance.setScale(dim.x, dim.y);
+            addInstance(instance);
+          }
         }
-      }
 
-      if (tile.entity && SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F1]) {
-        Entity tileE = e.world().get(tile.entity);
-        if (!tileE.has<ArrowComponent>())
-          continue;
-        Vec2 worldPos = transform.getWorldPoint(tm.getLocalTileCenter(tilePos));
-        ArrowComponent& arrow = tileE.get<ArrowComponent>();
+        if (tile.entity && SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F1]) {
+          Entity tileE = e.world().get(tile.entity);
+          if (!tileE.has<ArrowComponent>())
+            continue;
+          Vec2 worldPos = transform.getWorldPoint(tm.getLocalTileCenter(tilePos));
+          ArrowComponent& arrow = tileE.get<ArrowComponent>();
 
-        shapeRender.drawLine(worldPos, worldPos + arrow.dir * 0.5f, glm::vec3(1.0f, (float)arrow.generation / 255, 0.0f), 0.01f, 1.0f);
+          shapeRender.drawLine(worldPos, worldPos + arrow.dir * 0.5f, glm::vec3(1.0f, (float)arrow.generation / 255, 0.0f), 0.01f, 1.0f);
+        }
       }
     }
   }

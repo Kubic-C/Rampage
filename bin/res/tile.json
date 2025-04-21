@@ -49,6 +49,7 @@
     "spritePaths": [ "basicTurretBase.png", "basicTurretTop.png" ],
     "flags": [ "IS_COLLIDABLE" ],
     "size": [ 1, 1 ],
+    "startingLayer":  2,
     "turret": {
         "bullet": {
           "damage": 10,
@@ -73,6 +74,7 @@
     "spritePaths": [ "fence.png" ],
     "flags": [ "IS_COLLIDABLE" ],
     "size": [ 2, 2 ],
+    "startingLayer": 2,
     "item": {
       "name": "FenceItem",
       "iconPath": "fence.png"
@@ -83,6 +85,7 @@
     "spritePaths": [ "wood.png" ],
     "flags": [ "IS_COLLIDABLE" ],
     "size": [ 1, 1 ],
+    "startingLayer": 2,
     "breakable": {
       "health": 100
     },

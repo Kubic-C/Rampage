@@ -29,6 +29,22 @@ struct PathfindingModule : Module {
     m_collisionQueue.add<CollisionQueueComponent>();
   }
 
+  ArrowComponent* getTopArrow(EntityWorld& world, TilemapComponent& tilemapLayers, const glm::i16vec2& pos) {
+    for (int i = tilemapLayers.getTilemapCount(); i != 0; i--) {
+      Tilemap& tilemap = tilemapLayers.getTilemap(i - 1);
+      if (!tilemap.contains(pos))
+        continue;
+
+      Tile& tile = tilemap.find(pos);
+      if(tile.entity == 0 || !world.get(tile.entity).has<ArrowComponent>())
+        continue;
+
+      return &world.get(tile.entity).get<ArrowComponent>();
+    }
+
+    return nullptr;
+  }
+
   void run(EntityWorld& world, float deltaTime) override final {
     CollisionQueueComponent& queue = m_collisionQueue.get<CollisionQueueComponent>();
     for (CollisionQueueComponent::Collision& collision : queue.queue) {
@@ -52,7 +68,7 @@ struct PathfindingModule : Module {
 
     Entity map = world.getWith(world.set<TransformComponent, TilemapComponent, WorldMapTag>()).next();
     TransformComponent& mapTransform = map.get<TransformComponent>();
-    TilemapComponent& tilemap = map.get<TilemapComponent>();
+    TilemapComponent& tilemapLayers = map.get<TilemapComponent>();
     EntityIterator it = world.getWith(world.set<TransformComponent, BodyComponent, SeekPrimaryTargetTag>());
     while (it.hasNext()) {
       Entity seeker = it.next();
@@ -60,40 +76,31 @@ struct PathfindingModule : Module {
       BodyComponent& seekerBody = seeker.get<BodyComponent>();
 
       Vec2 localMapPos = mapTransform.getLocalPoint(seekerTransform.pos);
-      glm::i16vec2 localTilePos = tilemap.getNearestTile(localMapPos);
-      if (!tilemap.contains(localTilePos) || 
-          tilemap.find(localTilePos).entity == 0 || 
-          !world.get(tilemap.find(localTilePos).entity).has<ArrowComponent>())
+      glm::i16vec2 localTilePos = Tilemap::getNearestTile(localMapPos);
+      ArrowComponent* arrow = getTopArrow(world, tilemapLayers, localTilePos);
+      if (!arrow)
         continue;
 
-      ArrowComponent& arrow = world.get(tilemap.find(localTilePos).entity).get<ArrowComponent>();
-
-      b2Body_ApplyLinearImpulseToCenter(seekerBody.id, Vec2(arrow.dir * b2Body_GetMass(seekerBody.id)), true);
+      b2Body_ApplyLinearImpulseToCenter(seekerBody.id, Vec2(arrow->dir * b2Body_GetMass(seekerBody.id)), true);
     }
   }
 
   void updateFlowField(EntityWorld& world) {
     Entity map = world.getWith(world.set<TransformComponent, TilemapComponent, WorldMapTag>()).next();
     TransformComponent& mapTransform = map.get<TransformComponent>();
-    TilemapComponent& tilemap = map.get<TilemapComponent>();
+    TilemapComponent& tilemapLayers = map.get<TilemapComponent>();
     Entity player = world.getWith(world.set<TransformComponent, PrimaryTargetTag>()).next();
     TransformComponent& playerTransform = player.get<TransformComponent>();
 
     Vec2 localMapPos = mapTransform.getLocalPoint(playerTransform.pos);
-    glm::i16vec2 localTilePos = tilemap.getNearestTile(localMapPos);
-    if (!tilemap.contains(localTilePos))
+    glm::i16vec2 localTilePos = Tilemap::getNearestTile(localMapPos);
+    if (tilemapLayers.getTopTilemapWith(localTilePos) == UINT32_MAX)
       return;
 
-    Tile& startTile = tilemap.find(localTilePos);
-    if (!startTile.entity)
+    ArrowComponent* startArrow = getTopArrow(world, tilemapLayers, localTilePos);
+    if (!startArrow)
       return;
-
-    Entity startEntity = world.get(startTile.entity);
-    if (!startEntity.has<ArrowComponent>())
-      return;
-
-    ArrowComponent& startArrow = startEntity.get<ArrowComponent>();
-    startArrow.dir = glm::normalize(playerTransform.pos - mapTransform.getWorldPoint(tilemap.getLocalTileCenter(localTilePos)));
+    startArrow->dir = glm::normalize(playerTransform.pos - mapTransform.getWorldPoint(Tilemap::getLocalTileCenter(localTilePos)));
 
     if (m_oldTarget == localTilePos)
       return;
@@ -104,42 +111,30 @@ struct PathfindingModule : Module {
 
     std::queue<glm::i16vec2> openList;
 
-    startArrow.cost = 0;
-    startArrow.generation = m_currentGeneration;
+    startArrow->cost = 0;
+    startArrow->generation = m_currentGeneration;
     openList.emplace(localTilePos);
 
     while (!openList.empty()) {
       glm::i16vec2 current = openList.front();
       openList.pop();
 
-      Tile& currentTile = tilemap.find(current);
-      Entity currentEntity = world.get(currentTile.entity);
-      ArrowComponent& currentArrow = currentEntity.get<ArrowComponent>();
+      ArrowComponent* currentArrow = getTopArrow(world, tilemapLayers, current);
 
       for (int i = 0; i < directions.size(); ++i) {
         glm::i16vec2 neighbor = current + directions[i];
 
-        if (!tilemap.contains(neighbor))
+        ArrowComponent* neighborArrow = getTopArrow(world, tilemapLayers, neighbor);
+        if (!neighborArrow)
           continue;
 
-        Tile& neighborTile = tilemap.find(neighbor);
-        if (neighborTile.entity == 0)
+        float newCost = currentArrow->cost + costs[i] + neighborArrow->tileCost;
+        if (neighborArrow->generation == m_currentGeneration && neighborArrow->cost <= newCost)
           continue;
 
-        Entity neighborEntity = world.get(neighborTile.entity);
-        if (!neighborEntity.has<ArrowComponent>())
-          continue;
-
-        ArrowComponent& neighborArrow = neighborEntity.get<ArrowComponent>();
-
-        float newCost = currentArrow.cost + costs[i] + neighborArrow.tileCost;
-        if (neighborArrow.generation == m_currentGeneration && neighborArrow.cost <= newCost)
-          continue;
-
-        neighborArrow.cost = newCost;
-        neighborArrow.dir = -normalizedDirs[i];
-        neighborArrow.generation = m_currentGeneration;
-
+        neighborArrow->cost = newCost;
+        neighborArrow->dir = -normalizedDirs[i];
+        neighborArrow->generation = m_currentGeneration;
         openList.emplace(neighbor);
       }
     }
