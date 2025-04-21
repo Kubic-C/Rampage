@@ -33,8 +33,6 @@ b2ShapeDef loadShapeFromJson(json& json) {
   if (json.contains("friction"))
     shapeDef.friction = json["friction"].get<float>();
 
-  std::cout << shapeDef.friction << '\n';
-
   return shapeDef;
 }
 
@@ -48,11 +46,11 @@ Entity loadBulletFromJson(EntityWorld& world, const std::string& parentDir, json
   float health = json["health"];
 
   Entity e = world.create();
-  e.add<DamageComponent>();
+  e.add<ContactDamageComponent>();
   e.add<LifetimeComponent>();
   e.add<TransformComponent>();
   e.add<HealthComponent>();
-  DamageComponent& damageComp = e.get<DamageComponent>();
+  ContactDamageComponent& damageComp = e.get<ContactDamageComponent>();
   LifetimeComponent& lifetimeComp = e.get<LifetimeComponent>();
   HealthComponent& healthComp = e.get<HealthComponent>();
 
@@ -90,6 +88,23 @@ TurretComponent loadTurretFromJson(EntityWorld& world, const std::string& parent
   turret.bulletRadius = json["bulletRadius"].get<float>();
 
   return turret;
+}
+
+void addBreakable(Entity entity, b2ShapeDef& def, json json) {
+  if (!keysExistAndLog("breakable", json, { "health" }))
+    return;
+
+  entity.add<HealthComponent>();
+  HealthComponent& health = entity.get<HealthComponent>();
+  health.health = json["health"].get<float>();
+
+  entity.add<ArrowComponent>();
+  entity.get<ArrowComponent>().tileCost = health.health;
+  entity.add<TileBoundComponent>();
+  entity.add<DestroyTileOnEntityRemovalTag>();
+
+  def.enableHitEvents = true;
+  def.enableContactEvents = true;
 }
 
 bool TilePrefabs::loadFromFile(const std::string& filePath) {
@@ -148,6 +163,9 @@ bool TilePrefabs::loadFromFile(const std::string& filePath) {
       tileEntity.add<TurretComponent>();
       tileEntity.get<TurretComponent>() = loadTurretFromJson(m_world, parentDir, tileJson["turret"]);
       tileEntity.add<TransformComponent>(); // in order for turrets to match the turret system they need a transform
+    }
+    if (tileJson.contains("breakable")) {
+      addBreakable(tileEntity, shapeDef, tileJson["breakable"]);
     }
     TilePrefabId tilePrefabId = createPrefab(name, tileEntity, tileFlags, size);
 

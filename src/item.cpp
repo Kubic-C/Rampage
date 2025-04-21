@@ -27,6 +27,9 @@ Inventory ItemManager::createInventory(std::string name, u8 rows, u8 cols) {
       inv.items[{i, j}].ui = ui;
 
       ui->onMousePress([this, invId, i, j]() {
+          if (getInventory(invId).isStackEmpty({ i, j }))
+            return;
+
           if (m_handInvId != 0 && !(m_handInvId != invId && m_handInvPos != glm::u16vec2(i, j)))
             getInventory(invId).swapItems({ i, j }, m_handInvId, m_handInvPos);
 

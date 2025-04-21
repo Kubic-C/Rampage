@@ -57,6 +57,9 @@ public:
     if (eventMgr.isKeyPressed(Key::Tab)) {
       inv.setVisible(!inv.getVisible());
     }
+    if (eventMgr.isKeyHeld(Key::F4)) {
+      inv.addItem(itemMgr.getItem("WoodItem"), 4);
+    }
 
     float maxSpeed = player.maxSpeed;
     if (eventMgr.isKeyHeld(Key::E))
@@ -74,7 +77,6 @@ public:
       player.mouse = render.getWorldCoords({x, y});
 
       tgui::Gui& gui = world.getContext<tgui::Gui>();
-      ItemManager& itemMgr = world.getContext<ItemManager>();
       if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F] && itemMgr.getHandInventory() != 0 && !gui.getWidgetAtPos({x, y}, false)) {
         Render& renderer = world.getContext<Render>();
         tryPlaceItem(world.getFirstWith(world.set<WorldMapTag>()), itemMgr.getInventory(itemMgr.getHandInventory()), itemMgr.getHandInventoryPos(), renderer.getWorldCoords({x, y}));

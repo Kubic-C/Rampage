@@ -55,13 +55,13 @@
           "lifetime": 1.0,
           "health":  20
         },
-        "fireRate": 1, // Per second
+        "fireRate": 0.08, // when to next shoot
         "radius": 10.0, // search radius
-        "turnSpeed": 0.02,
-        "shootRange": 0.2, // + or -
+        "turnSpeed": 0.12,
+        "shootRange": 0.05, // + or -
         "stopRange": 0.04,
-        "muzzleVelocity": 10.0,
-        "bulletRadius": 0.25
+        "muzzleVelocity": 50.0,
+        "bulletRadius": 0.05
     },
     "item": {
       "name": "BasicTurretItem",
@@ -76,6 +76,19 @@
     "item": {
       "name": "FenceItem",
       "iconPath": "fence.png"
+    }
+  },
+  {
+    "name": "Wood",
+    "spritePaths": [ "wood.png" ],
+    "flags": [ "IS_COLLIDABLE" ],
+    "size": [ 1, 1 ],
+    "breakable": {
+      "health": 100
+    },
+    "item": {
+      "name": "WoodItem",
+      "iconPath": "wood.png"
     }
   }
 ]

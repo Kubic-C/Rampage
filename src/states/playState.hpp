@@ -43,6 +43,13 @@ public:
       seeker.add<CircleRenderComponent>();
       seeker.add<OwnedBy<PlayState>>();
       seeker.add<HealthComponent>();
+      seeker.add<ContactDamageComponent>();
+
+      ContactDamageComponent& damage = seeker.get<ContactDamageComponent>();
+      damage.damage = 12;
+
+      seeker.add<SubmitToCollisionQueueComponent>();
+      seeker.get<SubmitToCollisionQueueComponent>().queue = world.getModule<PathfindingModule>().getContactDamageQueue();
 
       CircleRenderComponent& circleRender = seeker.get<CircleRenderComponent>();
       circleRender.radius = 0.1f;
@@ -54,10 +61,12 @@ public:
       bodyDef.type = b2_dynamicBody;
       bodyDef.position = Vec2(0, 0);
       bodyDef.linearDamping = 10;
-      bodyDef.userData = entityToB2Data(seeker);
       b2ShapeDef shapeDef = b2DefaultShapeDef();
       shapeDef.friction = 0;
       shapeDef.filter.categoryBits = Enemy;
+      shapeDef.filter.maskBits = ~Enemy; // everything but ourselves
+      shapeDef.enableContactEvents = true;
+      shapeDef.userData = entityToB2Data(seeker);
       b2Circle circle;
       circle.radius = 0.1f;
       circle.center = Vec2(0);
@@ -85,7 +94,8 @@ public:
     Inventory playerInvetory = itemMgr.createInventory("Player Inventory", 3, 5);
     player.get<InventoryComponent>().id = playerInvetory;
     playerInvetory.addItem(itemMgr.getItem("BasicTurretItem"), 20);
-    playerInvetory.addItem(itemMgr.getItem("BigHighStoneItem"), 5);
+    playerInvetory.addItem(itemMgr.getItem("BigHighStoneItem"), 1);
+    playerInvetory.addItem(itemMgr.getItem("WoodItem"), 32);
 
     // Render
     RectangleRenderComponent& renderRect = player.get<RectangleRenderComponent>();

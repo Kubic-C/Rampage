@@ -42,9 +42,8 @@ inline void copyBodiesIntoTransforms(TransformComponent& transform, BodyComponen
 
 struct CollisionQueueComponent {
   struct Collision {
-    EntityId primary; // The entity which "made" the submission
-    EntityId secondary; // The other entity
-    Vec2 manifold;
+    EntityId primary = 0; // The entity which "made" the submission
+    EntityId secondary = 0; // The other entity
   };
 
   std::vector<Collision> queue;
@@ -61,6 +60,19 @@ struct PhysicsModule : Module {
     world.component<TransformComponent>();
     world.component<CollisionQueueComponent>();
     world.component<SubmitToCollisionQueueComponent>();
+
+    world.observe(EntityWorld::EventType::Remove, world.component<BodyComponent>(), {},
+      [&](Entity e) {
+        auto it = m_ongoingCollisions.find(e);
+        if (it != m_ongoingCollisions.end()) {
+          for (EntityId other : it->second) {
+            m_ongoingCollisions[other].erase(e);
+            if (m_ongoingCollisions[other].empty())
+              m_ongoingCollisions.erase(other);
+          }
+          m_ongoingCollisions.erase(it);
+        }
+      });
   }
 
   void run(EntityWorld& world, float deltaTime) override final {
@@ -83,36 +95,73 @@ struct PhysicsModule : Module {
     }
 
     b2ContactEvents events = b2World_GetContactEvents(physicsWorldId);
-    for (int i = 0; i < events.hitCount; i++) {
-      const b2ContactHitEvent& hit = events.hitEvents[i];
+    for (int i = 0; i < events.beginCount; i++) {
+      const b2ContactBeginTouchEvent& touch = events.beginEvents[i]; 
       
-      void* Ab2Data = b2Body_GetUserData(b2Shape_GetBody(hit.shapeIdA));
-      void* Bb2Data = b2Body_GetUserData(b2Shape_GetBody(hit.shapeIdB));
+      void* Ab2Data = b2Shape_GetUserData(touch.shapeIdA);
+      void* Bb2Data = b2Shape_GetUserData(touch.shapeIdB);
       if (!Ab2Data || !Bb2Data)
         continue;
 
       Entity eA = b2DataToEntity(world, Ab2Data);
       Entity eB = b2DataToEntity(world, Bb2Data);
-      CollisionQueueComponent::Collision collision;
-      collision.manifold = hit.point;
-      collision.primary = eA;
-      collision.secondary = eB;
-      if (eA.has<SubmitToCollisionQueueComponent>()) {
-        SubmitToCollisionQueueComponent& submitTo = eA.get<SubmitToCollisionQueueComponent>();
-        CollisionQueueComponent& queue = world.get(submitTo.queue).get<CollisionQueueComponent>();
+      m_ongoingCollisions[eA].insert(eB);
+      m_ongoingCollisions[eB].insert(eA);
+    }
+    for (int i = 0; i < events.endCount; i++) {
+      const b2ContactEndTouchEvent& touch = events.endEvents[i];
 
-        queue.queue.push_back(collision);
-      }
-      std::swap(collision.primary, collision.secondary);
-      if (eB.has<SubmitToCollisionQueueComponent>()) {
-        SubmitToCollisionQueueComponent& submitTo = eB.get<SubmitToCollisionQueueComponent>();
-        CollisionQueueComponent& queue = world.get(submitTo.queue).get<CollisionQueueComponent>();
+      if (!b2Shape_IsValid(touch.shapeIdA) || 
+          !b2Shape_IsValid(touch.shapeIdB))
+        continue;
 
-        queue.queue.push_back(collision);
+      void* Ab2Data = b2Shape_GetUserData(touch.shapeIdA);
+      void* Bb2Data = b2Shape_GetUserData(touch.shapeIdB);
+      if (!Ab2Data || !Bb2Data)
+        continue;
+
+      Entity eA = b2DataToEntity(world, Ab2Data);
+      Entity eB = b2DataToEntity(world, Bb2Data);
+      m_ongoingCollisions[eA].erase(eB);
+      m_ongoingCollisions[eB].erase(eA);
+      if (m_ongoingCollisions[eA].empty())
+        m_ongoingCollisions.erase(eA);
+      if (m_ongoingCollisions[eB].empty())
+        m_ongoingCollisions.erase(eB);
+    }
+
+    for (auto& [entity, contactList] : m_ongoingCollisions) {
+      Entity eA = world.get(entity);
+
+      for (EntityId other : contactList) {
+        Entity eB = world.get(other);
+
+        CollisionQueueComponent::Collision collision;
+        collision.primary = eA;
+        collision.secondary = eB;
+        if (eA.has<SubmitToCollisionQueueComponent>()) {
+          SubmitToCollisionQueueComponent& submitTo = eA.get<SubmitToCollisionQueueComponent>();
+          CollisionQueueComponent& queue = world.get(submitTo.queue).get<CollisionQueueComponent>();
+
+          queue.queue.push_back(collision);
+        }
+        std::swap(collision.primary, collision.secondary);
+        if (eB.has<SubmitToCollisionQueueComponent>()) {
+          SubmitToCollisionQueueComponent& submitTo = eB.get<SubmitToCollisionQueueComponent>();
+          CollisionQueueComponent& queue = world.get(submitTo.queue).get<CollisionQueueComponent>();
+
+          queue.queue.push_back(collision);
+        }
       }
     }
   }
 
+  Map<EntityId, std::set<EntityId>>& getOngoingCollisions() {
+    return m_ongoingCollisions;
+  }
+
 private:
   int m_steps;
+
+  Map<EntityId, std::set<EntityId>> m_ongoingCollisions;
 };

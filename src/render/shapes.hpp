@@ -36,6 +36,26 @@ public:
 
     world.component<CircleRenderComponent>();
     world.component<RectangleRenderComponent>();
+
+    setCircleResolution(12);
+  }
+
+  void setCircleResolution(int resolution) {
+    int count = 0;
+    const float anglePerTriangle = glm::pi<float>() * 2 / resolution;
+    float x = 1;
+    float y = 0;
+    for (float angle = 0.0f; angle <= 2 * glm::pi<float>(); angle += anglePerTriangle, count += 3) {
+      float xNext = cos(angle + anglePerTriangle);
+      float yNext = sin(angle + anglePerTriangle);
+
+      m_circleMesh.push_back(Vertex({ 0, 0, 0 }, glm::vec3(0, 0, 0)));
+      m_circleMesh.push_back(Vertex({ x, y, 0 }, glm::vec3(0, 0, 0)));
+      m_circleMesh.push_back(Vertex({ xNext, yNext, 0 }, glm::vec3(0, 0, 0)));
+
+      x = xNext;
+      y = yNext;
+    }
   }
 
   void run(EntityWorld& world, float deltaTime) override final {
@@ -53,7 +73,7 @@ public:
       CircleRenderComponent& circle = e.get<CircleRenderComponent>();
       TransformComponent& transform = e.get<TransformComponent>();
 
-      drawCircle(Transform(transform.getWorldPoint(circle.offset), transform.rot), circle.color, circle.radius, 8, circle.z);
+      drawCircle(Transform(transform.getWorldPoint(circle.offset), transform.rot), circle.color, circle.radius, circle.z);
     }
 
     EntityIterator it = m_world.getWith(m_world.set<RectangleRenderComponent, TransformComponent>());
@@ -113,28 +133,17 @@ public:
     }
   }
 
-  void drawCircle(const Transform& transform, glm::vec3 color, float r, int resolution = 10, float z = -1) {
-    int count = 0;
-    const float anglePerTriangle = glm::pi<float>() * 2 / resolution;
-    float x = r;
-    float y = 0;
-    for (float angle = 0.0f; angle <= 2 * glm::pi<float>(); angle += anglePerTriangle, count += 3) {
-      float xNext = cos(angle + anglePerTriangle) * r;
-      float yNext = sin(angle + anglePerTriangle) * r;
+  void drawCircle(const Transform& transform, glm::vec3 color, float r, float z = -1) {
+    for (int i = 0; i < m_circleMesh.size(); i += 3) {
+      Vertex copy[3];
+      std::memcpy(copy, &m_circleMesh[i], sizeof(Vertex) * 3);
 
-      Vertex vertices[] = {
-        Vertex({ 0, 0, z }, color),
-        Vertex({ x, y, z}, color),
-        Vertex({ xNext, yNext, z }, color)
-      };
+      for (int i = 0; i < 3; i++) {
+        copy[i].pos = glm::vec3(transform.getWorldPoint({ copy[i].pos.x * r, copy[i].pos.y * r}), copy[i].pos.z);
+        copy[i].color = color;
+      }
 
-      for (int i = 0; i < 3; i++)
-        vertices[i].pos = glm::vec3(transform.getWorldPoint({ vertices[i].pos.x, vertices[i].pos.y }), vertices[i].pos.z);
-
-      mesh.addMesh(vertices);
-
-      x = xNext;
-      y = yNext;
+      mesh.addMesh(copy);
     }
   }
 
@@ -194,6 +203,8 @@ private:
         })###";
 
 private:
+  std::vector<Vertex> m_circleMesh;
+
   Mesh<Vertex, 3, 3> mesh;
   Shader shader;
   VertexArrayBuffer va;

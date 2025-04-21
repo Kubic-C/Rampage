@@ -40,6 +40,8 @@ inline uint32_t createShader(uint32_t shader_type, const char* file_path) {
     file_size = ftell(file);
     fseek(file, 0, SEEK_SET);
     file_data = (char*)malloc(file_size * sizeof(char));
+    if (file_data == 0)
+      return 0;
     fread(file_data, sizeof(char), file_size, file);
     fclose(file);
   }

@@ -158,7 +158,7 @@ bool EntityWorld::SetIterator::hasNext() const {
     next = m_world.m_superSets[m_base].begin();
   else
     next++;
-
+  
   while(next != m_world.m_superSets[m_base].end() && (m_world.m_sets[*next].empty())) {
     next++;
   } 
@@ -390,6 +390,7 @@ void EntityWorld::beginDefer() {
   assert(!m_isDefer);
   assert(m_deferredMoves.empty());
   assert(m_deferredDestroy.empty());
+  assert(m_deferredSuperSetCalc.empty());
 
   m_isDefer = true;
 }
@@ -398,6 +399,10 @@ void EntityWorld::endDefer() {
   assert(m_isDefer);
 
   m_isDefer = false;
+  for (const ComponentSet* baseSet : m_deferredSuperSetCalc) {
+    addToSuperSets(baseSet);
+  }
+
   for (auto const& [id, set] : m_deferredMoves) {
     moveSets(id, set);
   }
@@ -406,6 +411,7 @@ void EntityWorld::endDefer() {
     destroy(id);
   }
 
+  m_deferredSuperSetCalc.clear();
   m_deferredMoves.clear();
   m_deferredDestroy.clear();
 }
@@ -464,23 +470,12 @@ const ComponentSet* EntityWorld::findOrCreateSet(const ComponentSet& base) {
 
     const ComponentSet* baseSet = m_componentSets[base];
     m_sets.insert(std::make_pair(baseSet, EntityList()));
-    m_superSets[baseSet].insert(baseSet);
 
-    std::vector<const ComponentSet*> supersets; // the supersets of baseSet
-    std::vector<const ComponentSet*> subsets; // the subSets of baseSet
-    /* Find all sets that contain this new set and insert it into m_superSets */
-    for (const std::pair<const ComponentSet* const, Set<const ComponentSet*>>& set : m_superSets)
-      if (set.first == baseSet)
-        continue;
-      else if (set.first->superset(*baseSet))
-        supersets.push_back(set.first);
-      else if (baseSet->superset(*set.first))
-        subsets.push_back(set.first);
-
-    for (const ComponentSet* set : supersets)
-      m_superSets[baseSet].insert(set);
-    for(const ComponentSet* set : subsets)
-      m_superSets[set].insert(baseSet);
+    if (m_isDefer) {
+      m_deferredSuperSetCalc.push_back(baseSet);
+    } else {
+      addToSuperSets(baseSet);
+    }
 
     return baseSet;
   }
@@ -496,18 +491,14 @@ void EntityWorld::notify(EntityWorld::EventType type, EntityId id, ComponentId c
     return;
 
   for (EntityWorld::ObserverData& obvData : m_typeObservers.at(compId)) {
-    if (getEntitySet(id)->superset(*obvData.with))
+    if (getEntitySet(id)->superset(*obvData.with)) {
       obvData.callback(get(id));
+    }
   }
 }
 
 bool EntityWorld::hasComponent(EntityId id, ComponentId comp) {
-  Map<EntityId, const ComponentSet*>::iterator it = m_deferredMoves.find(id);
-  if (it == m_deferredMoves.end()) {
-    return m_entities.find(id)->second.comps->has(comp);
-  }
-
-  return it->second->has(comp);
+  return getEntitySet(id)->has(comp);
 }
 
 const ComponentSet* EntityWorld::getEntitySet(EntityId id) {
@@ -517,6 +508,28 @@ const ComponentSet* EntityWorld::getEntitySet(EntityId id) {
   }
 
   return it->second;
+}
+
+void EntityWorld::addToSuperSets(const ComponentSet* baseSet) {
+  assert(!m_isDefer);
+
+  m_superSets[baseSet].insert(baseSet);
+
+  std::vector<const ComponentSet*> supersets; // the supersets of baseSet
+  std::vector<const ComponentSet*> subsets; // the subSets of baseSet
+  /* Find all sets that contain this new set and insert it into m_superSets */
+  for (const std::pair<const ComponentSet* const, Set<const ComponentSet*>>& set : m_superSets)
+    if (set.first == baseSet)
+      continue;
+    else if (set.first->superset(*baseSet))
+      supersets.push_back(set.first);
+    else if (baseSet->superset(*set.first))
+      subsets.push_back(set.first);
+
+  for (const ComponentSet* set : supersets)
+    m_superSets[baseSet].insert(set);
+  for (const ComponentSet* set : subsets)
+    m_superSets[set].insert(baseSet);
 }
 
 Entity::Entity(EntityWorld& world)

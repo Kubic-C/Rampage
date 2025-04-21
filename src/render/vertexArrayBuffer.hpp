@@ -13,7 +13,7 @@ public:
     glCreateVertexArrays(1, &m_id);
   }
 
-  VertexArrayBuffer(VertexArrayBuffer&& other) {
+  VertexArrayBuffer(VertexArrayBuffer&& other) noexcept {
     m_id = other.m_id;
     other.m_id = 0;
   }

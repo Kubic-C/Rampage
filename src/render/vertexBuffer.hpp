@@ -13,7 +13,7 @@ public:
     glCreateBuffers(1, &m_id);
   }
 
-  VertexBuffer(VertexBuffer&& other) {
+  VertexBuffer(VertexBuffer&& other) noexcept {
     m_id = other.m_id;
     other.m_id = 0;
   }
@@ -24,7 +24,7 @@ public:
     }
   }
 
-  VertexBuffer& operator=(VertexBuffer&& other) {
+  VertexBuffer& operator=(VertexBuffer&& other) noexcept {
     m_id = other.m_id;
     other.m_id = 0;
 

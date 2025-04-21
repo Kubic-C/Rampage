@@ -2,14 +2,23 @@
 
 #include "tilePrefabs.hpp"
 #include "transform.hpp"
+#include "physics.hpp"
 
 template<>
 struct boost::hash<glm::i16vec2> {
-  size_t operator()(const glm::i16vec2& pos) const {
-    constexpr u16 prime1 = 65521;
-    constexpr u16 prime2 = 57149;
+  size_t operator()(const glm::i16vec2& pos) const noexcept {
+    // Pack into a 32-bit key (since i16vec2 fits in 32 bits)
+    uint32_t packed = (static_cast<uint16_t>(pos.x) << 16) | static_cast<uint16_t>(pos.y);
 
-    return (pos.x ^ prime1 * 0x5555) ^ (pos.y ^ prime2 * 0x5555);
+    // Use a quick integer hash (e.g. a mix of Murmur finalizer)
+    uint32_t h = packed;
+    h ^= h >> 16;
+    h *= 0x85ebca6b;
+    h ^= h >> 13;
+    h *= 0xc2b2ae35;
+    h ^= h >> 16;
+
+    return static_cast<size_t>(h);
   }
 };
 
@@ -77,7 +86,9 @@ struct TilemapComponent {
       glm::vec2 fdim = dim;
       b2Vec2 tilePos = getLocalTileCenter(pos, fdim).b2();
       b2Polygon tilePolygon = b2MakeOffsetBox(fdim.x * tileSize.x * 0.5f, fdim.y * tileSize.y * 0.5f, tilePos, Rot(0.0f));
-      tile.shapeDef = b2CreatePolygonShape(body, &shapeDef, &tilePolygon);
+      b2ShapeDef copyShapeDef = shapeDef;
+      copyShapeDef.userData = entityToB2Data(entity);
+      tile.shapeDef = b2CreatePolygonShape(body, &copyShapeDef, &tilePolygon);
     }
     else {
       tile.shapeDef = b2_nullShapeId;
@@ -181,12 +192,40 @@ public:
   Set<glm::i16vec2> m_mainTiles;
 };
 
+struct DestroyTileOnEntityRemovalTag {};
+
 class TilemapModule : public Module {
 public:
   TilemapModule(EntityWorld& world)
     : m_calcTransforms(world.system(world.set<TransformComponent, TileBoundComponent>(), &updateTileBoundTransforms)) {
     world.component<TilemapComponent>();
     world.component<TileBoundComponent>();
+    world.component<DestroyTileOnEntityRemovalTag>();
+
+    world.observe(EntityWorld::EventType::Remove, world.component<DestroyTileOnEntityRemovalTag>(), world.set<TileBoundComponent>(),
+      [](Entity e) {
+        TileBoundComponent& tileBound = e.get<TileBoundComponent>();
+        TilemapComponent& tm = e.world().get(tileBound.parent).get<TilemapComponent>();
+
+        // Tiles may be destroyed already before we can delete them, hence the check
+        if (tm.contains(tileBound.pos))
+          tm.erase(tileBound.pos);
+      });
+
+    world.observe(EntityWorld::EventType::Remove, world.component<TileBoundComponent>(), {},
+      [&](Entity e) {
+        Map<EntityId, std::set<EntityId>>& ongoingCollisions = e.world().getModule<PhysicsModule>().getOngoingCollisions();
+
+        auto it = ongoingCollisions.find(e);
+        if (it != ongoingCollisions.end()) {
+          for (EntityId other : it->second) {
+            ongoingCollisions[other].erase(e);
+            if (ongoingCollisions[other].empty())
+              ongoingCollisions.erase(other);
+          }
+          ongoingCollisions.erase(it);
+        }
+      });
   }
 
   static void updateTileBoundTransforms(Entity e, float dt) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "id.hpp"
+#include "log.hpp"
 
 using EntityId = u32;
 using ComponentId = u16;
@@ -195,7 +196,7 @@ public:
   };
 
   struct ContextData {
-    u8* bytes;
+    u8* bytes = nullptr;
     std::function<void(u8*)> destroy;
   };
 
@@ -298,7 +299,7 @@ public:
   }
 
   template<typename T>
-  ComponentId component(const std::string& name = boost::typeindex::type_id<T>().pretty_name()) {
+  ComponentId component(const std::string_view& name = "") {
     size_t size = sizeof(T);
     if constexpr (std::is_empty<T>::value)
       size = 0;
@@ -313,7 +314,10 @@ public:
     }
 
     ComponentData& compData = m_components[compId];
-    compData.name = name;
+    if (name == "")
+      compData.name = boost::typeindex::type_id<T>().pretty_name();
+    else
+      compData.name = name;
     if (size != 0) {
       compData.pool = Pool<T>::createPool();
 
@@ -321,6 +325,12 @@ public:
           new((T*)dst)T(*(T*)src);
          };
     }
+
+#ifndef NDEBUG
+    logGeneric("Registered Comp: %s @ %u\n", compData.name.c_str(), compId);
+#endif NDEBUG
+
+    findOrCreateSet(set<Enabled, T>());
 
     return compId;
   }
@@ -399,9 +409,11 @@ protected:
   void notify(EventType type, EntityId entity, ComponentId compId);
   bool hasComponent(EntityId entity, ComponentId comp);
   const ComponentSet* getEntitySet(EntityId id);
+  void addToSuperSets(const ComponentSet* baseSet);
 
 private: 
   bool m_isDefer = false;
+  std::vector<const ComponentSet*> m_deferredSuperSetCalc;
   Map<EntityId, const ComponentSet*> m_deferredMoves;
   std::vector<EntityId> m_deferredDestroy;
 

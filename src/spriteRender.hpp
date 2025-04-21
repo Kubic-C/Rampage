@@ -368,13 +368,7 @@ private:
     };
   }
 
-private:/*
-  m_va.addIntegerVertexArrayAttrib(instanceBuffer, 2, 2, GL_SHORT, sizeof(Instance), offsetof(Instance, worldPos));
-  m_va.addIntegerVertexArrayAttrib(instanceBuffer, 3, 1, GL_UNSIGNED_SHORT, sizeof(Instance), offsetof(Instance, layer));
-  m_va.addVertexArrayAttrib(instanceBuffer, 4, 1, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, rot5z3));
-  m_va.addVertexArrayAttrib(instanceBuffer, 5, 1, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, scale));*/
-
-
+private:
   const char* tileVertexShaderSource = R"###(
         #version 400 core
         layout(location = 0) in vec2 pos;

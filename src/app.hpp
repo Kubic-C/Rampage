@@ -61,6 +61,7 @@ public:
     m_world.addModule<PathfindingModule>();
     m_world.addModule<ItemModule>();
     m_world.addModule<PlayerModule>();
+    m_world.addModule<HealthModule>();
     m_world.addModule<TurretModule>();
 
     m_world.component<WorldMapTag>();
@@ -85,6 +86,7 @@ public:
     m_world.enableModule<ShapeRenderModule>();
     m_world.enableModule<SpriteRenderModule>();
     m_world.enableModule<ItemModule>();
+    m_world.enableModule<HealthModule>();
     m_world.enableModule<TurretModule>();
 
     ItemManager& itemMgr = m_world.getContext<ItemManager>();

@@ -473,7 +473,8 @@ inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& sta
         if (tile.has<TileItemComponent>()) {
           inv.addItem(tile.get<TileItemComponent>().item);
         }
-        world.destroy(tile);
+        if (!tile.has<DestroyTileOnEntityRemovalTag>())
+          world.destroy(tile);
       }
     }
   }

@@ -2,24 +2,13 @@
 
 #include "physics.hpp"
 #include "tile.hpp"
+#include "health.hpp"
 
 enum PhysicsCategories {
   Friendly = 0x01,
   Enemy = 0x02,
   Static = 0x04,
   All = 0xFFFF
-};
-
-struct DamageComponent {
-  float damage = 10.0f;
-};
-
-struct LifetimeComponent {
-  float timeLeft = 1.0f;
-};
-
-struct HealthComponent {
-  float health = 5.0f;
 };
 
 struct TurretComponent {
@@ -75,30 +64,10 @@ class TurretModule : public Module {
 public:
   TurretModule(EntityWorld& world) 
     : m_tilemapSys(world.system(world.set<TransformComponent, TurretComponent>(), std::bind(&TurretModule::turretSystem, this, std::placeholders::_1, std::placeholders::_2))),
-    m_shouldDieSys(world.system(world.set<LifetimeComponent>(), &lifetimeSystem)),
-    m_healthSys(world.system(world.set<HealthComponent>(), &healthSystem)), 
     m_collisionQueue(world.create()) {
     world.component<TurretComponent>();
-    world.component<LifetimeComponent>();
-    world.component<DamageComponent>();
-    world.component<HealthComponent>();
 
     m_collisionQueue.add<CollisionQueueComponent>();
-  }
-
-  static void healthSystem(Entity e, float dt) {
-    HealthComponent& health = e.get<HealthComponent>();
-
-    if (health.health <= 0)
-      e.world().destroy(e);
-  }
-
-  static void lifetimeSystem(Entity e, float dt) {
-    LifetimeComponent& destroyAfter = e.get<LifetimeComponent>();
-
-    if (destroyAfter.timeLeft < 0)
-      e.world().destroy(e);
-    destroyAfter.timeLeft -= dt;
   }
      
   void turretSystem(Entity e, float dt) {
@@ -157,13 +126,20 @@ public:
   void run(EntityWorld& world, float deltaTime) override {
     CollisionQueueComponent& queue = m_collisionQueue.get<CollisionQueueComponent>();
     for (CollisionQueueComponent::Collision& collision : queue.queue) {
+      // its possible for a bullet to be destroyed by the HealthModule before we can get to it.
+      if (!world.exists(collision.primary))
+        continue;
       Entity bullet = world.get(collision.primary);
+      // its possible for a enemy to be destroyed by the HealthModule before we can get to it.
+      if (!world.exists(collision.secondary))
+        continue;
       Entity other = world.get(collision.secondary);
+
 
       assert(other.has<HealthComponent>());
 
       HealthComponent& health = other.get<HealthComponent>();
-      DamageComponent& damage = bullet.get<DamageComponent>();
+      ContactDamageComponent& damage = bullet.get<ContactDamageComponent>();
       float speed = b2Length((b2Body_GetLinearVelocity(bullet.get<BodyComponent>().id)));
       health.health -= (speed / 10.0f) * damage.damage;
 
@@ -173,8 +149,6 @@ public:
     queue.queue.clear();
 
     m_tilemapSys.run(deltaTime);
-    m_shouldDieSys.run(deltaTime);
-    m_healthSys.run(deltaTime);
 
     b2WorldId physicsWorld = world.getContext<b2WorldId>();
     for (SummonBullet& bullet : m_summonBullets) {
@@ -186,6 +160,7 @@ public:
       bulletEntity.add<CircleRenderComponent>();
       CircleRenderComponent& cirlceRender = bulletEntity.get<CircleRenderComponent>();
       cirlceRender.radius = bullet.radius;
+      cirlceRender.color = glm::vec3(1.0f, 1.0f, 0.0f);
 
       bulletEntity.add<SubmitToCollisionQueueComponent>();
       bulletEntity.get<SubmitToCollisionQueueComponent>().queue = m_collisionQueue;
@@ -194,7 +169,6 @@ public:
       bodyDef.type = b2_dynamicBody;
       bodyDef.linearVelocity = bullet.shootVelocity;
       bodyDef.position = bullet.pos;
-      bodyDef.userData = (void*)bulletEntity.id();
       id = b2CreateBody(physicsWorld, &bodyDef);
       b2Circle circle;
       circle.center = Vec2(0);
@@ -202,6 +176,7 @@ public:
       b2ShapeDef shapeDef = b2DefaultShapeDef();
       shapeDef.density = 100.0f;
       shapeDef.enableHitEvents = true;
+      shapeDef.userData = entityToB2Data(bulletEntity);
       b2Filter filter;
       filter.categoryBits = Friendly;
       filter.maskBits = Enemy;
@@ -213,8 +188,6 @@ public:
   }
 private:
   System m_tilemapSys;
-  System m_shouldDieSys;
-  System m_healthSys;
   std::vector<SummonBullet> m_summonBullets;
   Entity m_collisionQueue;
 };

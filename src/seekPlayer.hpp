@@ -3,6 +3,7 @@
 #include "utility/ecs.hpp"
 #include "physics.hpp"
 #include "worldMap.hpp"
+#include "health.hpp"
 
 struct PrimaryTargetTag {};
 
@@ -22,11 +23,31 @@ struct ArrowComponent {
 struct SeekPrimaryTargetTag {};
 
 struct PathfindingModule : Module {
-  PathfindingModule(EntityWorld& world) {
+  PathfindingModule(EntityWorld& world)
+    : m_collisionQueue(world.create()) {
     world.set<GrandUnitComponent, ArrowComponent, PrimaryTargetTag, SeekPrimaryTargetTag>();
+    m_collisionQueue.add<CollisionQueueComponent>();
   }
 
   void run(EntityWorld& world, float deltaTime) override final {
+    CollisionQueueComponent& queue = m_collisionQueue.get<CollisionQueueComponent>();
+    for (CollisionQueueComponent::Collision& collision : queue.queue) {
+      if (!world.exists(collision.primary))
+        continue;
+      Entity enemy = world.get(collision.primary);
+      if (!world.exists(collision.secondary))
+        continue;
+      Entity other = world.get(collision.secondary);
+      if (!other.has<HealthComponent>() || other.has<SeekPrimaryTargetTag>())
+        continue;                                 
+
+      HealthComponent& health = other.get<HealthComponent>();
+      ContactDamageComponent& damage = enemy.get<ContactDamageComponent>();
+      float speed = b2Length((b2Body_GetLinearVelocity(enemy.get<BodyComponent>().id)));
+      health.health -= (speed / 10.0f) * damage.damage;
+    }
+    queue.queue.clear();
+
     updateFlowField(world);
 
     Entity map = world.getWith(world.set<TransformComponent, TilemapComponent, WorldMapTag>()).next();
@@ -102,7 +123,7 @@ struct PathfindingModule : Module {
           continue;
 
         Tile& neighborTile = tilemap.find(neighbor);
-        if (neighborTile.flags & TileFlags::IS_COLLIDABLE)
+        if (neighborTile.entity == 0)
           continue;
 
         Entity neighborEntity = world.get(neighborTile.entity);
@@ -122,6 +143,10 @@ struct PathfindingModule : Module {
         openList.emplace(neighbor);
       }
     }
+  }
+
+  Entity getContactDamageQueue() {
+    return m_collisionQueue;
   }
 
 private:
@@ -155,4 +180,5 @@ private:
 private:
   u32 m_currentGeneration = 1;
   glm::i16vec2 m_oldTarget = { 0, 0 };
+  Entity m_collisionQueue;
 };
