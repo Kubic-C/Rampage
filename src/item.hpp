@@ -472,18 +472,17 @@ inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& sta
       if (!topTilemap.contains(tilePos))
         continue;
 
-      Tile oldTile = topTilemap.find(tilePos);
       Entity tile = world.get(topTilemap.erase(tilePos));
-      if (tile.has<TileItemComponent>()) {
+      if (tile.has<TileItemComponent>())
         inv.addItem(tile.get<TileItemComponent>().item);
-      }
-      if (!tile.has<DestroyTileOnEntityRemovalTag>())
-        world.destroy(tile);
+      world.destroy(tile);
     }
   }
 
   inv.removeItem(stackPos);
-  tmLayers.getToptilemap().insert(world, body.id, tilePos, worldMap, tilePrefabs.clonePrefab(item.get<ItemAttrTile>().tileId));
+  bool RES =tmLayers.getToptilemap().insert(world, body.id, tilePos, worldMap, tilePrefabs.clonePrefab(item.get<ItemAttrTile>().tileId));
+  if (!RES)
+    logGeneric("failed\n");
 
   if (inv.isStackEmpty(stackPos))
     world.getContext<ItemManager>().clearHand();

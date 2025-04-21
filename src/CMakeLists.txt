@@ -36,6 +36,7 @@ target_sources(
 	"transform.hpp"
 	"contexts.hpp"
 	"app.hpp"
+	"assetLoader.hpp"
 	"tile.hpp"
 	"tilemap.hpp"
 	"spriteRender.hpp"

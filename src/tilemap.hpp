@@ -267,8 +267,12 @@ public:
         Tilemap& tilemap = tilemapLayers.getTilemap(tileBound.layer);
 
         // Tiles may be destroyed already before we can delete them, hence the check
-        if (tilemap.contains(tileBound.pos))
-          tilemap.erase(tileBound.pos);
+        if (!tilemap.contains(tileBound.pos))
+          return;
+        if (tilemap.find(tileBound.pos).entity != e)
+          return;
+
+        tilemap.erase(tileBound.pos);
       });
 
     world.observe(EntityWorld::EventType::Remove, world.component<TileBoundComponent>(), {},
