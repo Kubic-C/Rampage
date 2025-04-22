@@ -71,6 +71,8 @@ struct PhysicsModule : Module {
               m_ongoingCollisions.erase(other);
           }
           m_ongoingCollisions.erase(it);
+          if (e.has<SubmitToCollisionQueueComponent>())
+            e.world().get(e.get<SubmitToCollisionQueueComponent>().queue).get<CollisionQueueComponent>().queue.clear();
         }
       });
   }

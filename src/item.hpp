@@ -461,10 +461,23 @@ inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& sta
   Entity item = world.get(stack.item);
   TilemapComponent& tmLayers = worldMap.get<TilemapComponent>();
   Tilemap& topTilemap = tmLayers.getToptilemap();
+  Tilemap& bottomTilemap = tmLayers.getBottomtilemap();
 
   BodyComponent& body = worldMap.get<BodyComponent>();
   glm::i16vec2 tilePos = Tilemap::getNearestTile(worldMap.get<TransformComponent>().getLocalPoint(coords));
   const TileDef& tileItemPrefab = tilePrefabs.getPrefab(item.get<ItemAttrTile>().tileId);
+  for (int x = tilePos.x; x < tilePos.x + tileItemPrefab.width; x++) {
+    for (int y = tilePos.y; y < tilePos.y + tileItemPrefab.height; y++) {
+      glm::i16vec2 tilePos = { x, y };
+
+      if (!bottomTilemap.contains(tilePos))
+        continue;
+      bool isCollidable = bottomTilemap.find(tilePos).flags & TileFlags::IS_COLLIDABLE;
+      if (isCollidable)
+        return false;
+    }
+  }
+
   for (int x = tilePos.x; x < tilePos.x + tileItemPrefab.width; x++) {
     for (int y = tilePos.y; y < tilePos.y + tileItemPrefab.height; y++) {
       glm::i16vec2 tilePos = { x, y };

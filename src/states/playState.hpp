@@ -94,7 +94,7 @@ public:
     Inventory playerInvetory = itemMgr.createInventory("Player Inventory", 3, 5);
     player.get<InventoryComponent>().id = playerInvetory;
     playerInvetory.addItem(itemMgr.getItem("BasicTurretItem"), 20);
-    playerInvetory.addItem(itemMgr.getItem("BigHighStoneItem"), 1);
+    playerInvetory.addItem(itemMgr.getItem("PlacableHighStoneItem"), 1);
     playerInvetory.addItem(itemMgr.getItem("WoodItem"), 32);
 
     // Render
@@ -142,17 +142,14 @@ public:
       auto tileCallback =
         [&](int x, int y) {
           if (x <= -35 || x >= 35 || y <= -35 || y >= 35 || (x % 5 == 0 && y < 20 && y != -34)) {
-            TileDef highStone = tilePrefabs.clonePrefab("HighStone");
-            m_world.get(highStone.entity).add<OwnedBy<PlayState>>();
+            TileDef highStone = tilePrefabs.clonePrefab("PermaHighStone");
             worldLayer.insert(m_world, bodyId, { x, y }, tm, highStone);
           }
           else if (rand() % 100 < 5) {
             TileDef unknown = tilePrefabs.clonePrefab("Unknown");
-            m_world.get(unknown.entity).add<OwnedBy<PlayState>>();
             worldLayer.insert(m_world, bodyId, { x, y }, tm, unknown);
           } else {
             TileDef stone = tilePrefabs.clonePrefab("StoneFloor");
-            m_world.get(stone.entity).add<OwnedBy<PlayState>>();
             worldLayer.insert(m_world, bodyId, { x, y }, tm, stone);
           }
         };

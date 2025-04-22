@@ -289,6 +289,28 @@ public:
           ongoingCollisions.erase(it);
         }
       });
+
+    world.observe(EntityWorld::EventType::Remove, world.component<TilemapComponent>(), {},
+      [&](Entity e) {
+        TilemapComponent& tmLayers = e.get<TilemapComponent>();
+
+        std::vector<glm::i16vec2> toDestroy;
+        for (int i = 0; i < tmLayers.getTilemapCount(); i++) {
+          Tilemap& tilemap = tmLayers.getTilemap(i);
+
+          toDestroy.clear();
+          for (glm::i16vec2 pos : tilemap) {
+            toDestroy.push_back(pos);
+          }
+
+          for (glm::i16vec2 pos : toDestroy) {
+            EntityId id = tilemap.erase(pos);
+            if (id == 0)
+              continue;
+            e.world().destroy(id);
+          }
+        }
+      });
   }
 
   static void updateTileBoundTransforms(Entity e, float dt) {

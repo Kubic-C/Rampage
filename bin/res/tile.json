@@ -20,27 +20,24 @@
     }
   },
   {
-    "name": "HighStone",
+    "name": "PermaHighStone",
     "shape": {
       "restitution": 10.0,
       "friction": 0.0
     },
-    "spritePaths": [ "highStone.png" ],
+    "spritePaths": [ "permaHighStone.png" ],
     "flags": [ "IS_COLLIDABLE" ],
-    "size": [ 1, 1 ],
-    "item": {
-      "name": "HighStoneItem",
-      "iconPath": "highStone.png"
-    }
+    "size": [ 1, 1 ]
   },
   {
-    "name": "BigHighStone",
-    "spritePaths": [ "highStone.png" ],
+    "name": "PlacableHighStone",
+    "spritePaths": [ "placableHighStone.png" ],
     "flags": [ "IS_COLLIDABLE" ],
-    "size": [ 500, 500 ],
+    "size": [ 3, 3 ],
+    "startingLayer": 3,
     "item": {
-      "name": "BigHighStoneItem",
-      "iconPath": "highStone.png",
+      "name": "PlacableHighStoneItem",
+      "iconPath": "placableHighStone.png",
       "unique": true
     }
   },

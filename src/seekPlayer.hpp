@@ -37,7 +37,7 @@ struct PathfindingModule : Module {
 
       Tile& tile = tilemap.find(pos);
       if(tile.entity == 0 || !world.get(tile.entity).has<ArrowComponent>())
-        continue;
+        return nullptr;
 
       return &world.get(tile.entity).get<ArrowComponent>();
     }
