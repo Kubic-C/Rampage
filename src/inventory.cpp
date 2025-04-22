@@ -1,6 +1,6 @@
-#include "item.hpp"
+#include "inventory.hpp"
 
-Inventory ItemManager::createInventory(std::string name, u8 rows, u8 cols) {
+Inventory InventoryManager::createInventory(std::string name, u8 rows, u8 cols) {
   InventoryId invId = m_idMgr.generate();
 
   m_inventories.emplace(std::pair(invId, InventoryData()));
@@ -50,15 +50,15 @@ Inventory ItemManager::createInventory(std::string name, u8 rows, u8 cols) {
   return getInventory(invId);
 }
 
-Inventory ItemManager::getInventory(InventoryId id) {
+Inventory InventoryManager::getInventory(InventoryId id) {
   return Inventory(*this, id);
 }
 
-bool ItemManager::hasInventory(InventoryId id) {
+bool InventoryManager::hasInventory(InventoryId id) {
   return m_inventories.contains(id);
 }
 
-void ItemManager::destroyInventory(InventoryId id) {
+void InventoryManager::destroyInventory(InventoryId id) {
   for (auto& [pos, stack] : m_inventories.find(id)->second.items) {
     if (stack.item == 0)
       continue;

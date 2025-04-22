@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tilePrefabs.hpp"
+#include "tile.hpp"
 #include "transform.hpp"
 #include "physics.hpp"
 

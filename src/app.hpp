@@ -14,8 +14,7 @@
 #include "states/menuState.hpp"
 #include "states/playState.hpp"
 
-#include "turret.hpp"
-#include "item.hpp"
+#include "assetLoader.hpp"
 
 class App {
 public:
@@ -75,10 +74,12 @@ public:
     /* Tilemap Render */
     m_world.addModule<SpriteRenderModule>(0, 32, 32, 256).add<IsRender>();
 
-    /* Tile Prefabs */
-    m_world.addContext<TilePrefabs>(m_world);
-    TilePrefabs& tilePrefab = m_world.getContext<TilePrefabs>();
-    tilePrefab.loadFromFile("./res/tile.json");
+    /* Asset Loader */
+    m_world.addContext<AssetLoader>(m_world);
+    AssetLoader& loader = m_world.getContext<AssetLoader>();
+    loader.loadAssets("./res/sprites.json"); // ALWAYS LOAD SPRITES FIRST!
+    loader.loadAssets("./res/items.json");
+    loader.loadAssets("./res/tiles.json");
 
     // Enable the core modules
     m_world.enableModule<TilemapModule>();
@@ -89,7 +90,7 @@ public:
     m_world.enableModule<HealthModule>();
     m_world.enableModule<TurretModule>();
 
-    ItemManager& itemMgr = m_world.getContext<ItemManager>();
+    InventoryManager& itemMgr = m_world.getContext<InventoryManager>();
     itemMgr.setDefaultItemIcon("./res/clear.png");
 
     /* State Management, init starts with menuState */

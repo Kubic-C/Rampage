@@ -1,9 +1,8 @@
 #pragma once
 
-#include "utility/ecs.hpp"
-#include "utility/log.hpp"
 #include "tilemap.hpp"
 #include "physics.hpp"
+#include "assetLoader.hpp"
 
 using InventoryId = u32;
 
@@ -32,7 +31,7 @@ struct ItemAttrIcon {
 struct ItemAttrUnique {};
 
 struct ItemAttrTile {
-  TilePrefabId tileId;
+  AssetId tileId;
 };
 
 struct TileItemComponent {
@@ -68,11 +67,11 @@ struct InventoryData {
 
 class Inventory;
 
-class ItemManager {
+class InventoryManager {
   friend class Inventory;
 
 public:
-  ItemManager(EntityWorld& world)
+  InventoryManager(EntityWorld& world)
     : m_world(world) {
     tgui::Gui& gui = m_world.getContext<tgui::Gui>();
     m_handPicture = tgui::Picture::create();
@@ -85,29 +84,6 @@ public:
   void setDefaultItemIcon(tgui::Texture texture) {
     m_defaultTexture = texture;
     m_handPicture->getRenderer()->setTexture(m_defaultTexture);
-  }
-
-  EntityId createItem(const std::string& name, Entity entity, tgui::Texture icon, u8 stackCost = 1) {
-    m_itemNames[name] = entity;
-
-    entity.disable();
-    entity.add<ItemAttrStackCost>();
-    ItemAttrStackCost& itemStackCost = entity.get<ItemAttrStackCost>();
-    itemStackCost.stackCost = stackCost;
-    entity.add<ItemAttrIcon>();
-    ItemAttrIcon& itemIcon = entity.get<ItemAttrIcon>();
-    itemIcon.icon = icon;
-
-#ifndef NDEBUG
-    logGeneric("Created Item: %s @ %u\n", name.c_str(), entity.id());
-#endif
-
-    return entity;
-  }
-
-  Entity getItem(const std::string& name) const {
-    assert(m_itemNames.contains(name));
-    return m_world.get(m_itemNames.at(name));
   }
 
   Inventory createInventory(std::string name, u8 rows = 3, u8 cols = 3);
@@ -170,7 +146,6 @@ private:
   
   tgui::Texture m_defaultTexture;
 
-  Map<std::string, EntityId> m_itemNames;
   IdManager<InventoryId> m_idMgr;
   Map<InventoryId, InventoryData> m_inventories;
 
@@ -182,7 +157,7 @@ private:
 /* A proxy class used to extend functionality */
 class Inventory {
 public:
-  Inventory(ItemManager& mgr, InventoryId id) 
+  Inventory(InventoryManager& mgr, InventoryId id) 
     : m_mgr(mgr), m_id(id) {}
 
   bool addItem(EntityId entity, const glm::u16vec2& pos, u32 count = 1) {
@@ -414,7 +389,7 @@ protected:
   }
 
 private:
-  ItemManager& m_mgr;
+  InventoryManager& m_mgr;
   InventoryId m_id;
 };
 
@@ -427,18 +402,18 @@ public:
     m_world.component<ItemAttrIcon>();
     m_world.component<ItemAttrTile>();
     m_world.component<TileItemComponent>();
-    m_world.addContext<ItemManager>(world);
+    m_world.addContext<InventoryManager>(world);
 
     m_world.observe(EntityWorld::EventType::Remove, m_world.component<InventoryComponent>(), {},
       [](Entity e) {
-        ItemManager& mgr = e.world().getContext<ItemManager>();
+        InventoryManager& mgr = e.world().getContext<InventoryManager>();
         if(mgr.hasInventory(e.get<InventoryComponent>().id))
           mgr.destroyInventory(e.get<InventoryComponent>().id);
       });
   }
 
   void run(EntityWorld& world, float deltaTime) override {
-    ItemManager& itemMgr = m_world.getContext<ItemManager>();
+    InventoryManager& itemMgr = m_world.getContext<InventoryManager>();
 
     itemMgr.updateHandPos();
     if (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_RMASK) {
@@ -452,7 +427,7 @@ private:
 
 inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& stackPos, const glm::vec2& coords) {
   EntityWorld& world = worldMap.world();
-  TilePrefabs& tilePrefabs = world.getContext<TilePrefabs>();
+  AssetLoader& assetLoader = world.getContext<AssetLoader>();
 
   const ItemStack stack = inv.getStack(stackPos);
   if (stack.item == 0 || !world.get(stack.item).has<ItemAttrTile>())
@@ -465,7 +440,7 @@ inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& sta
 
   BodyComponent& body = worldMap.get<BodyComponent>();
   glm::i16vec2 tilePos = Tilemap::getNearestTile(worldMap.get<TransformComponent>().getLocalPoint(coords));
-  const TileDef& tileItemPrefab = tilePrefabs.getPrefab(item.get<ItemAttrTile>().tileId);
+  const TileDef& tileItemPrefab = assetLoader.getTilePrefab(item.get<ItemAttrTile>().tileId);
   for (int x = tilePos.x; x < tilePos.x + tileItemPrefab.width; x++) {
     for (int y = tilePos.y; y < tilePos.y + tileItemPrefab.height; y++) {
       glm::i16vec2 tilePos = { x, y };
@@ -493,12 +468,10 @@ inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& sta
   }
 
   inv.removeItem(stackPos);
-  bool RES =tmLayers.getToptilemap().insert(world, body.id, tilePos, worldMap, tilePrefabs.clonePrefab(item.get<ItemAttrTile>().tileId));
-  if (!RES)
-    logGeneric("failed\n");
+  tmLayers.getToptilemap().insert(world, body.id, tilePos, worldMap, assetLoader.cloneTilePrefab(item.get<ItemAttrTile>().tileId));
 
   if (inv.isStackEmpty(stackPos))
-    world.getContext<ItemManager>().clearHand();
+    world.getContext<InventoryManager>().clearHand();
   
   return true;
 }

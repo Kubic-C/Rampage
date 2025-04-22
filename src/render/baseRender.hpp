@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utility/base.hpp"
+#include "../utility/ecs.hpp"
 
 struct IsRender {};
 

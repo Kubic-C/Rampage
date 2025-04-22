@@ -4,7 +4,7 @@
 #include "render/render.hpp"
 
 #include "tilemap.hpp"
-#include "item.hpp"
+#include "inventory.hpp"
 #include "worldMap.hpp"
 #include "eventManager.hpp"
 
@@ -28,14 +28,15 @@ public:
     EntityWorld& world = e.world();
     SDL_Window* window = world.getContext<SDL_Window*>();
     Render& render = world.getContext<Render>();
-    ItemManager& itemMgr = world.getContext<ItemManager>();
+    InventoryManager& invMgr = world.getContext<InventoryManager>();
     EventManager& eventMgr = world.getContext<EventManager>();
+    AssetLoader& assetLoader = world.getContext<AssetLoader>();
 
     BodyComponent& body = e.get<BodyComponent>();
     TransformComponent& transform = e.get<TransformComponent>();
     PlayerComponent& player = e.get<PlayerComponent>();
     CameraComponent& camera = e.get<CameraComponent>();
-    Inventory inv = itemMgr.getInventory(e.get<InventoryComponent>().id);
+    Inventory inv = invMgr.getInventory(e.get<InventoryComponent>().id);
 
     float mass = b2Body_GetMass(body.id);
     if (eventMgr.isKeyHeld(Key::A))
@@ -58,7 +59,7 @@ public:
       inv.setVisible(!inv.getVisible());
     }
     if (eventMgr.isKeyHeld(Key::F4)) {
-      inv.addItem(itemMgr.getItem("WoodItem"), 4);
+      inv.addItem(assetLoader.getItem("WoodItem"), 4);
     }
 
     float maxSpeed = player.maxSpeed;
@@ -77,9 +78,9 @@ public:
       player.mouse = render.getWorldCoords({x, y});
 
       tgui::Gui& gui = world.getContext<tgui::Gui>();
-      if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F] && itemMgr.getHandInventory() != 0 && !gui.getWidgetAtPos({x, y}, false)) {
+      if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F] && invMgr.getHandInventory() != 0 && !gui.getWidgetAtPos({x, y}, false)) {
         Render& renderer = world.getContext<Render>();
-        tryPlaceItem(world.getFirstWith(world.set<WorldMapTag>()), itemMgr.getInventory(itemMgr.getHandInventory()), itemMgr.getHandInventoryPos(), renderer.getWorldCoords({x, y}));
+        tryPlaceItem(world.getFirstWith(world.set<WorldMapTag>()), invMgr.getInventory(invMgr.getHandInventory()), invMgr.getHandInventoryPos(), renderer.getWorldCoords({x, y}));
       }
     }
 

@@ -1,0 +1,33 @@
+[
+  {
+    "type": "Item",
+    "name": "UnknownItem",
+    "iconPath": "unknown.png"
+  },
+  {
+    "type": "Item",
+    "name": "StoneItem",
+    "iconPath": "stone.png"
+  },
+  {
+    "type": "Item",
+    "name": "PlaceableHighStoneItem",
+    "iconPath": "placableHighStone.png",
+    "unique":  true
+  },
+  {
+    "type": "Item",
+    "name": "BasicTurretItem",
+    "iconPath": "basicTurretIcon.png"
+  },
+  {
+    "type": "Item",
+    "name": "FenceItem",
+    "iconPath": "fence.png"
+  },
+  {
+    "type": "Item",
+    "name": "WoodItem",
+    "iconPath": "wood.png"
+  }
+]

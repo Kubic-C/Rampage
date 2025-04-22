@@ -78,7 +78,8 @@ public:
 
   void onEntry() {
     b2WorldId physicsWorld = m_world.getContext<b2WorldId>();
-    ItemManager& itemMgr = m_world.getContext<ItemManager>();
+    InventoryManager& invMgr = m_world.getContext<InventoryManager>();
+    AssetLoader& assetLoader = m_world.getContext<AssetLoader>();
     Entity player = m_world.getFirstWith(m_world.set<CameraInUse>());
 
     m_menu->setEnabled(true);
@@ -91,11 +92,11 @@ public:
 
     /* Player */
     player.add(m_addedPlayerComponents);
-    Inventory playerInvetory = itemMgr.createInventory("Player Inventory", 3, 5);
+    Inventory playerInvetory = invMgr.createInventory("Player Inventory", 3, 5);
     player.get<InventoryComponent>().id = playerInvetory;
-    playerInvetory.addItem(itemMgr.getItem("BasicTurretItem"), 20);
-    playerInvetory.addItem(itemMgr.getItem("PlacableHighStoneItem"), 1);
-    playerInvetory.addItem(itemMgr.getItem("WoodItem"), 32);
+    playerInvetory.addItem(assetLoader.getItem("BasicTurretItem"), 20);
+    playerInvetory.addItem(assetLoader.getItem("PlaceableHighStoneItem"), 1);
+    playerInvetory.addItem(assetLoader.getItem("WoodItem"), 32);
 
     // Render
     RectangleRenderComponent& renderRect = player.get<RectangleRenderComponent>();
@@ -136,20 +137,19 @@ public:
       b2BodyId bodyId = b2CreateBody(physicsWorld, &bodyDef);
       tm.get<BodyComponent>().id = bodyId;
       
-      TilePrefabs& tilePrefabs = m_world.getContext<TilePrefabs>();
       TilemapComponent& tilemapLayers = tm.get<TilemapComponent>();
       Tilemap& worldLayer = tilemapLayers.getTilemap(TilemapWorldLayer);
       auto tileCallback =
         [&](int x, int y) {
           if (x <= -35 || x >= 35 || y <= -35 || y >= 35 || (x % 5 == 0 && y < 20 && y != -34)) {
-            TileDef highStone = tilePrefabs.clonePrefab("PermaHighStone");
+            TileDef highStone = assetLoader.cloneTilePrefab("PermaHighStone");
             worldLayer.insert(m_world, bodyId, { x, y }, tm, highStone);
           }
           else if (rand() % 100 < 5) {
-            TileDef unknown = tilePrefabs.clonePrefab("Unknown");
+            TileDef unknown = assetLoader.cloneTilePrefab("Unknown");
             worldLayer.insert(m_world, bodyId, { x, y }, tm, unknown);
           } else {
-            TileDef stone = tilePrefabs.clonePrefab("StoneFloor");
+            TileDef stone = assetLoader.cloneTilePrefab("StoneFloor");
             worldLayer.insert(m_world, bodyId, { x, y }, tm, stone);
           }
         };
