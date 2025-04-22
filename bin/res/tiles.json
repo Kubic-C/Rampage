@@ -33,7 +33,10 @@
     "item": "PlaceableHighStoneItem",
     "flags": [ "IS_COLLIDABLE" ],
     "size": [ 3, 3 ],
-    "startingLayer": 3
+    "startingLayer": 3,
+    "breakable": {
+      "health": 2000
+    }
   },
   {
     "type": "Tile",
@@ -56,6 +59,9 @@
       "stopRange": 0.04,
       "muzzleVelocity": 50.0,
       "bulletRadius": 0.05
+    },
+    "breakable": {
+      "health": 1000
     }
   },
   {

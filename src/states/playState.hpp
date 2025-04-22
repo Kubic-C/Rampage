@@ -95,7 +95,7 @@ public:
     Inventory playerInvetory = invMgr.createInventory("Player Inventory", 3, 5);
     player.get<InventoryComponent>().id = playerInvetory;
     playerInvetory.addItem(assetLoader.getItem("BasicTurretItem"), 20);
-    playerInvetory.addItem(assetLoader.getItem("PlaceableHighStoneItem"), 1);
+    playerInvetory.addItem(assetLoader.getItem("PlaceableHighStoneItem"), 2);
     playerInvetory.addItem(assetLoader.getItem("WoodItem"), 32);
 
     // Render

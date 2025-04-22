@@ -5,8 +5,6 @@
 typedef u32 AssetId;
 
 class AssetLoader {
-  typedef EntityId ItemId;
-  
   struct SpriteAsset {
     SpriteComponent sprite;
   };
