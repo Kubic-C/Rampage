@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utility/ecs.hpp"
+#include "../ecs/ecs.hpp"
 
 struct CollisionQueueComponent {
   struct Collision {

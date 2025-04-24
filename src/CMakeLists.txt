@@ -21,8 +21,6 @@ endif()
 # Utility
 target_sources(
 	Rampage PUBLIC
-	"utility/ecs.hpp"
-	"utility/ecs.cpp"
 	"utility/base.hpp"
 	"utility/id.hpp"
 	"utility/math.hpp"
@@ -80,6 +78,21 @@ target_sources(
 	"modules/tilemap.hpp"
 	"modules/turret.hpp"
 	"modules/item.hpp")
+
+# Ecs
+target_sources(
+	Rampage PUBLIC
+	"ecs/componentSet.cpp"
+	"ecs/componentSet.hpp"
+	"ecs/ecs.hpp"
+	"ecs/entity.cpp"
+	"ecs/entity.hpp"
+	"ecs/id.hpp"
+	"ecs/module.hpp"
+	"ecs/pool.hpp"
+	"ecs/system.hpp"
+	"ecs/world.hpp"
+	"ecs/world.cpp")
 
 target_sources(Rampage PUBLIC ${srcFiles})
 

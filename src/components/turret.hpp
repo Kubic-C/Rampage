@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utility/ecs.hpp"
+#include "../ecs/ecs.hpp"
 
 enum PhysicsCategories {
   Friendly = 0x01,

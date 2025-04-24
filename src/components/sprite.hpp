@@ -1,7 +1,7 @@
 #pragma once
 
+#include "../ecs/ecs.hpp"
 #include "../utility/math.hpp"
-#include "../utility/ecs.hpp"
 
 enum class WorldLayer : u8 {
   Invalid = 8,

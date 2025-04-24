@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utility/ecs.hpp"
+#include "../ecs/ecs.hpp"
 #include "../utility/math.hpp"
 
 constexpr float tileSidelength = 0.5f;

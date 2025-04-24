@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utility/ecs.hpp"
+#include "ecs/ecs.hpp"
 #include "components/sprite.hpp"
 #include "components/tile.hpp"
 
