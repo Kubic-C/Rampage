@@ -33,6 +33,7 @@ public:
     CameraComponent& camera = e.get<CameraComponent>();
     Inventory inv = invMgr.getInventory(e.get<InventoryComponent>().id);
 
+    /* Linear Movement */
     float mass = b2Body_GetMass(body.id);
     if (eventMgr.isKeyHeld(Key::A))
       b2Body_ApplyLinearImpulseToCenter(body.id, fast2DRotate({ mass * -player.accel, 0.0f }, camera.m_rot), true);
@@ -42,46 +43,43 @@ public:
       b2Body_ApplyLinearImpulseToCenter(body.id, fast2DRotate({ 0.0f, mass * player.accel }, camera.m_rot), true);
     if (eventMgr.isKeyHeld(Key::S))
       b2Body_ApplyLinearImpulseToCenter(body.id, fast2DRotate({ 0.0f, mass * -player.accel }, camera.m_rot), true);
-    if (eventMgr.isKeyHeld(Key::Z))
-      camera.safeZoom(10);
-    if (eventMgr.isKeyHeld(Key::X))
-      camera.safeZoom(-10);
-    if (eventMgr.isKeyHeld(Key::Q))
-      camera.m_rot += 0.1f;
-    if (eventMgr.isKeyHeld(Key::E))
-      camera.m_rot -= 0.1f;
-    if (eventMgr.isKeyPressed(Key::Tab)) {
-      inv.setVisible(!inv.getVisible());
-    }
-    if (eventMgr.isKeyHeld(Key::F4)) {
-      inv.addItem(assetLoader.getItem("WoodItem"), 4);
-    }
 
     float maxSpeed = player.maxSpeed;
-    if (eventMgr.isKeyHeld(Key::E))
+    if (eventMgr.isKeyHeld(Key::LeftShift))
       maxSpeed *= 8;
-
     glm::vec2 vel = (Vec2)b2Body_GetLinearVelocity(body.id);
     if (glm::length(vel) > maxSpeed) {
       vel = glm::normalize(vel) * maxSpeed;
       b2Body_SetLinearVelocity(body.id, (Vec2)vel);
     }
 
-    {
-      float x, y;
-      SDL_MouseButtonFlags flags = SDL_GetMouseState(&x, &y);
-      player.mouse = render.getWorldCoords({ x, y });
+    /* Zoom */
+    if (eventMgr.isKeyHeld(Key::Z))
+      camera.safeZoom(10);
+    if (eventMgr.isKeyHeld(Key::X))
+      camera.safeZoom(-10);
 
-      tgui::Gui& gui = world.getContext<tgui::Gui>();
-      if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F] && invMgr.getHandInventory() != 0 && !gui.getWidgetAtPos({ x, y }, false)) {
-        Render& renderer = world.getContext<Render>();
-        tryPlaceItem(world.getFirstWith(world.set<WorldMapTag>()), invMgr.getInventory(invMgr.getHandInventory()), invMgr.getHandInventoryPos(), renderer.getWorldCoords({ x, y }));
-      }
-    }
+    /* Camera Rotation */
+    if (eventMgr.isKeyHeld(Key::Q))
+      camera.m_rot += 0.1f;
+    if (eventMgr.isKeyHeld(Key::E))
+      camera.m_rot -= 0.1f;
 
+    /* Cursor */
+    Vec2 mouseScreen = eventMgr.getMouseCoords();
+    player.mouse = render.getWorldCoords(mouseScreen);
     glm::vec2 dir = glm::normalize((Vec2)b2Body_GetPosition(body.id) - player.mouse);
-    float angle = atan2(dir.y, dir.x);
-    transform.rot = Rot(angle);
+    transform.rot = Rot(atan2(dir.y, dir.x));
+
+    /* Inventory Stuff */
+    if (eventMgr.isKeyPressed(Key::Tab))
+      inv.setVisible(!inv.getVisible());
+    if (eventMgr.isKeyHeld(Key::F4))
+      inv.addItem(assetLoader.getItem("WoodItem"), 4);
+    if (eventMgr.isKeyHeld(Key::F) && 
+        invMgr.isHandEmpty() &&
+        !world.getContext<tgui::Gui>().getWidgetAtPos(mouseScreen, false))
+      tryPlaceItem(world.getFirstWith(world.set<WorldMapTag>()), invMgr.getHandInventory(), invMgr.getHandInventoryPos(), player.mouse);
   }
 
 private:

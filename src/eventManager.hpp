@@ -355,6 +355,14 @@ public:
     return m_signalExit;
   }
 
+  Vec2 getMouseCoords() {
+    float x, y;
+
+    SDL_GetMouseState(&x, &y);
+
+    return Vec2(x, y);
+  }
+
 private:
   std::vector<SDL_Event> m_polledEvents;
   bool m_signalResized = false;

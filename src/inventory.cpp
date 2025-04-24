@@ -50,6 +50,10 @@ Inventory InventoryManager::createInventory(std::string name, u8 rows, u8 cols) 
   return getInventory(invId);
 }
 
+Inventory InventoryManager::getHandInventory() {
+  return Inventory(*this, m_handInvId);
+}
+
 Inventory InventoryManager::getInventory(InventoryId id) {
   return Inventory(*this, id);
 }

@@ -95,9 +95,11 @@ public:
     m_handPicture->setVisible(false);
   }
 
-  InventoryId getHandInventory() {
-    return m_handInvId;
+  bool isHandEmpty() {
+    return m_handInvId != 0;
   }
+
+  Inventory getHandInventory();
 
   glm::u16vec2 getHandInventoryPos() {
     return m_handInvPos;

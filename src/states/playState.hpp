@@ -67,7 +67,6 @@ public:
       b2ShapeDef shapeDef = b2DefaultShapeDef();
       shapeDef.friction = 0;
       shapeDef.filter.categoryBits = Enemy;
-      shapeDef.filter.maskBits = ~Enemy; // everything but ourselves
       shapeDef.enableContactEvents = true;
       shapeDef.userData = entityToB2Data(seeker);
       b2Circle circle;
