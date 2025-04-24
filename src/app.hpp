@@ -1,19 +1,20 @@
 #pragma once
 
-#include "tilemap.hpp"
-#include "player.hpp"
-#include "physics.hpp"
-#include "seekPlayer.hpp"
-#include "worldMap.hpp"
-#include "eventManager.hpp"
-
-#include "render/shapes.hpp"
-#include "spriteRender.hpp"
-#include "guiRender.hpp"
+#include "modules/guiRender.hpp"
+#include "modules/health.hpp"
+#include "modules/pathfinding.hpp"
+#include "modules/physics.hpp"
+#include "modules/player.hpp"
+#include "modules/shapeRender.hpp"
+#include "modules/spriteRender.hpp"
+#include "modules/tilemap.hpp"
+#include "modules/turret.hpp"
+#include "modules/item.hpp"
 
 #include "states/menuState.hpp"
 #include "states/playState.hpp"
 
+#include "eventManager.hpp"
 #include "assetLoader.hpp"
 
 class App {

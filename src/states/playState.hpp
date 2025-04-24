@@ -1,7 +1,10 @@
 #pragma once
 
 #include "state.hpp"
-#include "../turret.hpp"
+#include "../components/player.hpp"
+#include "../components/arrow.hpp"
+#include "../components/body.hpp"
+#include "../components/shapes.hpp"
 
 class PlayState : public State {
   const std::string& menuName = "PlayMenu";
@@ -77,6 +80,7 @@ public:
   }
 
   void onEntry() {
+    StateManager& stateMgr = m_world.getContext<StateManager>();
     b2WorldId physicsWorld = m_world.getContext<b2WorldId>();
     InventoryManager& invMgr = m_world.getContext<InventoryManager>();
     AssetLoader& assetLoader = m_world.getContext<AssetLoader>();

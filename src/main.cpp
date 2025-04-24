@@ -1,7 +1,4 @@
-﻿#include "utility/ecs.hpp"
-#include "transform.hpp"
-#include "render/render.hpp"
-#include "app.hpp"
+﻿#include "app.hpp"
 
 int main() {
 	logInit();

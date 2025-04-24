@@ -1,42 +1,13 @@
 #pragma once
 
-#include "tilemap.hpp"
-#include "physics.hpp"
+#include "utility/hashes.hpp"
+
+#include "components/tilemap.hpp"
+#include "components/transform.hpp"
+#include "components/body.hpp"
+#include "components/item.hpp"
+
 #include "assetLoader.hpp"
-
-using InventoryId = u32;
-
-template<>
-struct boost::hash<glm::u16vec2> {
-  size_t operator()(const glm::u16vec2& pos) const {
-    constexpr u16 prime1 = 65521;
-    constexpr u16 prime2 = 57149;
-
-    return (pos.x ^ prime1 * 0x5555) ^ (pos.y ^ prime2 * 0x5555);
-  }
-};
-
-struct InventoryComponent {
-  InventoryId id;
-};
-
-struct ItemAttrStackCost {
-  u8 stackCost = 1;
-};
-
-struct ItemAttrIcon {
-  tgui::Texture icon;
-};
-
-struct ItemAttrUnique {};
-
-struct ItemAttrTile {
-  AssetId tileId;
-};
-
-struct TileItemComponent {
-  EntityId item;
-};
 
 struct ItemStack {
   u32 maxStackCost = 64;
@@ -391,38 +362,6 @@ protected:
 private:
   InventoryManager& m_mgr;
   InventoryId m_id;
-};
-
-class ItemModule : public Module {
-public:
-  ItemModule(EntityWorld& world)
-    : m_world(world) {
-    m_world.component<ItemAttrStackCost>();
-    m_world.component<ItemAttrUnique>();
-    m_world.component<ItemAttrIcon>();
-    m_world.component<ItemAttrTile>();
-    m_world.component<TileItemComponent>();
-    m_world.addContext<InventoryManager>(world);
-
-    m_world.observe(EntityWorld::EventType::Remove, m_world.component<InventoryComponent>(), {},
-      [](Entity e) {
-        InventoryManager& mgr = e.world().getContext<InventoryManager>();
-        if(mgr.hasInventory(e.get<InventoryComponent>().id))
-          mgr.destroyInventory(e.get<InventoryComponent>().id);
-      });
-  }
-
-  void run(EntityWorld& world, float deltaTime) override {
-    InventoryManager& itemMgr = m_world.getContext<InventoryManager>();
-
-    itemMgr.updateHandPos();
-    if (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_RMASK) {
-      itemMgr.clearHand();
-    }
-  }
-
-private:
-  EntityWorld& m_world;
 };
 
 inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& stackPos, const glm::vec2& coords) {

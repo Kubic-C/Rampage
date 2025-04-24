@@ -1,6 +1,7 @@
 #pragma once
 
-#include "transform.hpp"
+#include "../utility/ecs.hpp"
+#include "../utility/math.hpp"
 
 constexpr float tileSidelength = 0.5f;
 constexpr glm::vec2 tileSize = glm::vec2(tileSidelength);

@@ -12,11 +12,13 @@ public:
 	virtual void onTick(u32 tick, float deltaTime) {}
 	virtual void onUpdate() {}
 
-private:
+protected:
 	std::string m_name;
 };
 
 class UnknownState : public State {};
+
+class PlayState;
 
 template<typename T>
 struct OwnedBy {};
@@ -85,6 +87,7 @@ private:
     std::string name;
   };
 
+  std::string m_activeState;
   std::vector<Command> m_commandBuffer;
   Map<std::string, std::shared_ptr<State>> m_states;
   Map<std::string, std::shared_ptr<State>> m_enabledStates;

@@ -1,85 +1,9 @@
 #pragma once
 
-#include "render/shapes.hpp"
-#include "transform.hpp"
-#include "tilemap.hpp"
-#include "seekPlayer.hpp"
-
-constexpr size_t maxNumberBits(size_t numBits) {
-  size_t num = 0;
-
-  for (size_t n = 1; n <= numBits - 1; n++) {
-    size_t powerOf2 = 2;
-
-    for (size_t power = n - 1; power > 0; power--) {
-      powerOf2 *= 2;
-    }
-
-    num += powerOf2;
-  }
-
-  return num + 1;
-}
-
-enum class WorldLayer: u8 {
-  Invalid = 8,
-  Bottom = 7,
-  Floor = 6,
-  Wall = 5,
-  Turret = 4,
-  Item = 3,
-  Res = 2,  // RESERVED
-  Res2 = 1, // RESERVED
-  Top = 0,
-};
-
-struct SpriteLayer {
-  SpriteLayer() = default;
-  SpriteLayer(u16 texIndex, glm::vec2 offset, float rot, WorldLayer layer)
-    : texIndex(texIndex), offset(offset), rot(rot), layer(layer) {
-  }
-
-  u16 texIndex = 0;
-  glm::vec2 offset = { 0.0f, 0.0f };
-  float rot = 0.0f;
-  WorldLayer layer = WorldLayer::Invalid;
-};
-
-struct SpriteComponent {
-  static constexpr size_t MaxSpriteLaters = maxNumberBits(3);
-  SpriteLayer layers[MaxSpriteLaters];
-  u8 layerCount = 0;
-
-  void addLayer(const SpriteLayer& layer) {
-    assert(layerCount < MaxSpriteLaters && "Too many sprite layers!");
-    layers[layerCount++] = layer;
-    if (layer.layer == WorldLayer::Invalid) {
-      layers[layerCount - 1].layer = (WorldLayer)(MaxSpriteLaters - layerCount);
-    }
-  }
-
-  void addLayer(u32 texIndex, glm::vec2 offset = Vec2(0), float rot = 0, WorldLayer layer = WorldLayer::Invalid) {
-    assert(layerCount < MaxSpriteLaters && "Too many sprite layers!");
-    if (layer == WorldLayer::Invalid) {
-      layer = (WorldLayer)(MaxSpriteLaters - layerCount);
-    }
-    layers[layerCount++] = SpriteLayer(texIndex, offset, rot, layer);
-  }
-
-  SpriteLayer& getLast() {
-    return layers[layerCount - 1];
-  }
-
-  const SpriteLayer& operator[](size_t index) const {
-    assert(index < layerCount);
-    return layers[index];
-  }
-};
-
-struct TilePosComponent {
-  glm::i16vec2 pos;
-  EntityId parent;
-};
+#include "shapeRender.hpp"
+#include "../components/transform.hpp"
+#include "../components/sprite.hpp"
+#include "../components/tilemap.hpp"
 
 class SpriteRenderModule : public BaseRenderModule {
   static const int instanceBufferFlags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
@@ -162,7 +86,7 @@ public:
 
   SpriteRenderModule(EntityWorld& world, size_t priority, u32 spriteWidth, u32 spriteHeight, u32 maxSprites)
     : BaseRenderModule(world, priority), m_texArray(spriteWidth, spriteHeight, maxSprites),
-    m_tilemapSys(m_world.system(m_world.set<TransformComponent, TilemapComponent>(), std::bind(&SpriteRenderModule::meshTilemap, this, std::placeholders::_1, std::placeholders::_2))),
+    m_turretSys(m_world.system(m_world.set<TransformComponent, TilemapComponent>(), std::bind(&SpriteRenderModule::meshTilemap, this, std::placeholders::_1, std::placeholders::_2))),
     m_spriteSys(m_world.system(m_world.set<TransformComponent, SpriteComponent>(), std::bind(&SpriteRenderModule::meshSprite, this, std::placeholders::_1, std::placeholders::_2))) {
   
     // Mesh Indicies
@@ -203,7 +127,7 @@ public:
   }
 
   void onMesh() override {
-    m_tilemapSys.run();
+    m_turretSys.run();
     m_spriteSys.run();
   }
 
@@ -444,6 +368,6 @@ private:
   VertexArrayBuffer m_va;
   TextureArray m_texArray;
   Sampler m_sampler;
-  System m_tilemapSys;
+  System m_turretSys;
   System m_spriteSys;
 };

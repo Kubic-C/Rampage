@@ -1,25 +1,20 @@
 #pragma once
-#include "transform.hpp"
-#include "physics.hpp"
-#include "render/render.hpp"
 
-#include "tilemap.hpp"
-#include "inventory.hpp"
-#include "worldMap.hpp"
-#include "eventManager.hpp"
+#include "../components/player.hpp"
+#include "../components/tilemap.hpp"
+#include "../components/worldMap.hpp"
 
-struct PlayerComponent {
-  glm::vec2 mouse = { 0, 0 };
-  float accel = 1.0f;
-  float maxSpeed = 5.0f;
-};
+#include "../render/render.hpp"
+
+#include "../inventory.hpp"
+#include "../eventManager.hpp"
 
 class PlayerModule : public Module {
 public:
-  PlayerModule(EntityWorld& world) 
-    :  m_system(world.system(world.set<BodyComponent, TransformComponent, PlayerComponent, CameraComponent, InventoryComponent>(), &updatePlayer)) {
+  PlayerModule(EntityWorld& world)
+    : m_system(world.system(world.set<BodyComponent, TransformComponent, PlayerComponent, CameraComponent, InventoryComponent>(), &updatePlayer)) {
   }
-  
+
   void run(EntityWorld& world, float deltaTime) override {
     m_system.run();
   }
@@ -44,7 +39,7 @@ public:
     if (eventMgr.isKeyHeld(Key::D))
       b2Body_ApplyLinearImpulseToCenter(body.id, fast2DRotate({ mass * player.accel, 0.0f }, camera.m_rot), true);
     if (eventMgr.isKeyHeld(Key::W))
-      b2Body_ApplyLinearImpulseToCenter(body.id, fast2DRotate({0.0f, mass * player.accel}, camera.m_rot), true);
+      b2Body_ApplyLinearImpulseToCenter(body.id, fast2DRotate({ 0.0f, mass * player.accel }, camera.m_rot), true);
     if (eventMgr.isKeyHeld(Key::S))
       b2Body_ApplyLinearImpulseToCenter(body.id, fast2DRotate({ 0.0f, mass * -player.accel }, camera.m_rot), true);
     if (eventMgr.isKeyHeld(Key::Z))
@@ -68,19 +63,19 @@ public:
 
     glm::vec2 vel = (Vec2)b2Body_GetLinearVelocity(body.id);
     if (glm::length(vel) > maxSpeed) {
-      vel = glm::normalize(vel) * maxSpeed; 
+      vel = glm::normalize(vel) * maxSpeed;
       b2Body_SetLinearVelocity(body.id, (Vec2)vel);
     }
 
     {
       float x, y;
       SDL_MouseButtonFlags flags = SDL_GetMouseState(&x, &y);
-      player.mouse = render.getWorldCoords({x, y});
+      player.mouse = render.getWorldCoords({ x, y });
 
       tgui::Gui& gui = world.getContext<tgui::Gui>();
-      if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F] && invMgr.getHandInventory() != 0 && !gui.getWidgetAtPos({x, y}, false)) {
+      if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F] && invMgr.getHandInventory() != 0 && !gui.getWidgetAtPos({ x, y }, false)) {
         Render& renderer = world.getContext<Render>();
-        tryPlaceItem(world.getFirstWith(world.set<WorldMapTag>()), invMgr.getInventory(invMgr.getHandInventory()), invMgr.getHandInventoryPos(), renderer.getWorldCoords({x, y}));
+        tryPlaceItem(world.getFirstWith(world.set<WorldMapTag>()), invMgr.getInventory(invMgr.getHandInventory()), invMgr.getHandInventoryPos(), renderer.getWorldCoords({ x, y }));
       }
     }
 

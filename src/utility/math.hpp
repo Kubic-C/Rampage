@@ -170,3 +170,19 @@ void callInGrid(int startx, int starty, int w, int h, T&& callback) {
     x++;
   }
 }
+
+constexpr size_t maxNumberBits(size_t numBits) {
+  size_t num = 0;
+
+  for (size_t n = 1; n <= numBits - 1; n++) {
+    size_t powerOf2 = 2;
+
+    for (size_t power = n - 1; power > 0; power--) {
+      powerOf2 *= 2;
+    }
+
+    num += powerOf2;
+  }
+
+  return num + 1;
+}

@@ -1,30 +1,8 @@
 #pragma once
 
-#include "physics.hpp"
-#include "tile.hpp"
-#include "health.hpp"
-
-enum PhysicsCategories {
-  Friendly = 0x01,
-  Enemy = 0x02,
-  Static = 0x04,
-  All = 0xFFFF
-};
-
-struct TurretComponent {
-  EntityId summon = 0;
-  float fireRate = 1; // Per second
-  float timeSinceLastShot = 0;
-  float radius = 2.0f; // search radius
-
-  float rot = 0; // When 0, the turret is facing right
-  float turnSpeed = 0.1f;
-  float shootRange = 0.04f; // + or -
-  float stopRange = 0.02f;
-
-  float muzzleVelocity = 10.0f;
-  float bulletRadius = 0.25f;
-};
+#include "../components/transform.hpp"
+#include "../components/health.hpp"
+#include "../components/turret.hpp"
 
 class TurretModule : public Module {
   struct ClosestShape {
@@ -63,7 +41,7 @@ class TurretModule : public Module {
   const Vec2 right = { 1.0f, 0.0f };
 public:
   TurretModule(EntityWorld& world) 
-    : m_tilemapSys(world.system(world.set<TransformComponent, TurretComponent>(), std::bind(&TurretModule::turretSystem, this, std::placeholders::_1, std::placeholders::_2))),
+    : m_turretSys(world.system(world.set<TransformComponent, TurretComponent>(), std::bind(&TurretModule::turretSystem, this, std::placeholders::_1, std::placeholders::_2))),
     m_collisionQueue(world.create()) {
     world.component<TurretComponent>();
 
@@ -148,7 +126,7 @@ public:
     }
     queue.queue.clear();
 
-    m_tilemapSys.run(deltaTime);
+    m_turretSys.run(deltaTime);
 
     b2WorldId physicsWorld = world.getContext<b2WorldId>();
     for (SummonBullet& bullet : m_summonBullets) {
@@ -187,7 +165,7 @@ public:
     m_summonBullets.clear();
   }
 private:
-  System m_tilemapSys;
+  System m_turretSys;
   std::vector<SummonBullet> m_summonBullets;
   Entity m_collisionQueue;
 };

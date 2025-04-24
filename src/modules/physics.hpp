@@ -1,23 +1,8 @@
 #pragma once
-#include "utility/base.hpp"
-#include "utility/ecs.hpp"
-#include "transform.hpp"
 
-struct BodyComponent {
-  b2BodyId id = b2_nullBodyId;
-
-  ~BodyComponent() {
-    b2DestroyBody(id);
-  }
-};
-
-inline void* entityToB2Data(EntityId id) {
-  return (void*)id;
-}
-
-inline Entity b2DataToEntity(EntityWorld& world, void* vp) {
-  return world.get((EntityId)vp);
-}
+#include "../components/transform.hpp"
+#include "../components/body.hpp"
+#include "../components/collisionQueue.hpp"
 
 inline void copyTransformsIntoBodies(TransformComponent& transform, BodyComponent& body) {
   if (!b2Body_IsValid(body.id))
@@ -39,19 +24,6 @@ inline void copyBodiesIntoTransforms(TransformComponent& transform, BodyComponen
     transform.rot = bodyTransform.q;
   }
 }
-
-struct CollisionQueueComponent {
-  struct Collision {
-    EntityId primary = 0; // The entity which "made" the submission
-    EntityId secondary = 0; // The other entity
-  };
-
-  std::vector<Collision> queue;
-};
-
-struct SubmitToCollisionQueueComponent {
-  EntityId queue;
-};
 
 struct PhysicsModule : Module {
   PhysicsModule(EntityWorld& world, int steps)

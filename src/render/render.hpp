@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../tile.hpp"
 #include "camera.hpp"
 #include "opengl.hpp"
 #include "baseRender.hpp"
+#include "../components/transform.hpp"
 
 class Render {
 public:

@@ -1,24 +1,12 @@
 #pragma once
 
-#include "utility/ecs.hpp"
-
-struct ContactDamageComponent {
-  float damage = 10.0f;
-};
-
-struct LifetimeComponent {
-  float timeLeft = 1.0f;
-};
-
-struct HealthComponent {
-  float health = 5.0f;
-};
+#include "../components/health.hpp"
 
 class HealthModule : public Module {
 public:
-  HealthModule(EntityWorld& world)   
+  HealthModule(EntityWorld& world)
     : m_shouldDieSys(world.system(world.set<LifetimeComponent>(), &lifetimeSystem)),
-      m_healthSys(world.system(world.set<HealthComponent>(), &healthSystem)) {
+    m_healthSys(world.system(world.set<HealthComponent>(), &healthSystem)) {
     world.component<ContactDamageComponent>();
   }
 

@@ -1,7 +1,11 @@
 #include "assetLoader.hpp"
 
 #include "inventory.hpp"
-#include "turret.hpp"
+#include "components/turret.hpp"
+#include "components/health.hpp"
+#include "components/arrow.hpp"
+
+#include "modules/spriteRender.hpp"
 
 bool keysExistAndLog(const std::string target, const json& json, const std::vector<std::string>& keys) {
   bool failed = false;
@@ -28,7 +32,6 @@ b2ShapeDef loadShapeFromJson(const json& json) {
 }
 
 Entity loadBulletFromJson(EntityWorld& world, const std::string& parentDir, const json& json) {
-  SpriteRenderModule& render = world.getModule<SpriteRenderModule>();
   if (!keysExistAndLog("bullet", json, { "damage", "lifetime", "health" }))
     return Entity(world, 0);
 

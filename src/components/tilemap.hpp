@@ -1,34 +1,16 @@
 #pragma once
 
-#include "tile.hpp"
-#include "transform.hpp"
-#include "physics.hpp"
+#include "../components/transform.hpp"
+#include "../components/tile.hpp"
+#include "../utility/hashes.hpp"
 
-template<>
-struct boost::hash<glm::i16vec2> {
-  size_t operator()(const glm::i16vec2& pos) const noexcept {
-    // Pack into a 32-bit key (since i16vec2 fits in 32 bits)
-    uint32_t packed = (static_cast<uint16_t>(pos.x) << 16) | static_cast<uint16_t>(pos.y);
-
-    // Use a quick integer hash (e.g. a mix of Murmur finalizer)
-    uint32_t h = packed;
-    h ^= h >> 16;
-    h *= 0x85ebca6b;
-    h ^= h >> 13;
-    h *= 0xc2b2ae35;
-    h ^= h >> 16;
-
-    return static_cast<size_t>(h);
-  }
-};
+class TilemapComponent;
 
 struct TileBoundComponent {
   u32 layer;
   glm::i16vec2 pos;
   EntityId parent;
 };
-
-class TilemapComponent;
 
 class Tilemap {
   friend class TilemapComponent;
@@ -251,85 +233,3 @@ private:
 };
 
 struct DestroyTileOnEntityRemovalTag {};
-
-class TilemapModule : public Module {
-public:
-  TilemapModule(EntityWorld& world)
-    : m_calcTransforms(world.system(world.set<TransformComponent, TileBoundComponent>(), &updateTileBoundTransforms)) {
-    world.component<TilemapComponent>();
-    world.component<TileBoundComponent>();
-    world.component<DestroyTileOnEntityRemovalTag>();
-
-    world.observe(EntityWorld::EventType::Remove, world.component<DestroyTileOnEntityRemovalTag>(), world.set<TileBoundComponent>(),
-      [](Entity e) {
-        TileBoundComponent& tileBound = e.get<TileBoundComponent>();
-        TilemapComponent& tilemapLayers = e.world().get(tileBound.parent).get<TilemapComponent>();
-        Tilemap& tilemap = tilemapLayers.getTilemap(tileBound.layer);
-
-        // Tiles may be destroyed already before we can delete them, hence the check
-        if (!tilemap.contains(tileBound.pos))
-          return;
-        if (tilemap.find(tileBound.pos).entity != e)
-          return;
-
-        tilemap.erase(tileBound.pos);
-      });
-
-    world.observe(EntityWorld::EventType::Remove, world.component<TileBoundComponent>(), {},
-      [&](Entity e) {
-        Map<EntityId, std::set<EntityId>>& ongoingCollisions = e.world().getModule<PhysicsModule>().getOngoingCollisions();
-
-        auto it = ongoingCollisions.find(e);
-        if (it != ongoingCollisions.end()) {
-          for (EntityId other : it->second) {
-            ongoingCollisions[other].erase(e);
-            if (ongoingCollisions[other].empty())
-              ongoingCollisions.erase(other);
-          }
-          ongoingCollisions.erase(it);
-        }
-      });
-
-    world.observe(EntityWorld::EventType::Remove, world.component<TilemapComponent>(), {},
-      [&](Entity e) {
-        TilemapComponent& tmLayers = e.get<TilemapComponent>();
-
-        std::vector<glm::i16vec2> toDestroy;
-        for (int i = 0; i < tmLayers.getTilemapCount(); i++) {
-          Tilemap& tilemap = tmLayers.getTilemap(i);
-
-          toDestroy.clear();
-          for (glm::i16vec2 pos : tilemap) {
-            toDestroy.push_back(pos);
-          }
-
-          for (glm::i16vec2 pos : toDestroy) {
-            EntityId id = tilemap.erase(pos);
-            if (id == 0)
-              continue;
-            e.world().destroy(id);
-          }
-        }
-      });
-  }
-
-  static void updateTileBoundTransforms(Entity e, float dt) {
-    TransformComponent& transform = e.get<TransformComponent>();
-    TileBoundComponent& tileBound = e.get<TileBoundComponent>();
-
-    Entity parent = e.world().get(tileBound.parent);
-    TransformComponent& parentTransform = parent.get<TransformComponent>();
-    TilemapComponent& parentTilemapLayers = parent.get<TilemapComponent>();
-    Tilemap& tilemap = parentTilemapLayers.getTilemap(tileBound.layer);
-    Tile& tile = tilemap.find(tileBound.pos);
-
-    transform = Transform(parentTransform.getWorldPoint(tilemap.getLocalTileCenter(tileBound.pos, tile.size())), transform.rot);
-  }
-
-  void run(EntityWorld& world, float deltaTime) override {
-    m_calcTransforms.run();
-  }
-
-private:
-  System m_calcTransforms;
-};

@@ -1,31 +1,16 @@
 #pragma once
 
-#include "utility/ecs.hpp"
-#include "physics.hpp"
-#include "worldMap.hpp"
-#include "health.hpp"
-
-struct PrimaryTargetTag {};
-
-struct GrandUnitComponent {
-  std::vector<EntityId> subUnits;
-};
-
-struct ArrowComponent {
-  // Normalized vector
-  // points up, down, left, or right
-  Vec2 dir = { 1.0f, 0.0f };
-  float cost = std::numeric_limits<float>::max();
-  u32 generation = 0;
-  u32 tileCost = 0;
-};
-
-struct SeekPrimaryTargetTag {};
+#include "../components/worldMap.hpp"
+#include "../components/health.hpp"
+#include "../components/arrow.hpp"
+#include "../components/tilemap.hpp"
+#include "../components/collisionQueue.hpp"
+#include "../components/body.hpp"
 
 struct PathfindingModule : Module {
   PathfindingModule(EntityWorld& world)
     : m_collisionQueue(world.create()) {
-    world.set<GrandUnitComponent, ArrowComponent, PrimaryTargetTag, SeekPrimaryTargetTag>();
+    world.set<ArrowComponent, PrimaryTargetTag, SeekPrimaryTargetTag>();
     m_collisionQueue.add<CollisionQueueComponent>();
   }
 

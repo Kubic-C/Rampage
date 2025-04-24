@@ -526,3 +526,11 @@ private:
   EntityIterator m_it;
   EntityWorld::SystemFunc m_func;
 };
+
+inline void* entityToB2Data(EntityId id) {
+  return (void*)id;
+}
+
+inline Entity b2DataToEntity(EntityWorld& world, void* vp) {
+  return world.get((EntityId)vp);
+}
