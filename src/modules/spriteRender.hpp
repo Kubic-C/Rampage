@@ -36,6 +36,10 @@ class SpriteRenderModule : public BaseRenderModule {
   }
 
 public:
+  static void registerComponents(EntityWorld& world) {
+    world.component<SpriteComponent>();
+  }
+
   struct MeshVertex {
     glm::vec2 pos;
     glm::vec2 texCoords;
@@ -133,16 +137,16 @@ public:
 
   void meshTilemap(Entity e, float dt) {
     ShapeRenderModule& shapeRender = e.world().getModule<ShapeRenderModule>();
-    TilemapComponent& tmLayers = e.get<TilemapComponent>();
-    TransformComponent& transform = e.get<TransformComponent>();
-    for (int i = 0; i < tmLayers.getTilemapCount(); i++) {
-      Tilemap& tm = tmLayers.getTilemap(i);
+    RefT<TilemapComponent> tmLayers = e.get<TilemapComponent>();
+    RefT<TransformComponent> transform = e.get<TransformComponent>();
+    for (int i = 0; i < tmLayers->getTilemapCount(); i++) {
+      Tilemap& tm = tmLayers->getTilemap(i);
 
       for (glm::i16vec2 tilePos : tm) {
         Tile& tile = tm.find(tilePos);
 
         glm::u16vec2 dim = { tile.width, tile.height };
-        glm::vec2 tileWorldPos = transform.getWorldPoint(tm.getLocalTileCenter(tilePos, dim));
+        glm::vec2 tileWorldPos = transform->getWorldPoint(tm.getLocalTileCenter(tilePos, dim));
         if (!tile.entity) {
           Instance instance;
           instance.worldPos = tileWorldPos;
@@ -153,14 +157,14 @@ public:
           addInstance(instance);
         } else {
           Entity tileEntity = e.world().get(tile.entity);
-          SpriteComponent& sprite = tileEntity.get<SpriteComponent>();
+          RefT<SpriteComponent> sprite = tileEntity.get<SpriteComponent>();
 
-          for (int i = 0; i < sprite.layerCount; i++) {
+          for (int i = 0; i < sprite->layerCount; i++) {
             Instance instance;
             instance.worldPos = tileWorldPos;
-            instance.layer = sprite[i].texIndex;
-            instance.setZ((u8)sprite[i].layer);
-            instance.setRot(sprite[i].rot);
+            instance.layer = sprite->get(i).texIndex;
+            instance.setZ((u8)sprite->get(i).layer);
+            instance.setRot(sprite->get(i).rot);
             instance.setScale(dim.x, dim.y);
             addInstance(instance);
           }
@@ -170,10 +174,10 @@ public:
           Entity tileE = e.world().get(tile.entity);
           if (!tileE.has<ArrowComponent>())
             continue;
-          Vec2 worldPos = transform.getWorldPoint(tm.getLocalTileCenter(tilePos));
-          ArrowComponent& arrow = tileE.get<ArrowComponent>();
+          Vec2 worldPos = transform->getWorldPoint(tm.getLocalTileCenter(tilePos));
+          RefT<ArrowComponent> arrow = tileE.get<ArrowComponent>();
 
-          shapeRender.drawLine(worldPos, worldPos + arrow.dir * 0.5f, glm::vec3(1.0f, (float)arrow.generation / 255, 0.0f), 0.01f, 1.0f);
+          shapeRender.drawLine(worldPos, worldPos + arrow->dir * 0.5f, glm::vec3(1.0f, (float)arrow->generation / 255, 0.0f), 0.01f, 1.0f);
         }
       }
     }
@@ -181,17 +185,17 @@ public:
    
   void meshSprite(Entity e, float dt) {
     ShapeRenderModule& shapeRender = e.world().getModule<ShapeRenderModule>();
-    SpriteComponent& sprite = e.get<SpriteComponent>();
-    TransformComponent& transform = e.get<TransformComponent>();
+    RefT<SpriteComponent> sprite = e.get<SpriteComponent>();
+    RefT<TransformComponent> transform = e.get<TransformComponent>();
     if (e.has<TileBoundComponent>())
       return;
 
-    for (int i = 0; i < sprite.layerCount; i++) {
+    for (int i = 0; i < sprite->layerCount; i++) {
       Instance instance;
-      instance.worldPos = transform.pos;
-      instance.layer = sprite[i].texIndex;
-      instance.setZ((u8)sprite[i].layer);
-      instance.setRot(sprite[i].rot);
+      instance.worldPos = transform->pos;
+      instance.layer = sprite->get(i).texIndex;
+      instance.setZ((u8)sprite->get(i).layer);
+      instance.setRot(sprite->get(i).rot);
       instance.setScale(1, 1);
       addInstance(instance);
     }

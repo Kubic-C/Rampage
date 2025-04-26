@@ -44,13 +44,13 @@ Entity loadBulletFromJson(EntityWorld& world, const std::string& parentDir, cons
   e.add<LifetimeComponent>();
   e.add<TransformComponent>();
   e.add<HealthComponent>();
-  ContactDamageComponent& damageComp = e.get<ContactDamageComponent>();
-  LifetimeComponent& lifetimeComp = e.get<LifetimeComponent>();
-  HealthComponent& healthComp = e.get<HealthComponent>();
+  RefT<ContactDamageComponent> damageComp = e.get<ContactDamageComponent>();
+  RefT<LifetimeComponent> lifetimeComp = e.get<LifetimeComponent>();
+  RefT<HealthComponent> healthComp = e.get<HealthComponent>();
 
-  damageComp.damage = damage;
-  lifetimeComp.timeLeft = lifetime;
-  healthComp.health = health;
+  damageComp->damage = damage;
+  lifetimeComp->timeLeft = lifetime;
+  healthComp->health = health;
 
   // its essentially a prefab
   e.disable();
@@ -89,11 +89,11 @@ void addBreakable(Entity entity, b2ShapeDef& def, json json) {
     return;
 
   entity.add<HealthComponent>();
-  HealthComponent& health = entity.get<HealthComponent>();
-  health.health = json["health"].get<float>();
+  RefT<HealthComponent> health = entity.get<HealthComponent>();
+  health->health = json["health"].get<float>();
 
   entity.add<ArrowComponent>();
-  entity.get<ArrowComponent>().tileCost = health.health;
+  entity.get<ArrowComponent>()->tileCost = health->health;
   entity.add<TileBoundComponent>();
   entity.add<DestroyTileOnEntityRemovalTag>();
 
@@ -138,11 +138,11 @@ void AssetLoader::loadItem(const std::string& parentDir, const std::string& name
 
   entity.disable();
   entity.add<ItemAttrStackCost>();
-  ItemAttrStackCost& itemStackCost = entity.get<ItemAttrStackCost>();
-  itemStackCost.stackCost = 1;
+  RefT<ItemAttrStackCost> itemStackCost = entity.get<ItemAttrStackCost>();
+  itemStackCost->stackCost = 1;
   entity.add<ItemAttrIcon>();
-  ItemAttrIcon& itemIcon = entity.get<ItemAttrIcon>();
-  itemIcon.icon = tgui::Texture(itemIconPath);
+  RefT<ItemAttrIcon> itemIcon = entity.get<ItemAttrIcon>();
+  itemIcon->icon = tgui::Texture(itemIconPath);
 
   itemId = entity;
 }
@@ -175,12 +175,12 @@ void AssetLoader::loadTile(const std::string& parentDir, const std::string& name
   prefab.entity = tileEntity;
 
   tileEntity.add<SpriteComponent>();
-  tileEntity.get<SpriteComponent>() = getSprite(spriteAssetName);
+  *tileEntity.get<SpriteComponent>() = getSprite(spriteAssetName);
   if (~prefab.flags & IS_COLLIDABLE)
     tileEntity.add<ArrowComponent>();
   if (json.contains("turret")) {
     tileEntity.add<TurretComponent>();
-    tileEntity.get<TurretComponent>() = loadTurretFromJson(m_world, parentDir, json["turret"]);
+    *tileEntity.get<TurretComponent>() = loadTurretFromJson(m_world, parentDir, json["turret"]);
     tileEntity.add<TransformComponent>(); // in order for turrets to match the turret system they need a transform
   }
   if (json.contains("breakable")) {
@@ -191,8 +191,8 @@ void AssetLoader::loadTile(const std::string& parentDir, const std::string& name
     Entity item = getItem(itemName);
 
     item.add<ItemAttrTile>();
-    item.get<ItemAttrTile>().tileId = assetId;
+    item.get<ItemAttrTile>()->tileId = assetId;
     tileEntity.add<TileItemComponent>();
-    tileEntity.get<TileItemComponent>().item = item;
+    tileEntity.get<TileItemComponent>()->item = item;
   }
 }

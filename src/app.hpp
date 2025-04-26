@@ -26,12 +26,6 @@ public:
     m_world.addContext<AppStats>();
     m_world.addContext<DoExit>();
 
-    /* Physics setup */
-    b2WorldDef physicsWorldDef = b2DefaultWorldDef();
-    physicsWorldDef.gravity = b2Vec2{ 0 };
-    m_world.addContext<b2WorldId>(b2CreateWorld(&physicsWorldDef));
-    m_world.addModule<PhysicsModule>(4);
-
     /* Window and render setup */
     m_world.addContext<SDL_Window*>();
     Render::setNecessaryGLAttributes();
@@ -57,25 +51,35 @@ public:
     tgui::Gui& gui = m_world.getContext<tgui::Gui>();
     gui.loadWidgetsFromFile("./res/form.txt");
 
+    m_world.component<WorldMapTag>();
+
+    b2WorldDef physicsWorldDef = b2DefaultWorldDef();
+    physicsWorldDef.gravity = b2Vec2{ 0 };
+    m_world.addContext<b2WorldId>(b2CreateWorld(&physicsWorldDef));
+
+    PhysicsModule::registerComponents(m_world);
+    TilemapModule::registerComponents(m_world);
+    PathfindingModule::registerComponents(m_world);
+    ItemModule::registerComponents(m_world);
+    PlayerModule::registerComponents(m_world);
+    HealthModule::registerComponents(m_world);
+    TurretModule::registerComponents(m_world);
+    ShapeRenderModule::registerComponents(m_world);
+    SpriteRenderModule::registerComponents(m_world);
+
+    m_world.addModule<PhysicsModule>(4);
     m_world.addModule<TilemapModule>();
     m_world.addModule<PathfindingModule>();
     m_world.addModule<ItemModule>();
     m_world.addModule<PlayerModule>();
     m_world.addModule<HealthModule>();
     m_world.addModule<TurretModule>();
-
-    m_world.component<WorldMapTag>();
-
-    /* GUI renderer */
+    m_world.addModule<ShapeRenderModule>(0).add<IsRender>();
+    m_world.addModule<SpriteRenderModule>(0, 32, 32, 256).add<IsRender>();
     m_world.addModule<GuiRenderModule>(SIZE_MAX, gui).add<IsRender>();
 
-    /* Shape Renderer */
-    m_world.addModule<ShapeRenderModule>(0).add<IsRender>();
-
-    /* Tilemap Render */
-    m_world.addModule<SpriteRenderModule>(0, 32, 32, 256).add<IsRender>();
-
     /* Asset Loader */
+    m_world.addContext<InventoryManager>(m_world);
     m_world.addContext<AssetLoader>(m_world);
     AssetLoader& loader = m_world.getContext<AssetLoader>();
     loader.loadAssets("./res/sprites.json"); // ALWAYS LOAD SPRITES FIRST!

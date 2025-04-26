@@ -56,6 +56,10 @@ struct SpriteComponent {
     assert(index < layerCount);
     return layers[index];
   }
+
+  const SpriteLayer& get(size_t index) const {
+    return layers[index];
+  }
 };
 
 struct TilePosComponent {

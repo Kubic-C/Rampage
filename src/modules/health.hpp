@@ -4,27 +4,31 @@
 
 class HealthModule : public Module {
 public:
-  HealthModule(EntityWorld& world)
-    : m_shouldDieSys(world.system(world.set<LifetimeComponent>(), &lifetimeSystem)),
-    m_healthSys(world.system(world.set<HealthComponent>(), &healthSystem)) {
+  static void registerComponents(EntityWorld& world) {
+    world.component<LifetimeComponent>();
     world.component<ContactDamageComponent>();
   }
 
-  static void healthSystem(Entity e, float dt) {
-    HealthComponent& health = e.get<HealthComponent>();
+  HealthModule(EntityWorld& world)
+    : m_shouldDieSys(world.system(world.set<LifetimeComponent>(), &lifetimeSystem)),
+    m_healthSys(world.system(world.set<HealthComponent>(), &healthSystem)) {
+  }
 
-    if (health.health <= 0) {
+  static void healthSystem(Entity e, float dt) {
+    RefT<HealthComponent> health = e.get<HealthComponent>();
+
+    if (health->health <= 0) {
       e.world().destroy(e);
     }
   }
 
   static void lifetimeSystem(Entity e, float dt) {
-    LifetimeComponent& destroyAfter = e.get<LifetimeComponent>();
+    RefT<LifetimeComponent> destroyAfter = e.get<LifetimeComponent>();
 
-    if (destroyAfter.timeLeft < 0) {
+    if (destroyAfter->timeLeft < 0) {
       e.world().destroy(e);
     }
-    destroyAfter.timeLeft -= dt;
+    destroyAfter->timeLeft -= dt;
   }
 
   void run(EntityWorld& world, float dt) override {

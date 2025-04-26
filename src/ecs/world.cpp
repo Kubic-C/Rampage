@@ -84,6 +84,10 @@ EntityWorld::EntityWorld() {
 }
 
 EntityWorld::~EntityWorld() {
+  for (int i = 1; i < m_componentPools.size(); i++) {
+    delete m_componentPools[i];
+  }
+
   for (int i = m_contextsLifo.size() - 1; i >= 0; i--) {
     ContextData& data = m_contexts[m_contextsLifo[i]];
 
@@ -118,7 +122,11 @@ Entity EntityWorld::create(EntityId explicitId) {
   data.comps = enabledSet;
   data.pos = m_sets[enabledSet].emplace(m_sets[enabledSet].end(), id);
 
-  m_entities.insert(std::make_pair(id, data));
+  if (id >= m_entities.size()) {
+    m_entities.resize(id + 1);
+  }
+
+  m_entities[id].emplace(data);
 
   return Entity(*this, id);
 }
@@ -136,7 +144,7 @@ Entity EntityWorld::ensure(EntityId id) {
 }
 
 bool EntityWorld::exists(EntityId id) {
-  return m_entities.find(id) != m_entities.end();
+  return m_idMgr.exists(id);
 }
 
 bool EntityWorld::isAlive(EntityId id) {
@@ -147,7 +155,7 @@ EntityWorld::EntityListIterator EntityWorld::destroy(EntityId id) {
   assert(exists(id));
 
   Entity entity = get(id);
-  EntityData& data = m_entities.find(id)->second;
+  EntityData& data = m_entities[id].value();
   entity.add(set<Destroy>());
 
   if (m_isDefer) {
@@ -160,7 +168,7 @@ EntityWorld::EntityListIterator EntityWorld::destroy(EntityId id) {
   entity.remove(entity.set().remove(component<Destroy>()));
 
   EntityListIterator next = m_sets[findOrCreateSet({ component<Destroy>() })].erase(data.pos);
-  m_entities.erase(id);
+  m_entities[id].reset();
   m_idMgr.destroy(id);
      
   return next;
@@ -217,9 +225,9 @@ void EntityWorld::run(float deltaTime) {
   EntityIterator it = getWith(set<ModuleData>());
   while (it.hasNext()) {
     Entity e = it.next();
-    ModuleData& data = e.get<ModuleData>();
+    RefT<ModuleData> data = e.get<ModuleData>();
 
-    data.m_module->run(*this, deltaTime);
+    data->m_module->run(*this, deltaTime);
   }
 }
 
@@ -284,23 +292,19 @@ Entity EntityWorld::clone(EntityId entity) {
   cloned.add(compSet);
 
   for (ComponentId cid : compSet.list()) {
-    ComponentData& compData = m_components.find(cid)->second;
+    auto copyCtor = m_componentCopyCtor[cid];
 
-    if(compData.m_copyCtor)
-      compData.m_copyCtor(cloned.get(cid), get(entity).get(cid));
+    if(copyCtor)
+      copyCtor((u8*)cloned.get(cid).get(), (u8*)get(entity).get(cid).get());
   }
 
   return cloned;
 }
 
-EntityWorld::ComponentData& EntityWorld::getComponentData(ComponentId id) {
-  return m_components.at(id);
-}
-
 void EntityWorld::moveSets(EntityId id, const ComponentSet* to) {
-  EntityData& entity = m_entities.find(id)->second;
+  EntityData& entity = m_entities[id].value();
 
-  m_sets.at(m_entities.at(id).comps).erase(entity.pos);
+  m_sets.at(entity.comps).erase(entity.pos);
   entity.comps = to;
   entity.pos = m_sets.at(to).emplace(m_sets.at(to).end(), id);; // ALWAYS INSERT IN THE BACK!
 }
@@ -320,7 +324,7 @@ const ComponentSet* EntityWorld::findOrCreateSet(const ComponentSet& base) {
   if (m_componentSets.find(base) == m_componentSets.end()) {
 #ifndef NDEBUG
     for (ComponentId id : base.list())
-      assert(m_components.contains(id));
+      assert(id < m_components.size());
 #endif
 
     m_componentSets.insert(std::make_pair(base, new ComponentSet(base)));
@@ -361,7 +365,7 @@ bool EntityWorld::hasComponent(EntityId id, ComponentId comp) {
 const ComponentSet* EntityWorld::getEntitySet(EntityId id) {
   Map<EntityId, const ComponentSet*>::iterator it = m_deferredMoves.find(id);
   if (it == m_deferredMoves.end()) {
-    return m_entities.find(id)->second.comps;
+    return m_entities[id].value().comps;
   }
 
   return it->second;

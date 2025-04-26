@@ -80,7 +80,7 @@ public:
     EntityId eId = m_inventories.find(invId)->second.items.find(pos)->second.item;
     if (eId) {
       Entity e = getEntity(eId);
-      m_handPicture->getRenderer()->setTexture(e.get<ItemAttrIcon>().icon);
+      m_handPicture->getRenderer()->setTexture(e.get<ItemAttrIcon>()->icon);
       m_handPicture->setVisible(true);
     }
   }
@@ -136,7 +136,7 @@ public:
   bool addItem(EntityId entity, const glm::u16vec2& pos, u32 count = 1) {
     InventoryData& inv = getData();
     Entity itemEntity = m_mgr.getEntity(entity);
-    u8 stackCost = itemEntity.get<ItemAttrStackCost>().stackCost;
+    u8 stackCost = itemEntity.get<ItemAttrStackCost>()->stackCost;
 
     if (!inv.items.contains(pos))
       return false;
@@ -153,7 +153,7 @@ public:
     stack.stackCount += count;
     if (itemEntity.has<ItemAttrUnique>() || stack.item == 0) {
       stack.item = entity;
-      stack.ui->setImage(itemEntity.get<ItemAttrIcon>().icon);
+      stack.ui->setImage(itemEntity.get<ItemAttrIcon>()->icon);
     }
 
     if (!itemEntity.has<ItemAttrUnique>())
@@ -165,7 +165,7 @@ public:
   bool addItem(EntityId entity, u32 count = 1) {
     InventoryData& inv = getData(); 
     Entity itemEntity = m_mgr.getEntity(entity); 
-    u8 stackCost = itemEntity.get<ItemAttrStackCost>().stackCost;
+    u8 stackCost = itemEntity.get<ItemAttrStackCost>()->stackCost;
 
     // If the item is unique, it can only contain one slot.
     if (itemEntity.has<ItemAttrUnique>()) {
@@ -178,7 +178,7 @@ public:
           if (stack.item == 0) {
             stack.item = itemEntity.clone();
             stack.stackCount = 1;
-            stack.ui->setImage(itemEntity.get<ItemAttrIcon>().icon);
+            stack.ui->setImage(itemEntity.get<ItemAttrIcon>()->icon);
             count--;
           }
         }
@@ -207,7 +207,7 @@ public:
           if (stack.item == 0) {
             stack.item = entity;
             stack.stackCount = count;
-            stack.ui->setImage(itemEntity.get<ItemAttrIcon>().icon);
+            stack.ui->setImage(itemEntity.get<ItemAttrIcon>()->icon);
             stack.ui->setText(std::to_string(stack.stackCount));
             return true;
           }
@@ -241,18 +241,18 @@ public:
     bool aItemUnique = false;
     if (a.item != 0) {
       Entity aItem = m_mgr.getEntity(a.item);
-      aCost = aItem.get<ItemAttrStackCost>().stackCost;
+      aCost = aItem.get<ItemAttrStackCost>()->stackCost;
       aItemUnique = aItem.has<ItemAttrUnique>();
-      aIcon = aItem.get<ItemAttrIcon>().icon;
+      aIcon = aItem.get<ItemAttrIcon>()->icon;
     }
     u8 bCost = 0;
     tgui::Texture bIcon = m_mgr.m_defaultTexture;
     bool bItemUnique = false;
     if (b.item != 0) {
       Entity bItem = m_mgr.getEntity(b.item);
-      bCost = bItem.get<ItemAttrStackCost>().stackCost;
+      bCost = bItem.get<ItemAttrStackCost>()->stackCost;
       bItemUnique = bItem.has<ItemAttrUnique>();
-      bIcon = bItem.get<ItemAttrIcon>().icon;
+      bIcon = bItem.get<ItemAttrIcon>()->icon;
     }
 
     if (a.maxStackCost < (b.stackCount * bCost) || b.maxStackCost < (a.stackCount * aCost))
@@ -288,7 +288,7 @@ public:
       return false;
 
     Entity item = m_mgr.getEntity(aStack.item);
-    u8 stackCost = item.get<ItemAttrStackCost>().stackCost;
+    u8 stackCost = item.get<ItemAttrStackCost>()->stackCost;
     i32 aCurrentStackCost = stackCost * aStack.stackCount;
     i32 bCurrentStackCost = stackCost * bStack.stackCount;
     i32 combinedCost = aCurrentStackCost + bCurrentStackCost;
@@ -375,13 +375,13 @@ inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& sta
     return false;
 
   Entity item = world.get(stack.item);
-  TilemapComponent& tmLayers = worldMap.get<TilemapComponent>();
-  Tilemap& topTilemap = tmLayers.getToptilemap();
-  Tilemap& bottomTilemap = tmLayers.getBottomtilemap();
+  RefT<TilemapComponent> tmLayers = worldMap.get<TilemapComponent>();
+  Tilemap& topTilemap = tmLayers->getToptilemap();
+  Tilemap& bottomTilemap = tmLayers->getBottomtilemap();
 
-  BodyComponent& body = worldMap.get<BodyComponent>();
-  glm::i16vec2 tilePos = Tilemap::getNearestTile(worldMap.get<TransformComponent>().getLocalPoint(coords));
-  const TileDef& tileItemPrefab = assetLoader.getTilePrefab(item.get<ItemAttrTile>().tileId);
+  RefT<BodyComponent> body = worldMap.get<BodyComponent>();
+  glm::i16vec2 tilePos = Tilemap::getNearestTile(worldMap.get<TransformComponent>()->getLocalPoint(coords));
+  const TileDef& tileItemPrefab = assetLoader.getTilePrefab(item.get<ItemAttrTile>()->tileId);
   for (int x = tilePos.x; x < tilePos.x + tileItemPrefab.width; x++) {
     for (int y = tilePos.y; y < tilePos.y + tileItemPrefab.height; y++) {
       glm::i16vec2 tilePos = { x, y };
@@ -403,13 +403,13 @@ inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& sta
 
       Entity tile = world.get(topTilemap.erase(tilePos));
       if (tile.has<TileItemComponent>())
-        inv.addItem(tile.get<TileItemComponent>().item);
+        inv.addItem(tile.get<TileItemComponent>()->item);
       world.destroy(tile);
     }
   }
 
   inv.removeItem(stackPos);
-  tmLayers.getToptilemap().insert(world, body.id, tilePos, worldMap, assetLoader.cloneTilePrefab(item.get<ItemAttrTile>().tileId));
+  tmLayers->getToptilemap().insert(world, body->id, tilePos, worldMap, assetLoader.cloneTilePrefab(item.get<ItemAttrTile>()->tileId));
 
   if (inv.isStackEmpty(stackPos))
     world.getContext<InventoryManager>().clearHand();

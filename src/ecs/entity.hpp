@@ -1,6 +1,6 @@
 #pragma once
 
-#include "world.hpp"
+#include "ref.hpp"
 
 class Entity {
 public:
@@ -17,7 +17,7 @@ public:
   void remove(ComponentId compId, bool notify = true);
   void add(const ComponentSet& comps, bool notify = true);
   void remove(const ComponentSet& comps, bool notify = true);
-  u8* get(ComponentId compId);
+  Ref get(ComponentId compId);
   bool has(ComponentId compId);
   EntityWorld& world();
   void enable();
@@ -26,22 +26,22 @@ public:
 
   template<typename T>
   void add() {
-    add(m_world.alias<T>());
+    add(m_world.component<T>());
   }
 
   template<typename T>
   void remove() {
-    remove(m_world.alias<T>());
+    remove(m_world.component<T>());
   }
 
   template<typename T>
-  T& get() {
-    return *(T*)get(m_world.alias<T>());
+  RefT<T> get() {
+    return RefT<T>(m_world, m_id);
 
   }
   template<typename T>
   bool has() {
-    return has(m_world.alias<T>());
+    return has(m_world.component<T>());
   }
 
   operator EntityId() const {
@@ -68,8 +68,8 @@ Entity EntityWorld::addModule(Params&& ... args) {
   Entity moduleEntity = create();
   moduleEntity.template add<ModuleData>();
   moduleEntity.template add<ModuleType<T>>();
-  ModuleData& moduleT = moduleEntity.template get<ModuleData>();
-  moduleT.m_module = std::make_shared<T>(*this, args...);
+  RefT<ModuleData> moduleT = moduleEntity.template get<ModuleData>();
+  moduleT->m_module = std::make_shared<T>(*this, args...);
 
   disable(moduleEntity);
 

@@ -40,70 +40,73 @@ class TurretModule : public Module {
 
   const Vec2 right = { 1.0f, 0.0f };
 public:
+  static void registerComponents(EntityWorld& world) {
+    world.component<TurretComponent>();
+  }
+
   TurretModule(EntityWorld& world) 
     : m_turretSys(world.system(world.set<TransformComponent, TurretComponent>(), std::bind(&TurretModule::turretSystem, this, std::placeholders::_1, std::placeholders::_2))),
     m_collisionQueue(world.create()) {
-    world.component<TurretComponent>();
 
     m_collisionQueue.add<CollisionQueueComponent>();
   }
      
   void turretSystem(Entity e, float dt) {
     b2WorldId physicsWorld = e.world().getContext<b2WorldId>();
-    TransformComponent& transform = e.get<TransformComponent>();
-    TurretComponent& turret = e.get<TurretComponent>();
-    SpriteComponent& sprite = e.get<SpriteComponent>();
+    RefT<TransformComponent> transform = e.get<TransformComponent>();
+    RefT<TurretComponent> turret = e.get<TurretComponent>();
+    RefT<SpriteComponent> sprite = e.get<SpriteComponent>();
     
     ClosestShape closestShape;
-    closestShape.center = transform.pos;
+    closestShape.center = transform->pos;
     b2Circle circle;
     circle.center = Vec2(0);
-    circle.radius = turret.radius;
+    circle.radius = turret->radius;
     b2QueryFilter filter;
     filter.maskBits = Enemy; 
     filter.categoryBits = All;
-    b2World_OverlapCircle(physicsWorld, &circle, Transform(transform.pos, 0), filter, &queryClosest, &closestShape);
+    b2World_OverlapCircle(physicsWorld, &circle, Transform(transform->pos, 0), filter, &queryClosest, &closestShape);
     if (!b2Shape_IsValid(closestShape.shape))
       return;
 
     Vec2 targetPos = b2Body_GetPosition(b2Shape_GetBody(closestShape.shape));
-    Vec2 targetDir = glm::normalize(targetPos - transform.pos);
+    Vec2 targetDir = glm::normalize(targetPos - transform->pos);
     float targetRot = atan2f(targetDir.y, targetDir.x);
 
-    float closestDistToRotate = signedAngleDiff(turret.rot, targetRot);
+    float closestDistToRotate = signedAngleDiff(turret->rot, targetRot);
     float distToRotate = glm::abs(closestDistToRotate);
-    if (distToRotate < turret.shootRange) {
-      turret.timeSinceLastShot += dt;
+    if (distToRotate < turret->shootRange) {
+      turret->timeSinceLastShot += dt;
 
-      if (turret.timeSinceLastShot >= turret.fireRate) {
+      if (turret->timeSinceLastShot >= turret->fireRate) {
         SummonBullet bullet;
-        bullet.id = turret.summon;
-        bullet.pos = transform.pos;
-        bullet.shootVelocity = fast2DRotate(right, turret.rot) * turret.muzzleVelocity;
-        bullet.radius = turret.bulletRadius;
+        bullet.id = turret->summon;
+        bullet.pos = transform->pos;
+        bullet.shootVelocity = fast2DRotate(right, turret->rot) * turret->muzzleVelocity;
+        bullet.radius = turret->bulletRadius;
         m_summonBullets.push_back(bullet);
 
-        turret.timeSinceLastShot = 0.0f;
+        turret->timeSinceLastShot = 0.0f;
       }
     }
 
-    if (distToRotate > turret.stopRange) {
-      float dir = turret.turnSpeed;
+    if (distToRotate > turret->stopRange) {
+      float dir = turret->turnSpeed;
       if (closestDistToRotate < 0)
         dir = -dir;
 
-      if (distToRotate < turret.turnSpeed)
-        turret.rot = targetRot;
+      if (distToRotate < turret->turnSpeed)
+        turret->rot = targetRot;
       else
-        turret.rot += dir;
+        turret->rot += dir;
     }
 
-    sprite.getLast().rot = turret.rot;
+    sprite->getLast().rot = turret->rot;
   }
 
   void run(EntityWorld& world, float deltaTime) override {
-    CollisionQueueComponent& queue = m_collisionQueue.get<CollisionQueueComponent>();
-    for (CollisionQueueComponent::Collision& collision : queue.queue) {
+    RefT<CollisionQueueComponent> queue = m_collisionQueue.get<CollisionQueueComponent>();
+    for (CollisionQueueComponent::Collision& collision : queue->queue) {
       // its possible for a bullet to be destroyed by the HealthModule before we can get to it.
       if (!world.exists(collision.primary))
         continue;
@@ -116,38 +119,38 @@ public:
 
       assert(other.has<HealthComponent>());
 
-      HealthComponent& health = other.get<HealthComponent>();
-      ContactDamageComponent& damage = bullet.get<ContactDamageComponent>();
-      float speed = b2Length((b2Body_GetLinearVelocity(bullet.get<BodyComponent>().id)));
-      health.health -= (speed / 10.0f) * damage.damage;
+      RefT<HealthComponent> health = other.get<HealthComponent>();
+      RefT<ContactDamageComponent> damage = bullet.get<ContactDamageComponent>();
+      float speed = b2Length((b2Body_GetLinearVelocity(bullet.get<BodyComponent>()->id)));
+      health->health -= (speed / 10.0f) * damage->damage;
 
-      HealthComponent& bulletHealth = bullet.get<HealthComponent>();
-      bulletHealth.health -= damage.damage * 0.1f;
+      RefT<HealthComponent> bulletHealth = bullet.get<HealthComponent>();
+      bulletHealth->health -= damage->damage * 0.1f;
     }
-    queue.queue.clear();
+    queue->queue.clear();
 
     m_turretSys.run(deltaTime);
 
     b2WorldId physicsWorld = world.getContext<b2WorldId>();
     for (SummonBullet& bullet : m_summonBullets) {
       Entity bulletEntity = world.get(bullet.id).clone();
-      bulletEntity.get<TransformComponent>().pos = bullet.pos;
+      bulletEntity.get<TransformComponent>()->pos = bullet.pos;
       bulletEntity.add<BodyComponent>();
-      b2BodyId& id = bulletEntity.get<BodyComponent>().id;
+      RefT<BodyComponent> bodyComp = bulletEntity.get<BodyComponent>();
 
       bulletEntity.add<CircleRenderComponent>();
-      CircleRenderComponent& cirlceRender = bulletEntity.get<CircleRenderComponent>();
-      cirlceRender.radius = bullet.radius;
-      cirlceRender.color = glm::vec3(1.0f, 1.0f, 0.0f);
+      RefT<CircleRenderComponent> cirlceRender = bulletEntity.get<CircleRenderComponent>();
+      cirlceRender->radius = bullet.radius;
+      cirlceRender->color = glm::vec3(1.0f, 1.0f, 0.0f);
 
       bulletEntity.add<SubmitToCollisionQueueComponent>();
-      bulletEntity.get<SubmitToCollisionQueueComponent>().queue = m_collisionQueue;
+      bulletEntity.get<SubmitToCollisionQueueComponent>()->queue = m_collisionQueue;
 
       b2BodyDef bodyDef = b2DefaultBodyDef();
       bodyDef.type = b2_dynamicBody;
       bodyDef.linearVelocity = bullet.shootVelocity;
       bodyDef.position = bullet.pos;
-      id = b2CreateBody(physicsWorld, &bodyDef);
+      bodyComp->id = b2CreateBody(physicsWorld, &bodyDef);
       b2Circle circle;
       circle.center = Vec2(0);
       circle.radius = bullet.radius;
@@ -160,7 +163,7 @@ public:
       filter.maskBits = Enemy;
       filter.groupIndex = 0;
       shapeDef.filter = filter;
-      b2CreateCircleShape(id, &shapeDef, &circle);
+      b2CreateCircleShape(bodyComp->id, &shapeDef, &circle);
     }
     m_summonBullets.clear();
   }

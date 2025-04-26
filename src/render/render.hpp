@@ -79,7 +79,7 @@ public:
     while (it.hasNext()) {
       Entity renderer = it.next();
 
-      Module* module = renderer.get<EntityWorld::ModuleData>().m_module.get();
+      Module* module = renderer.get<EntityWorld::ModuleData>()->m_module.get();
       BaseRenderModule* renderData = dynamic_cast<BaseRenderModule*>(module);
       auto it = std::lower_bound(m_renderers.begin(), m_renderers.end(), renderData, 
         [](BaseRenderModule* first, BaseRenderModule* other)
@@ -126,10 +126,10 @@ public:
   glm::mat4 getView() {
     glm::ivec2 screenDim;
     SDL_GetWindowSize(m_window, &screenDim.x, &screenDim.y);
-    CameraComponent& camera = m_camera.get<CameraComponent>();
-    TransformComponent transform = m_camera.get<TransformComponent>();
+    RefT<CameraComponent> camera = m_camera.get<CameraComponent>();
+    RefT<TransformComponent> transform = m_camera.get<TransformComponent>();
 
-    return camera.view(Transform(transform.pos, camera.m_rot), (glm::vec2)screenDim);
+    return camera->view(Transform(transform->pos, camera->m_rot), (glm::vec2)screenDim);
   }
 
   void resizeViewport(const glm::ivec2& size) {

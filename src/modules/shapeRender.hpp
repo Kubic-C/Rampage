@@ -7,6 +7,11 @@
 
 class ShapeRenderModule : public BaseRenderModule {
 public:
+  static void registerComponents(EntityWorld& world) {
+    world.component<CircleRenderComponent>();
+    world.component<RectangleRenderComponent>();
+  }
+
   struct Vertex {
     glm::vec3 pos;
     glm::vec3 color;
@@ -20,9 +25,6 @@ public:
       m_status = Status::CriticalError;
       return;
     }
-
-    world.component<CircleRenderComponent>();
-    world.component<RectangleRenderComponent>();
 
     setCircleResolution(12);
   }
@@ -57,19 +59,19 @@ public:
     EntityIterator itCircle = m_world.getWith(m_world.set<CircleRenderComponent, TransformComponent>());
     while (itCircle.hasNext()) {
       Entity e = itCircle.next();
-      CircleRenderComponent& circle = e.get<CircleRenderComponent>();
-      TransformComponent& transform = e.get<TransformComponent>();
+      RefT<CircleRenderComponent> circle = e.get<CircleRenderComponent>();
+      RefT<TransformComponent> transform = e.get<TransformComponent>();
 
-      drawCircle(Transform(transform.getWorldPoint(circle.offset), transform.rot), circle.color, circle.radius, circle.z);
+      drawCircle(Transform(transform->getWorldPoint(circle->offset), transform->rot), circle->color, circle->radius, circle->z);
     }
 
     EntityIterator it = m_world.getWith(m_world.set<RectangleRenderComponent, TransformComponent>());
     while (it.hasNext()) {
       Entity e = it.next();
-      RectangleRenderComponent& rect = e.get<RectangleRenderComponent>();
-      TransformComponent& transform = e.get<TransformComponent>();
+      RefT<RectangleRenderComponent> rect = e.get<RectangleRenderComponent>();
+      Transform transform = e.get<TransformComponent>().copy();
 
-      drawRectangle(transform, rect.color, rect.hw, rect.hh, rect.z);
+      drawRectangle(transform, rect->color, rect->hw, rect->hh, rect->z);
     }
   }
 

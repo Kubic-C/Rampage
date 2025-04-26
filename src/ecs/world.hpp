@@ -5,6 +5,7 @@
 #include "module.hpp"
 #include "componentSet.hpp"
 
+class Ref;
 class Entity;
 class System;
 
@@ -28,10 +29,19 @@ private:
     std::function<void(u8*)> destroy;
   };
 
-  struct ComponentData {
-    std::string name;
-    void(*m_copyCtor)(u8* dst, u8* src) = nullptr;
-    std::shared_ptr<IPool> pool;
+  class ComponentIdCounter {
+  public:
+    template<typename T>
+    static int id() {
+      static int id = nextID();
+      return id;
+    }
+
+  private:
+    static int nextID() {
+      static int counter = 0;
+      return counter++;
+    }
   };
 
   struct EntityData {
@@ -68,6 +78,7 @@ private:
 private:
   friend class Entity;
   friend class System;
+  friend class Ref;
 
 public:
   class SetIterator {
@@ -143,7 +154,7 @@ public:
   T& getModule() {
     EntityIterator it = getWithDisabled(set<ModuleType<T>>());
     while (it.hasNext())
-      return *(T*)it.next().get<ModuleData>().m_module.get();
+      return *(T*)it.next().get<ModuleData>()->m_module.get();
 
     throw std::exception("Module does not exist\n");
   }
@@ -169,36 +180,35 @@ public:
 
   template<typename T>
   ComponentId component(const std::string_view& name = "") {
+    ComponentId compId = ComponentIdCounter::id<T>();
+    if (compId < m_componentPools.size())
+      return compId;
+    
+    m_componentNames.resize(compId + 1, "");
+    m_componentCopyCtor.resize(compId + 1, nullptr);
+    m_componentPools.resize(compId + 1, nullptr);
+
+    if (name == "")
+      m_componentNames[compId] = boost::typeindex::type_id<T>().pretty_name();
+    else
+      m_componentNames[compId] = name;
+
     size_t size = sizeof(T);
     if constexpr (std::is_empty<T>::value)
       size = 0;
-
-    const size_t hashId = typeid(T).hash_code();
-    ComponentId compId = NullComponentId;
-    if (m_localAliases.find(hashId) != m_localAliases.end()) {
-      return m_localAliases[hashId];
-    } else {
-      compId = ++m_compIdCounter;
-      m_localAliases[hashId] = compId;
-    }
-
-    ComponentData& compData = m_components[compId];
-    if (name == "")
-      compData.name = boost::typeindex::type_id<T>().pretty_name();
-    else
-      compData.name = name;
     if (size != 0) {
-      compData.pool = Pool<T>::createPool();
+      m_componentPools[compId] = SparsePool<T>::createPool();
 
-      compData.m_copyCtor = [](u8* dst, u8* src) {
+      m_componentCopyCtor[compId] = [](u8* dst, u8* src) {
           new((T*)dst)T(*(T*)src);
          };
     }
 
 #ifndef NDEBUG
-    logGeneric("Registered Comp: %s @ %u\n", compData.name.c_str(), compId);
-#endif NDEBUG
+    logGeneric("Registered Comp: %s @ %u\n", m_componentNames[compId].c_str(), compId);
+#endif
 
+    // Necessary for modules.
     findOrCreateSet(set<Enabled, T>());
 
     return compId;
@@ -256,7 +266,7 @@ public:
   Entity clone(EntityId entity);
 
   size_t getEntityCount() {
-    return m_entities.size();
+    return m_idMgr.count();
   }
 
   template<typename ... Params>
@@ -265,13 +275,11 @@ public:
   }
 
 protected:
-
-  template<typename T>
-  ComponentId alias() {
-    return m_localAliases.find(typeid(T).hash_code())->second;
+  inline IPool* getPool(ComponentId id) {
+    assert(id < m_components.size());
+    return m_componentPools[id];
   }
 
-  ComponentData& getComponentData(ComponentId id);
   void moveSets(EntityId id, const ComponentSet* to);
   void tryMoveSets(EntityId id, const ComponentSet* to);
   const ComponentSet* findOrCreateSet(const ComponentSet& base);
@@ -281,28 +289,32 @@ protected:
   void addToSuperSets(const ComponentSet* baseSet);
 
 private: 
+  /* Deferred operations */
   bool m_isDefer = false;
   std::vector<const ComponentSet*> m_deferredSuperSetCalc;
   Map<EntityId, const ComponentSet*> m_deferredMoves;
   std::vector<EntityId> m_deferredDestroy;
 
-  Map<EventType, Map<ComponentId, std::vector<ObserverData>>> m_observers;
-  
+  /* Contexts */
   std::vector<size_t> m_contextsLifo;
   Map<size_t, ContextData> m_contexts;
 
-  // A map that keeps track of super sets, meaning sets that contain the same or more components
-  Map<const ComponentSet*, Set<const ComponentSet*>> m_superSets;
-  Map<const ComponentSet*, EntityList> m_sets;
-  Map<EntityId, EntityData> m_entities;
+  /* Entities */
+  std::vector<std::optional<EntityData>> m_entities;
   IdManager<EntityId> m_idMgr;
 
-  Map<ComponentId, ComponentData> m_components;
-  Map<size_t, ComponentId> m_localAliases;
+  /* Components */
+  Map<EventType, Map<ComponentId, std::vector<ObserverData>>> m_observers;
 
+  std::vector<std::string> m_componentNames;
+  std::vector<void(*)(u8* dst, u8* src)> m_componentCopyCtor;
+  std::vector<IPool*> m_componentPools;
+
+  // A map that keeps track of super sets, meaning sets that contain the same or more components
   Map<ComponentSet, const ComponentSet*> m_componentSets;
+  Map<const ComponentSet*, Set<const ComponentSet*>> m_superSets;
+  Map<const ComponentSet*, EntityList> m_sets;
 
-  ComponentId m_compIdCounter = 0;
 };
 
 using EntityIterator = EntityWorld::EntityIterator;

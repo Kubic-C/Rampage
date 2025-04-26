@@ -8,15 +8,18 @@
 #include "../components/body.hpp"
 
 struct PathfindingModule : Module {
+  static void registerComponents(EntityWorld& world) {
+    world.set<ArrowComponent, PrimaryTargetTag, SeekPrimaryTargetTag>();
+  }
+
   PathfindingModule(EntityWorld& world)
     : m_collisionQueue(world.create()) {
-    world.set<ArrowComponent, PrimaryTargetTag, SeekPrimaryTargetTag>();
     m_collisionQueue.add<CollisionQueueComponent>();
   }
 
-  ArrowComponent* getTopArrow(EntityWorld& world, TilemapComponent& tilemapLayers, const glm::i16vec2& pos) {
-    for (int i = tilemapLayers.getTilemapCount(); i != 0; i--) {
-      Tilemap& tilemap = tilemapLayers.getTilemap(i - 1);
+  ArrowComponent* getTopArrow(EntityWorld& world, RefT<TilemapComponent> tilemapLayers, const glm::i16vec2& pos) {
+    for (int i = tilemapLayers->getTilemapCount(); i != 0; i--) {
+      Tilemap& tilemap = tilemapLayers->getTilemap(i - 1);
       if (!tilemap.contains(pos))
         continue;
 
@@ -24,15 +27,15 @@ struct PathfindingModule : Module {
       if(tile.entity == 0 || !world.get(tile.entity).has<ArrowComponent>())
         return nullptr;
 
-      return &world.get(tile.entity).get<ArrowComponent>();
+      return &*world.get(tile.entity).get<ArrowComponent>();
     }
 
     return nullptr;
   }
 
   void run(EntityWorld& world, float deltaTime) override final {
-    CollisionQueueComponent& queue = m_collisionQueue.get<CollisionQueueComponent>();
-    for (CollisionQueueComponent::Collision& collision : queue.queue) {
+    RefT<CollisionQueueComponent> queue = m_collisionQueue.get<CollisionQueueComponent>();
+    for (CollisionQueueComponent::Collision& collision : queue->queue) {
       if (!world.exists(collision.primary))
         continue;
       Entity enemy = world.get(collision.primary);
@@ -42,50 +45,50 @@ struct PathfindingModule : Module {
       if (!other.has<HealthComponent>() || other.has<SeekPrimaryTargetTag>())
         continue;                                 
 
-      HealthComponent& health = other.get<HealthComponent>();
-      ContactDamageComponent& damage = enemy.get<ContactDamageComponent>();
-      float speed = b2Length((b2Body_GetLinearVelocity(enemy.get<BodyComponent>().id)));
-      health.health -= (speed / 10.0f) * damage.damage;
+      RefT<HealthComponent> health = other.get<HealthComponent>();
+      RefT<ContactDamageComponent> damage = enemy.get<ContactDamageComponent>();
+      float speed = b2Length((b2Body_GetLinearVelocity(enemy.get<BodyComponent>()->id)));
+      health->health -= (speed / 10.0f) * damage->damage;
     }
-    queue.queue.clear();
+    queue->queue.clear();
 
     updateFlowField(world);
 
     Entity map = world.getWith(world.set<TransformComponent, TilemapComponent, WorldMapTag>()).next();
-    TransformComponent& mapTransform = map.get<TransformComponent>();
-    TilemapComponent& tilemapLayers = map.get<TilemapComponent>();
+    RefT<TransformComponent> mapTransform = map.get<TransformComponent>();
+    RefT<TilemapComponent> tilemapLayers = map.get<TilemapComponent>();
     EntityIterator it = world.getWith(world.set<TransformComponent, BodyComponent, SeekPrimaryTargetTag>());
     while (it.hasNext()) {
       Entity seeker = it.next();
-      TransformComponent& seekerTransform = seeker.get<TransformComponent>();
-      BodyComponent& seekerBody = seeker.get<BodyComponent>();
+      RefT<TransformComponent> seekerTransform = seeker.get<TransformComponent>();
+      RefT<BodyComponent> seekerBody = seeker.get<BodyComponent>();
 
-      Vec2 localMapPos = mapTransform.getLocalPoint(seekerTransform.pos);
+      Vec2 localMapPos = mapTransform->getLocalPoint(seekerTransform->pos);
       glm::i16vec2 localTilePos = Tilemap::getNearestTile(localMapPos);
       ArrowComponent* arrow = getTopArrow(world, tilemapLayers, localTilePos);
       if (!arrow)
         continue;
 
-      b2Body_ApplyLinearImpulseToCenter(seekerBody.id, Vec2(arrow->dir * b2Body_GetMass(seekerBody.id)), true);
+      b2Body_ApplyLinearImpulseToCenter(seekerBody->id, Vec2(arrow->dir * b2Body_GetMass(seekerBody->id)), true);
     }
   }
 
   void updateFlowField(EntityWorld& world) {
     Entity map = world.getWith(world.set<TransformComponent, TilemapComponent, WorldMapTag>()).next();
-    TransformComponent& mapTransform = map.get<TransformComponent>();
-    TilemapComponent& tilemapLayers = map.get<TilemapComponent>();
+    RefT<TransformComponent> mapTransform = map.get<TransformComponent>();
+    RefT<TilemapComponent> tilemapLayers = map.get<TilemapComponent>();
     Entity player = world.getWith(world.set<TransformComponent, PrimaryTargetTag>()).next();
-    TransformComponent& playerTransform = player.get<TransformComponent>();
+    RefT<TransformComponent> playerTransform = player.get<TransformComponent>();
 
-    Vec2 localMapPos = mapTransform.getLocalPoint(playerTransform.pos);
+    Vec2 localMapPos = mapTransform->getLocalPoint(playerTransform->pos);
     glm::i16vec2 localTilePos = Tilemap::getNearestTile(localMapPos);
-    if (tilemapLayers.getTopTilemapWith(localTilePos) == UINT32_MAX)
+    if (tilemapLayers->getTopTilemapWith(localTilePos) == UINT32_MAX)
       return;
 
     ArrowComponent* startArrow = getTopArrow(world, tilemapLayers, localTilePos);
     if (!startArrow)
       return;
-    startArrow->dir = glm::normalize(playerTransform.pos - mapTransform.getWorldPoint(Tilemap::getLocalTileCenter(localTilePos)));
+    startArrow->dir = glm::normalize(playerTransform->pos - mapTransform->getWorldPoint(Tilemap::getLocalTileCenter(localTilePos)));
 
     if (m_oldTarget == localTilePos)
       return;

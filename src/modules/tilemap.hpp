@@ -4,25 +4,24 @@
 
 class TilemapModule : public Module {
 public:
-  TilemapModule(EntityWorld& world)
-    : m_calcTransforms(world.system(world.set<TransformComponent, TileBoundComponent>(), &updateTileBoundTransforms)) {
+  static void registerComponents(EntityWorld& world) {
     world.component<TilemapComponent>();
     world.component<TileBoundComponent>();
     world.component<DestroyTileOnEntityRemovalTag>();
 
     world.observe(EntityWorld::EventType::Remove, world.component<DestroyTileOnEntityRemovalTag>(), world.set<TileBoundComponent>(),
       [](Entity e) {
-        TileBoundComponent& tileBound = e.get<TileBoundComponent>();
-        TilemapComponent& tilemapLayers = e.world().get(tileBound.parent).get<TilemapComponent>();
-        Tilemap& tilemap = tilemapLayers.getTilemap(tileBound.layer);
+        RefT<TileBoundComponent> tileBound = e.get<TileBoundComponent>();
+        RefT<TilemapComponent> tilemapLayers = e.world().get(tileBound->parent).get<TilemapComponent>();
+        Tilemap& tilemap = tilemapLayers->getTilemap(tileBound->layer);
 
         // Tiles may be destroyed already before we can delete them, hence the check
-        if (!tilemap.contains(tileBound.pos))
+        if (!tilemap.contains(tileBound->pos))
           return;
-        if (tilemap.find(tileBound.pos).entity != e)
+        if (tilemap.find(tileBound->pos).entity != e)
           return;
 
-        tilemap.erase(tileBound.pos);
+        tilemap.erase(tileBound->pos);
       });
 
     world.observe(EntityWorld::EventType::Remove, world.component<TileBoundComponent>(), {},
@@ -42,11 +41,11 @@ public:
 
     world.observe(EntityWorld::EventType::Remove, world.component<TilemapComponent>(), {},
       [&](Entity e) {
-        TilemapComponent& tmLayers = e.get<TilemapComponent>();
+        RefT<TilemapComponent> tmLayers = e.get<TilemapComponent>();
 
         std::vector<glm::i16vec2> toDestroy;
-        for (int i = 0; i < tmLayers.getTilemapCount(); i++) {
-          Tilemap& tilemap = tmLayers.getTilemap(i);
+        for (int i = 0; i < tmLayers->getTilemapCount(); i++) {
+          Tilemap& tilemap = tmLayers->getTilemap(i);
 
           toDestroy.clear();
           for (glm::i16vec2 pos : tilemap) {
@@ -63,17 +62,21 @@ public:
       });
   }
 
+  TilemapModule(EntityWorld& world)
+    : m_calcTransforms(world.system(world.set<TransformComponent, TileBoundComponent>(), &updateTileBoundTransforms)) {
+  }
+
   static void updateTileBoundTransforms(Entity e, float dt) {
-    TransformComponent& transform = e.get<TransformComponent>();
-    TileBoundComponent& tileBound = e.get<TileBoundComponent>();
+    RefT<TransformComponent> transform = e.get<TransformComponent>();
+    RefT<TileBoundComponent> tileBound = e.get<TileBoundComponent>();
 
-    Entity parent = e.world().get(tileBound.parent);
-    TransformComponent& parentTransform = parent.get<TransformComponent>();
-    TilemapComponent& parentTilemapLayers = parent.get<TilemapComponent>();
-    Tilemap& tilemap = parentTilemapLayers.getTilemap(tileBound.layer);
-    Tile& tile = tilemap.find(tileBound.pos);
+    Entity parent = e.world().get(tileBound->parent);
+    RefT<TransformComponent> parentTransform = parent.get<TransformComponent>();
+    RefT<TilemapComponent> parentTilemapLayers = parent.get<TilemapComponent>();
+    Tilemap& tilemap = parentTilemapLayers->getTilemap(tileBound->layer);
+    Tile& tile = tilemap.find(tileBound->pos);
 
-    transform = Transform(parentTransform.getWorldPoint(tilemap.getLocalTileCenter(tileBound.pos, tile.size())), transform.rot);
+    *transform = Transform(parentTransform->getWorldPoint(tilemap.getLocalTileCenter(tileBound->pos, tile.size())), transform->rot);
   }
 
   void run(EntityWorld& world, float deltaTime) override {

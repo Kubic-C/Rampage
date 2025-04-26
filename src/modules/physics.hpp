@@ -4,34 +4,46 @@
 #include "../components/body.hpp"
 #include "../components/collisionQueue.hpp"
 
-inline void copyTransformsIntoBodies(TransformComponent& transform, BodyComponent& body) {
-  if (!b2Body_IsValid(body.id))
+inline void copyTransformsIntoBodies(RefT<TransformComponent> transform, RefT<BodyComponent> body) {
+  if (!b2Body_IsValid(body->id))
     return;
 
   /* SetTransform is expensive to call, only set the transform of the body if transform does not match*/
-  if (transform != b2Body_GetTransform(body.id)) {
-    b2Body_SetTransform(body.id, transform.pos, transform.rot);
+  if (*transform != b2Body_GetTransform(body->id)) {
+    b2Body_SetTransform(body->id, transform->pos, transform->rot);
   }
 }
 
-inline void copyBodiesIntoTransforms(TransformComponent& transform, BodyComponent& body) {
-  if (!b2Body_IsValid(body.id))
+inline void copyBodiesIntoTransforms(RefT<TransformComponent> transform, RefT<BodyComponent> body) {
+  if (!b2Body_IsValid(body->id))
     return;
 
-  b2Transform bodyTransform = b2Body_GetTransform(body.id);
-  if (transform != bodyTransform) {
-    transform.pos = bodyTransform.p;
-    transform.rot = bodyTransform.q;
+  b2Transform bodyTransform = b2Body_GetTransform(body->id);
+  if (*transform != bodyTransform) {
+    transform->pos = bodyTransform.p;
+    transform->rot = bodyTransform.q;
   }
 }
 
 struct PhysicsModule : Module {
-  PhysicsModule(EntityWorld& world, int steps)
-    : m_steps(steps) {
+private:
+  inline static bool m_created = false;
+public:
+
+  static void registerComponents(EntityWorld& world) {
     world.component<BodyComponent>();
     world.component<TransformComponent>();
     world.component<CollisionQueueComponent>();
     world.component<SubmitToCollisionQueueComponent>();
+  }
+
+  PhysicsModule(EntityWorld& world, int steps)
+    : m_steps(steps) {
+    if (m_created) {
+      logGeneric("PhysicsModule can not be instanced twice\n");
+      throw std::exception("Error: double instanced");
+    }
+    m_created = true;
 
     world.observe(EntityWorld::EventType::Remove, world.component<BodyComponent>(), {},
       [&](Entity e) {
@@ -44,7 +56,7 @@ struct PhysicsModule : Module {
           }
           m_ongoingCollisions.erase(it);
           if (e.has<SubmitToCollisionQueueComponent>())
-            e.world().get(e.get<SubmitToCollisionQueueComponent>().queue).get<CollisionQueueComponent>().queue.clear();
+            e.world().get(e.get<SubmitToCollisionQueueComponent>()->queue).get<CollisionQueueComponent>()->queue.clear();
         }
       });
   }
@@ -114,17 +126,17 @@ struct PhysicsModule : Module {
         collision.primary = eA;
         collision.secondary = eB;
         if (eA.has<SubmitToCollisionQueueComponent>()) {
-          SubmitToCollisionQueueComponent& submitTo = eA.get<SubmitToCollisionQueueComponent>();
-          CollisionQueueComponent& queue = world.get(submitTo.queue).get<CollisionQueueComponent>();
+          RefT<SubmitToCollisionQueueComponent> submitTo = eA.get<SubmitToCollisionQueueComponent>();
+          RefT<CollisionQueueComponent> queue = world.get(submitTo->queue).get<CollisionQueueComponent>();
 
-          queue.queue.push_back(collision);
+          queue->queue.push_back(collision);
         }
         std::swap(collision.primary, collision.secondary);
         if (eB.has<SubmitToCollisionQueueComponent>()) {
-          SubmitToCollisionQueueComponent& submitTo = eB.get<SubmitToCollisionQueueComponent>();
-          CollisionQueueComponent& queue = world.get(submitTo.queue).get<CollisionQueueComponent>();
+          RefT<SubmitToCollisionQueueComponent> submitTo = eB.get<SubmitToCollisionQueueComponent>();
+          RefT<CollisionQueueComponent> queue = world.get(submitTo->queue).get<CollisionQueueComponent>();
 
-          queue.queue.push_back(collision);
+          queue->queue.push_back(collision);
         }
       }
     }

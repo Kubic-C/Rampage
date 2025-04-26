@@ -47,10 +47,10 @@ void Entity::add(const ComponentSet& addComps, bool notify) {
     if (oldSet.has(compId))
       continue;
 
-    EntityWorld::ComponentData& compData = m_world.getComponentData(compId);
+    IPool* pool = m_world.getPool(compId);
     tempSet.add(compId);
-    if (compData.pool)
-      compData.pool->create(m_id);
+    if (pool)
+      pool->create(m_id);
   }
   m_world.tryMoveSets(m_id, m_world.findOrCreateSet(tempSet.build()));
 
@@ -78,23 +78,20 @@ void Entity::remove(const ComponentSet& remComps, bool notify) {
   const ComponentSet& oldSet = set();
   ComponentSetBuilder tempSet(oldSet);
   for (ComponentId compId : remComps.list()) {
-    EntityWorld::ComponentData& compData = m_world.getComponentData(compId);
     if (!oldSet.has(compId))
       throw std::exception("Set does not contain compId: " + compId);
 
+    IPool* pool = m_world.getPool(compId);
     tempSet.remove(compId);
-    if (compData.pool)
-      compData.pool->destroy(m_id);
+    if (pool)
+      pool->destroy(m_id);
   }
 
   m_world.tryMoveSets(m_id, m_world.findOrCreateSet(tempSet.build()));
 }
 
-u8* Entity::get(ComponentId compId) {
-  assert(has(compId));
-
-  EntityWorld::ComponentData& compData = m_world.getComponentData(compId);
-  return compData.pool->get(m_id);
+Ref Entity::get(ComponentId compId) {
+  return Ref(m_world, m_id, compId);
 }
 
 bool Entity::has(ComponentId compId) {

@@ -12,7 +12,7 @@ add_executable(Rampage
 	"eventManager.hpp"
 	"inventory.cpp"
 	"inventory.hpp"
-	"main.cpp")
+	"main.cpp" "ecs/ref.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Rampage PROPERTY CXX_STANDARD 20)

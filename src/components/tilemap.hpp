@@ -36,10 +36,10 @@ public:
     if (entity) {
       Entity e = world.get(entity);
       e.add<TileBoundComponent>();
-      TileBoundComponent& tileBound = e.get<TileBoundComponent>();
-      tileBound.parent = parent;
-      tileBound.pos = pos;
-      tileBound.layer = m_layer;
+      RefT<TileBoundComponent> tileBound = e.get<TileBoundComponent>();
+      tileBound->parent = parent;
+      tileBound->pos = pos;
+      tileBound->layer = m_layer;
     }
 
     if (tile.flags & TileFlags::IS_MULTI_TILE) {

@@ -101,6 +101,10 @@ public:
     return m_lastId;
   }
 
+  size_t count() const {
+    return m_ids.size();
+  }
+
   bool validRange(IdType id) {
     if (!m_enableRangeCheck)
       return true;

@@ -48,18 +48,18 @@ public:
       seeker.add<HealthComponent>();
       seeker.add<ContactDamageComponent>();
 
-      ContactDamageComponent& damage = seeker.get<ContactDamageComponent>();
-      damage.damage = 12;
+      RefT<ContactDamageComponent> damage = seeker.get<ContactDamageComponent>();
+      damage->damage = 12;
 
       seeker.add<SubmitToCollisionQueueComponent>();
-      seeker.get<SubmitToCollisionQueueComponent>().queue = world.getModule<PathfindingModule>().getContactDamageQueue();
+      seeker.get<SubmitToCollisionQueueComponent>()->queue = world.getModule<PathfindingModule>().getContactDamageQueue();
 
-      CircleRenderComponent& circleRender = seeker.get<CircleRenderComponent>();
-      circleRender.radius = 0.1f;
+      RefT<CircleRenderComponent> circleRender = seeker.get<CircleRenderComponent>();
+      circleRender->radius = 0.1f;
 
-      TransformComponent& transform = seeker.get<TransformComponent>();
-      transform.pos = { x * 0.3f - 7, y * 0.3f + 14 };
-      transform.rot = Rot(0);
+      RefT<TransformComponent> transform = seeker.get<TransformComponent>();
+      transform->pos = { x * 0.3f - 7, y * 0.3f + 14 };
+      transform->rot = Rot(0);
       b2BodyDef bodyDef = b2DefaultBodyDef();
       bodyDef.type = b2_dynamicBody;
       bodyDef.position = Vec2(0, 0);
@@ -73,7 +73,7 @@ public:
       circle.radius = 0.1f;
       circle.center = Vec2(0);
       b2BodyId bodyId = b2CreateBody(physicsWorldId, &bodyDef);
-      seeker.get<BodyComponent>().id = bodyId;
+      seeker.get<BodyComponent>()->id = bodyId;
       b2CreateCircleShape(bodyId, &shapeDef, &circle);
       };
   }
@@ -96,15 +96,15 @@ public:
     /* Player */
     player.add(m_addedPlayerComponents);
     Inventory playerInvetory = invMgr.createInventory("Player Inventory", 3, 5);
-    player.get<InventoryComponent>().id = playerInvetory;
+    player.get<InventoryComponent>()->id = playerInvetory;
     playerInvetory.addItem(assetLoader.getItem("BasicTurretItem"), 20);
     playerInvetory.addItem(assetLoader.getItem("PlaceableHighStoneItem"), 2);
     playerInvetory.addItem(assetLoader.getItem("WoodItem"), 32);
 
     // Render
-    RectangleRenderComponent& renderRect = player.get<RectangleRenderComponent>();
-    renderRect.hw = 0.12f;
-    renderRect.hh = 0.12f;
+    RefT<RectangleRenderComponent> renderRect = player.get<RectangleRenderComponent>();
+    renderRect->hw = 0.12f;
+    renderRect->hh = 0.12f;
 
     // Collider
     b2BodyDef bodyDef = b2DefaultBodyDef();
@@ -112,14 +112,17 @@ public:
     bodyDef.fixedRotation = true;
     bodyDef.linearDamping = 10;
     b2BodyId bodyId = b2CreateBody(physicsWorld, &bodyDef);
-    player.get<BodyComponent>().id = bodyId;
+    player.get<BodyComponent>()->id = bodyId;
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     shapeDef.density = 1000;
     b2Polygon rect = b2MakeBox(0.12f, 0.12f);
     b2CreatePolygonShape(bodyId, &shapeDef, &rect);
 
-    Transform& playerTransform = player.get<TransformComponent>();
-    playerTransform.pos = { 5.0f, -7.0f };
+    logGeneric("BodyId: %u\n", bodyId.index1);
+    logGeneric("Saved BodyId: %u\n", player.get<BodyComponent>()->id.index1);
+
+    RefT<Transform> playerTransform = player.get<TransformComponent>();
+    playerTransform->pos = { 5.0f, -7.0f };
 
     /* WorldMap & Tilemap Component */
 
@@ -131,17 +134,17 @@ public:
       tm.add<WorldMapTag>();
       tm.add<OwnedBy<PlayState>>();
 
-      TransformComponent& transform = tm.get<TransformComponent>();
-      transform.pos = { 0, 0 };
-      transform.rot = Rot(0);
+      RefT<TransformComponent> transform = tm.get<TransformComponent>();
+      transform->pos = { 0, 0 };
+      transform->rot = Rot(0);
       b2BodyDef bodyDef = b2DefaultBodyDef();
       bodyDef.type = b2_staticBody;
       bodyDef.position = Vec2(0, 0);
       b2BodyId bodyId = b2CreateBody(physicsWorld, &bodyDef);
-      tm.get<BodyComponent>().id = bodyId;
+      tm.get<BodyComponent>()->id = bodyId;
       
-      TilemapComponent& tilemapLayers = tm.get<TilemapComponent>();
-      Tilemap& worldLayer = tilemapLayers.getTilemap(TilemapWorldLayer);
+      RefT<TilemapComponent> tilemapLayers = tm.get<TilemapComponent>();
+      Tilemap& worldLayer = tilemapLayers->getTilemap(TilemapWorldLayer);
       auto tileCallback =
         [&](int x, int y) {
           if (x <= -35 || x >= 35 || y <= -35 || y >= 35 || (x % 5 == 0 && y < 20 && y != -34)) {

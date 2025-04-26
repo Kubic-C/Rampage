@@ -12,7 +12,10 @@ public:
 	virtual void onTick(u32 tick, float deltaTime) {}
 	virtual void onUpdate() {}
 
+  void attachModule();
+
 protected:
+  std::vector<EntityId> m_modules;
 	std::string m_name;
 };
 
