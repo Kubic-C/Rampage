@@ -59,13 +59,14 @@ public:
     
     ClosestShape closestShape;
     closestShape.center = transform->pos;
-    b2Circle circle;
-    circle.center = Vec2(0);
-    circle.radius = turret->radius;
+    b2ShapeProxy proxy;
+    proxy.count = 1;
+    proxy.points[0] = transform->pos;
+    proxy.radius = turret->radius;
     b2QueryFilter filter;
     filter.maskBits = Enemy; 
     filter.categoryBits = All;
-    b2World_OverlapCircle(physicsWorld, &circle, Transform(transform->pos, 0), filter, &queryClosest, &closestShape);
+    b2World_OverlapShape(physicsWorld, &proxy, filter, &queryClosest, &closestShape);
     if (!b2Shape_IsValid(closestShape.shape))
       return;
 

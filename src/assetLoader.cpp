@@ -22,11 +22,11 @@ bool keysExistAndLog(const std::string target, const json& json, const std::vect
 
 b2ShapeDef loadShapeFromJson(const json& json) {
   b2ShapeDef shapeDef = b2DefaultShapeDef();
-
+  
   if (json.contains("restitution"))
-    shapeDef.restitution = json["restitution"].get<float>();
+    shapeDef.material.restitution = json["restitution"].get<float>();
   if (json.contains("friction"))
-    shapeDef.friction = json["friction"].get<float>();
+    shapeDef.material.friction = json["friction"].get<float>();
 
   return shapeDef;
 }

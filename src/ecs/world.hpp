@@ -276,7 +276,7 @@ public:
 
 protected:
   inline IPool* getPool(ComponentId id) {
-    assert(id < m_components.size());
+    assert(id < m_componentPools.size());
     return m_componentPools[id];
   }
 

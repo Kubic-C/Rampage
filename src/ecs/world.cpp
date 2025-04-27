@@ -324,7 +324,7 @@ const ComponentSet* EntityWorld::findOrCreateSet(const ComponentSet& base) {
   if (m_componentSets.find(base) == m_componentSets.end()) {
 #ifndef NDEBUG
     for (ComponentId id : base.list())
-      assert(id < m_components.size());
+      assert(id < m_componentPools.size());
 #endif
 
     m_componentSets.insert(std::make_pair(base, new ComponentSet(base)));

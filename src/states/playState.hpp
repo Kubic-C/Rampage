@@ -39,6 +39,8 @@ public:
     b2WorldId& physicsWorldId = m_world.getContext<b2WorldId>();
     m_bodyCallback =
       [&](int x, int y) {
+      AssetLoader loader = m_world.getContext<AssetLoader>();
+
       Entity seeker = m_world.create();
       seeker.add<TransformComponent>();
       seeker.add<BodyComponent>();
@@ -54,8 +56,8 @@ public:
       seeker.add<SubmitToCollisionQueueComponent>();
       seeker.get<SubmitToCollisionQueueComponent>()->queue = world.getModule<PathfindingModule>().getContactDamageQueue();
 
-      RefT<CircleRenderComponent> circleRender = seeker.get<CircleRenderComponent>();
-      circleRender->radius = 0.1f;
+      RefT<CircleRenderComponent> sprite = seeker.get<CircleRenderComponent>();
+      sprite->radius = 0.1f;
 
       RefT<TransformComponent> transform = seeker.get<TransformComponent>();
       transform->pos = { x * 0.3f - 7, y * 0.3f + 14 };
@@ -65,8 +67,9 @@ public:
       bodyDef.position = Vec2(0, 0);
       bodyDef.linearDamping = 10;
       b2ShapeDef shapeDef = b2DefaultShapeDef();
-      shapeDef.friction = 0;
+      shapeDef.material.friction = 0;
       shapeDef.filter.categoryBits = Enemy;
+      //shapeDef.filter.maskBits = ~Enemy;
       shapeDef.enableContactEvents = true;
       shapeDef.userData = entityToB2Data(seeker);
       b2Circle circle;

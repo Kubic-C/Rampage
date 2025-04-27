@@ -12,7 +12,11 @@ add_executable(Rampage
 	"eventManager.hpp"
 	"inventory.cpp"
 	"inventory.hpp"
-	"main.cpp" "ecs/ref.cpp")
+	"main.cpp" 
+	"ecs/ref.cpp"
+	"utility/TaskScheduler.cpp"
+	"utility/TaskScheduler.hpp"
+	"utility/LockLessMultiReadPipe.hpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Rampage PROPERTY CXX_STANDARD 20)

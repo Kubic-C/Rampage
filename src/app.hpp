@@ -17,11 +17,17 @@
 #include "eventManager.hpp"
 #include "assetLoader.hpp"
 
+#include "utility/box2dScheduler.hpp"
+
 class App {
 public:
   App(const std::string_view& appName, float ticksPerSecond)
     : m_localAppStatus(Status::Ok), m_ticksPerSecond(ticksPerSecond) {
     /* Really dont wanna forget this ... */
+    m_world.addContext<enki::TaskScheduler>();
+    enki::TaskScheduler& scheduler = m_world.getContext<enki::TaskScheduler>();
+    scheduler.Initialize(32);
+
     m_world.addContext<EventManager>();
     m_world.addContext<AppStats>();
     m_world.addContext<DoExit>();
@@ -53,8 +59,13 @@ public:
 
     m_world.component<WorldMapTag>();
 
+
     b2WorldDef physicsWorldDef = b2DefaultWorldDef();
     physicsWorldDef.gravity = b2Vec2{ 0 };
+    physicsWorldDef.workerCount = scheduler.GetNumTaskThreads();
+    physicsWorldDef.userTaskContext = &scheduler;
+    physicsWorldDef.enqueueTask = enki_b2EnqueueTaskCallback;
+    physicsWorldDef.finishTask = enki_b2FinishTaskCallback;
     m_world.addContext<b2WorldId>(b2CreateWorld(&physicsWorldDef));
 
     PhysicsModule::registerComponents(m_world);
@@ -136,6 +147,7 @@ public:
   }
 
   void update(float frameTime) {
+    enki::TaskScheduler& scheduler = m_world.getContext<enki::TaskScheduler>();
     Render& render = m_world.getContext<Render>();
     StateManager& stateMgr = m_world.getContext<StateManager>();
     stateMgr.onUpdate();
@@ -147,44 +159,46 @@ public:
   int run() {
     AppStats& appStats = m_world.getContext<AppStats>();
 
-    // For Frames
-    float lastTime = 0;
-    float ticksToGo = 0;
+    const float targetTickTime = 1.0f / m_ticksPerSecond;   // e.g., 1/60, or 1/30
 
-    // For Ticks
-    float tickLastTime = 0;
-    u32 tickI = 0;
+    float lastTime = now();
+    float tickAccumulator = 0.0f;
 
-    // For App Stats
-    float culmTime = 0;
+    float culmTime = 0.0f;
     u32 culmTicks = 0;
     u32 culmFrames = 0;
-   
+    u32 tickI = 0;
+
     while (!m_world.getContext<DoExit>().exit) {
       float nowTime = now();
       float deltaTime = nowTime - lastTime;
-      ticksToGo += deltaTime * m_ticksPerSecond;
       lastTime = nowTime;
 
-      while (ticksToGo >= 1.0f) {
-        float tickNowTime = now();
-        float tickDeltaTime = tickNowTime - tickLastTime;
-        tickLastTime = tickNowTime;
+      // Clamp deltaTime to avoid big spikes
+      if (deltaTime > 0.25f)
+        deltaTime = 0.25f;
 
-        tick(tickI, tickDeltaTime);
+      tickAccumulator += deltaTime;
 
-        ticksToGo--;
-        tickI++;
+      // Only allow a single tick per frame, even if falling behind
+      if (tickAccumulator >= targetTickTime) {
+        tick(tickI++, targetTickTime); // *fixed* timestep
+
+        tickAccumulator -= targetTickTime;
         culmTicks++;
       }
 
+      // Frame Update (always)
       update(deltaTime);
       culmFrames++;
       culmTime += deltaTime;
+
+      // Update stats every second
       if (culmTime >= 1.0f) {
-        appStats.tps = (float)culmTicks;
-        appStats.fps = (float)culmFrames;
-        culmTicks = culmFrames = culmTime = 0;
+        appStats.tps = static_cast<float>(culmTicks);
+        appStats.fps = static_cast<float>(culmFrames);
+        culmTicks = culmFrames = 0;
+        culmTime = 0.0f;
       }
     }
 
