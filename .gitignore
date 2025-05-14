@@ -42,3 +42,5 @@
 /out/
 /vcpkg_installed/
 /bin/debug/
+
+/cmake-build-debug/
