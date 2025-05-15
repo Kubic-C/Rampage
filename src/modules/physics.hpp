@@ -41,7 +41,7 @@ public:
     : m_steps(steps) {
     if (m_created) {
       logGeneric("PhysicsModule can not be instanced twice\n");
-      throw std::exception("Error: double instanced");
+      throw std::runtime_error("Error: double instanced");
     }
     m_created = true;
 

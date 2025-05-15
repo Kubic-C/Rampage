@@ -89,14 +89,6 @@ public:
     m_world.addModule<SpriteRenderModule>(0, 32, 32, 256).add<IsRender>();
     m_world.addModule<GuiRenderModule>(SIZE_MAX, gui).add<IsRender>();
 
-    /* Asset Loader */
-    m_world.addContext<InventoryManager>(m_world);
-    m_world.addContext<AssetLoader>(m_world);
-    AssetLoader& loader = m_world.getContext<AssetLoader>();
-    loader.loadAssets("./res/sprites.json"); // ALWAYS LOAD SPRITES FIRST!
-    loader.loadAssets("./res/items.json");
-    loader.loadAssets("./res/tiles.json");
-
     // Enable the core modules
     m_world.enableModule<TilemapModule>();
     m_world.enableModule<GuiRenderModule>();
@@ -105,6 +97,12 @@ public:
     m_world.enableModule<ItemModule>();
     m_world.enableModule<HealthModule>();
     m_world.enableModule<TurretModule>();
+
+    /* Asset Loader */
+    m_world.addContext<InventoryManager>(m_world);
+    m_world.addContext<AssetLoader>(m_world);
+    AssetLoader& loader = m_world.getContext<AssetLoader>();
+    loader.loadAssets("./res/entities.json"); // ALWAYS LOAD SPRITES FIRST!
 
     InventoryManager& itemMgr = m_world.getContext<InventoryManager>();
     itemMgr.setDefaultItemIcon("./res/clear.png");
@@ -122,17 +120,17 @@ public:
   }
 
   float now() {
-    auto current_time = std::chrono::high_resolution_clock::now();
+    auto current_time = std::chrono::steady_clock::now();
 
     return (float)std::chrono::duration_cast<std::chrono::microseconds>(current_time - start_time).count() / (1000000);
   }
 
   void tick(u32 tick, float deltaTime) {
-    EventManager& eventMgr = m_world.getContext<EventManager>();
-    tgui::Gui& gui = m_world.getContext<tgui::Gui>();
-    StateManager& stateMgr = m_world.getContext<StateManager>();
-    Render& render = m_world.getContext<Render>();
-    DoExit& doExit = m_world.getContext<DoExit>();
+    auto& eventMgr = m_world.getContext<EventManager>();
+    auto& gui = m_world.getContext<tgui::Gui>();
+    auto& stateMgr = m_world.getContext<StateManager>();
+    auto& render = m_world.getContext<Render>();
+    auto& doExit = m_world.getContext<DoExit>();
 
     stateMgr.onTick(tick, deltaTime);
     m_world.run(deltaTime);
@@ -210,5 +208,5 @@ private:
   EntityWorld m_world;
   float m_ticksPerSecond;
 
-  std::chrono::steady_clock::time_point start_time = std::chrono::high_resolution_clock::now();
+  std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
 };

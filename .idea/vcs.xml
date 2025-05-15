@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/SDL" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/SDL_ttf" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/SDL_ttf/external/freetype" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/SDL_ttf/external/harfbuzz" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/SDL_ttf/external/plutosvg" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/SDL_ttf/external/plutovg" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/TGUI" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/box2d" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/glad" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/glaze" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/glm" vcs="Git" />
+  </component>
+</project>

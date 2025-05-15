@@ -70,6 +70,7 @@ struct PathfindingModule : Module {
         continue;
 
       b2Body_ApplyLinearImpulseToCenter(seekerBody->id, Vec2(arrow->dir * b2Body_GetMass(seekerBody->id)), true);
+      seekerTransform->rot = atan2(arrow->dir.y, arrow->dir.x);
     }
   }
 

@@ -28,11 +28,13 @@ class SpriteRenderModule : public BaseRenderModule {
     m_va.addVertexArrayAttrib(instanceBuffer, 2, 2, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, worldPos));
     m_va.addIntegerVertexArrayAttrib(instanceBuffer, 3, 1, GL_UNSIGNED_SHORT, sizeof(Instance), offsetof(Instance, layer));
     m_va.addIntegerVertexArrayAttrib(instanceBuffer, 4, 1, GL_UNSIGNED_BYTE, sizeof(Instance), offsetof(Instance, rot5z3));
-    m_va.addIntegerVertexArrayAttrib(instanceBuffer, 5, 1, GL_UNSIGNED_BYTE, sizeof(Instance), offsetof(Instance, scale));
+    m_va.addIntegerVertexArrayAttrib(instanceBuffer, 5, 1, GL_UNSIGNED_BYTE, sizeof(Instance), offsetof(Instance, dim));
+    m_va.addVertexArrayAttrib(instanceBuffer, 6, 1, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, scale));
     m_va.attribDivisor(2, 1);
     m_va.attribDivisor(3, 1);
     m_va.attribDivisor(4, 1);
     m_va.attribDivisor(5, 1);
+    m_va.attribDivisor(6, 1);
   }
 
 public:
@@ -48,13 +50,14 @@ public:
   struct Instance {
     static constexpr u8 zMask      = 0b00000111; // 7
     static constexpr u8 rotMask    = 0b11111000; // 248 (31)
-    static constexpr u8 scaleXMask = 0b00001111; // 15
-    static constexpr u8 scaleYMask = 0b11110000; // 240 (15)
+    static constexpr u8 dimXMask = 0b00001111; // 15
+    static constexpr u8 dimYMask = 0b11110000; // 240 (15)
 
     glm::vec2 worldPos;
     u16 layer;
     u8 rot5z3;
-    u8 scale;
+    u8 dim;
+    float scale;
 
     void setRot(float fRot) {
       constexpr u8 rangeLimit = 31;
@@ -77,21 +80,21 @@ public:
       rot5z3 |= z;
     }
 
-    void setScale(u8 scaleX, u8 scaleY) {
+    void setDim(u8 dimX, u8 dimY) {
       constexpr u8 rangeLimit = 15;
-      assert(scaleX <= rangeLimit);
-      assert(scaleY <= rangeLimit);
+      assert(dimX <= rangeLimit);
+      assert(dimY <= rangeLimit);
 
-      scale = 0;
-      scale |= scaleX;
-      scale |= scaleY << 4;
+      dim = 0;
+      dim |= dimX;
+      dim |= dimY << 4;
     }
   };
 
   SpriteRenderModule(EntityWorld& world, size_t priority, u32 spriteWidth, u32 spriteHeight, u32 maxSprites)
     : BaseRenderModule(world, priority), m_texArray(spriteWidth, spriteHeight, maxSprites),
     m_turretSys(m_world.system(m_world.set<TransformComponent, TilemapComponent>(), std::bind(&SpriteRenderModule::meshTilemap, this, std::placeholders::_1, std::placeholders::_2))),
-    m_spriteSys(m_world.system(m_world.set<TransformComponent, SpriteComponent>(), std::bind(&SpriteRenderModule::meshSprite, this, std::placeholders::_1, std::placeholders::_2))) {
+    m_spriteSys(m_world.system(m_world.set<TransformComponent, SpriteComponent, SpriteIndependentTag>(), std::bind(&SpriteRenderModule::meshSprite, this, std::placeholders::_1, std::placeholders::_2))) {
   
     // Mesh Indicies
     std::array<u32, 6> indicies = generateIndicies();
@@ -114,7 +117,7 @@ public:
     }
     m_shader.use();
     m_shader.setInt("uSampler", 0);
-    m_shader.setFloat("uTileSideLength", tileSidelength);
+    m_shader.setFloat("uTileSideLength", baseSpriteScale);
 
     m_sampler.parameter(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     m_sampler.parameter(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -145,15 +148,16 @@ public:
       for (glm::i16vec2 tilePos : tm) {
         Tile& tile = tm.find(tilePos);
 
-        glm::u16vec2 dim = { tile.width, tile.height };
+        glm::u16vec2 dim = tile.size();
         glm::vec2 tileWorldPos = transform->getWorldPoint(tm.getLocalTileCenter(tilePos, dim));
         if (!tile.entity) {
           Instance instance;
           instance.worldPos = tileWorldPos;
           instance.layer = 0;
+          instance.scale = 1.0f;
           instance.setZ((u8)WorldLayer::Bottom);
           instance.setRot(0);
-          instance.setScale(1, 1);
+          instance.setDim(1, 1);
           addInstance(instance);
         } else {
           Entity tileEntity = e.world().get(tile.entity);
@@ -163,9 +167,10 @@ public:
             Instance instance;
             instance.worldPos = tileWorldPos;
             instance.layer = sprite->get(i).texIndex;
+            instance.scale = sprite->scaling;
             instance.setZ((u8)sprite->get(i).layer);
             instance.setRot(sprite->get(i).rot);
-            instance.setScale(dim.x, dim.y);
+            instance.setDim(dim.x, dim.y);
             addInstance(instance);
           }
         }
@@ -194,9 +199,10 @@ public:
       Instance instance;
       instance.worldPos = transform->pos;
       instance.layer = sprite->get(i).texIndex;
+      instance.scale = sprite->scaling;
       instance.setZ((u8)sprite->get(i).layer);
-      instance.setRot(sprite->get(i).rot);
-      instance.setScale(1, 1);
+      instance.setRot(sprite->get(i).rot + transform->rot);
+      instance.setDim(1, 1);
       addInstance(instance);
     }
   }
@@ -273,10 +279,10 @@ private:
 
   std::array<MeshVertex, 4> generateDefaultMesh() {
     std::array<glm::vec2, 4> tileRect = {
-      glm::vec2(-1, -1),
-      glm::vec2(1, -1),
-      glm::vec2(1,  1),
-      glm::vec2(-1,  1)
+      glm::vec2(-0.5f, -0.5f),
+      glm::vec2( 0.5f, -0.5f),
+      glm::vec2( 0.5f,  0.5f),
+      glm::vec2(-0.5f,  0.5f)
     };
 
     std::array<glm::vec2, 4> texCoords = {
@@ -308,7 +314,8 @@ private:
         layout(location = 2) in vec2 worldPos;
         layout(location = 3) in uint layer;
         layout(location = 4) in uint rot5z3;
-        layout(location = 5) in uint scaleByte;
+        layout(location = 5) in uint dimByte;
+        layout(location = 6) in float scaling;
 
         uniform mat4 uVP; 
         uniform float uTileSideLength;
@@ -335,10 +342,10 @@ private:
             // scaleYMask = 0b11110000; // 240
             float z = rot5z3 & 7;
             float localRot = (rot5z3 >> 3) / 31.0f * pi * 2;
-            vec2 scale = vec2(scaleByte & 15, (scaleByte & 240) >> 4);
+            vec2 dim = vec2(dimByte & 15, (dimByte & 240) >> 4);
 
-            gl_Position = uVP * vec4(worldPos + rotate(pos * (0.5 * uTileSideLength) * scale, localRot), -z, 1.0);
-            vTexCoords = vec3(texCoords * scale, layer);
+            gl_Position = uVP * vec4(worldPos + rotate(pos * uTileSideLength * dim, localRot) * scaling, -z, 1.0);
+            vTexCoords = vec3(texCoords * dim, layer);
         })###";
 
   const char* tileFragShaderSource = R"###(

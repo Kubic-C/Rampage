@@ -1,7 +1,7 @@
 ﻿# CMakeList.txt : Top-level CMake project file, do global configuration
 # and include sub-projects here.
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.12)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -10,8 +10,6 @@ if (POLICY CMP0141)
 endif()
 
 project ("Rampage")
-
-
 
 # if(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
 #     message("USING ASAN FOR DEBUG BUILD ON THE MSVC PLATFORM")
@@ -28,25 +26,14 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "$<0:>${CMAKE_SOURCE_DIR}/bin/debug")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "$<0:>${CMAKE_SOURCE_DIR}/bin/debug")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "$<0:>${CMAKE_SOURCE_DIR}/bin")
 
-
 # Include sub-projects.
 add_subdirectory("deps")
 add_subdirectory("src")
 
-
-add_custom_target(copy_freetype ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "$ENV{FREETYPE_WINDOWS_BINARIES_PATH}/release dll/win64/freetype.dll" 
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-    COMMENT "Copying freetype.dll to the bin directory"
-)
-
-add_custom_target(copy_box2d ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "$<TARGET_FILE_DIR:box2d>/box2d.dll"
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-    COMMENT "Copying box2d.dll to the bin directory"
-)
-
 # Ensure the copy_dlls target runs after building the application
-add_dependencies(Rampage copy_freetype)
+set_target_properties(box2d PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/debug"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/debug"
+    PDB_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/debug"
+)

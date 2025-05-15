@@ -11,5 +11,26 @@ struct ArrowComponent {
   u32 tileCost = 0;
 };
 
-struct PrimaryTargetTag {};
-struct SeekPrimaryTargetTag {};
+struct PrimaryTargetTag {
+  PrimaryTargetTag() = default;
+  PrimaryTargetTag(glz::make_reflectable) {}
+};
+
+struct SeekPrimaryTargetTag {
+  SeekPrimaryTargetTag() = default;
+  SeekPrimaryTargetTag(glz::make_reflectable) {}
+};
+
+// Specialization of glz::meta for PrimaryTargetTag
+template <>
+struct glz::meta<PrimaryTargetTag> {
+  using T = PrimaryTargetTag;
+  static constexpr std::string_view tag = "primaryTarget";
+};
+
+// Specialization of glz::meta for SeekPrimaryTargetTag
+template <>
+struct glz::meta<SeekPrimaryTargetTag> {
+  using T = SeekPrimaryTargetTag;
+  static constexpr std::string_view tag = "seekPrimaryTarget";
+};

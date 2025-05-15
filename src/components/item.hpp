@@ -16,7 +16,10 @@ struct ItemAttrIcon {
   tgui::Texture icon;
 };
 
-struct ItemAttrUnique {};
+struct ItemAttrUnique {
+  ItemAttrUnique() = default;
+  ItemAttrUnique(glz::make_reflectable) {}
+};
 
 struct ItemAttrTile {
   AssetId tileId;
@@ -24,4 +27,16 @@ struct ItemAttrTile {
 
 struct TileItemComponent {
   EntityId item;
+};
+
+template <>
+struct glz::meta<ItemAttrStackCost> {
+  using T = ItemAttrStackCost;
+  static constexpr auto value = object("stackCost", &T::stackCost);
+};
+
+template <>
+struct glz::meta<ItemAttrUnique> {
+  using T = ItemAttrUnique;
+  static constexpr auto value = object();
 };

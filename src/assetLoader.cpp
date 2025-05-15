@@ -7,192 +7,342 @@
 
 #include "modules/spriteRender.hpp"
 
-bool keysExistAndLog(const std::string target, const json& json, const std::vector<std::string>& keys) {
-  bool failed = false;
-  for (const std::string& key : keys) {
-    if (!json.contains(key)) {
-      logGeneric("Failed to %s from json. No %s\n", target.c_str(), key.c_str());
-      failed = true;
-      continue;
+//////////////////// Sprite Prototype
+
+struct SpritePrototypeLayer {
+  std::string path;
+  WorldLayer layer = WorldLayer::Invalid;
+};
+
+template <>
+struct glz::meta<SpritePrototypeLayer>
+{
+  using T = SpritePrototypeLayer;
+  static constexpr auto value = object("path", &T::path, "layer", &T::layer);
+};
+
+struct SpritePrototype {
+  std::vector<SpritePrototypeLayer> sprites;
+};
+
+template <>
+struct glz::meta<SpritePrototype> {
+  using T = SpritePrototype;
+  static constexpr auto value = object("sprites", &T::sprites);
+};
+
+//////////////////// SpriteName
+
+struct SpriteName {
+  std::string sprite;
+};
+
+template <>
+struct glz::meta<SpriteName> {
+  using T = SpriteName;
+  static constexpr auto value = object("name", &T::sprite);
+};
+
+//////////////////// ItemName
+
+struct ItemName {
+  std::string item;
+};
+
+template <>
+struct glz::meta<ItemName> {
+  using T = ItemName;
+  static constexpr auto value = object("name", &T::item);
+};
+
+//////////////////// Item Icon
+
+struct ItemIconPath {
+  std::string icon;
+};
+
+template <>
+struct glz::meta<ItemIconPath>
+{
+  using T = ItemIconPath;
+  static constexpr auto value = object("iconPath", &T::icon);
+};
+
+//////////////////// Tile additional
+
+struct TileBreakable {
+  float health = 1.0f;
+};
+
+template <>
+struct glz::meta<TileBreakable>
+{
+  using T = TileBreakable;
+  static constexpr auto value = object(&T::health);
+};
+
+//////////////////// Prefab Prototype
+
+/* The below components are valid to read from json*/
+
+using ComponentPrototype =
+  std::variant<
+    SpriteName, // 1
+    ItemName, // 2
+    ItemIconPath, // 3
+    AddShapeComponent, // 4
+    HealthComponent,  // 5
+    ContactDamageComponent, // 6
+    SeekPrimaryTargetTag, // 7
+    TurretComponent, // 8
+    ItemAttrStackCost, // 9
+    ItemAttrUnique, // 10
+    TileBreakable // 11
+  >;
+
+template <>
+struct glz::meta<ComponentPrototype> {
+  static constexpr std::string_view tag = "type";
+  static constexpr auto ids = std::array{
+      "spriteName", // 1
+      "itemName", // 2
+      "itemIcon", // 3
+      "addShape", // 4
+      "health", // 5
+      "contactDamage", // 6
+      "seekPrimary", // 7
+      "turret", // 8
+      "stackCost",// 9
+      "unique", // 10
+      "breakable" // 11
+  };
+};
+
+struct PrefabPrototype {
+  std::vector<ComponentPrototype> comps;
+};
+
+template <>
+struct glz::meta<PrefabPrototype> {
+  using T = PrefabPrototype;
+  static constexpr auto value = object("comps", &T::comps);
+};
+
+//////////////////// Tile Prototype
+
+struct TilePrototype {
+  PrefabPrototype entityComponents;
+  TileDef tile;
+};
+
+template <>
+struct glz::meta<TilePrototype>
+{
+  using T = TilePrototype;
+  static constexpr auto value = object("entity", &T::entityComponents, "tile", &T::tile);
+};
+
+//////////////////// Asset Json
+
+// An asset prototype is an asset whose member values have not been verified yet,
+// and had not yet been given a AssetId
+using AssetPrototype = std::variant<SpritePrototype, PrefabPrototype, TilePrototype>;
+
+template<>
+struct glz::meta<AssetPrototype> {
+  static constexpr std::string_view tag = "type";
+  static constexpr auto ids = std::array{
+      "spriteLoad",
+      "prefab",
+      "tileDef"
+  };
+};
+
+struct AssetJson {
+  std::string name;
+  AssetPrototype prototype;
+}; 
+
+template <>
+struct glz::meta<AssetJson> {
+  using T = AssetJson;
+  static constexpr auto value = object("name", &T::name, "data", &T::prototype);
+};
+
+AssetLoader::SpriteAsset loadSprite(EntityWorld& world, const std::string& path, const SpritePrototype& spriteProto) {
+  auto& render = world.getModule<SpriteRenderModule>();
+  SpriteComponent sprite;
+
+  for (const SpritePrototypeLayer& layer : spriteProto.sprites) {
+    u32 index = render.getSpriteFromPath(path + layer.path);
+
+    sprite.addLayer(index, Vec2(0), 0, layer.layer);
+  }
+
+  return AssetLoader::SpriteAsset(sprite);
+}
+
+AssetLoader::PrefabAsset loadPrefabPrototype(AssetLoader& loader, EntityWorld& world, const std::string& path, AssetId id, const PrefabPrototype& prototypeComponents) {
+  Entity e = world.create();
+  e.disable();
+
+  for (const ComponentPrototype& proto : prototypeComponents.comps) {
+    switch (proto.index()) {
+      case IndexInVariant<ComponentPrototype, SpriteName>: {
+        e.add<SpriteComponent>();
+        *e.get<SpriteComponent>() = loader.getSprite(std::get<SpriteName>(proto).sprite);
+      } break;
+      case IndexInVariant<ComponentPrototype, AddShapeComponent>: {
+        e.add<AddShapeComponent>();
+        *e.get<AddShapeComponent>() = std::get<AddShapeComponent>(proto);
+      } break;
+      case IndexInVariant<ComponentPrototype, HealthComponent>: {
+        e.add<HealthComponent>();
+        *e.get<HealthComponent>() = std::get<HealthComponent>(proto);
+      } break;
+      case IndexInVariant<ComponentPrototype, ContactDamageComponent>: {
+        e.add<ContactDamageComponent>();
+        *e.get<ContactDamageComponent>() = std::get<ContactDamageComponent>(proto);
+      } break;
+      case IndexInVariant<ComponentPrototype, SeekPrimaryTargetTag>: {
+        e.add<SeekPrimaryTargetTag>();
+      } break;
+      case IndexInVariant<ComponentPrototype, TurretComponent>: {
+        e.add<TurretComponent>();
+        *e.get<TurretComponent>() = std::get<TurretComponent>(proto);
+      } break;
+      case IndexInVariant<ComponentPrototype, ItemName>: {
+        e.add<TileItemComponent>();
+        RefT<TileItemComponent> tileItem = e.get<TileItemComponent>();
+        Entity itemEntity = loader.getPrefab(std::get<ItemName>(proto).item);
+        tileItem->item = itemEntity;
+        itemEntity.add<ItemAttrTile>();
+        RefT<ItemAttrTile> tile = itemEntity.get<ItemAttrTile>();
+        tile->tileId = id;
+      } break;
+
+      // If an entity prototype contains any one of the components below
+      // the other two item components must be added, it is necessary
+      // for the item system to work.
+      case IndexInVariant<ComponentPrototype, ItemAttrStackCost>: {
+        e.add<ItemAttrIcon>();
+        e.add<ItemAttrStackCost>();
+        *e.get<ItemAttrStackCost>() = std::get<ItemAttrStackCost>(proto);
+      } break;
+      case IndexInVariant<ComponentPrototype, ItemIconPath>: {
+        e.add<ItemAttrIcon>();
+        e.add<ItemAttrStackCost>();
+        RefT<ItemAttrIcon> icon = e.get<ItemAttrIcon>();
+        icon->icon = tgui::Texture(path + std::get<ItemIconPath>(proto).icon);
+      } break;
+      case IndexInVariant<ComponentPrototype, ItemAttrUnique>: {
+        e.add<ItemAttrIcon>();
+        e.add<ItemAttrStackCost>();
+        e.add<ItemAttrUnique>();
+      } break;
+      // end of comment
+
+      case IndexInVariant<ComponentPrototype, TileBreakable>: {
+        e.add<HealthComponent>();
+        RefT<HealthComponent> health = e.get<HealthComponent>();
+
+        e.add<ArrowComponent>();
+        e.get<ArrowComponent>()->tileCost = health->health;
+        e.add<TileBoundComponent>();
+        e.add<DestroyTileOnEntityRemovalTag>();
+      } break;
+      default:
+        break;
     }
   }
 
-  return !failed;
+  return AssetLoader::PrefabAsset(e);
 }
 
-b2ShapeDef loadShapeFromJson(const json& json) {
-  b2ShapeDef shapeDef = b2DefaultShapeDef();
+TileDef loadTilePrototype(AssetLoader& loader, EntityWorld& world, const std::string& path, AssetId id, const TilePrototype& tilePrototype) {
+  TileDef def = tilePrototype.tile;
+  if (!tilePrototype.entityComponents.comps.empty()) {
+    def.entity = loadPrefabPrototype(loader, world, path, id, tilePrototype.entityComponents).entity;
+    Entity e = world.get(def.entity);
+
+    e.add<TransformComponent>();
+    e.add<TileBoundComponent>();
+    e.add<DestroyTileOnEntityRemovalTag>();
+
+    if (!def.enableCollision) {
+      e.add<ArrowComponent>();
+    }
+
+    for (const ComponentPrototype& proto : tilePrototype.entityComponents.comps) {
+      if (proto.index() == IndexInVariant<ComponentPrototype, TileBreakable>) {
+        e.add<HealthComponent>();
+        RefT<HealthComponent> health = e.get<HealthComponent>();
+        health->health = std::get<TileBreakable>(proto).health;
+
+        e.add<ArrowComponent>();
+        e.get<ArrowComponent>()->tileCost = static_cast<u32>(health->health);
+
+        def.shapeDef.enableHitEvents = true;
+        def.shapeDef.enableContactEvents = true;
+        break;
+      }
+    }
+  }
+
+  return def;
+}
+
+bool AssetLoader::loadAssets(const std::string& path) {
+  std::ifstream file(path);
+  if (!file.is_open())
+    return false;
+
+  std::string fileData;
+  fileData.resize(std::filesystem::file_size(path));
+  file.read(fileData.data(), fileData.size());
+  file.close();
+
+  constexpr glz::opts readOps{
+    .comments = true,
+    .error_on_unknown_keys = true,
+    .append_arrays = true,
+    .error_on_missing_keys = false // turn this to true for debug reasons
+  };
   
-  if (json.contains("restitution"))
-    shapeDef.material.restitution = json["restitution"].get<float>();
-  if (json.contains("friction"))
-    shapeDef.material.friction = json["friction"].get<float>();
-
-  return shapeDef;
-}
-
-Entity loadBulletFromJson(EntityWorld& world, const std::string& parentDir, const json& json) {
-  if (!keysExistAndLog("bullet", json, { "damage", "lifetime", "health" }))
-    return Entity(world, 0);
-
-  float damage = json["damage"];
-  float lifetime = json["lifetime"];
-  float health = json["health"];
-
-  Entity e = world.create();
-  e.add<ContactDamageComponent>();
-  e.add<LifetimeComponent>();
-  e.add<TransformComponent>();
-  e.add<HealthComponent>();
-  RefT<ContactDamageComponent> damageComp = e.get<ContactDamageComponent>();
-  RefT<LifetimeComponent> lifetimeComp = e.get<LifetimeComponent>();
-  RefT<HealthComponent> healthComp = e.get<HealthComponent>();
-
-  damageComp->damage = damage;
-  lifetimeComp->timeLeft = lifetime;
-  healthComp->health = health;
-
-  // its essentially a prefab
-  e.disable();
-
-  return e;
-}
-
-TurretComponent loadTurretFromJson(EntityWorld& world, const std::string& parentDir, const json& json) {
-  TurretComponent turret;
-
-  if (!keysExistAndLog("turret", json,
-    { "bullet",
-    "fireRate",
-    "radius",
-    "turnSpeed",
-    "shootRange",
-    "stopRange",
-    "muzzleVelocity",
-    "bulletRadius" }))
-    return turret;
-
-  turret.summon = loadBulletFromJson(world, parentDir, json["bullet"]);
-  turret.fireRate = json["fireRate"].get<float>();
-  turret.radius = json["radius"].get<float>();
-  turret.turnSpeed = json["turnSpeed"].get<float>();
-  turret.shootRange = json["shootRange"].get<float>();
-  turret.stopRange = json["stopRange"].get<float>();
-  turret.muzzleVelocity = json["muzzleVelocity"].get<float>();
-  turret.bulletRadius = json["bulletRadius"].get<float>();
-
-  return turret;
-}
-
-void addBreakable(Entity entity, b2ShapeDef& def, json json) {
-  if (!keysExistAndLog("breakable", json, { "health" }))
-    return;
-
-  entity.add<HealthComponent>();
-  RefT<HealthComponent> health = entity.get<HealthComponent>();
-  health->health = json["health"].get<float>();
-
-  entity.add<ArrowComponent>();
-  entity.get<ArrowComponent>()->tileCost = health->health;
-  entity.add<TileBoundComponent>();
-  entity.add<DestroyTileOnEntityRemovalTag>();
-
-  def.enableHitEvents = true;
-  def.enableContactEvents = true;
-}
-
-void AssetLoader::loadSprite(const std::string& parentDir, const std::string& name, const json& json) {
-  AssetId assetId = createAsset<SpriteAsset>(name);
-  SpriteComponent& sprite = getSprite(assetId);
-  SpriteRenderModule& spriteRender = m_world.getModule<SpriteRenderModule>();
-
-  if (!json.contains("paths")) {
-    logGeneric("Failed to load sprite asset! Must contain paths\n");
-    return;
+  std::string parentDir = getPath(path);
+  std::vector<AssetJson> readAssets;
+  glz::error_ctx ec = glz::read<readOps>(readAssets, fileData);
+  if (ec) { 
+    std::string msg = glz::format_error(ec, fileData);
+    logGeneric("<bgRed, bold>Failed to load assets\n Ec: %i\n Msg: %s\n<reset>", ec.ec, msg.c_str());
+    return false;
   }
 
-  for (const auto& spriteJson : json["paths"]) {
-    std::string path = spriteJson["path"].get<std::string>();
-    int layer = spriteJson["layer"].get<int>();
-    layer = std::min((int)SpriteComponent::MaxSpriteLaters, glm::max(0, layer));
-
-    u32 texIndex = spriteRender.getSpriteFromPath(parentDir + path);
-    if (texIndex == UINT32_MAX)
-      continue;
-
-    sprite.addLayer(texIndex, Vec2(0), 0, (WorldLayer)layer);
+  for (const AssetJson& json : readAssets) {
+    logGeneric("<fgGreen>Loading Asset: %s\n<reset>", json.name.c_str());
+    fflush(stdout);
+    loadAsset(parentDir, json);
   }
+
+  return true;
 }
 
-void AssetLoader::loadItem(const std::string& parentDir, const std::string& name, const json& json) {
-  AssetId assetId = createAsset<ItemAsset>(name);
-  EntityId& itemId = getItemRawId(assetId);
-  InventoryManager& itemMgr = m_world.getContext<InventoryManager>();
-
-  std::string itemName = json["name"].get<std::string>();
-  std::string itemIconPath = parentDir + json["iconPath"].get<std::string>();
-
-  Entity entity = m_world.create();
-  if (json.contains("unique") && json["unique"].get<bool>())
-    entity.add<ItemAttrUnique>();
-
-  entity.disable();
-  entity.add<ItemAttrStackCost>();
-  RefT<ItemAttrStackCost> itemStackCost = entity.get<ItemAttrStackCost>();
-  itemStackCost->stackCost = 1;
-  entity.add<ItemAttrIcon>();
-  RefT<ItemAttrIcon> itemIcon = entity.get<ItemAttrIcon>();
-  itemIcon->icon = tgui::Texture(itemIconPath);
-
-  itemId = entity;
-}
-
-void AssetLoader::loadTile(const std::string& parentDir, const std::string& name, const json& json) {
-  AssetId assetId = createAsset<TileDef>(name);
-  TileDef& prefab = getTilePrefab(assetId);
-
-  std::string spriteAssetName = json["sprite"];
-  prefab.flags = TileFlags::IS_MAIN_TILE;
-  prefab.width = glm::min((i16)maxDim.x, json["size"][0].get<i16>());
-  prefab.height = glm::min((i16)maxDim.y, json["size"][1].get<i16>());
-  prefab.shapeDef = b2DefaultShapeDef();
-  int startingLayer = 0;
-  bool needsLocalTransform = false;
-
-  /* Tile Flags */
-  for (auto flag : json["flags"])
-    prefab.flags |= getTileFlagFromString(flag.get<std::string>());
-  if (prefab.flags == std::numeric_limits<u8>::max()) {
-    logGeneric("Failed to load tile json. Flag was invalid\n");
-    return;
+AssetId AssetLoader::loadAsset(const std::string& parentDir, const AssetJson& asset) {
+  switch (asset.prototype.index()) {
+  case IndexInVariant<AssetPrototype, SpritePrototype>:
+    return createAsset(asset.name, loadSprite(m_world, parentDir, std::get<SpritePrototype>(asset.prototype)));
+  case IndexInVariant<AssetPrototype, TilePrototype>: {
+    AssetId assetId = createAsset<TileDef>(asset.name);
+    getTilePrefab(assetId) = loadTilePrototype(*this, m_world, parentDir, assetId, std::get<TilePrototype>(asset.prototype));
+    return assetId;
   }
-  /* Shape Properties */
-  if (json.contains("shape"))
-    prefab.shapeDef = loadShapeFromJson(json["shape"]);
-
-  Entity tileEntity = m_world.create();
-  tileEntity.disable();
-  prefab.entity = tileEntity;
-
-  tileEntity.add<SpriteComponent>();
-  *tileEntity.get<SpriteComponent>() = getSprite(spriteAssetName);
-  if (~prefab.flags & IS_COLLIDABLE)
-    tileEntity.add<ArrowComponent>();
-  if (json.contains("turret")) {
-    tileEntity.add<TurretComponent>();
-    *tileEntity.get<TurretComponent>() = loadTurretFromJson(m_world, parentDir, json["turret"]);
-    tileEntity.add<TransformComponent>(); // in order for turrets to match the turret system they need a transform
+  case IndexInVariant<AssetPrototype, PrefabPrototype>: {
+    AssetId assetId = createAsset<PrefabAsset>(asset.name);
+    getPrefabRawId(assetId) = loadPrefabPrototype(*this, m_world, parentDir, assetId, std::get<PrefabPrototype>(asset.prototype)).entity;
+    return assetId;
   }
-  if (json.contains("breakable")) {
-    addBreakable(tileEntity, prefab.shapeDef, json["breakable"]);
-  }
-  if (json.contains("item")) {
-    std::string itemName = json["item"].get<std::string>();
-    Entity item = getItem(itemName);
-
-    item.add<ItemAttrTile>();
-    item.get<ItemAttrTile>()->tileId = assetId;
-    tileEntity.add<TileItemComponent>();
-    tileEntity.get<TileItemComponent>()->item = item;
+  default:
+    logGeneric("Failed to load asset %s\n", asset.name.c_str());
+    return 0;
   }
 }

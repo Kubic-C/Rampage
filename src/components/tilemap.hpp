@@ -17,10 +17,14 @@ class Tilemap {
 public:
   // Ignores shapeId
   bool insert(EntityWorld& world, b2BodyId body, const glm::i16vec2& pos, EntityId parent, const TileDef& clone) {
-    return insert(world, body, pos, parent, clone.entity, clone.flags, { clone.width, clone.height });
+    u8 flags = 0;
+    if (clone.enableCollision)
+      flags |= TileFlags::IS_COLLIDABLE;
+
+    return insert(world, body, pos, parent, clone.entity, flags, clone.size, clone.shapeDef);
   }
 
-  bool insert(EntityWorld& world, b2BodyId body, const glm::i16vec2& pos, EntityId parent = 0, EntityId entity = 0, u8 tileFlags = TileFlags::IS_COLLIDABLE, const glm::i16vec2& dim = { 1, 1 }, const b2ShapeDef& shapeDef = b2DefaultShapeDef()) {
+  bool insert(EntityWorld& world, b2BodyId body, const glm::i16vec2& pos, EntityId parent = 0, EntityId entity = 0, u8 tileFlags = TileFlags::IS_COLLIDABLE, const glm::u16vec2& dim = { 1, 1 }, const b2ShapeDef& shapeDef = b2DefaultShapeDef()) {
     if (contains(pos))
       return false;
 
@@ -30,8 +34,8 @@ public:
     Tile tile;
     tile.entity = entity;
     tile.flags = tileFlags | TileFlags::IS_MAIN_TILE;
-    tile.width = dim.x;
-    tile.height = dim.y;
+    tile.x.w = dim.x;
+    tile.y.h = dim.y;
 
     if (entity) {
       Entity e = world.get(entity);
@@ -44,13 +48,13 @@ public:
 
     if (tile.flags & TileFlags::IS_MULTI_TILE) {
       const glm::i16vec2 startPos = pos;
-      const glm::i16vec2 endPos = pos + dim;
+      const glm::i16vec2 endPos = pos + static_cast<glm::i16vec2>(dim);
 
       Tile subTile;
       subTile.entity = NullEntityId;
       subTile.flags = tileFlags & ~TileFlags::IS_MAIN_TILE;
-      subTile.posx = pos.x;
-      subTile.posy = pos.y;
+      subTile.x.x = pos.x;
+      subTile.y.y = pos.y;
       subTile.shapeDef = b2_nullShapeId;
 
       for (i16 y = startPos.y; y < endPos.y; y++) {
@@ -97,7 +101,7 @@ public:
 
     if (copy.flags & TileFlags::IS_MULTI_TILE) {
       if (!(copy.flags & TileFlags::IS_MAIN_TILE)) {
-        return erase(glm::i16vec2(copy.posx, copy.posy));
+        return erase(copy.pos());
       }
     }
 
@@ -107,8 +111,8 @@ public:
 
     m_mainTiles.erase(pos);
 
-    for (i16 x = pos.x; x < pos.x + copy.width; x++) {
-      for (i16 y = pos.y; y < pos.y + copy.height; y++) {
+    for (i16 x = pos.x; x < pos.x + copy.x.w; x++) {
+      for (i16 y = pos.y; y < pos.y + copy.y.y; y++) {
         Tile& subtile = find({ x, y });
 
         if (subtile.entity) {
@@ -135,7 +139,7 @@ public:
   }
 
   static Vec2 getLocalTileCenter(const glm::i16vec2& tilePos, const glm::u16vec2& dim = { 1, 1 }) {
-    return (glm::vec2)tilePos * tileSize + ((Vec2)dim * tileSize * 0.5f);
+    return static_cast<glm::vec2>(tilePos) * tileSize + ((Vec2)dim * tileSize * 0.5f);
   }
 
   static glm::i16vec2 getNearestTile(const glm::vec2& localPos) {

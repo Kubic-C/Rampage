@@ -1,20 +1,5 @@
-Tilemap:
-	Map<Coords, Tile> 
-	helper methods
+// scene handling
 
-TilemapComponent:
-	std::shared_ptr<Tilemap> tm
-
-
-Tile
-	ShapeId
-	flags
-	entityId entity
-
-
-
-// PATHFINDING
-
-xx Use A star
-Vector Flow fields
-Super units
+State, EntityScene
+	- Module 1
+	- Module 2

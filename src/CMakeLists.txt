@@ -1,5 +1,5 @@
 ﻿
-glad_add_library(GLAD SHARED REPRODUCIBLE API gl:core=4.0)
+glad_add_library(GLAD STATIC REPRODUCIBLE API gl:core=4.0)
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
@@ -19,7 +19,8 @@ add_executable(Rampage
 	"utility/LockLessMultiReadPipe.hpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET Rampage PROPERTY CXX_STANDARD 20)
+	set_property(TARGET Rampage PROPERTY CXX_STANDARD 20)
+	set_property(TARGET tgui PROPERTY CXX_STANDARD 20)
 endif()
 
 # Utility
@@ -106,9 +107,8 @@ target_sources(Rampage PUBLIC ${srcFiles})
 set(Boost_USE_MULTITHREADED ON)  
 set(Boost_USE_STATIC_LIBS   ON)
 set(BOOST_ROOT "$ENV{BOOST_ROOT}")
-find_package(Boost REQUIRED COMPONENTS thread)
+find_package(Boost REQUIRED)
 target_include_directories(Rampage PUBLIC "${Boost_INCLUDE_DIRS}")
 target_link_directories(Rampage PUBLIC "${Boost_LIBRARY_DIRS}")
-target_link_libraries(Rampage PUBLIC Boost::thread)
 
-target_link_libraries(Rampage PUBLIC glm-header-only GLAD box2d tgui SDL3::SDL3 nlohmann_json)
+target_link_libraries(Rampage PUBLIC glm-header-only GLAD box2d TGUI::TGUI SDL3::SDL3 glaze::glaze)

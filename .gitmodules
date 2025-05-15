@@ -19,3 +19,6 @@
 [submodule "deps/glaze"]
 	path = deps/glaze
 	url = https://github.com/stephenberry/glaze
+[submodule "deps/SDL_ttf"]
+	path = deps/SDL_ttf
+	url = https://github.com/libsdl-org/SDL_ttf

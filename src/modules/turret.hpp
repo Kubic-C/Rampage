@@ -16,6 +16,8 @@ class TurretModule : public Module {
     Vec2 shootVelocity;
     Vec2 pos;
     float radius = 0.25f;
+    float health;
+    float damage;
   };
 
   static bool queryClosest(b2ShapeId shape, void* ctx) {
@@ -85,6 +87,8 @@ public:
         bullet.pos = transform->pos;
         bullet.shootVelocity = fast2DRotate(right, turret->rot) * turret->muzzleVelocity;
         bullet.radius = turret->bulletRadius;
+        bullet.health = turret->bulletHealth;
+        bullet.damage = turret->bulletDamage;
         m_summonBullets.push_back(bullet);
 
         turret->timeSinceLastShot = 0.0f;
@@ -134,19 +138,21 @@ public:
 
     b2WorldId physicsWorld = world.getContext<b2WorldId>();
     for (SummonBullet& bullet : m_summonBullets) {
-      Entity bulletEntity = world.get(bullet.id).clone();
-      bulletEntity.get<TransformComponent>()->pos = bullet.pos;
-      bulletEntity.add<BodyComponent>();
-      RefT<BodyComponent> bodyComp = bulletEntity.get<BodyComponent>();
+      Entity bulletEntity = world.create();
+      bulletEntity.add(world.set<LifetimeComponent, HealthComponent, ContactDamageComponent, BodyComponent, SubmitToCollisionQueueComponent, CircleRenderComponent, TransformComponent>());
 
-      bulletEntity.add<CircleRenderComponent>();
+      bulletEntity.get<TransformComponent>()->pos = bullet.pos;
+
       RefT<CircleRenderComponent> cirlceRender = bulletEntity.get<CircleRenderComponent>();
       cirlceRender->radius = bullet.radius;
       cirlceRender->color = glm::vec3(1.0f, 1.0f, 0.0f);
 
-      bulletEntity.add<SubmitToCollisionQueueComponent>();
       bulletEntity.get<SubmitToCollisionQueueComponent>()->queue = m_collisionQueue;
 
+      bulletEntity.get<HealthComponent>()->health = bullet.health;
+      bulletEntity.get<ContactDamageComponent>()->damage = bullet.damage;
+
+      RefT<BodyComponent> bodyComp = bulletEntity.get<BodyComponent>();
       b2BodyDef bodyDef = b2DefaultBodyDef();
       bodyDef.type = b2_dynamicBody;
       bodyDef.linearVelocity = bullet.shootVelocity;

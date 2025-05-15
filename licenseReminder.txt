@@ -1,0 +1,9 @@
+
+enkiTS
+box2d
+SDL
+GLAZE
+boost
+TGUI
+glad
+glm

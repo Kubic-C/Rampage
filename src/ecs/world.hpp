@@ -29,9 +29,13 @@ private:
     std::function<void(u8*)> destroy;
   };
 
-  class ComponentIdCounter {
+  struct ComponentGen {};
+  struct ContextGen {};
+
+  template<typename T>
+  class StaticId {
   public:
-    template<typename T>
+    template<typename X>
     static int id() {
       static int id = nextID();
       return id;
@@ -53,6 +57,9 @@ private:
 
   struct ObserverData {
     ObserverData& operator=(const ObserverData& other) {
+      if (this == &other)
+        return *this;
+
       callback = other.callback;
       with = other.with;
 
@@ -75,7 +82,7 @@ private:
 
   template<typename T>
   struct ModuleType {};
-private:
+
   friend class Entity;
   friend class System;
   friend class Ref;
@@ -87,6 +94,8 @@ public:
       m_base = other.m_base;
       m_next = other.m_next;
       m_world = other.m_world;
+
+      return *this;
     }
 
     SetIterator(EntityWorld& world, const ComponentSet* match);
@@ -97,7 +106,7 @@ public:
     EntityWorld& getWorld();
 
   private:
-    EntityWorld& m_world;
+    EntityWorld* m_world;
     const ComponentSet* m_base;
     Set<const ComponentSet*>::const_iterator m_next;
   };
@@ -108,6 +117,8 @@ public:
       m_setIt = other.m_setIt;
       m_next = other.m_next;
       m_list = other.m_list;
+
+      return *this;
     }
 
     EntityIterator(SetIterator setIt);
@@ -120,67 +131,53 @@ public:
   private:
     EntityList* m_list;
     EntityListIterator m_next;
-    EntityWorld::SetIterator m_setIt;
+    SetIterator m_setIt;
   };
 
-public:
   EntityWorld();
+  EntityWorld(const EntityWorld& other) = delete;
+  EntityWorld(EntityWorld&& other) = delete;
   ~EntityWorld();
+
+  EntityWorld& operator=(const EntityWorld& other) = delete;
+  EntityWorld& operator=(EntityWorld&& other) = delete;
+  EntityWorld& operator=(EntityWorld& other) = delete;
+  EntityWorld& operator=(EntityWorld other) = delete;
 
   template<typename T, typename ... Params>
   Entity addModule(Params&& ... args);
 
   template<typename T>
-  void enableModule() {
-    EntityIterator it = getWithDisabled(set<ModuleType<T>>());
-    beginDefer();
-    while (it.hasNext()) {
-      it.next().add<Enabled>();
-    }
-    endDefer();
-  }
+  void enableModule();
 
   template<typename T>
-  void disableModule() {
-    EntityIterator it = getWithDisabled(set<ModuleType<T>>());
-    beginDefer();
-    while (it.hasNext()) {
-      it.next().remove<Enabled>();
-    }
-    endDefer();
-  }
+  void disableModule();
 
   template<typename T>
-  T& getModule() {
-    EntityIterator it = getWithDisabled(set<ModuleType<T>>());
-    while (it.hasNext())
-      return *(T*)it.next().get<ModuleData>()->m_module.get();
-
-    throw std::exception("Module does not exist\n");
-  }
+  T& getModule();
 
   template<typename T, typename ... Params>
   void addContext(Params&& ... args) {
-    m_contexts[typeid(T).hash_code()].bytes = (u8*)new T(args...);
-    m_contexts[typeid(T).hash_code()].destroy = [](u8* bytes) { delete (T*)bytes;  };
-    m_contextsLifo.push_back(typeid(T).hash_code());
+    int id = StaticId<ContextGen>::id<T>();
+
+#ifndef NDEBUG
+    logGeneric("Added CONTEXT: %i at %s\n", id, typeid(T).name());
+#endif 
+    m_contexts[id].bytes = (u8*)new T(args...);
+    m_contexts[id].destroy = [](u8* bytes) { delete (T*)bytes;  };
+    m_contextsLifo.push_back(id);
   }
-    
-  //template<typename T>
-  //void destroyContext() {
-  //  size_t hashCode = typeid(T).hash_code();
-  //  m_contexts[hashCode].destroy(m_contexts[hashCode].bytes);
-  //  m_contexts.erase(hashCode);
-  //}
 
   template<typename T>
   T& getContext() {
-    return *(T*)m_contexts[typeid(T).hash_code()].bytes;
+    int id = StaticId<ContextGen>::id<T>();
+    assert(m_contexts.contains(id));
+    return *(T*)m_contexts[id].bytes;
   }
 
   template<typename T>
   ComponentId component(const std::string_view& name = "") {
-    ComponentId compId = ComponentIdCounter::id<T>();
+    ComponentId compId = StaticId<ComponentGen>::id<T>();
     if (compId < m_componentPools.size())
       return compId;
     
@@ -188,13 +185,13 @@ public:
     m_componentCopyCtor.resize(compId + 1, nullptr);
     m_componentPools.resize(compId + 1, nullptr);
 
-    if (name == "")
+    if (name.empty())
       m_componentNames[compId] = boost::typeindex::type_id<T>().pretty_name();
     else
       m_componentNames[compId] = name;
 
     size_t size = sizeof(T);
-    if constexpr (std::is_empty<T>::value)
+    if constexpr (std::is_empty_v<T>)
       size = 0;
     if (size != 0) {
       m_componentPools[compId] = SparsePool<T>::createPool();
@@ -296,8 +293,8 @@ private:
   std::vector<EntityId> m_deferredDestroy;
 
   /* Contexts */
-  std::vector<size_t> m_contextsLifo;
-  Map<size_t, ContextData> m_contexts;
+  std::vector<u32> m_contextsLifo;
+  Map<u32, ContextData> m_contexts;
 
   /* Entities */
   std::vector<std::optional<EntityData>> m_entities;

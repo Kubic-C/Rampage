@@ -28,6 +28,7 @@
 #include <boost/type_index.hpp> 
 #include <boost/pool/object_pool.hpp>
 #include <boost/pool/pool_alloc.hpp>
+#include <boost/mp11/algorithm.hpp>
 
 /* OpenGL Mathematics (GLM) */
 #define GLM_ENABLE_EXPERIMENTAL
@@ -40,14 +41,14 @@
 /* SDL/OpenGL */
 #include <glad/gl.h>
 #include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 /* TGUI */
 #include <TGUI/TGUI.hpp>
-#include <TGUI/Backend/SDL-OpenGL3.hpp>
+#include <TGUI/Backend/SDL-TTF-OpenGL3.hpp>
 
 /* JSOOOOOOOOOOOOOOOOOOOON */
-#include <nlohmann/json.hpp>
-using namespace nlohmann;
+#include <glaze/glaze.hpp>
 
 #ifndef NODISCARD 
 #define NODISCARD [[nodiscard]]
@@ -112,3 +113,8 @@ inline std::string getPath(const std::string& path) {
 
   return path.substr(0, lastOfSlash);
 }
+
+// https://stackoverflow.com/questions/52303316/get-index-by-type-in-stdvariant
+
+template<typename Variant, typename T>
+constexpr size_t IndexInVariant = boost::mp11::mp_find<Variant, T>::value;

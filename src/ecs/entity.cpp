@@ -1,11 +1,11 @@
 #include "entity.hpp"
 
 Entity::Entity(EntityWorld& world)
-  : m_world(world), m_id(NullEntityId) {
+  : m_world(&world), m_id(NullEntityId) {
 }
 
 Entity::Entity(EntityWorld& world, EntityId id)
-  : m_world(world), m_id(id) {
+  : m_world(&world), m_id(id) {
 }
 
 Entity& Entity::operator=(Entity other) {
@@ -20,11 +20,11 @@ EntityId Entity::id() const {
 }
 
 bool Entity::exists() const {
-  return m_world.exists(m_id);
+  return m_world->exists(m_id);
 }
 
 bool Entity::alive() const {
-  return m_world.isAlive(m_id);
+  return m_world->isAlive(m_id);
 }
 
 bool Entity::isNull() const {
@@ -47,18 +47,18 @@ void Entity::add(const ComponentSet& addComps, bool notify) {
     if (oldSet.has(compId))
       continue;
 
-    IPool* pool = m_world.getPool(compId);
+    IPool* pool = m_world->getPool(compId);
     tempSet.add(compId);
     if (pool)
       pool->create(m_id);
   }
-  m_world.tryMoveSets(m_id, m_world.findOrCreateSet(tempSet.build()));
+  m_world->tryMoveSets(m_id, m_world->findOrCreateSet(tempSet.build()));
 
-  if (notify && &oldSet != m_world.findOrCreateSet(tempSet.build()))
+  if (notify && &oldSet != m_world->findOrCreateSet(tempSet.build()))
     for (ComponentId compId : addComps.list()) {
       if (oldSet.has(compId))
         continue;
-      m_world.notify(EntityWorld::EventType::Add, m_id, compId);
+      m_world->notify(EntityWorld::EventType::Add, m_id, compId);
     }
 }
 
@@ -73,33 +73,33 @@ void Entity::remove(const ComponentSet& remComps, bool notify) {
 
   if (notify)
     for (ComponentId compId : remComps.list())
-      m_world.notify(EntityWorld::EventType::Remove, m_id, compId);
+      m_world->notify(EntityWorld::EventType::Remove, m_id, compId);
 
   const ComponentSet& oldSet = set();
   ComponentSetBuilder tempSet(oldSet);
   for (ComponentId compId : remComps.list()) {
     if (!oldSet.has(compId))
-      throw std::exception("Set does not contain compId: " + compId);
+      throw std::runtime_error("Set does not contain compId: " + std::to_string(compId));
 
-    IPool* pool = m_world.getPool(compId);
+    IPool* pool = m_world->getPool(compId);
     tempSet.remove(compId);
     if (pool)
       pool->destroy(m_id);
   }
 
-  m_world.tryMoveSets(m_id, m_world.findOrCreateSet(tempSet.build()));
+  m_world->tryMoveSets(m_id, m_world->findOrCreateSet(tempSet.build()));
 }
 
 Ref Entity::get(ComponentId compId) {
-  return Ref(m_world, m_id, compId);
+  return Ref(*m_world, m_id, compId);
 }
 
 bool Entity::has(ComponentId compId) {
-  return m_world.hasComponent(m_id, compId);
+  return m_world->hasComponent(m_id, compId);
 }
 
 EntityWorld& Entity::world() {
-  return m_world;
+  return *m_world;
 }
 
 void Entity::enable() {
@@ -111,9 +111,9 @@ void Entity::disable() {
 }
 
 Entity Entity::clone() {
-  return m_world.clone(m_id);
+  return m_world->clone(m_id);
 }
 
 const ComponentSet& Entity::set() const {
-  return *m_world.getEntitySet(m_id);
+  return *m_world->getEntitySet(m_id);
 }

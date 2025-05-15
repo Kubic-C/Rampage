@@ -2,7 +2,7 @@
 #include "entity.hpp"
 
 EntityWorld::SetIterator::SetIterator(EntityWorld& world, const ComponentSet* match)
-  : m_world(world), m_base(match), m_next(Set<const ComponentSet*>::const_iterator()) {
+  : m_world(&world), m_base(match), m_next(Set<const ComponentSet*>::const_iterator()) {
 }
 
 void EntityWorld::SetIterator::reset() {
@@ -12,32 +12,32 @@ void EntityWorld::SetIterator::reset() {
 bool EntityWorld::SetIterator::hasNext() const {
   Set<const ComponentSet*>::const_iterator next = m_next;
   if (next == Set<const ComponentSet*>::const_iterator())
-    next = m_world.m_superSets[m_base].begin();
+    next = m_world->m_superSets[m_base].begin();
   else
     next++;
   
-  while(next != m_world.m_superSets[m_base].end() && (m_world.m_sets[*next].empty())) {
+  while(next != m_world->m_superSets[m_base].end() && (m_world->m_sets[*next].empty())) {
     next++;
   } 
 
-  return next != m_world.m_superSets[m_base].end();
+  return next != m_world->m_superSets[m_base].end();
 } 
 
 EntityWorld::EntityList& EntityWorld::SetIterator::next() {
   if (m_next == Set<const ComponentSet*>::const_iterator())
-    m_next = m_world.m_superSets[m_base].begin();
+    m_next = m_world->m_superSets[m_base].begin();
   else
     m_next++;
 
-  while ((m_world.m_sets[*m_next].empty())) {
+  while ((m_world->m_sets[*m_next].empty())) {
     m_next++;
   }
 
-  return m_world.m_sets.find(*m_next)->second;
+  return m_world->m_sets.find(*m_next)->second;
 }
 
 EntityWorld& EntityWorld::SetIterator::getWorld() {
-  return m_world;
+  return *m_world;
 }
 
 EntityWorld::EntityIterator::EntityIterator(EntityWorld::SetIterator setIt)
@@ -122,10 +122,8 @@ Entity EntityWorld::create(EntityId explicitId) {
   data.comps = enabledSet;
   data.pos = m_sets[enabledSet].emplace(m_sets[enabledSet].end(), id);
 
-  if (id >= m_entities.size()) {
+  if (id >= m_entities.size())
     m_entities.resize(id + 1);
-  }
-
   m_entities[id].emplace(data);
 
   return Entity(*this, id);

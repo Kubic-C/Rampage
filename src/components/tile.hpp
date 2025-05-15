@@ -2,9 +2,9 @@
 
 #include "../ecs/ecs.hpp"
 #include "../utility/math.hpp"
+#include "sprite.hpp"
 
-constexpr float tileSidelength = 0.5f;
-constexpr glm::vec2 tileSize = glm::vec2(tileSidelength);
+constexpr glm::vec2 tileSize = glm::vec2(baseSpriteScale);
 
 enum TileFlags : u8 {
   IS_MULTI_TILE = 1 << 0,
@@ -25,21 +25,17 @@ static constexpr glm::u8vec2 maxDim = { 15, 15 };
 
 struct TileDef {
   b2ShapeDef shapeDef = b2DefaultShapeDef();
-  u8 flags = 0;
+  bool enableCollision = false;
   EntityId entity = 0;
 
-  union {
-    u8 width; // the width of the multi tile
-    i16 posx = 0; // the x position of the main mutile tile
-  };
+  glm::u16vec2 size = glm::u16vec2(1, 1);
 
-  union {
-    u8 height; // the height of the multi tile
-    i16 posy; // the y position of the main multi tile
-  };
+  u16 width() const {
+    return size.x;
+  }
 
-  glm::vec2 size() const {
-    return { width, height };
+  u16 height() const {
+    return size.y;
   }
 };
 
@@ -48,17 +44,39 @@ struct Tile {
   u8 flags = 0;
   EntityId entity = 0;
 
-  union {
-    u16 width; // the width of the multi tile
-    i16 posx = 0; // the x position of the main mutile tile
-  };
+  union _X {
+    u16 w; // the width of the multi tile
+    i16 x = 0; // the x position of the main mutile tile
+  } x;
 
-  union {
-    u16 height; // the height of the multi tile
-    i16 posy = 0; // the y position of the main multi tile
-  };
+  union _Y {
+    u16 h; // the height of the multi tile
+    i16 y = 0; // the y position of the main multi tile
+  } y;
 
   glm::vec2 size() const {
-    return { width, height };
+    return { x.w, y.h };
   }
+
+  glm::vec2 pos() const {
+    return { x.x, y.y };
+  }
+
+  u16 width() const {
+    return x.w;
+  }
+
+  u16 height() const {
+    return y.h;
+  }
+};
+
+template<>
+struct glz::meta<TileDef> {
+  using T = TileDef;
+  static constexpr auto value = object(
+    "shapeDef", &T::shapeDef,
+    "enableCollision", &T::enableCollision,
+    "size", &T::size
+  );
 };

@@ -3,6 +3,8 @@
 #include "../ecs/ecs.hpp"
 #include "../utility/math.hpp"
 
+constexpr float baseSpriteScale = 0.5f;
+
 enum class WorldLayer : u8 {
   Invalid = 8,
   Bottom = 7,
@@ -31,6 +33,7 @@ struct SpriteComponent {
   static constexpr size_t MaxSpriteLaters = maxNumberBits(3);
   SpriteLayer layers[MaxSpriteLaters];
   u8 layerCount = 0;
+  float scaling = 1.0f;
 
   void addLayer(const SpriteLayer& layer) {
     assert(layerCount < MaxSpriteLaters && "Too many sprite layers!");
@@ -62,7 +65,25 @@ struct SpriteComponent {
   }
 };
 
+// The sprite is not part of a tilemap
+struct SpriteIndependentTag {};
+
 struct TilePosComponent {
   glm::i16vec2 pos;
   EntityId parent;
+};
+
+template <>
+struct glz::meta<WorldLayer> {
+  static constexpr auto value = glz::enumerate(
+    "Top", WorldLayer::Top,
+    "Res2", WorldLayer::Res2,
+    "Res", WorldLayer::Res,
+    "Item", WorldLayer::Item,
+    "Turret", WorldLayer::Turret,
+    "Wall", WorldLayer::Wall,
+    "Floor", WorldLayer::Floor,
+    "Bottom", WorldLayer::Bottom,
+    "Invalid", WorldLayer::Invalid
+  );
 };

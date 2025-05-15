@@ -45,22 +45,27 @@ public:
       seeker.add<TransformComponent>();
       seeker.add<BodyComponent>();
       seeker.add<SeekPrimaryTargetTag>();
-      seeker.add<CircleRenderComponent>();
+      seeker.add<SpriteComponent>();
       seeker.add<OwnedBy<PlayState>>();
       seeker.add<HealthComponent>();
       seeker.add<ContactDamageComponent>();
+      seeker.add<SpriteIndependentTag>();
 
       RefT<ContactDamageComponent> damage = seeker.get<ContactDamageComponent>();
-      damage->damage = 12;
+      damage->damage = 5;
+
+      RefT<HealthComponent> health = seeker.get<HealthComponent>();
+      health->health = 50;
 
       seeker.add<SubmitToCollisionQueueComponent>();
       seeker.get<SubmitToCollisionQueueComponent>()->queue = world.getModule<PathfindingModule>().getContactDamageQueue();
 
-      RefT<CircleRenderComponent> sprite = seeker.get<CircleRenderComponent>();
-      sprite->radius = 0.1f;
+      RefT<SpriteComponent> sprite = seeker.get<SpriteComponent>();
+      *sprite = loader.getSprite("BasicZombieSprite");
+      sprite->scaling = 0.4f;
 
       RefT<TransformComponent> transform = seeker.get<TransformComponent>();
-      transform->pos = { x * 0.3f - 7, y * 0.3f + 14 };
+      transform->pos = Vec2(x * 0.3f - 7, y * 0.3f + 14 );
       transform->rot = Rot(0);
       b2BodyDef bodyDef = b2DefaultBodyDef();
       bodyDef.type = b2_dynamicBody;
@@ -100,9 +105,9 @@ public:
     player.add(m_addedPlayerComponents);
     Inventory playerInvetory = invMgr.createInventory("Player Inventory", 3, 5);
     player.get<InventoryComponent>()->id = playerInvetory;
-    playerInvetory.addItem(assetLoader.getItem("BasicTurretItem"), 20);
-    playerInvetory.addItem(assetLoader.getItem("PlaceableHighStoneItem"), 2);
-    playerInvetory.addItem(assetLoader.getItem("WoodItem"), 32);
+    playerInvetory.addItem(assetLoader.getPrefab("BasicTurretItem"), 20);
+    playerInvetory.addItem(assetLoader.getPrefab("PlaceableHighStoneItem"), 2);
+    playerInvetory.addItem(assetLoader.getPrefab("WoodItem"), 32);
 
     // Render
     RefT<RectangleRenderComponent> renderRect = player.get<RectangleRenderComponent>();
@@ -121,11 +126,8 @@ public:
     b2Polygon rect = b2MakeBox(0.12f, 0.12f);
     b2CreatePolygonShape(bodyId, &shapeDef, &rect);
 
-    logGeneric("BodyId: %u\n", bodyId.index1);
-    logGeneric("Saved BodyId: %u\n", player.get<BodyComponent>()->id.index1);
-
     RefT<Transform> playerTransform = player.get<TransformComponent>();
-    playerTransform->pos = { 5.0f, -7.0f };
+    playerTransform->pos = Vec2(5.0f, -7.0f);
 
     /* WorldMap & Tilemap Component */
 
@@ -138,7 +140,7 @@ public:
       tm.add<OwnedBy<PlayState>>();
 
       RefT<TransformComponent> transform = tm.get<TransformComponent>();
-      transform->pos = { 0, 0 };
+      transform->pos = Vec2(0, 0);
       transform->rot = Rot(0);
       b2BodyDef bodyDef = b2DefaultBodyDef();
       bodyDef.type = b2_staticBody;
@@ -151,14 +153,14 @@ public:
       auto tileCallback =
         [&](int x, int y) {
           if (x <= -35 || x >= 35 || y <= -35 || y >= 35 || (x % 5 == 0 && y < 20 && y != -34)) {
-            TileDef highStone = assetLoader.cloneTilePrefab("PermaHighStone");
+            TileDef highStone = assetLoader.cloneTilePrefab("PermaHighStoneTile");
             worldLayer.insert(m_world, bodyId, { x, y }, tm, highStone);
           }
           else if (rand() % 100 < 5) {
-            TileDef unknown = assetLoader.cloneTilePrefab("Unknown");
+            TileDef unknown = assetLoader.cloneTilePrefab("UnknownTile");
             worldLayer.insert(m_world, bodyId, { x, y }, tm, unknown);
           } else {
-            TileDef stone = assetLoader.cloneTilePrefab("StoneFloor");
+            TileDef stone = assetLoader.cloneTilePrefab("StoneFloorTile");
             worldLayer.insert(m_world, bodyId, { x, y }, tm, stone);
           }
         };

@@ -1,0 +1,381 @@
+[
+  {
+    "name": "UnknownSprite",
+    "data": {
+      "type": "spriteLoad",
+      "sprites": [
+        {
+          "path": "unknown.png",
+          "layer": "Bottom"
+        }
+      ]
+    }
+  },
+  {
+    "name": "StoneFloorSprite",
+    "data": {
+      "type": "spriteLoad",
+      "sprites": [
+        {
+          "path": "stone.png",
+          "layer": "Bottom"
+        }
+      ]
+    }
+  },
+  {
+    "name": "PermaHighStoneSprite",
+    "data": {
+      "type": "spriteLoad",
+      "sprites": [
+        {
+          "path": "permaHighStone.png",
+          "layer": "Bottom"
+        }
+      ]
+    }
+  },
+  {
+    "name": "PlaceableHighStoneSprite",
+    "data": {
+      "type": "spriteLoad",
+      "sprites": [
+        {
+          "path": "placableHighStone.png",
+          "layer": "Floor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "BasicTurretSprite",
+    "data": {
+      "type": "spriteLoad",
+      "sprites": [
+        {
+          "path": "basicTurretBase.png",
+          "layer": "Floor"
+        },
+        {
+          "path": "basicTurretTop.png",
+          "layer": "Wall"
+        }
+      ]
+    }
+  },
+  {
+    "name": "FenceSprite",
+    "data": {
+      "type": "spriteLoad",
+      "sprites": [
+        {
+          "path": "fence.png",
+          "layer": "Floor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "WoodSprite",
+    "data": {
+      "type": "spriteLoad",
+      "sprites": [
+        {
+          "path": "wood.png",
+          "layer": "Floor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "BasicZombieSprite",
+    "data": {
+      "type": "spriteLoad",
+      "sprites": [
+        {
+          "path": "zombie.png",
+          "layer": "Top"
+        }
+      ]
+    }
+  },
+  {
+    "name": "UnknownItem",
+    "data": {
+      "type": "prefab",
+      "comps": [
+        {
+          "type": "itemIcon",
+          "iconPath": "unknown.png"
+        }
+      ]
+    }
+  },
+  {
+    "name": "StoneItem",
+    "data": {
+      "type": "prefab",
+      "comps": [
+        {
+          "type": "itemIcon",
+          "iconPath": "stone.png"
+        }
+      ]
+    }
+  },
+  {
+    "name": "PlaceableHighStoneItem",
+    "data": {
+      "type": "prefab",
+      "comps": [
+        {
+          "type": "itemIcon",
+          "iconPath": "placableHighStone.png"
+        },
+        {
+          "type": "unique"
+        }
+      ]
+    }
+  },
+  {
+    "name": "BasicTurretItem",
+    "data": {
+      "type": "prefab",
+      "comps": [
+        {
+          "type": "itemIcon",
+          "iconPath": "basicTurretIcon.png"
+        }
+      ]
+    }
+  },
+  {
+    "name": "FenceItem",
+    "data": {
+      "type": "prefab",
+
+      "comps": [
+        {
+          "type": "itemIcon",
+          "iconPath": "fence.png"
+        }
+      ]
+    }
+  },
+  {
+    "name": "WoodItem",
+    "data": {
+      "type": "prefab",
+      "comps": [
+        {
+          "type": "itemIcon",
+          "iconPath": "wood.png"
+        }
+      ]
+    }
+  },
+  {
+    "name": "UnknownTile",
+    "data": {
+      "type": "tileDef",
+      "entity": {
+        "comps": [
+          {
+            "type": "itemName",
+            "name": "UnknownItem"
+          },
+          {
+            "type": "spriteName",
+            "name": "UnknownSprite"
+          }
+        ]
+      },
+      "tile": {
+        "size": {
+          "x": 1,
+          "y": 1
+        }
+      }
+    }
+  },
+  {
+    "name": "StoneFloorTile",
+    "data": {
+      "type": "tileDef",
+      "entity": {
+        "comps": [
+          {
+            "type": "itemName",
+            "name": "StoneItem"
+          },
+          {
+            "type": "spriteName",
+            "name": "StoneFloorSprite"
+          }
+        ]
+      },
+      "tile": {
+        "size": {
+          "x": 1,
+          "y": 1
+        }
+      }
+    }
+  },
+  {
+    "name": "PermaHighStoneTile",
+    "data": {
+      "type": "tileDef",
+      "entity": {
+        "comps": [
+          {
+            "type": "spriteName",
+            "name": "PermaHighStoneSprite"
+          }
+        ]
+      },
+      "tile": {
+        "shapeDef": {
+          "material": {
+            "restitution": 1.0,
+            "friction": 0.0
+          }
+        },
+        "enableCollision": true,
+        "size": {
+          "x": 1,
+          "y": 1
+        }
+      }
+    }
+  },
+  {
+    "name": "PlaceableHighStoneTile",
+    "data": {
+      "type": "tileDef",
+      "entity": {
+        "comps": [
+          {
+            "type": "itemName",
+            "name": "PlaceableHighStoneItem"
+          },
+          {
+            "type": "spriteName",
+            "name": "PlaceableHighStoneSprite"
+          },
+          {
+            "type": "breakable",
+            "health": 2000
+          }
+        ]
+      },
+      "tile": {
+        "shapeDef": {
+          "material": {
+            "restitution": 1.0,
+            "friction": 0.0
+          }
+        },
+        "enableCollision": true,
+        "size": {
+          "x": 3,
+          "y": 3
+        }
+      }
+    }
+  },
+  {
+    "name": "BasicTurretTile",
+    "data": {
+      "type": "tileDef",
+      "entity": {
+        "comps": [
+          {
+            "type": "itemName",
+            "name": "BasicTurretItem"
+          },
+          {
+            "type": "spriteName",
+            "name": "BasicTurretSprite"
+          },
+          {
+            "type": "breakable",
+            "health": 1000
+          },
+          {
+            "type": "turret",
+            "fireRate": 0.00,
+            "radius": 10.0,
+            "turnSpeed": 0.12,
+            "shootRange": 0.05,
+            "stopRange": 0.04,
+            "muzzleVelocity": 10.0,
+            "bulletRadius": 0.05
+          }
+        ]
+      },
+      "tile": {
+        "enableCollision": true,
+        "size": {
+          "x": 1,
+          "y": 1
+        }
+      }
+    }
+  },
+  {
+    "name": "FenceTile",
+    "data": {
+      "type": "tileDef",
+      "entity": {
+        "comps": [
+          {
+            "type": "itemName",
+            "name": "FenceItem"
+          },
+          {
+            "type": "spriteName",
+            "name": "FenceSprite"
+          }
+        ]
+      },
+      "tile": {
+        "enableCollision": true,
+        "size": {
+          "x": 1,
+          "y": 1
+        }
+      }
+    }
+  },
+  {
+    "name": "WoodTile",
+    "data": {
+      "type": "tileDef",
+      "entity": {
+        "comps": [
+          {
+            "type": "itemName",
+            "name": "WoodItem"
+          },
+          {
+            "type": "spriteName",
+            "name": "WoodSprite"
+          },
+          {
+            "type": "breakable",
+            "health": 100
+          }
+        ]
+      },
+      "tile": {
+        "enableCollision": true,
+        "size": {
+          "x": 1,
+          "y": 1
+        }
+      }
+    }
+  }
+]
