@@ -114,11 +114,11 @@ public:
     RefT<CollisionQueueComponent> queue = m_collisionQueue.get<CollisionQueueComponent>();
     for (CollisionQueueComponent::Collision& collision : queue->queue) {
       // its possible for a bullet to be destroyed by the HealthModule before we can get to it.
-      if (!world.exists(collision.primary))
+      if (!world.isAlive(collision.primary))
         continue;
       Entity bullet = world.get(collision.primary);
       // its possible for a enemy to be destroyed by the HealthModule before we can get to it.
-      if (!world.exists(collision.secondary))
+      if (!world.isAlive(collision.secondary))
         continue;
       Entity other = world.get(collision.secondary);
 
@@ -131,7 +131,7 @@ public:
       RefT<HealthComponent> bulletHealth = bullet.get<HealthComponent>();
       bulletHealth->health -= damage->damage * 0.1f;
 
-      logGeneric("Shot\n");
+      //logGeneric("Shot: %i\n", collision.primary);
     }
     queue->queue.clear();
 

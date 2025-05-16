@@ -275,7 +275,6 @@ AssetLoader::PrefabAsset loadPrefabPrototype(AssetLoader& loader, EntityWorld& w
         RefT<AddShapeComponent> def = e.get<AddShapeComponent>();
 
         def->def = defProto.def;
-        logGeneric("==>%i\n", def->def.enableContactEvents);
         def->def.filter.categoryBits = convertToBitmask(defProto.categoryMask);
         def->def.filter.maskBits = convertToBitmask(defProto.collisionMask);
         def->shape = defProto.shape;
