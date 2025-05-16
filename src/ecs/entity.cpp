@@ -94,12 +94,16 @@ Ref Entity::get(ComponentId compId) {
   return Ref(*m_world, m_id, compId);
 }
 
-bool Entity::has(ComponentId compId) {
+bool Entity::has(ComponentId compId) const {
   return m_world->hasComponent(m_id, compId);
 }
 
 EntityWorld& Entity::world() {
   return *m_world;
+}
+
+bool Entity::isEnabled() const {
+  return has<EntityWorld::Enabled>();
 }
 
 void Entity::enable() {
@@ -110,7 +114,7 @@ void Entity::disable() {
   remove<EntityWorld::Enabled>();
 }
 
-Entity Entity::clone() {
+Entity Entity::clone() const {
   return m_world->clone(m_id);
 }
 

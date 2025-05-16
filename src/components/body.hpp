@@ -2,6 +2,13 @@
 
 #include "../utility/base.hpp"
 
+enum PhysicsCategories {
+  Friendly = 0x01,
+  Enemy = 0x02,
+  Static = 0x04,
+  All = 0xFFFF
+};
+
 struct BodyComponent {
     b2BodyId id = b2_nullBodyId;
 
@@ -23,7 +30,6 @@ struct BodyComponent {
     ~BodyComponent() {
         if (b2Body_IsValid(id)) {
           b2DestroyBody(id);
-          logGeneric("Destroy body\n");
         }
     }
 };
@@ -34,11 +40,50 @@ enum AddShapeType {
   Polygon
 };
 
-struct AddShapeComponent {
-  using ShapeVariant = std::variant<b2Circle, b2Polygon>;
+using ShapeVariant = std::variant<b2Circle, b2Polygon>;
 
+struct AddShapeComponent {
   b2ShapeDef def = b2DefaultShapeDef();
   ShapeVariant shape;
+};
+
+template <>
+struct glz::meta<b2BodyType> {
+  static constexpr auto value = enumerate(
+    "static", b2_staticBody,
+    "kinematic", b2_kinematicBody,
+    "dynamic", b2_dynamicBody
+  );
+};
+
+struct AddBodyComponent : public b2BodyDef {
+  AddBodyComponent() {
+    dynamic_cast<b2BodyDef&>(*this) = b2DefaultBodyDef();
+  }
+
+  AddBodyComponent(glz::make_reflectable) {
+    dynamic_cast<b2BodyDef&>(*this) = b2DefaultBodyDef();
+  }
+};
+
+template <>
+struct glz::meta<AddBodyComponent> {
+  using T = b2BodyDef;
+  static constexpr auto value = object(
+    "bodyType", &T::type,
+    "linearVelocity", &T::linearVelocity,
+    "angularVelocity", &T::angularVelocity,
+    "linearDamping", &T::linearDamping,
+    "angularDamping", &T::angularDamping,
+    "gravityScale", &T::gravityScale,
+    "sleepThreshold", &T::sleepThreshold,
+    "enableSleep", &T::enableSleep,
+    "isAwake", &T::isAwake,
+    "fixedRotation", &T::fixedRotation,
+    "isBullet", &T::isBullet,
+    "isEnabled", &T::isEnabled,
+    "allowFastRotation", &T::allowFastRotation
+  );
 };
 
 template <>
@@ -70,7 +115,6 @@ struct glz::meta<b2ShapeDef> {
   static constexpr auto value = object(
     "material", &T::material,
     "density", &T::density,
-    "filter", &T::filter,
     "isSensor", &T::isSensor,
     "enableSensorEvents", &T::enableSensorEvents,
     "enableContactEvents", &T::enableContactEvents,
@@ -111,19 +155,10 @@ struct glz::meta<b2Polygon> {
 };
 
 template<>
-struct glz::meta<AddShapeComponent::ShapeVariant> {
-  static constexpr std::string_view tag = "type";
+struct glz::meta<ShapeVariant> {
+  static constexpr std::string_view tag = "shapeType";
   static constexpr auto ids = std::array{
       "circle",
       "polygon"
   };
-};
-
-template <>
-struct glz::meta<AddShapeComponent> {
-  using T = AddShapeComponent;
-  static constexpr auto value = object(
-    "def", &T::def,
-    "shape", &T::shape
-  );
 };

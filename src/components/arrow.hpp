@@ -32,5 +32,5 @@ struct glz::meta<PrimaryTargetTag> {
 template <>
 struct glz::meta<SeekPrimaryTargetTag> {
   using T = SeekPrimaryTargetTag;
-  static constexpr std::string_view tag = "seekPrimaryTarget";
+  static constexpr auto value = object();
 };

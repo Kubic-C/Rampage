@@ -24,6 +24,8 @@ public:
   AssetLoader(EntityWorld& world)
     : m_world(world) {}
 
+  AssetLoader(AssetLoader&&) = delete;
+
   bool loadAssets(const std::string& path);
   AssetId loadAsset(const std::string& parentDir, const AssetJson& json);
 

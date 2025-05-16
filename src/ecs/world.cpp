@@ -293,7 +293,7 @@ Entity EntityWorld::clone(EntityId entity) {
     auto copyCtor = m_componentCopyCtor[cid];
 
     if(copyCtor)
-      copyCtor((u8*)cloned.get(cid).get(), (u8*)get(entity).get(cid).get());
+      copyCtor(static_cast<u8*>(cloned.get(cid).get()), static_cast<u8*>(get(entity).get(cid).get()));
   }
 
   return cloned;

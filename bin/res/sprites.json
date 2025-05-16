@@ -1,0 +1,103 @@
+[
+  {
+    "name": "UnknownSprite",
+    "data": {
+      "type": "spriteLoad",
+      "sprites": [
+        {
+          "path": "unknown.png",
+          "layer": "Bottom"
+        }
+      ]
+    }
+  },
+  {
+    "name": "StoneFloorSprite",
+    "data": {
+      "type": "spriteLoad",
+      "sprites": [
+        {
+          "path": "stone.png",
+          "layer": "Bottom"
+        }
+      ]
+    }
+  },
+  {
+    "name": "PermaHighStoneSprite",
+    "data": {
+      "type": "spriteLoad",
+      "sprites": [
+        {
+          "path": "permaHighStone.png",
+          "layer": "Bottom"
+        }
+      ]
+    }
+  },
+  {
+    "name": "PlaceableHighStoneSprite",
+    "data": {
+      "type": "spriteLoad",
+      "sprites": [
+        {
+          "path": "placableHighStone.png",
+          "layer": "Floor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "BasicTurretSprite",
+    "data": {
+      "type": "spriteLoad",
+      "sprites": [
+        {
+          "path": "basicTurretBase.png",
+          "layer": "Floor"
+        },
+        {
+          "path": "basicTurretTop.png",
+          "layer": "Wall"
+        }
+      ]
+    }
+  },
+  {
+    "name": "FenceSprite",
+    "data": {
+      "type": "spriteLoad",
+      "sprites": [
+        {
+          "path": "fence.png",
+          "layer": "Floor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "WoodSprite",
+    "data": {
+      "type": "spriteLoad",
+      "sprites": [
+        {
+          "path": "wood.png",
+          "layer": "Floor"
+        }
+      ]
+    }
+  },
+  {
+    "name": "BasicZombieSprite",
+    "data": {
+      "type": "spriteLoad",
+      "scale": 0.4,
+      "sprites": [
+        {
+          "path": "zombie.png",
+          "layer": "Top"
+        }
+      ]
+    }
+  }
+]

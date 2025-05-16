@@ -93,7 +93,6 @@ public:
     return true;
   }
 
-
   // !ATTENTION! this does not destroy the entity located with the tile
   EntityId erase(const glm::i16vec2& pos) {
     Tile copy = find(pos);

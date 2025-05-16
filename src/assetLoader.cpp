@@ -23,24 +23,26 @@ struct glz::meta<SpritePrototypeLayer>
 
 struct SpritePrototype {
   std::vector<SpritePrototypeLayer> sprites;
+  float scale = 1.0f;
 };
 
 template <>
 struct glz::meta<SpritePrototype> {
   using T = SpritePrototype;
-  static constexpr auto value = object("sprites", &T::sprites);
+  static constexpr auto value = object("sprites", &T::sprites, "scale", &T::scale);
 };
 
 //////////////////// SpriteName
 
 struct SpriteName {
   std::string sprite;
+  float scale = -1.0f;
 };
 
 template <>
 struct glz::meta<SpriteName> {
   using T = SpriteName;
-  static constexpr auto value = object("name", &T::sprite);
+  static constexpr auto value = object("name", &T::sprite, "scale", &T::scale);
 };
 
 //////////////////// ItemName
@@ -81,6 +83,71 @@ struct glz::meta<TileBreakable>
   static constexpr auto value = object(&T::health);
 };
 
+//////////////////// Transform Prototype
+
+struct TransformPrototype {
+  Vec2 pos;
+  float rot; // Store rotation as radians for serialization
+
+  TransformPrototype() = default;
+
+  TransformPrototype(const Transform& transform)
+    : pos(transform.pos), rot(transform.rot.radians()) {}
+
+  Transform toTransform() const {
+    return Transform(pos, Rot(rot));
+  }
+};
+
+template <>
+struct glz::meta<TransformPrototype> {
+  using T = TransformPrototype;
+  static constexpr auto value = object(
+    "pos", &T::pos,
+    "rot", &T::rot
+  );
+};
+
+//////////////////// Shape Prototypes
+
+static const std::unordered_map<std::string, uint64_t> categoryMapping = {
+  {"Friendly", Friendly},
+  {"Enemy", Enemy},
+  {"Static", Static},
+  {"All", All}
+};
+
+inline uint64_t convertToBitmask(const std::vector<std::string>& mask) {
+  uint64_t bitmask = 0;
+  for (const auto& category : mask) {
+    auto it = categoryMapping.find(category);
+    if (it != categoryMapping.end()) {
+      bitmask |= it->second;
+    } else {
+      logGeneric("Unknown mask: %s\n", category.c_str());
+    }
+  }
+  return bitmask;
+}
+
+struct AddShapePrototype {
+  std::vector<std::string> categoryMask;
+  std::vector<std::string> collisionMask;
+  b2ShapeDef def = b2DefaultShapeDef();
+  ShapeVariant shape;
+};
+
+template <>
+struct glz::meta<AddShapePrototype> {
+  using T = AddShapePrototype;
+  static constexpr auto value = object(
+    "categoryMask", &T::categoryMask,
+    "collisionMask", &T::collisionMask,
+    "def", &T::def,
+    "shape", &T::shape
+  );
+};
+
 //////////////////// Prefab Prototype
 
 /* The below components are valid to read from json*/
@@ -90,14 +157,17 @@ using ComponentPrototype =
     SpriteName, // 1
     ItemName, // 2
     ItemIconPath, // 3
-    AddShapeComponent, // 4
+    AddShapePrototype, // 4
     HealthComponent,  // 5
     ContactDamageComponent, // 6
     SeekPrimaryTargetTag, // 7
     TurretComponent, // 8
     ItemAttrStackCost, // 9
     ItemAttrUnique, // 10
-    TileBreakable // 11
+    TileBreakable, // 11
+    TransformPrototype, // 12
+    SpriteIndependentTag, // 13
+    AddBodyComponent // 14
   >;
 
 template <>
@@ -110,11 +180,14 @@ struct glz::meta<ComponentPrototype> {
       "addShape", // 4
       "health", // 5
       "contactDamage", // 6
-      "seekPrimary", // 7
+      "seekTarget", // 7
       "turret", // 8
       "stackCost",// 9
       "unique", // 10
-      "breakable" // 11
+      "breakable", // 11
+      "transform", // 12
+      "spriteIndependent", // 13
+      "addRigidBody" // 14
   };
 };
 
@@ -172,6 +245,7 @@ struct glz::meta<AssetJson> {
 AssetLoader::SpriteAsset loadSprite(EntityWorld& world, const std::string& path, const SpritePrototype& spriteProto) {
   auto& render = world.getModule<SpriteRenderModule>();
   SpriteComponent sprite;
+  sprite.scaling = spriteProto.scale;
 
   for (const SpritePrototypeLayer& layer : spriteProto.sprites) {
     u32 index = render.getSpriteFromPath(path + layer.path);
@@ -191,10 +265,20 @@ AssetLoader::PrefabAsset loadPrefabPrototype(AssetLoader& loader, EntityWorld& w
       case IndexInVariant<ComponentPrototype, SpriteName>: {
         e.add<SpriteComponent>();
         *e.get<SpriteComponent>() = loader.getSprite(std::get<SpriteName>(proto).sprite);
+        float overloadedScale = std::get<SpriteName>(proto).scale;
+        if (overloadedScale > 0.0f)
+          e.get<SpriteComponent>()->scaling = overloadedScale;
       } break;
-      case IndexInVariant<ComponentPrototype, AddShapeComponent>: {
+      case IndexInVariant<ComponentPrototype, AddShapePrototype>: {
         e.add<AddShapeComponent>();
-        *e.get<AddShapeComponent>() = std::get<AddShapeComponent>(proto);
+        const auto& defProto = std::get<AddShapePrototype>(proto);
+        RefT<AddShapeComponent> def = e.get<AddShapeComponent>();
+
+        def->def = defProto.def;
+        logGeneric("==>%i\n", def->def.enableContactEvents);
+        def->def.filter.categoryBits = convertToBitmask(defProto.categoryMask);
+        def->def.filter.maskBits = convertToBitmask(defProto.collisionMask);
+        def->shape = defProto.shape;
       } break;
       case IndexInVariant<ComponentPrototype, HealthComponent>: {
         e.add<HealthComponent>();
@@ -247,9 +331,20 @@ AssetLoader::PrefabAsset loadPrefabPrototype(AssetLoader& loader, EntityWorld& w
         RefT<HealthComponent> health = e.get<HealthComponent>();
 
         e.add<ArrowComponent>();
-        e.get<ArrowComponent>()->tileCost = health->health;
+        e.get<ArrowComponent>()->tileCost = static_cast<u32>(health->health);
         e.add<TileBoundComponent>();
         e.add<DestroyTileOnEntityRemovalTag>();
+      } break;
+      case IndexInVariant<ComponentPrototype, TransformPrototype>: {
+        e.add<TransformComponent>();
+        *e.get<TransformComponent>() = std::get<TransformPrototype>(proto).toTransform();
+      } break;
+      case IndexInVariant<ComponentPrototype, SpriteIndependentTag>: {
+        e.add<SpriteIndependentTag>();
+      } break;
+      case IndexInVariant<ComponentPrototype, AddBodyComponent>: {
+        e.add<AddBodyComponent>();
+        *e.get<AddBodyComponent>() = std::get<AddBodyComponent>(proto);
       } break;
       default:
         break;
@@ -312,15 +407,14 @@ bool AssetLoader::loadAssets(const std::string& path) {
   std::string parentDir = getPath(path);
   std::vector<AssetJson> readAssets;
   glz::error_ctx ec = glz::read<readOps>(readAssets, fileData);
-  if (ec) { 
+  if (ec) {
     std::string msg = glz::format_error(ec, fileData);
-    logGeneric("<bgRed, bold>Failed to load assets\n Ec: %i\n Msg: %s\n<reset>", ec.ec, msg.c_str());
+    logGeneric("<bgRed, bold>Failed to load assets\n Ec: %i\n File:%s\n Msg: %s\n<reset>", ec.ec, path.c_str(), msg.c_str());
     return false;
   }
 
   for (const AssetJson& json : readAssets) {
     logGeneric("<fgGreen>Loading Asset: %s\n<reset>", json.name.c_str());
-    fflush(stdout);
     loadAsset(parentDir, json);
   }
 

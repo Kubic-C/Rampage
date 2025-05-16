@@ -113,11 +113,16 @@ public:
 
   class EntityIterator {
   public:
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = Entity;
+    using difference_type = std::ptrdiff_t;
+    using pointer = Entity*;
+    using reference = Entity&;
+
     EntityIterator& operator=(const EntityIterator& other) {
       m_setIt = other.m_setIt;
       m_next = other.m_next;
       m_list = other.m_list;
-
       return *this;
     }
 

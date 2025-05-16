@@ -45,6 +45,9 @@ public:
     }
     m_created = true;
 
+    world.component<AddBodyComponent>();
+    world.component<AddShapeComponent>();
+
     world.observe(EntityWorld::EventType::Remove, world.component<BodyComponent>(), {},
       [&](Entity e) {
         auto it = m_ongoingCollisions.find(e);
@@ -140,6 +143,50 @@ public:
         }
       }
     }
+
+    world.beginDefer();
+    auto it = world.getWith(world.set<AddBodyComponent>());
+    while (it.hasNext()) {
+      Entity e = it.next();
+
+      e.add<BodyComponent>();
+      RefT<BodyComponent> bodyId = e.get<BodyComponent>();
+      if (b2Body_IsValid(bodyId->id))
+        b2DestroyBody(bodyId->id);
+
+      RefT<AddBodyComponent> bodyDef = e.get<AddBodyComponent>();
+      bodyDef->userData = entityToB2Data(e);
+      if (e.has<TransformComponent>()) {
+        RefT<TransformComponent> transform = e.get<TransformComponent>();
+        bodyDef->position = transform->pos;
+        bodyDef->rotation = transform->rot;
+      }
+
+      bodyId->id = b2CreateBody(world.getContext<b2WorldId>(), &*bodyDef);
+
+      e.remove<AddBodyComponent>();
+    }
+
+    it = world.getWith(world.set<AddShapeComponent>());
+    while (it.hasNext()) {
+      Entity e = it.next();
+
+      if (!e.has<BodyComponent>())
+        throw std::runtime_error("Error: cannot add shape, body not created");
+
+      RefT<BodyComponent> bodyId = e.get<BodyComponent>();
+      RefT<AddShapeComponent> shapeDef = e.get<AddShapeComponent>();
+      shapeDef->def.userData = entityToB2Data(e);
+      if (shapeDef->shape.index() == IndexInVariant<ShapeVariant, b2Circle>)
+        b2CreateCircleShape(bodyId->id, &shapeDef->def, &std::get<b2Circle>(shapeDef->shape));
+      else if (shapeDef->shape.index() == IndexInVariant<ShapeVariant, b2Polygon>)
+        b2CreatePolygonShape(bodyId->id, &shapeDef->def, &std::get<b2Polygon>(shapeDef->shape));
+      else
+        throw std::runtime_error("Error: cannot add shape, unknown shape type");
+
+      e.remove<AddShapeComponent>();
+    }
+    world.endDefer();
   }
 
   Map<EntityId, std::set<EntityId>>& getOngoingCollisions() {

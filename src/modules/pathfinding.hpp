@@ -69,7 +69,8 @@ struct PathfindingModule : Module {
       if (!arrow)
         continue;
 
-      b2Body_ApplyLinearImpulseToCenter(seekerBody->id, Vec2(arrow->dir * b2Body_GetMass(seekerBody->id)), true);
+      float massSpeed = glm::min(5.0f / b2Body_GetMass(seekerBody->id), 0.75f);
+      b2Body_ApplyLinearImpulseToCenter(seekerBody->id, Vec2(arrow->dir * massSpeed), true);
       seekerTransform->rot = atan2(arrow->dir.y, arrow->dir.x);
     }
   }

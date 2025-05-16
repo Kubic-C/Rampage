@@ -36,54 +36,21 @@ public:
     m_activeBodiesText = gui.get(activeBodiesTextName)->cast<tgui::Label>();
     m_entityCountText = gui.get(playEntityCountTextName)->cast<tgui::Label>();
 
-    b2WorldId& physicsWorldId = m_world.getContext<b2WorldId>();
     m_bodyCallback =
       [&](int x, int y) {
-      AssetLoader loader = m_world.getContext<AssetLoader>();
+        auto& loader = m_world.getContext<AssetLoader>();
 
-      Entity seeker = m_world.create();
-      seeker.add<TransformComponent>();
-      seeker.add<BodyComponent>();
-      seeker.add<SeekPrimaryTargetTag>();
-      seeker.add<SpriteComponent>();
-      seeker.add<OwnedBy<PlayState>>();
-      seeker.add<HealthComponent>();
-      seeker.add<ContactDamageComponent>();
-      seeker.add<SpriteIndependentTag>();
+        std::string enemyType = "BasicZombie";
+        if (rand() % 20 < 5)
+          enemyType = "BigAssZombie";
 
-      RefT<ContactDamageComponent> damage = seeker.get<ContactDamageComponent>();
-      damage->damage = 5;
-
-      RefT<HealthComponent> health = seeker.get<HealthComponent>();
-      health->health = 50;
-
-      seeker.add<SubmitToCollisionQueueComponent>();
-      seeker.get<SubmitToCollisionQueueComponent>()->queue = world.getModule<PathfindingModule>().getContactDamageQueue();
-
-      RefT<SpriteComponent> sprite = seeker.get<SpriteComponent>();
-      *sprite = loader.getSprite("BasicZombieSprite");
-      sprite->scaling = 0.4f;
-
-      RefT<TransformComponent> transform = seeker.get<TransformComponent>();
-      transform->pos = Vec2(x * 0.3f - 7, y * 0.3f + 14 );
-      transform->rot = Rot(0);
-      b2BodyDef bodyDef = b2DefaultBodyDef();
-      bodyDef.type = b2_dynamicBody;
-      bodyDef.position = Vec2(0, 0);
-      bodyDef.linearDamping = 10;
-      b2ShapeDef shapeDef = b2DefaultShapeDef();
-      shapeDef.material.friction = 0;
-      shapeDef.filter.categoryBits = Enemy;
-      //shapeDef.filter.maskBits = ~Enemy;
-      shapeDef.enableContactEvents = true;
-      shapeDef.userData = entityToB2Data(seeker);
-      b2Circle circle;
-      circle.radius = 0.1f;
-      circle.center = Vec2(0);
-      b2BodyId bodyId = b2CreateBody(physicsWorldId, &bodyDef);
-      seeker.get<BodyComponent>()->id = bodyId;
-      b2CreateCircleShape(bodyId, &shapeDef, &circle);
-      };
+        Entity seeker = loader.getPrefab(enemyType).clone();
+        seeker.add<SubmitToCollisionQueueComponent>();
+        seeker.get<SubmitToCollisionQueueComponent>()->queue = world.getModule<PathfindingModule>().getContactDamageQueue();
+        // fixed cloned components not clong or whajngoiadwoijawd
+        seeker.get<TransformComponent>()->pos = Vec2(x * 0.3f - 7, y * 0.3f + 14 );
+        seeker.add<OwnedBy<PlayState>>();
+    };
   }
 
   void onEntry() {

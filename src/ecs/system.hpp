@@ -3,7 +3,7 @@
 #include "world.hpp"
 #include "entity.hpp"
 
-struct System {
+class System {
   friend class EntityWorld;
 
 protected:

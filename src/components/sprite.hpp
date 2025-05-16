@@ -66,7 +66,10 @@ struct SpriteComponent {
 };
 
 // The sprite is not part of a tilemap
-struct SpriteIndependentTag {};
+struct SpriteIndependentTag {
+  SpriteIndependentTag() = default;
+  SpriteIndependentTag(glz::make_reflectable) {}
+};
 
 struct TilePosComponent {
   glm::i16vec2 pos;
@@ -86,4 +89,9 @@ struct glz::meta<WorldLayer> {
     "Bottom", WorldLayer::Bottom,
     "Invalid", WorldLayer::Invalid
   );
+};
+
+template <>
+struct glz::meta<SpriteIndependentTag> {
+  static constexpr auto value = glz::object();
 };

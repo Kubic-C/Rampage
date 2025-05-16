@@ -1,13 +1,6 @@
 #pragma once
 
-#include "../ecs/ecs.hpp"
-
-enum PhysicsCategories {
-  Friendly = 0x01,
-  Enemy = 0x02,
-  Static = 0x04,
-  All = 0xFFFF
-};
+#include "body.hpp"
 
 struct TurretComponent {
   EntityId summon = 0; /* Currently unused, will be used later. */

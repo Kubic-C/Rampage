@@ -26,7 +26,7 @@ public:
     /* Really dont wanna forget this ... */
     m_world.addContext<enki::TaskScheduler>();
     enki::TaskScheduler& scheduler = m_world.getContext<enki::TaskScheduler>();
-    scheduler.Initialize(32);
+    scheduler.Initialize();
 
     m_world.addContext<EventManager>();
     m_world.addContext<AppStats>();
@@ -58,7 +58,6 @@ public:
     gui.loadWidgetsFromFile("./res/form.txt");
 
     m_world.component<WorldMapTag>();
-
 
     b2WorldDef physicsWorldDef = b2DefaultWorldDef();
     physicsWorldDef.gravity = b2Vec2{ 0 };
@@ -101,15 +100,18 @@ public:
     /* Asset Loader */
     m_world.addContext<InventoryManager>(m_world);
     m_world.addContext<AssetLoader>(m_world);
-    AssetLoader& loader = m_world.getContext<AssetLoader>();
-    loader.loadAssets("./res/entities.json"); // ALWAYS LOAD SPRITES FIRST!
+    auto& loader = m_world.getContext<AssetLoader>();
+    loader.loadAssets("./res/sprites.json");
+    loader.loadAssets("./res/items.json");
+    loader.loadAssets("./res/tiles.json");
+    loader.loadAssets("./res/entity.json");
 
-    InventoryManager& itemMgr = m_world.getContext<InventoryManager>();
+    auto& itemMgr = m_world.getContext<InventoryManager>();
     itemMgr.setDefaultItemIcon("./res/clear.png");
 
     /* State Management, init starts with menuState */
     m_world.addContext<StateManager>();
-    StateManager& stateMgr = m_world.getContext<StateManager>();
+    auto& stateMgr = m_world.getContext<StateManager>();
     stateMgr.createState<PlayState>("PlayState", m_world);
     stateMgr.createState<MenuState>("MenuState", m_world);
     stateMgr.enableState("MenuState");

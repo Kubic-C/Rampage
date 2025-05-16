@@ -72,7 +72,8 @@ public:
     if (!b2Shape_IsValid(closestShape.shape))
       return;
 
-    Vec2 targetPos = b2Body_GetPosition(b2Shape_GetBody(closestShape.shape));
+    b2BodyId targetBody = b2Shape_GetBody(closestShape.shape);
+    Vec2 targetPos = b2Body_GetPosition(targetBody);
     Vec2 targetDir = glm::normalize(targetPos - transform->pos);
     float targetRot = atan2f(targetDir.y, targetDir.x);
 
@@ -121,16 +122,16 @@ public:
         continue;
       Entity other = world.get(collision.secondary);
 
-
       assert(other.has<HealthComponent>());
 
       RefT<HealthComponent> health = other.get<HealthComponent>();
       RefT<ContactDamageComponent> damage = bullet.get<ContactDamageComponent>();
-      float speed = b2Length((b2Body_GetLinearVelocity(bullet.get<BodyComponent>()->id)));
-      health->health -= (speed / 10.0f) * damage->damage;
+      health->health -= damage->damage;
 
       RefT<HealthComponent> bulletHealth = bullet.get<HealthComponent>();
       bulletHealth->health -= damage->damage * 0.1f;
+
+      logGeneric("Shot\n");
     }
     queue->queue.clear();
 
@@ -163,7 +164,7 @@ public:
       circle.radius = bullet.radius;
       b2ShapeDef shapeDef = b2DefaultShapeDef();
       shapeDef.density = 100.0f;
-      shapeDef.enableHitEvents = true;
+      shapeDef.enableContactEvents = true;
       shapeDef.userData = entityToB2Data(bulletEntity);
       b2Filter filter;
       filter.categoryBits = Friendly;

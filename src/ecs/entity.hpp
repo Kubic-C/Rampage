@@ -18,11 +18,12 @@ public:
   void add(const ComponentSet& comps, bool notify = true);
   void remove(const ComponentSet& comps, bool notify = true);
   Ref get(ComponentId compId);
-  bool has(ComponentId compId);
+  bool has(ComponentId compId) const;
   EntityWorld& world();
+  bool isEnabled() const;
   void enable();
   void disable();
-  Entity clone();
+  Entity clone() const;
 
   template<typename T>
   void add() {
@@ -40,7 +41,7 @@ public:
 
   }
   template<typename T>
-  bool has() {
+  bool has() const {
     return has(m_world->component<T>());
   }
 
