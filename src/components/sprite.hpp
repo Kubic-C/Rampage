@@ -12,19 +12,19 @@ enum class WorldLayer : u8 {
   Wall = 5,
   Turret = 4,
   Item = 3,
-  Res = 2,  // RESERVED
+  Res = 2, // RESERVED
   Res2 = 1, // RESERVED
   Top = 0,
 };
 
 struct SpriteLayer {
   SpriteLayer() = default;
-  SpriteLayer(u16 texIndex, glm::vec2 offset, float rot, WorldLayer layer)
-    : texIndex(texIndex), offset(offset), rot(rot), layer(layer) {
-  }
+
+  SpriteLayer(u16 texIndex, glm::vec2 offset, float rot, WorldLayer layer) :
+      texIndex(texIndex), offset(offset), rot(rot), layer(layer) {}
 
   u16 texIndex = 0;
-  glm::vec2 offset = { 0.0f, 0.0f };
+  glm::vec2 offset = {0.0f, 0.0f};
   float rot = 0.0f;
   WorldLayer layer = WorldLayer::Invalid;
 };
@@ -43,7 +43,8 @@ struct SpriteComponent {
     }
   }
 
-  void addLayer(u32 texIndex, glm::vec2 offset = Vec2(0), float rot = 0, WorldLayer layer = WorldLayer::Invalid) {
+  void addLayer(u32 texIndex, glm::vec2 offset = Vec2(0), float rot = 0,
+                WorldLayer layer = WorldLayer::Invalid) {
     assert(layerCount < MaxSpriteLaters && "Too many sprite layers!");
     if (layer == WorldLayer::Invalid) {
       layer = (WorldLayer)(MaxSpriteLaters - layerCount);
@@ -51,23 +52,20 @@ struct SpriteComponent {
     layers[layerCount++] = SpriteLayer(texIndex, offset, rot, layer);
   }
 
-  SpriteLayer& getLast() {
-    return layers[layerCount - 1];
-  }
+  SpriteLayer& getLast() { return layers[layerCount - 1]; }
 
   const SpriteLayer& operator[](size_t index) const {
     assert(index < layerCount);
     return layers[index];
   }
 
-  const SpriteLayer& get(size_t index) const {
-    return layers[index];
-  }
+  const SpriteLayer& get(size_t index) const { return layers[index]; }
 };
 
 // The sprite is not part of a tilemap
 struct SpriteIndependentTag {
   SpriteIndependentTag() = default;
+
   SpriteIndependentTag(glz::make_reflectable) {}
 };
 
@@ -78,17 +76,10 @@ struct TilePosComponent {
 
 template <>
 struct glz::meta<WorldLayer> {
-  static constexpr auto value = glz::enumerate(
-    "Top", WorldLayer::Top,
-    "Res2", WorldLayer::Res2,
-    "Res", WorldLayer::Res,
-    "Item", WorldLayer::Item,
-    "Turret", WorldLayer::Turret,
-    "Wall", WorldLayer::Wall,
-    "Floor", WorldLayer::Floor,
-    "Bottom", WorldLayer::Bottom,
-    "Invalid", WorldLayer::Invalid
-  );
+  static constexpr auto value =
+      glz::enumerate("Top", WorldLayer::Top, "Res2", WorldLayer::Res2, "Res", WorldLayer::Res, "Item",
+                     WorldLayer::Item, "Turret", WorldLayer::Turret, "Wall", WorldLayer::Wall, "Floor",
+                     WorldLayer::Floor, "Bottom", WorldLayer::Bottom, "Invalid", WorldLayer::Invalid);
 };
 
 template <>

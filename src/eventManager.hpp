@@ -296,7 +296,7 @@ class EventManager {
     bool hold = false;
   };
 
-public:
+  public:
   void poll() {
     m_signalResized = false;
 
@@ -328,32 +328,20 @@ public:
         m_keys[event.key.scancode].hold = false;
         break;
       }
-    } 
+    }
   }
 
-  const std::vector<SDL_Event>& getPolledEvents() const {
-    return m_polledEvents;
-  }
+  const std::vector<SDL_Event>& getPolledEvents() const { return m_polledEvents; }
 
-  bool isKeyPressed(Key key) {
-    return m_keys[(u32)key].pressed;
-  }
+  bool isKeyPressed(Key key) { return m_keys[(u32)key].pressed; }
 
-  bool isKeyHeld(Key key) {
-    return m_keys[(u32)key].hold;
-  }
+  bool isKeyHeld(Key key) { return m_keys[(u32)key].hold; }
 
-  bool hasWindowReized() {
-    return m_signalResized;
-  }
+  bool hasWindowReized() { return m_signalResized; }
 
-  glm::vec2 getWindowSize() {
-    return m_windowSize;
-  }
+  glm::vec2 getWindowSize() { return m_windowSize; }
 
-  bool shouldExit() const {
-    return m_signalExit;
-  }
+  bool shouldExit() const { return m_signalExit; }
 
   Vec2 getMouseCoords() {
     float x, y;
@@ -363,12 +351,12 @@ public:
     return Vec2(x, y);
   }
 
-private:
+  private:
   std::vector<SDL_Event> m_polledEvents;
   bool m_signalResized = false;
   Vec2 m_windowSize;
   bool m_signalExit = false;
-  
+
   std::vector<SDL_Scancode> m_pressedKeys;
   std::array<KeyData, SDL_SCANCODE_COUNT> m_keys;
 };

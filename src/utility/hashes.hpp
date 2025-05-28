@@ -4,7 +4,7 @@
 
 // hashin' time
 
-template<>
+template <>
 struct boost::hash<glm::i16vec2> {
   size_t operator()(const glm::i16vec2& pos) const noexcept {
     // Pack into a 32-bit key (since i16vec2 fits in 32 bits)
@@ -22,7 +22,7 @@ struct boost::hash<glm::i16vec2> {
   }
 };
 
-template<>
+template <>
 struct boost::hash<glm::u16vec2> {
   size_t operator()(const glm::u16vec2& pos) const noexcept {
     // Pack into a 32-bit key (since u16vec2 fits in 32 bits)

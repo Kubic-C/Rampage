@@ -1,6 +1,7 @@
 #pragma once
 
-// Purpose of the file is to hold various global contexts that may be held within an EntityWorld
+// Purpose of the file is to hold various global contexts that may be held
+// within an EntityWorld
 
 struct AppStats {
   float tps;

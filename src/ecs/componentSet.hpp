@@ -3,9 +3,11 @@
 #include "id.hpp"
 
 class ComponentSetBuilder;
+
 class ComponentSet {
   friend class ComponentSetBuilder;
-public:
+
+  public:
   ComponentSet() = default;
   ComponentSet(const ComponentSet&) = default;
   ComponentSet(ComponentSet&&) = default;
@@ -25,16 +27,14 @@ public:
 
   ComponentSet& operator=(const ComponentSet& other) = default;
 
-  bool operator==(const ComponentSet& other) const {
-    return getSetId() == other.getSetId();
-  }
+  bool operator==(const ComponentSet& other) const { return getSetId() == other.getSetId(); }
 
-protected:
+  protected:
   std::vector<ComponentId> m_comps;
 };
 
 class ComponentSetBuilder {
-public:
+  public:
   static const ComponentSet empty;
 
   ComponentSetBuilder() = default;
@@ -57,24 +57,20 @@ public:
   const std::vector<ComponentId>& list() const;
   ComponentSet build() const;
 
-protected:
+  protected:
   std::vector<ComponentId> m_comps;
 };
 
 namespace boost {
   template <>
   struct hash<ComponentSet> {
-    size_t operator()(const ComponentSet& set) const {
-      return set.getSetId();
-    }
+    size_t operator()(const ComponentSet& set) const { return set.getSetId(); }
   };
-}
+} // namespace boost
 
 namespace std {
   template <>
   struct hash<ComponentSet> {
-    size_t operator()(const ComponentSet& set) const {
-      return set.getSetId();
-    }
+    size_t operator()(const ComponentSet& set) const { return set.getSetId(); }
   };
-}
+} // namespace std

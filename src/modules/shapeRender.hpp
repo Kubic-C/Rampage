@@ -1,12 +1,12 @@
 #pragma once
 
+#include "../components/shapes.hpp"
+#include "../components/transform.hpp"
 #include "../render/baseRender.hpp"
 #include "../render/opengl.hpp"
-#include "../components/transform.hpp"
-#include "../components/shapes.hpp"
 
 class ShapeRenderModule : public BaseRenderModule {
-public:
+  public:
   static void registerComponents(EntityWorld& world) {
     world.component<CircleRenderComponent>();
     world.component<RectangleRenderComponent>();
@@ -17,8 +17,7 @@ public:
     glm::vec3 color;
   };
 
-  ShapeRenderModule(EntityWorld& world, size_t priority)
-    : BaseRenderModule(world, priority) {
+  ShapeRenderModule(EntityWorld& world, size_t priority) : BaseRenderModule(world, priority) {
     va.addVertexArrayAttrib(mesh.buffer, 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
     va.addVertexArrayAttrib(mesh.buffer, 1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), offsetof(Vertex, color));
     if (!shader.loadShaderStr(triangleVertexShaderSource, triangleFragShaderSource)) {
@@ -38,22 +37,18 @@ public:
       float xNext = cos(angle + anglePerTriangle);
       float yNext = sin(angle + anglePerTriangle);
 
-      m_circleMesh.push_back(Vertex({ 0, 0, 0 }, glm::vec3(0, 0, 0)));
-      m_circleMesh.push_back(Vertex({ x, y, 0 }, glm::vec3(0, 0, 0)));
-      m_circleMesh.push_back(Vertex({ xNext, yNext, 0 }, glm::vec3(0, 0, 0)));
+      m_circleMesh.push_back(Vertex({0, 0, 0}, glm::vec3(0, 0, 0)));
+      m_circleMesh.push_back(Vertex({x, y, 0}, glm::vec3(0, 0, 0)));
+      m_circleMesh.push_back(Vertex({xNext, yNext, 0}, glm::vec3(0, 0, 0)));
 
       x = xNext;
       y = yNext;
     }
   }
 
-  void run(EntityWorld& world, float deltaTime) override final {
+  void run(EntityWorld& world, float deltaTime) override final {}
 
-  }
-
-  void preMesh() override {
-    mesh.reset();
-  }
+  void preMesh() override { mesh.reset(); }
 
   void onMesh() override {
     EntityIterator itCircle = m_world.getWith(m_world.set<CircleRenderComponent, TransformComponent>());
@@ -62,7 +57,8 @@ public:
       RefT<CircleRenderComponent> circle = e.get<CircleRenderComponent>();
       RefT<TransformComponent> transform = e.get<TransformComponent>();
 
-      drawCircle(Transform(transform->getWorldPoint(circle->offset), transform->rot), circle->color, circle->radius, circle->z);
+      drawCircle(Transform(transform->getWorldPoint(circle->offset), transform->rot), circle->color,
+                 circle->radius, circle->z);
     }
 
     EntityIterator it = m_world.getWith(m_world.set<RectangleRenderComponent, TransformComponent>());
@@ -83,30 +79,22 @@ public:
   }
 
   void drawRectangle(const Transform& transform, glm::vec3 color, float hw, float hh, float z) {
-    const glm::vec3 rect[4] = {
-        glm::vec3(-hw, -hh, z),
-        glm::vec3(hw, -hh,  z),
-        glm::vec3(hw, hh,   z),
-        glm::vec3(-hw, hh,  z)
-    };
+    const glm::vec3 rect[4] = {glm::vec3(-hw, -hh, z), glm::vec3(hw, -hh, z), glm::vec3(hw, hh, z),
+                               glm::vec3(-hw, hh, z)};
 
-    Vertex vertices[] = {
-      Vertex(rect[0], color),
-      Vertex(rect[1], color),
-      Vertex(rect[2], color),
-      Vertex(rect[2], color),
-      Vertex(rect[3], color),
-      Vertex(rect[0], color)
-    };
-    
+    Vertex vertices[] = {Vertex(rect[0], color), Vertex(rect[1], color), Vertex(rect[2], color),
+                         Vertex(rect[2], color), Vertex(rect[3], color), Vertex(rect[0], color)};
+
     for (int i = 0; i < 6; i++)
-      vertices[i].pos = glm::vec3(transform.getWorldPoint({ vertices[i].pos.x, vertices[i].pos.y }), vertices[i].pos.z);
+      vertices[i].pos =
+          glm::vec3(transform.getWorldPoint({vertices[i].pos.x, vertices[i].pos.y}), vertices[i].pos.z);
 
     mesh.addMesh(vertices);
     mesh.addMesh(&vertices[3]);
   }
 
-  void drawHollowCircle(const Transform& transform, glm::vec3 color, float r, int resolution = 30, float thickness = 0.01f, float z = -1) {
+  void drawHollowCircle(const Transform& transform, glm::vec3 color, float r, int resolution = 30,
+                        float thickness = 0.01f, float z = -1) {
     int count = 0;
     const float anglePerTriangle = glm::pi<float>() * 2 / resolution;
     float x = r;
@@ -128,7 +116,8 @@ public:
       std::memcpy(copy, &m_circleMesh[i], sizeof(Vertex) * 3);
 
       for (int i = 0; i < 3; i++) {
-        copy[i].pos = glm::vec3(transform.getWorldPoint({ copy[i].pos.x * r, copy[i].pos.y * r}), copy[i].pos.z);
+        copy[i].pos =
+            glm::vec3(transform.getWorldPoint({copy[i].pos.x * r, copy[i].pos.y * r}), copy[i].pos.z);
         copy[i].color = color;
       }
 
@@ -141,32 +130,22 @@ public:
     glm::vec2 dir = glm::normalize(to - from);
     float angle = atan2(dir.y, dir.x);
 
-    glm::vec3 rect[4] = {
-      glm::vec3(0, hw , z),
-      glm::vec3(0, -hw, z),
-      glm::vec3(l, -hw, z),
-      glm::vec3(l, hw , z)
-    };
+    glm::vec3 rect[4] = {glm::vec3(0, hw, z), glm::vec3(0, -hw, z), glm::vec3(l, -hw, z),
+                         glm::vec3(l, hw, z)};
 
     for (int i = 0; i < 4; i++) {
       rect[i] = glm::rotate(rect[i], angle, glm::vec3(0.0, 0.0f, 1.0f));
       rect[i] += glm::vec3(from, 0.0f);
     }
 
-    Vertex vertices[] = {
-      Vertex(rect[0], color),
-      Vertex(rect[1], color),
-      Vertex(rect[2], color),
-      Vertex(rect[2], color),
-      Vertex(rect[3], color),
-      Vertex(rect[0], color)
-    };
+    Vertex vertices[] = {Vertex(rect[0], color), Vertex(rect[1], color), Vertex(rect[2], color),
+                         Vertex(rect[2], color), Vertex(rect[3], color), Vertex(rect[0], color)};
 
     mesh.addMesh(vertices);
     mesh.addMesh(&vertices[3]);
   }
 
-private:
+  private:
   const char* triangleVertexShaderSource = R"###(
         #version 400 core
         layout(location = 0) in vec3 a_pos;
@@ -191,7 +170,7 @@ private:
             fragColor = vec4(color, 1.0);
         })###";
 
-private:
+  private:
   std::vector<Vertex> m_circleMesh;
 
   Mesh<Vertex, 3, 3> mesh;

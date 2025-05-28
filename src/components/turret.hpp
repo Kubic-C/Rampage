@@ -22,18 +22,9 @@ struct TurretComponent {
 template <>
 struct glz::meta<TurretComponent> {
   using T = TurretComponent;
-  static constexpr auto value = object(
-    "summon", &T::summon,
-    "fireRate", &T::fireRate,
-    "timeSinceLastShot", &T::timeSinceLastShot,
-    "radius", &T::radius,
-    "rot", &T::rot,
-    "turnSpeed", &T::turnSpeed,
-    "shootRange", &T::shootRange,
-    "stopRange", &T::stopRange,
-    "muzzleVelocity", &T::muzzleVelocity,
-    "bulletRadius", &T::bulletRadius,
-    "bulletDamage", &T::bulletDamage,
-    "bulletHealth", &T::bulletHealth
-  );
+  static constexpr auto value =
+      object("summon", &T::summon, "fireRate", &T::fireRate, "timeSinceLastShot", &T::timeSinceLastShot,
+             "radius", &T::radius, "rot", &T::rot, "turnSpeed", &T::turnSpeed, "shootRange", &T::shootRange,
+             "stopRange", &T::stopRange, "muzzleVelocity", &T::muzzleVelocity, "bulletRadius",
+             &T::bulletRadius, "bulletDamage", &T::bulletDamage, "bulletHealth", &T::bulletHealth);
 };

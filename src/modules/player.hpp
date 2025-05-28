@@ -6,22 +6,21 @@
 
 #include "../render/render.hpp"
 
-#include "../inventory.hpp"
 #include "../eventManager.hpp"
+#include "../inventory.hpp"
 
 class PlayerModule : public Module {
-public:
+  public:
   static void registerComponents(EntityWorld& world) {
     world.set<BodyComponent, TransformComponent, PlayerComponent, CameraComponent, InventoryComponent>();
   }
 
-  PlayerModule(EntityWorld& world)
-    : m_system(world.system(world.set<BodyComponent, TransformComponent, PlayerComponent, CameraComponent, InventoryComponent>(), &updatePlayer)) {
-  }
+  PlayerModule(EntityWorld& world) :
+      m_system(world.system(world.set<BodyComponent, TransformComponent, PlayerComponent, CameraComponent,
+                                      InventoryComponent>(),
+                            &updatePlayer)) {}
 
-  void run(EntityWorld& world, float deltaTime) override {
-    m_system.run();
-  }
+  void run(EntityWorld& world, float deltaTime) override { m_system.run(); }
 
   static void updatePlayer(Entity e, float deltaTime) {
     EntityWorld& world = e.world();
@@ -40,13 +39,17 @@ public:
     /* Linear Movement */
     float mass = b2Body_GetMass(body->id);
     if (eventMgr.isKeyHeld(Key::A))
-      b2Body_ApplyLinearImpulseToCenter(body->id, fast2DRotate({ mass * -player->accel, 0.0f }, camera->m_rot), true);
+      b2Body_ApplyLinearImpulseToCenter(body->id, fast2DRotate({mass * -player->accel, 0.0f}, camera->m_rot),
+                                        true);
     if (eventMgr.isKeyHeld(Key::D))
-      b2Body_ApplyLinearImpulseToCenter(body->id, fast2DRotate({ mass * player->accel, 0.0f }, camera->m_rot), true);
+      b2Body_ApplyLinearImpulseToCenter(body->id, fast2DRotate({mass * player->accel, 0.0f}, camera->m_rot),
+                                        true);
     if (eventMgr.isKeyHeld(Key::W))
-      b2Body_ApplyLinearImpulseToCenter(body->id, fast2DRotate({ 0.0f, mass * player->accel }, camera->m_rot), true);
+      b2Body_ApplyLinearImpulseToCenter(body->id, fast2DRotate({0.0f, mass * player->accel}, camera->m_rot),
+                                        true);
     if (eventMgr.isKeyHeld(Key::S))
-      b2Body_ApplyLinearImpulseToCenter(body->id, fast2DRotate({ 0.0f, mass * -player->accel }, camera->m_rot), true);
+      b2Body_ApplyLinearImpulseToCenter(body->id, fast2DRotate({0.0f, mass * -player->accel}, camera->m_rot),
+                                        true);
 
     float maxSpeed = player->maxSpeed;
     if (eventMgr.isKeyHeld(Key::LeftShift))
@@ -80,12 +83,12 @@ public:
       inv.setVisible(!inv.getVisible());
     if (eventMgr.isKeyHeld(Key::F4))
       inv.addItem(assetLoader.getPrefab("WoodItem"), 4);
-    if (eventMgr.isKeyHeld(Key::F) && 
-        invMgr.isHandEmpty() &&
+    if (eventMgr.isKeyHeld(Key::F) && invMgr.isHandEmpty() &&
         !world.getContext<tgui::Gui>().getWidgetAtPos(mouseScreen, false))
-      tryPlaceItem(world.getFirstWith(world.set<WorldMapTag>()), invMgr.getHandInventory(), invMgr.getHandInventoryPos(), player->mouse);
+      tryPlaceItem(world.getFirstWith(world.set<WorldMapTag>()), invMgr.getHandInventory(),
+                   invMgr.getHandInventoryPos(), player->mouse);
   }
 
-private:
+  private:
   System m_system;
 };

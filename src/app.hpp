@@ -2,6 +2,7 @@
 
 #include "modules/guiRender.hpp"
 #include "modules/health.hpp"
+#include "modules/item.hpp"
 #include "modules/pathfinding.hpp"
 #include "modules/physics.hpp"
 #include "modules/player.hpp"
@@ -9,20 +10,19 @@
 #include "modules/spriteRender.hpp"
 #include "modules/tilemap.hpp"
 #include "modules/turret.hpp"
-#include "modules/item.hpp"
 
 #include "states/menuState.hpp"
 #include "states/playState.hpp"
 
-#include "eventManager.hpp"
 #include "assetLoader.hpp"
+#include "eventManager.hpp"
 
 #include "utility/box2dScheduler.hpp"
 
 class App {
-public:
-  App(const std::string_view& appName, float ticksPerSecond)
-    : m_localAppStatus(Status::Ok), m_ticksPerSecond(ticksPerSecond) {
+  public:
+  App(const std::string_view& appName, float ticksPerSecond) :
+      m_localAppStatus(Status::Ok), m_ticksPerSecond(ticksPerSecond) {
     /* Really dont wanna forget this ... */
     m_world.addContext<enki::TaskScheduler>();
     enki::TaskScheduler& scheduler = m_world.getContext<enki::TaskScheduler>();
@@ -60,7 +60,7 @@ public:
     m_world.component<WorldMapTag>();
 
     b2WorldDef physicsWorldDef = b2DefaultWorldDef();
-    physicsWorldDef.gravity = b2Vec2{ 0 };
+    physicsWorldDef.gravity = b2Vec2{0};
     physicsWorldDef.workerCount = scheduler.GetNumTaskThreads();
     physicsWorldDef.userTaskContext = &scheduler;
     physicsWorldDef.enqueueTask = enki_b2EnqueueTaskCallback;
@@ -105,6 +105,7 @@ public:
     loader.loadAssets("./res/items.json");
     loader.loadAssets("./res/tiles.json");
     loader.loadAssets("./res/entity.json");
+    loader.loadAssets("./res/scenes/basicScene.json");
 
     auto& itemMgr = m_world.getContext<InventoryManager>();
     itemMgr.setDefaultItemIcon("./res/clear.png");
@@ -117,14 +118,13 @@ public:
     stateMgr.enableState("MenuState");
   }
 
-  Status getStatus() {
-    return m_localAppStatus;
-  }
+  Status getStatus() { return m_localAppStatus; }
 
   float now() {
     auto current_time = std::chrono::steady_clock::now();
 
-    return (float)std::chrono::duration_cast<std::chrono::microseconds>(current_time - start_time).count() / (1000000);
+    return (float)std::chrono::duration_cast<std::chrono::microseconds>(current_time - start_time).count() /
+        (1000000);
   }
 
   void tick(u32 tick, float deltaTime) {
@@ -159,7 +159,7 @@ public:
   int run() {
     AppStats& appStats = m_world.getContext<AppStats>();
 
-    const float targetTickTime = 1.0f / m_ticksPerSecond;   // e.g., 1/60, or 1/30
+    const float targetTickTime = 1.0f / m_ticksPerSecond; // e.g., 1/60, or 1/30
 
     float lastTime = now();
     float tickAccumulator = 0.0f;
@@ -205,7 +205,7 @@ public:
     return 0;
   }
 
-private:
+  private:
   Status m_localAppStatus;
   EntityWorld m_world;
   float m_ticksPerSecond;

@@ -1,30 +1,38 @@
 #pragma once
 
-#include "../components/worldMap.hpp"
-#include "../components/health.hpp"
 #include "../components/arrow.hpp"
-#include "../components/tilemap.hpp"
-#include "../components/collisionQueue.hpp"
 #include "../components/body.hpp"
+#include "../components/collisionQueue.hpp"
+#include "../components/health.hpp"
+#include "../components/tilemap.hpp"
+#include "../components/worldMap.hpp"
+#include "../ecs/world.hpp"
 
 struct PathfindingModule : Module {
   static void registerComponents(EntityWorld& world) {
     world.set<ArrowComponent, PrimaryTargetTag, SeekPrimaryTargetTag>();
   }
 
-  PathfindingModule(EntityWorld& world)
-    : m_collisionQueue(world.create()) {
+  PathfindingModule(EntityWorld& world) : m_collisionQueue(world.create()) {
     m_collisionQueue.add<CollisionQueueComponent>();
+
+    world.observe(EntityWorld::EventType::Add, world.component<ContactDamageComponent>(),
+                  world.set<EntityWorld::Enabled>(), [&](Entity e) {
+                    e.add<SubmitToCollisionQueueComponent>();
+                    RefT<SubmitToCollisionQueueComponent> queue = e.get<SubmitToCollisionQueueComponent>();
+                    queue->queue = m_collisionQueue;
+                  });
   }
 
-  ArrowComponent* getTopArrow(EntityWorld& world, RefT<TilemapComponent> tilemapLayers, const glm::i16vec2& pos) {
+  static ArrowComponent* getTopArrow(EntityWorld& world, RefT<TilemapComponent> tilemapLayers,
+                                     const glm::i16vec2& pos) {
     for (int i = tilemapLayers->getTilemapCount(); i != 0; i--) {
       Tilemap& tilemap = tilemapLayers->getTilemap(i - 1);
       if (!tilemap.contains(pos))
         continue;
 
       Tile& tile = tilemap.find(pos);
-      if(tile.entity == 0 || !world.get(tile.entity).has<ArrowComponent>())
+      if (tile.entity == 0 || !world.get(tile.entity).has<ArrowComponent>())
         return nullptr;
 
       return &*world.get(tile.entity).get<ArrowComponent>();
@@ -36,19 +44,18 @@ struct PathfindingModule : Module {
   void run(EntityWorld& world, float deltaTime) override final {
     RefT<CollisionQueueComponent> queue = m_collisionQueue.get<CollisionQueueComponent>();
     for (CollisionQueueComponent::Collision& collision : queue->queue) {
-      if (!world.exists(collision.primary))
+      if (!world.isAlive(collision.primary))
         continue;
       Entity enemy = world.get(collision.primary);
-      if (!world.exists(collision.secondary))
+      if (!world.isAlive(collision.secondary))
         continue;
       Entity other = world.get(collision.secondary);
       if (!other.has<HealthComponent>() || other.has<SeekPrimaryTargetTag>())
-        continue;                                 
+        continue;
 
       RefT<HealthComponent> health = other.get<HealthComponent>();
       RefT<ContactDamageComponent> damage = enemy.get<ContactDamageComponent>();
-      float speed = b2Length((b2Body_GetLinearVelocity(enemy.get<BodyComponent>()->id)));
-      health->health -= (speed / 10.0f) * damage->damage;
+      health->health -= damage->damage;
     }
     queue->queue.clear();
 
@@ -90,7 +97,8 @@ struct PathfindingModule : Module {
     ArrowComponent* startArrow = getTopArrow(world, tilemapLayers, localTilePos);
     if (!startArrow)
       return;
-    startArrow->dir = glm::normalize(playerTransform->pos - mapTransform->getWorldPoint(Tilemap::getLocalTileCenter(localTilePos)));
+    startArrow->dir = glm::normalize(playerTransform->pos -
+                                     mapTransform->getWorldPoint(Tilemap::getLocalTileCenter(localTilePos)));
 
     if (m_oldTarget == localTilePos)
       return;
@@ -130,40 +138,22 @@ struct PathfindingModule : Module {
     }
   }
 
-  Entity getContactDamageQueue() {
-    return m_collisionQueue;
-  }
+  Entity getContactDamageQueue() { return m_collisionQueue; }
 
-private:
+  private:
   const std::array<glm::i16vec2, 8> directions = {
-  { {1, 0}, {-1, 0}, { 0,  1}, {0, -1},
-    {1, 1}, {-1, 1}, {-1, -1}, {1, -1} }
-  };
+      {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}}};
 
   const std::array<glm::vec2, 8> normalizedDirs = {
-    glm::normalize(glm::vec2(directions[0])),
-    glm::normalize(glm::vec2(directions[1])),
-    glm::normalize(glm::vec2(directions[2])),
-    glm::normalize(glm::vec2(directions[3])),
-    glm::normalize(glm::vec2(directions[4])),
-    glm::normalize(glm::vec2(directions[5])),
-    glm::normalize(glm::vec2(directions[6])),
-    glm::normalize(glm::vec2(directions[7]))
-  };
+      glm::normalize(glm::vec2(directions[0])), glm::normalize(glm::vec2(directions[1])),
+      glm::normalize(glm::vec2(directions[2])), glm::normalize(glm::vec2(directions[3])),
+      glm::normalize(glm::vec2(directions[4])), glm::normalize(glm::vec2(directions[5])),
+      glm::normalize(glm::vec2(directions[6])), glm::normalize(glm::vec2(directions[7]))};
 
-  const std::array<float, 8> costs = {
-    1,
-    1,
-    1,
-    1,
-    sqrtf(2),
-    sqrtf(2),
-    sqrtf(2),
-    sqrtf(2)
-  };
+  const std::array<float, 8> costs = {1, 1, 1, 1, sqrtf(2), sqrtf(2), sqrtf(2), sqrtf(2)};
 
-private:
+  private:
   u32 m_currentGeneration = 1;
-  glm::i16vec2 m_oldTarget = { 0, 0 };
+  glm::i16vec2 m_oldTarget = {0, 0};
   Entity m_collisionQueue;
 };

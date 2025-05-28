@@ -18,6 +18,7 @@ struct ItemAttrIcon {
 
 struct ItemAttrUnique {
   ItemAttrUnique() = default;
+
   ItemAttrUnique(glz::make_reflectable) {}
 };
 

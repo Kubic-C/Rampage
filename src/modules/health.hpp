@@ -3,16 +3,15 @@
 #include "../components/health.hpp"
 
 class HealthModule : public Module {
-public:
+  public:
   static void registerComponents(EntityWorld& world) {
     world.component<LifetimeComponent>();
     world.component<ContactDamageComponent>();
   }
 
-  HealthModule(EntityWorld& world)
-    : m_shouldDieSys(world.system(world.set<LifetimeComponent>(), &lifetimeSystem)),
-    m_healthSys(world.system(world.set<HealthComponent>(), &healthSystem)) {
-  }
+  HealthModule(EntityWorld& world) :
+      m_shouldDieSys(world.system(world.set<LifetimeComponent>(), &lifetimeSystem)),
+      m_healthSys(world.system(world.set<HealthComponent>(), &healthSystem)) {}
 
   static void healthSystem(Entity e, float dt) {
     RefT<HealthComponent> health = e.get<HealthComponent>();
@@ -36,7 +35,7 @@ public:
     m_healthSys.run(dt);
   }
 
-private:
+  private:
   System m_shouldDieSys;
   System m_healthSys;
 };

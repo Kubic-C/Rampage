@@ -1,12 +1,12 @@
 #pragma once
 
+#include "../components/transform.hpp"
+#include "baseRender.hpp"
 #include "camera.hpp"
 #include "opengl.hpp"
-#include "baseRender.hpp"
-#include "../components/transform.hpp"
 
 class Render {
-public:
+  public:
   static constexpr int MinimumMajorGLVersion = 4;
   static constexpr int MinimumMinorGLVersion = 0;
 
@@ -26,9 +26,9 @@ public:
     return flags;
   }
 
-public:
-  Render(EntityWorld& world, bool vsyncOn = true)
-    : m_camera(world.create()), m_window(world.getContext<SDL_Window*>()), m_status(Status::Ok) {
+  public:
+  Render(EntityWorld& world, bool vsyncOn = true) :
+      m_camera(world.create()), m_window(world.getContext<SDL_Window*>()), m_status(Status::Ok) {
     m_glcontext = SDL_GL_CreateContext(m_window);
     if (!m_glcontext) {
       m_status = Status::CriticalError;
@@ -42,19 +42,20 @@ public:
       return;
     }
 
-    if(!vsyncOn)
+    if (!vsyncOn)
       SDL_GL_SetSwapInterval(0);
 
     /* Basic state */
 #ifndef NDEBUG
     enableOpenglErrorCallback();
-#endif 
+#endif
 
     TTF_Init();
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    //glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_DST_ALPHA);
+    // glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA,
+    // GL_DST_ALPHA);
 
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.2, 1, 0, 0);
@@ -69,13 +70,9 @@ public:
     m_camera.add(world.set<TransformComponent, CameraComponent, CameraInUse>());
   }
 
-  ~Render() {
-    TTF_Quit();
-  }
+  ~Render() { TTF_Quit(); }
 
-  Status getStatus() {
-    return m_status;
-  }
+  Status getStatus() { return m_status; }
 
   void mesh() {
     /* collect active renderers */
@@ -87,11 +84,10 @@ public:
 
       Module* module = renderer.get<EntityWorld::ModuleData>()->m_module.get();
       BaseRenderModule* renderData = dynamic_cast<BaseRenderModule*>(module);
-      auto it = std::lower_bound(m_renderers.begin(), m_renderers.end(), renderData, 
-        [](BaseRenderModule* first, BaseRenderModule* other)
-        {
-          return first->getPriority() < other->getPriority();
-        });
+      auto it = std::lower_bound(m_renderers.begin(), m_renderers.end(), renderData,
+                                 [](BaseRenderModule* first, BaseRenderModule* other) {
+                                   return first->getPriority() < other->getPriority();
+                                 });
       m_renderers.insert(it, renderData);
     }
 
@@ -110,7 +106,7 @@ public:
     for (auto renderer : m_renderers) {
       renderer->preRender();
     }
-    
+
     glm::mat4 vp = m_proj * getView();
     for (auto renderer : m_renderers) {
       renderer->onRender(vp);
@@ -155,18 +151,14 @@ public:
     glm::ivec2 screenSize;
     SDL_GetWindowSize(m_window, &screenSize.x, &screenSize.y);
 
-    glm::vec2 screenCoords = { (float)_screenCoords.x, (float)_screenCoords.y };
+    glm::vec2 screenCoords = {(float)_screenCoords.x, (float)_screenCoords.y};
 
     glm::mat4 view = getView();
 
     screenCoords.y = screenSize.y - screenCoords.y;
 
-    glm::vec2 worldCoords =
-      glm::unProject(
-        glm::vec3(screenCoords, -1.0f),
-        view,
-        m_proj,
-        glm::vec4(0.0f, 0.0f, (float)screenSize.x, (float)screenSize.y));
+    glm::vec2 worldCoords = glm::unProject(glm::vec3(screenCoords, -1.0f), view, m_proj,
+                                           glm::vec4(0.0f, 0.0f, (float)screenSize.x, (float)screenSize.y));
 
     return worldCoords;
   }
@@ -177,19 +169,15 @@ public:
 
     glm::mat4 view = getView();
 
-    glm::vec2 screenCoords =
-      glm::project(
-        glm::vec3(screenCoords, -1.0f),
-        view,
-        m_proj,
-        glm::vec4(0.0f, 0.0f, (float)screenSize.x, (float)screenSize.y));
+    glm::vec2 screenCoords = glm::project(glm::vec3(screenCoords, -1.0f), view, m_proj,
+                                          glm::vec4(0.0f, 0.0f, (float)screenSize.x, (float)screenSize.y));
 
     screenCoords.y = screenSize.y - screenCoords.y;
 
     return screenCoords;
   }
 
-private:
+  private:
   Status m_status;
   SDL_GLContext m_glcontext;
   SDL_Window* m_window;

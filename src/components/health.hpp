@@ -6,6 +6,10 @@ struct ContactDamageComponent {
   float damage = 10.0f;
 };
 
+struct BulletDamageComponent {
+  float damage = 10.0f;
+};
+
 struct LifetimeComponent {
   float timeLeft = 1.0f;
 };
@@ -15,22 +19,19 @@ struct HealthComponent {
 };
 
 template <>
-struct glz::meta<ContactDamageComponent>
-{
+struct glz::meta<ContactDamageComponent> {
   using T = ContactDamageComponent;
   static constexpr auto value = object("damage", &T::damage);
 };
 
 template <>
-struct glz::meta<LifetimeComponent>
-{
+struct glz::meta<LifetimeComponent> {
   using T = LifetimeComponent;
   static constexpr auto value = object("timeLeft", &T::timeLeft);
 };
 
 template <>
-struct glz::meta<HealthComponent>
-{
+struct glz::meta<HealthComponent> {
   using T = HealthComponent;
   static constexpr auto value = object("health", &T::health);
 };

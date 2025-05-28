@@ -131,9 +131,9 @@
             "type": "turret",
             "fireRate": 0.00,
             "radius": 10.0,
-            "turnSpeed": 0.12,
-            "shootRange": 0.05,
-            "stopRange": 0.04,
+            "turnSpeed": 0.04,
+            "shootRange": 6.0,
+            "stopRange": 0.02,
             "muzzleVelocity": 10.0,
             "bulletRadius": 0.05,
             "bulletDamage": 100.0
@@ -143,8 +143,8 @@
       "tile": {
         "enableCollision": true,
         "size": {
-          "x": 1,
-          "y": 1
+          "x": 3,
+          "y": 3
         }
       }
     }

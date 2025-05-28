@@ -2,29 +2,23 @@
 
 #include "base.hpp"
 
-template<typename IdType>
+template <typename IdType>
 class IdManager {
-public:
+  public:
   static constexpr IdType maxValidId = std::numeric_limits<IdType>::max();
   static constexpr IdType invalidId = 0;
 
   // set the last biggest id
-  void setLastId(uint32_t lastId) {
-    m_lastId = lastId;
-  }
+  void setLastId(uint32_t lastId) { m_lastId = lastId; }
 
   void setLocalRange(IdType startingId) {
     m_startingLocalRange = startingId;
     m_lastLocalId = m_startingLocalRange;
   }
 
-  void enableRangeCheck(bool enable) {
-    m_enableRangeCheck = enable;
-  }
+  void enableRangeCheck(bool enable) { m_enableRangeCheck = enable; }
 
-  bool idLocked(IdType id) {
-    return m_enableRangeCheck && exists(id);
-  }
+  bool idLocked(IdType id) { return m_enableRangeCheck && exists(id); }
 
   IdType generate() {
     IdType newId = 0;
@@ -92,18 +86,12 @@ public:
     }
   }
 
-  bool exists(IdType id) const {
-    return m_ids.contains(id);
-  }
+  bool exists(IdType id) const { return m_ids.contains(id); }
 
   // Returns the biggest id given out (Applies only for global ids)
-  IdType maxId() const {
-    return m_lastId;
-  }
+  IdType maxId() const { return m_lastId; }
 
-  size_t count() const {
-    return m_ids.size();
-  }
+  size_t count() const { return m_ids.size(); }
 
   bool validRange(IdType id) {
     if (!m_enableRangeCheck)
@@ -112,7 +100,7 @@ public:
     return id >= m_startingLocalRange;
   }
 
-private:
+  private:
   bool m_enableRangeCheck = false;
   IdType m_startingLocalRange = maxValidId;
 

@@ -3,9 +3,10 @@
 class EntityWorld;
 
 class Module {
-public:
+  public:
   virtual ~Module() {}
 
   virtual void run(EntityWorld& world, float deltaTime) {}
-private:
+
+  private:
 };

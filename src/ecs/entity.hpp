@@ -3,7 +3,7 @@
 #include "ref.hpp"
 
 class Entity {
-public:
+  public:
   Entity(EntityWorld& world);
   Entity(EntityWorld& world, EntityId id);
   Entity& operator=(Entity other);
@@ -24,46 +24,43 @@ public:
   void enable();
   void disable();
   Entity clone() const;
+  void copyInto(EntityId id);
 
-  template<typename T>
+  template <typename T>
   void add() {
     add(m_world->component<T>());
   }
 
-  template<typename T>
+  template <typename T>
   void remove() {
     remove(m_world->component<T>());
   }
 
-  template<typename T>
+  template <typename T>
   RefT<T> get() {
     return RefT<T>(*m_world, m_id);
-
   }
-  template<typename T>
+
+  template <typename T>
   bool has() const {
     return has(m_world->component<T>());
   }
 
-  operator EntityId() const {
-    return m_id;
-  }
+  operator EntityId() const { return m_id; }
 
-private:
+  private:
   EntityWorld* m_world;
   EntityId m_id;
 };
 
-inline void* entityToB2Data(const EntityId id) {
-  return reinterpret_cast<void*>(id);
-}
+inline void* entityToB2Data(const EntityId id) { return reinterpret_cast<void*>(id); }
 
 inline Entity b2DataToEntity(EntityWorld& world, void* vp) {
   return world.get(static_cast<EntityId>(reinterpret_cast<uintptr_t>(vp)));
 }
 
-template<typename T, typename ... Params>
-Entity EntityWorld::addModule(Params&& ... args) {
+template <typename T, typename... Params>
+Entity EntityWorld::addModule(Params&&... args) {
   component<ModuleType<T>>();
 
   Entity moduleEntity = create();
@@ -77,7 +74,7 @@ Entity EntityWorld::addModule(Params&& ... args) {
   return moduleEntity;
 }
 
-template<typename T>
+template <typename T>
 void EntityWorld::enableModule() {
   EntityIterator it = getWithDisabled(set<ModuleType<T>>());
   beginDefer();
@@ -87,7 +84,7 @@ void EntityWorld::enableModule() {
   endDefer();
 }
 
-template<typename T>
+template <typename T>
 void EntityWorld::disableModule() {
   EntityIterator it = getWithDisabled(set<ModuleType<T>>());
   beginDefer();
@@ -97,7 +94,7 @@ void EntityWorld::disableModule() {
   endDefer();
 }
 
-template<typename T>
+template <typename T>
 T& EntityWorld::getModule() {
   EntityIterator it = getWithDisabled(set<ModuleType<T>>());
   while (it.hasNext())

@@ -2,10 +2,10 @@
 
 #include "utility/hashes.hpp"
 
-#include "components/tilemap.hpp"
-#include "components/transform.hpp"
 #include "components/body.hpp"
 #include "components/item.hpp"
+#include "components/tilemap.hpp"
+#include "components/transform.hpp"
 
 #include "assetLoader.hpp"
 
@@ -14,7 +14,7 @@ struct ItemStack {
   i32 stackCount = 0;
   EntityId item = 0;
   tgui::BitmapButton::Ptr ui; // do not erase
-  
+
   bool doesExceedMaxStackCost(u8 stackCost, i32 additional) {
     return (stackCount + additional) * stackCost > maxStackCost;
   }
@@ -41,9 +41,8 @@ class Inventory;
 class InventoryManager {
   friend class Inventory;
 
-public:
-  InventoryManager(EntityWorld& world)
-    : m_world(world) {
+  public:
+  InventoryManager(EntityWorld& world) : m_world(world) {
     tgui::Gui& gui = m_world.getContext<tgui::Gui>();
     m_handPicture = tgui::Picture::create();
     m_handPicture->setEnabled(false);
@@ -65,7 +64,7 @@ public:
   void updateHandPos() {
     float x, y;
     SDL_GetMouseState(&x, &y);
-  
+
     m_handPicture->setPosition(x, y);
     m_handPicture->moveToFront();
   }
@@ -87,7 +86,7 @@ public:
 
   void clearHand() {
     m_handInvId = 0;
-    m_handInvPos = { 0, 0 };
+    m_handInvPos = {0, 0};
 
     tgui::Gui& gui = m_world.getContext<tgui::Gui>();
     gui.setOverrideMouseCursor(tgui::Cursor::Type::Arrow);
@@ -95,43 +94,34 @@ public:
     m_handPicture->setVisible(false);
   }
 
-  bool isHandEmpty() {
-    return m_handInvId != 0;
-  }
+  bool isHandEmpty() { return m_handInvId != 0; }
 
   Inventory getHandInventory();
 
-  glm::u16vec2 getHandInventoryPos() {
-    return m_handInvPos;
-  }
+  glm::u16vec2 getHandInventoryPos() { return m_handInvPos; }
 
-protected:
-  InventoryData& getInventoryData(InventoryId id) {
-    return m_inventories.find(id)->second;
-  }
+  protected:
+  InventoryData& getInventoryData(InventoryId id) { return m_inventories.find(id)->second; }
 
-  Entity getEntity(EntityId entity) {
-    return m_world.get(entity);
-  }
+  Entity getEntity(EntityId entity) { return m_world.get(entity); }
 
-private:
+  private:
   EntityWorld& m_world;
-  
+
   tgui::Texture m_defaultTexture;
 
   IdManager<InventoryId> m_idMgr;
   Map<InventoryId, InventoryData> m_inventories;
 
   InventoryId m_handInvId = 0;
-  glm::u16vec2 m_handInvPos = { 0, 0 };
+  glm::u16vec2 m_handInvPos = {0, 0};
   tgui::Picture::Ptr m_handPicture;
 };
 
 /* A proxy class used to extend functionality */
 class Inventory {
-public:
-  Inventory(InventoryManager& mgr, InventoryId id) 
-    : m_mgr(mgr), m_id(id) {}
+  public:
+  Inventory(InventoryManager& mgr, InventoryId id) : m_mgr(mgr), m_id(id) {}
 
   bool addItem(EntityId entity, const glm::u16vec2& pos, u32 count = 1) {
     InventoryData& inv = getData();
@@ -145,9 +135,8 @@ public:
     // If the item is unique, and the itemStack is not empty, return false
     // If the itemStack does contain the same entity, return false
     // If the added stackCost would exceed the maxStackCost, return false
-    if (itemEntity.has<ItemAttrUnique>() && stack.item != 0 || 
-      (entity != stack.item && stack.item != 0) || 
-      (stack.stackCount + count) * stackCost > stack.maxStackCost)
+    if (itemEntity.has<ItemAttrUnique>() && stack.item != 0 || (entity != stack.item && stack.item != 0) ||
+        (stack.stackCount + count) * stackCost > stack.maxStackCost)
       return false;
 
     stack.stackCount += count;
@@ -163,18 +152,18 @@ public:
   }
 
   bool addItem(EntityId entity, u32 count = 1) {
-    InventoryData& inv = getData(); 
-    Entity itemEntity = m_mgr.getEntity(entity); 
+    InventoryData& inv = getData();
+    Entity itemEntity = m_mgr.getEntity(entity);
     u8 stackCost = itemEntity.get<ItemAttrStackCost>()->stackCost;
 
     // If the item is unique, it can only contain one slot.
     if (itemEntity.has<ItemAttrUnique>()) {
-       for (u16 y = 0; y < inv.rows; y++) {
+      for (u16 y = 0; y < inv.rows; y++) {
         for (u16 x = 0; x < inv.cols; x++) {
           if (count == 0)
             return true;
 
-          ItemStack& stack = inv.items.find({ x, y })->second;
+          ItemStack& stack = inv.items.find({x, y})->second;
           if (stack.item == 0) {
             stack.item = itemEntity.clone();
             stack.stackCount = 1;
@@ -187,7 +176,7 @@ public:
       // Search existing stacks to see if any can fit this item
       for (u16 y = 0; y < inv.rows; y++) {
         for (u16 x = 0; x < inv.cols; x++) {
-          ItemStack& stack = inv.items.find({ x, y })->second;
+          ItemStack& stack = inv.items.find({x, y})->second;
           if (stack.doesExceedMaxStackCost(stackCost, count))
             continue;
           if (stack.item == itemEntity) {
@@ -201,7 +190,7 @@ public:
       // Now find the first empty one
       for (u16 y = 0; y < inv.rows; y++) {
         for (u16 x = 0; x < inv.cols; x++) {
-          ItemStack& stack = inv.items.find({ x, y })->second;
+          ItemStack& stack = inv.items.find({x, y})->second;
           if (stack.doesExceedMaxStackCost(stackCost, count))
             continue;
           if (stack.item == 0) {
@@ -218,13 +207,9 @@ public:
     return false; // Inventory is full
   }
 
-  const ItemStack getStack(const glm::u16vec2& pos) const {
-    return getData().items.find(pos)->second;
-  }
+  const ItemStack getStack(const glm::u16vec2& pos) const { return getData().items.find(pos)->second; }
 
-  bool isStackEmpty(const glm::u16vec2& pos) {
-    return getData().items.find(pos)->second.item == 0;
-  }
+  bool isStackEmpty(const glm::u16vec2& pos) { return getData().items.find(pos)->second.item == 0; }
 
   bool swapItems(const glm::u16vec2& posA, InventoryId invIdB, const glm::u16vec2& posB) {
     // its not as bad as it looks i swear
@@ -260,7 +245,7 @@ public:
 
     EntityId aCopyItem = a.item;
     i32 aCopyStackCount = a.stackCount;
-    
+
     a.stackCount = b.stackCount;
     a.item = b.item;
     a.ui->setImage(bIcon);
@@ -344,29 +329,22 @@ public:
       gui.remove(inv.window);
   }
 
-  bool getVisible() const {
-    return getData().m_visible;
-  }
+  bool getVisible() const { return getData().m_visible; }
 
-  operator InventoryId() const {
-    return m_id;
-  }
-     
-protected:
-  InventoryData& getData() {
-    return m_mgr.getInventoryData(m_id);
-  }
+  operator InventoryId() const { return m_id; }
 
-  const InventoryData& getData() const {
-    return m_mgr.getInventoryData(m_id);
-  }
+  protected:
+  InventoryData& getData() { return m_mgr.getInventoryData(m_id); }
 
-private:
+  const InventoryData& getData() const { return m_mgr.getInventoryData(m_id); }
+
+  private:
   InventoryManager& m_mgr;
   InventoryId m_id;
 };
 
-inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& stackPos, const glm::vec2& coords) {
+inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& stackPos,
+                         const glm::vec2& coords) {
   EntityWorld& world = worldMap.world();
   AssetLoader& assetLoader = world.getContext<AssetLoader>();
 
@@ -384,7 +362,7 @@ inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& sta
   const TileDef& tileItemPrefab = assetLoader.getTilePrefab(item.get<ItemAttrTile>()->tileId);
   for (int x = tilePos.x; x < tilePos.x + tileItemPrefab.width(); x++) {
     for (int y = tilePos.y; y < tilePos.y + tileItemPrefab.height(); y++) {
-      glm::i16vec2 tilePos = { x, y };
+      glm::i16vec2 tilePos = {x, y};
 
       if (!bottomTilemap.contains(tilePos))
         continue;
@@ -396,7 +374,7 @@ inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& sta
 
   for (int x = tilePos.x; x < tilePos.x + tileItemPrefab.width(); x++) {
     for (int y = tilePos.y; y < tilePos.y + tileItemPrefab.height(); y++) {
-      glm::i16vec2 tilePos = { x, y };
+      glm::i16vec2 tilePos = {x, y};
 
       if (!topTilemap.contains(tilePos))
         continue;
@@ -409,10 +387,11 @@ inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& sta
   }
 
   inv.removeItem(stackPos);
-  tmLayers->getToptilemap().insert(world, body->id, tilePos, worldMap, assetLoader.cloneTilePrefab(item.get<ItemAttrTile>()->tileId));
+  tmLayers->getToptilemap().insert(world, body->id, tilePos, worldMap,
+                                   assetLoader.cloneTilePrefab(item.get<ItemAttrTile>()->tileId));
 
   if (inv.isStackEmpty(stackPos))
     world.getContext<InventoryManager>().clearHand();
-  
+
   return true;
 }

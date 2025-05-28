@@ -1,9 +1,9 @@
 #pragma once
 
-#include "shapeRender.hpp"
-#include "../components/transform.hpp"
 #include "../components/sprite.hpp"
 #include "../components/tilemap.hpp"
+#include "../components/transform.hpp"
+#include "shapeRender.hpp"
 
 class SpriteRenderModule : public BaseRenderModule {
   static const int instanceBufferFlags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
@@ -22,14 +22,19 @@ class SpriteRenderModule : public BaseRenderModule {
 
     bindInstanceBufferAttribs();
     instances = (Instance*)instanceBuffer.mapBuffer(GL_WRITE_ONLY);
-  } 
+  }
 
   void bindInstanceBufferAttribs() {
-    m_va.addVertexArrayAttrib(instanceBuffer, 2, 2, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, worldPos));
-    m_va.addIntegerVertexArrayAttrib(instanceBuffer, 3, 1, GL_UNSIGNED_SHORT, sizeof(Instance), offsetof(Instance, layer));
-    m_va.addIntegerVertexArrayAttrib(instanceBuffer, 4, 1, GL_UNSIGNED_BYTE, sizeof(Instance), offsetof(Instance, rot5z3));
-    m_va.addIntegerVertexArrayAttrib(instanceBuffer, 5, 1, GL_UNSIGNED_BYTE, sizeof(Instance), offsetof(Instance, dim));
-    m_va.addVertexArrayAttrib(instanceBuffer, 6, 1, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, scale));
+    m_va.addVertexArrayAttrib(instanceBuffer, 2, 2, GL_FLOAT, GL_FALSE, sizeof(Instance),
+                              offsetof(Instance, worldPos));
+    m_va.addIntegerVertexArrayAttrib(instanceBuffer, 3, 1, GL_UNSIGNED_SHORT, sizeof(Instance),
+                                     offsetof(Instance, layer));
+    m_va.addIntegerVertexArrayAttrib(instanceBuffer, 4, 1, GL_UNSIGNED_BYTE, sizeof(Instance),
+                                     offsetof(Instance, rot5z3));
+    m_va.addIntegerVertexArrayAttrib(instanceBuffer, 5, 1, GL_UNSIGNED_BYTE, sizeof(Instance),
+                                     offsetof(Instance, dim));
+    m_va.addVertexArrayAttrib(instanceBuffer, 6, 1, GL_FLOAT, GL_FALSE, sizeof(Instance),
+                              offsetof(Instance, scale));
     m_va.attribDivisor(2, 1);
     m_va.attribDivisor(3, 1);
     m_va.attribDivisor(4, 1);
@@ -37,10 +42,8 @@ class SpriteRenderModule : public BaseRenderModule {
     m_va.attribDivisor(6, 1);
   }
 
-public:
-  static void registerComponents(EntityWorld& world) {
-    world.component<SpriteComponent>();
-  }
+  public:
+  static void registerComponents(EntityWorld& world) { world.component<SpriteComponent>(); }
 
   struct MeshVertex {
     glm::vec2 pos;
@@ -48,8 +51,8 @@ public:
   };
 
   struct Instance {
-    static constexpr u8 zMask      = 0b00000111; // 7
-    static constexpr u8 rotMask    = 0b11111000; // 248 (31)
+    static constexpr u8 zMask = 0b00000111; // 7
+    static constexpr u8 rotMask = 0b11111000; // 248 (31)
     static constexpr u8 dimXMask = 0b00001111; // 15
     static constexpr u8 dimYMask = 0b11110000; // 240 (15)
 
@@ -91,11 +94,14 @@ public:
     }
   };
 
-  SpriteRenderModule(EntityWorld& world, size_t priority, u32 spriteWidth, u32 spriteHeight, u32 maxSprites)
-    : BaseRenderModule(world, priority), m_texArray(spriteWidth, spriteHeight, maxSprites),
-    m_turretSys(m_world.system(m_world.set<TransformComponent, TilemapComponent>(), std::bind(&SpriteRenderModule::meshTilemap, this, std::placeholders::_1, std::placeholders::_2))),
-    m_spriteSys(m_world.system(m_world.set<TransformComponent, SpriteComponent, SpriteIndependentTag>(), std::bind(&SpriteRenderModule::meshSprite, this, std::placeholders::_1, std::placeholders::_2))) {
-  
+  SpriteRenderModule(EntityWorld& world, size_t priority, u32 spriteWidth, u32 spriteHeight, u32 maxSprites) :
+      BaseRenderModule(world, priority), m_texArray(spriteWidth, spriteHeight, maxSprites),
+      m_turretSys(m_world.system(
+          m_world.set<TransformComponent, TilemapComponent>(),
+          std::bind(&SpriteRenderModule::meshTilemap, this, std::placeholders::_1, std::placeholders::_2))),
+      m_spriteSys(m_world.system(
+          m_world.set<TransformComponent, SpriteComponent, SpriteIndependentTag>(),
+          std::bind(&SpriteRenderModule::meshSprite, this, std::placeholders::_1, std::placeholders::_2))) {
     // Mesh Indicies
     std::array<u32, 6> indicies = generateIndicies();
     indexBuffer.bufferData(sizeof(indicies), indicies.data(), GL_STATIC_DRAW);
@@ -104,7 +110,8 @@ public:
     std::array<MeshVertex, 4> mesh = generateDefaultMesh();
     meshBuffer.bufferData(sizeof(mesh), mesh.data(), GL_STATIC_DRAW);
     m_va.addVertexArrayAttrib(meshBuffer, 0, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), 0);
-    m_va.addVertexArrayAttrib(meshBuffer, 1, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), offsetof(MeshVertex, texCoords));
+    m_va.addVertexArrayAttrib(meshBuffer, 1, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex),
+                              offsetof(MeshVertex, texCoords));
 
     // Per Instance
     instanceBuffer.bufferStorage(sizeof(Instance) * capacity, nullptr, instanceBufferFlags);
@@ -125,13 +132,9 @@ public:
     m_sampler.parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
   }
 
-  void run(EntityWorld& world, float deltaTime) override {
+  void run(EntityWorld& world, float deltaTime) override {}
 
-  }
-     
-  void preMesh() override {
-    
-  }
+  void preMesh() override {}
 
   void onMesh() override {
     m_turretSys.run();
@@ -182,12 +185,13 @@ public:
           Vec2 worldPos = transform->getWorldPoint(tm.getLocalTileCenter(tilePos));
           RefT<ArrowComponent> arrow = tileE.get<ArrowComponent>();
 
-          shapeRender.drawLine(worldPos, worldPos + arrow->dir * 0.5f, glm::vec3(1.0f, (float)arrow->generation / 255, 0.0f), 0.01f, 1.0f);
+          shapeRender.drawLine(worldPos, worldPos + arrow->dir * 0.5f,
+                               glm::vec3(1.0f, (float)arrow->generation / 255, 0.0f), 0.01f, 1.0f);
         }
       }
     }
   }
-   
+
   void meshSprite(Entity e, float dt) {
     ShapeRenderModule& shapeRender = e.world().getModule<ShapeRenderModule>();
     RefT<SpriteComponent> sprite = e.get<SpriteComponent>();
@@ -218,7 +222,7 @@ public:
     m_va.bind();
     indexBuffer.bind(GL_ELEMENT_ARRAY_BUFFER);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instanceCount);
-    
+
     instanceCount = 0;
     instances = (Instance*)instanceBuffer.mapBuffer(GL_WRITE_ONLY);
   }
@@ -230,10 +234,10 @@ public:
     u32 id = m_lastFreeTexture++;
     if (!loadSprite(id, path)) {
       m_lastFreeTexture--;
-      return UINT32_MAX; 
+      return UINT32_MAX;
     }
     m_textureIds[name] = id;
-       
+
     return id;
   }
 
@@ -242,8 +246,9 @@ public:
     return m_textureIds.find(name)->second;
   }
 
-  // Gets the sprite located at path, if the sprite with the core name does not exist yet
-  // it is created. if the core name already exists, that sprite will be grabbed instead.
+  // Gets the sprite located at path, if the sprite with the core name does not
+  // exist yet it is created. if the core name already exists, that sprite will
+  // be grabbed instead.
   u32 getSpriteFromPath(const std::string& path) {
     std::string name = getFilename(path);
     if (m_textureIds.contains(name))
@@ -252,8 +257,7 @@ public:
     return loadSprite(path);
   }
 
-
-private:
+  private:
   bool loadSprite(uint32_t index, const std::string& path) {
     assert(index < 256);
 
@@ -278,35 +282,19 @@ private:
   }
 
   std::array<MeshVertex, 4> generateDefaultMesh() {
-    std::array<glm::vec2, 4> tileRect = {
-      glm::vec2(-0.5f, -0.5f),
-      glm::vec2( 0.5f, -0.5f),
-      glm::vec2( 0.5f,  0.5f),
-      glm::vec2(-0.5f,  0.5f)
-    };
+    std::array<glm::vec2, 4> tileRect = {glm::vec2(-0.5f, -0.5f), glm::vec2(0.5f, -0.5f),
+                                         glm::vec2(0.5f, 0.5f), glm::vec2(-0.5f, 0.5f)};
 
-    std::array<glm::vec2, 4> texCoords = {
-      glm::vec2(0.0f, 0.0f),
-      glm::vec2(1.0f, 0.0f),
-      glm::vec2(1.0f, 1.0f),
-      glm::vec2(0.0f, 1.0f)
-    };
+    std::array<glm::vec2, 4> texCoords = {glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
+                                          glm::vec2(0.0f, 1.0f)};
 
-    return {
-      MeshVertex(tileRect[0], texCoords[0]),
-      MeshVertex(tileRect[1], texCoords[1]),
-      MeshVertex(tileRect[2], texCoords[2]),
-      MeshVertex(tileRect[3], texCoords[3])
-    };
+    return {MeshVertex(tileRect[0], texCoords[0]), MeshVertex(tileRect[1], texCoords[1]),
+            MeshVertex(tileRect[2], texCoords[2]), MeshVertex(tileRect[3], texCoords[3])};
   }
 
-  std::array<u32, 6> generateIndicies() {
-    return {
-      0, 1, 2, 2, 3, 0
-    };
-  }
+  std::array<u32, 6> generateIndicies() { return {0, 1, 2, 2, 3, 0}; }
 
-private:
+  private:
   const char* tileVertexShaderSource = R"###(
         #version 400 core
         layout(location = 0) in vec2 pos;
@@ -364,7 +352,7 @@ private:
             fragColor = frag;
         })###";
 
-private:
+  private:
   u32 m_lastFreeTexture = 0;
   Map<std::string, u32> m_textureIds;
 

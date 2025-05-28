@@ -1,10 +1,10 @@
 #pragma once
 
-#include "state.hpp"
-#include "../components/player.hpp"
 #include "../components/arrow.hpp"
 #include "../components/body.hpp"
+#include "../components/player.hpp"
 #include "../components/shapes.hpp"
+#include "state.hpp"
 
 class PlayState : public State {
   const std::string& menuName = "PlayMenu";
@@ -14,21 +14,22 @@ class PlayState : public State {
   const std::string& fpsTextName = "PlayFPS";
   const std::string& activeBodiesTextName = "PlayActiveBodies";
   const std::string& playEntityCountTextName = "PlayEntityCount";
-public:
-  PlayState(EntityWorld& world)
-    : m_world(world) {
+
+  public:
+  PlayState(EntityWorld& world) : m_world(world) {
     m_world.component<OwnedBy<PlayState>>();
-    m_addedPlayerComponents = m_world.set<PlayerComponent, PrimaryTargetTag, BodyComponent, RectangleRenderComponent, InventoryComponent>();
+    m_addedPlayerComponents = m_world.set<PlayerComponent, PrimaryTargetTag, BodyComponent,
+                                          RectangleRenderComponent, InventoryComponent>();
 
     tgui::Gui& gui = m_world.getContext<tgui::Gui>();
     m_menu = world.getContext<tgui::Gui>().get(menuName);
     tgui::Button::Ptr returnBtn = gui.get(returnBtnName)->cast<tgui::Button>();
 
     returnBtn->onMousePress([&]() {
-        StateManager& stateMgr = world.getContext<StateManager>();
-        stateMgr.disableState("PlayState");
-        stateMgr.enableState("MenuState");
-      });
+      StateManager& stateMgr = world.getContext<StateManager>();
+      stateMgr.disableState("PlayState");
+      stateMgr.enableState("MenuState");
+    });
 
     m_tickText = gui.get(tickTextName)->cast<tgui::Label>();
     m_tpsText = gui.get(tpsTextName)->cast<tgui::Label>();
@@ -36,20 +37,20 @@ public:
     m_activeBodiesText = gui.get(activeBodiesTextName)->cast<tgui::Label>();
     m_entityCountText = gui.get(playEntityCountTextName)->cast<tgui::Label>();
 
-    m_bodyCallback =
-      [&](int x, int y) {
-        auto& loader = m_world.getContext<AssetLoader>();
+    Entity base = m_world.create();
+    base.disable();
+    base.add<OwnedBy<PlayState>>();
 
-        std::string enemyType = "BasicZombie";
-        if (rand() % 20 < 5)
-          enemyType = "BigAssZombie";
+    m_bodyCallback = [this, baseId = base.id()](int x, int y) {
+      auto& loader = m_world.getContext<AssetLoader>();
 
-        Entity seeker = loader.getPrefab(enemyType).clone();
-        seeker.add<SubmitToCollisionQueueComponent>();
-        seeker.get<SubmitToCollisionQueueComponent>()->queue = world.getModule<PathfindingModule>().getContactDamageQueue();
-        // fixed cloned components not clong or whajngoiadwoijawd
-        seeker.get<TransformComponent>()->pos = Vec2(x * 0.3f - 7, y * 0.3f + 14 );
-        seeker.add<OwnedBy<PlayState>>();
+      std::string enemyType = "BasicZombie";
+      if (rand() % 20 < 1)
+        enemyType = "BigAssZombie";
+
+      Entity seeker = loader.getPrefab(enemyType).clone();
+      m_world.get(baseId).copyInto(seeker);
+      seeker.get<TransformComponent>()->pos = Vec2(x * 0.3f - 7, y * 0.3f + 14);
     };
   }
 
@@ -98,7 +99,8 @@ public:
 
     /* WorldMap & Tilemap Component */
 
-    { // World Map
+    {
+      // World Map
       Entity tm = m_world.create();
       tm.add<TransformComponent>();
       tm.add<BodyComponent>();
@@ -114,23 +116,21 @@ public:
       bodyDef.position = Vec2(0, 0);
       b2BodyId bodyId = b2CreateBody(physicsWorld, &bodyDef);
       tm.get<BodyComponent>()->id = bodyId;
-      
+
       RefT<TilemapComponent> tilemapLayers = tm.get<TilemapComponent>();
       Tilemap& worldLayer = tilemapLayers->getTilemap(TilemapWorldLayer);
-      auto tileCallback =
-        [&](int x, int y) {
-          if (x <= -35 || x >= 35 || y <= -35 || y >= 35 || (x % 5 == 0 && y < 20 && y != -34)) {
-            TileDef highStone = assetLoader.cloneTilePrefab("PermaHighStoneTile");
-            worldLayer.insert(m_world, bodyId, { x, y }, tm, highStone);
-          }
-          else if (rand() % 100 < 5) {
-            TileDef unknown = assetLoader.cloneTilePrefab("UnknownTile");
-            worldLayer.insert(m_world, bodyId, { x, y }, tm, unknown);
-          } else {
-            TileDef stone = assetLoader.cloneTilePrefab("StoneFloorTile");
-            worldLayer.insert(m_world, bodyId, { x, y }, tm, stone);
-          }
-        };
+      auto tileCallback = [&](int x, int y) {
+        if (x <= -35 || x >= 35 || y <= -35 || y >= 35 || (x % 5 == 0 && y < 20 && y != -34)) {
+          TileDef highStone = assetLoader.cloneTilePrefab("PermaHighStoneTile");
+          worldLayer.insert(m_world, bodyId, {x, y}, tm, highStone);
+        } else if (rand() % 100 < 5) {
+          TileDef unknown = assetLoader.cloneTilePrefab("UnknownTile");
+          worldLayer.insert(m_world, bodyId, {x, y}, tm, unknown);
+        } else {
+          TileDef stone = assetLoader.cloneTilePrefab("StoneFloorTile");
+          worldLayer.insert(m_world, bodyId, {x, y}, tm, stone);
+        }
+      };
 
       callInGrid(-37, -37, 37, 37, tileCallback);
     }
@@ -145,7 +145,16 @@ public:
     m_tpsText->setText("TPS: " + std::to_string(appStats.tps));
     m_fpsText->setText("FPS: " + std::to_string(appStats.fps));
     m_activeBodiesText->setText("Active Rigid Bodies: " + std::to_string(activeBodies));
-    m_entityCountText->setText("Entity Count: " + std::to_string(m_world.getEntityCount()));
+    int count = 0;
+    auto eIt = m_world.getWith(
+        m_world.set<LifetimeComponent, HealthComponent, ContactDamageComponent, BodyComponent,
+                    SubmitToCollisionQueueComponent, CircleRenderComponent, TransformComponent>());
+    while (eIt.hasNext()) {
+      eIt.next();
+      count++;
+    }
+
+    m_entityCountText->setText("Set Count: " + std::to_string(m_world.getSetCount()));
 
     b2WorldId physicsWorld = m_world.getContext<b2WorldId>();
     if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F3]) {
@@ -156,7 +165,7 @@ public:
   void onLeave() {
     Entity player = m_world.getFirstWith(m_world.set<CameraComponent>());
 
-    m_world.destroyAllEntitiesWith(m_world.set<OwnedBy<PlayState>>());
+    m_world.destroyAllEntitiesWith(m_world.set<OwnedBy<PlayState>, EntityWorld::Enabled>());
     player.remove(m_addedPlayerComponents);
     m_world.disableModule<PhysicsModule>();
     m_world.disableModule<PathfindingModule>();
@@ -166,7 +175,7 @@ public:
     m_menu->setVisible(false);
   }
 
-private:
+  private:
   std::function<void(int, int)> m_bodyCallback;
   tgui::Label::Ptr m_tickText;
   tgui::Label::Ptr m_tpsText;

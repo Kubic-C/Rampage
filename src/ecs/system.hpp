@@ -1,16 +1,15 @@
 #pragma once
 
-#include "world.hpp"
 #include "entity.hpp"
+#include "world.hpp"
 
 class System {
   friend class EntityWorld;
 
-protected:
-  System(const EntityIterator& it, const EntityWorld::SystemFunc& func)
-    : m_it(it), m_func(func) {
-  }
-public:
+  protected:
+  System(const EntityIterator& it, const EntityWorld::SystemFunc& func) : m_it(it), m_func(func) {}
+
+  public:
   void run(float deltaTime = 0.0f) {
     EntityWorld& world = m_it.getWorld();
 
@@ -22,7 +21,7 @@ public:
     world.endDefer();
   }
 
-private:
+  private:
   EntityIterator m_it;
   EntityWorld::SystemFunc m_func;
 };

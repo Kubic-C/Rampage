@@ -1,5 +1,27 @@
 set(BUILD_SHARED_LIBS OFF)
 
+# Needed Boost libraries' dependencies
+add_subdirectory("boost/assert")
+add_subdirectory("boost/static_assert")
+add_subdirectory("boost/config")
+add_subdirectory("boost/intrusive")
+add_subdirectory("boost/move")
+add_subdirectory("boost/throw_exception")
+add_subdirectory("boost/type_traits")
+add_subdirectory("boost/winapi")
+add_subdirectory("boost/predef")
+add_subdirectory("boost/mp11")
+add_subdirectory("boost/container_hash")
+add_subdirectory("boost/describe")
+add_subdirectory("boost/core")
+add_subdirectory("boost/integer")
+
+# Needed Boost libraries
+add_subdirectory("boost/container")
+add_subdirectory("boost/pool")
+add_subdirectory("boost/type_index")
+add_subdirectory("boost/unordered")
+
 set(BOX2D_SAMPLES OFF)
 set(BOX2D_UNIT_TESTS OFF)
 add_subdirectory("box2d")

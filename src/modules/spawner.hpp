@@ -1,8 +1,8 @@
 #pragma once
 
+#include <random>
 #include "../components/spawner.hpp"
 #include "../components/transform.hpp"
-#include <random>
 
 class SpawnerModule : public Module {
   struct SpawnAt {
@@ -16,15 +16,13 @@ class SpawnerModule : public Module {
     while (true) {
       float x = unif();
       float y = unif();
-      if(x * x + y * y <= 1)
+      if (x * x + y * y <= 1)
         return Vec2(x, y) * r
     }
   }
 
-public:
-  SpawnerModule(EntityWorld& world) {
-    world.component<SpawnerComponent>();
-  }
+  public:
+  SpawnerModule(EntityWorld& world) { world.component<SpawnerComponent>(); }
 
   void run(EntityWorld& world, float deltaTime) {
     EntityIterator it = world.getWith(world.set<TransformComponent, SpawnerComponent>());
@@ -33,7 +31,7 @@ public:
     world.beginDefer();
     while (it.hasNext()) {
       Entity e = it.next();
-      
+
       RefT<TransformComponent> transform = e.get<TransformComponent>();
       RefT<SpawnerComponent> spawner = e.get<SpawnerComponent>();
 
@@ -44,7 +42,7 @@ public:
         for (u32 i = 0; i < spawner->spawnCount; i++) {
           Vec2 point = getUniformCircularPoint(spawner->spawnableRadius);
 
-          spawned.push_back({ spawner->spawn, point });
+          spawned.push_back({spawner->spawn, point});
         }
       }
     }
@@ -56,5 +54,5 @@ public:
     }
   }
 
-private:
+  private:
 };

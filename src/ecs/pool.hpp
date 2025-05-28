@@ -3,7 +3,7 @@
 #include "id.hpp"
 
 class IPool {
-public:
+  public:
   virtual ~IPool() = default;
 
   virtual u8* create(EntityId id) = 0;
@@ -11,18 +11,16 @@ public:
   virtual bool exists(EntityId id) = 0;
   virtual u8* get(EntityId id) = 0;
 
-  template<typename T>
+  template <typename T>
   T& get(EntityId id) {
     return *(T*)get(id);
   }
 };
 
-template<typename T>
+template <typename T>
 class Pool : public IPool {
-public:
-  static IPool* createPool() {
-    return new Pool();
-  }
+  public:
+  static IPool* createPool() { return new Pool(); }
 
   u8* create(EntityId id) override {
     assert(!exists(id));
@@ -36,28 +34,25 @@ public:
     m_objects.erase(id);
   }
 
-  bool exists(EntityId id) override {
-    return m_objects.find(id) != m_objects.end();
-  }
+  bool exists(EntityId id) override { return m_objects.find(id) != m_objects.end(); }
 
-  u8* get(EntityId id)override {
+  u8* get(EntityId id) override {
     assert(exists(id));
     return (u8*)m_objects.at(id);
   }
 
-private:
+  private:
   Map<EntityId, T*> m_objects;
   boost::object_pool<T> m_pool;
 };
 
 /* Component pointers and references may be invalidated*/
-template<typename T>
+template <typename T>
 class SparsePool : public IPool {
   static constexpr std::size_t npos = static_cast<std::size_t>(-1);
-public:
-  static IPool* createPool() {
-    return new SparsePool<T>();
-  }
+
+  public:
+  static IPool* createPool() { return new SparsePool<T>(); }
 
   u8* create(EntityId id) override {
     assert(!exists(id));
@@ -90,9 +85,7 @@ public:
     m_sparse[id] = npos;
   }
 
-  bool exists(EntityId id) override {
-    return m_sparse.size() > id && m_sparse[id] != npos;
-  }
+  bool exists(EntityId id) override { return m_sparse.size() > id && m_sparse[id] != npos; }
 
   u8* get(EntityId id) override {
     assert(exists(id));
@@ -100,8 +93,8 @@ public:
     return reinterpret_cast<u8*>(&m_dense[m_sparse[id]].value());
   }
 
-private:
+  private:
   std::vector<size_t> m_freed;
   std::vector<std::optional<T>> m_dense;
   std::vector<size_t> m_sparse;
-}; 
+};

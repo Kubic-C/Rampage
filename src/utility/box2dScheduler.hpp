@@ -1,7 +1,7 @@
 #pragma once
 
-#include "base.hpp"
 #include "TaskScheduler.hpp"
+#include "base.hpp"
 
 struct b2TaskSet : public enki::ITaskSet {
   b2TaskCallback* m_task = nullptr;
@@ -12,7 +12,8 @@ struct b2TaskSet : public enki::ITaskSet {
   }
 };
 
-inline void* enki_b2EnqueueTaskCallback(b2TaskCallback* task, int itemCount, int minRange, void* taskContext, void* userContext) {
+inline void* enki_b2EnqueueTaskCallback(b2TaskCallback* task, int itemCount, int minRange, void* taskContext,
+                                        void* userContext) {
   enki::TaskScheduler& scheduler = *reinterpret_cast<enki::TaskScheduler*>(userContext);
 
   b2TaskSet* taskSet = new b2TaskSet();

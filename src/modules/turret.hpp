@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../components/transform.hpp"
 #include "../components/health.hpp"
+#include "../components/transform.hpp"
 #include "../components/turret.hpp"
 
 class TurretModule : public Module {
@@ -40,25 +40,32 @@ class TurretModule : public Module {
     return diff;
   }
 
-  const Vec2 right = { 1.0f, 0.0f };
-public:
-  static void registerComponents(EntityWorld& world) {
-    world.component<TurretComponent>();
-  }
+  const Vec2 right = {1.0f, 0.0f};
 
-  TurretModule(EntityWorld& world) 
-    : m_turretSys(world.system(world.set<TransformComponent, TurretComponent>(), std::bind(&TurretModule::turretSystem, this, std::placeholders::_1, std::placeholders::_2))),
-    m_collisionQueue(world.create()) {
+  public:
+  static void registerComponents(EntityWorld& world) { world.component<TurretComponent>(); }
 
+  TurretModule(EntityWorld& world) :
+      m_turretSys(world.system(
+          world.set<TransformComponent, TurretComponent>(),
+          std::bind(&TurretModule::turretSystem, this, std::placeholders::_1, std::placeholders::_2))),
+      m_collisionQueue(world.create()) {
     m_collisionQueue.add<CollisionQueueComponent>();
+
+    world.observe(EntityWorld::EventType::Add, world.component<BulletDamageComponent>(),
+                  world.set<EntityWorld::Enabled>(), [&](Entity e) {
+                    e.add<SubmitToCollisionQueueComponent>();
+                    RefT<SubmitToCollisionQueueComponent> queue = e.get<SubmitToCollisionQueueComponent>();
+                    queue->queue = m_collisionQueue;
+                  });
   }
-     
+
   void turretSystem(Entity e, float dt) {
     b2WorldId physicsWorld = e.world().getContext<b2WorldId>();
     RefT<TransformComponent> transform = e.get<TransformComponent>();
     RefT<TurretComponent> turret = e.get<TurretComponent>();
     RefT<SpriteComponent> sprite = e.get<SpriteComponent>();
-    
+
     ClosestShape closestShape;
     closestShape.center = transform->pos;
     b2ShapeProxy proxy;
@@ -66,7 +73,7 @@ public:
     proxy.points[0] = transform->pos;
     proxy.radius = turret->radius;
     b2QueryFilter filter;
-    filter.maskBits = Enemy; 
+    filter.maskBits = Enemy;
     filter.categoryBits = All;
     b2World_OverlapShape(physicsWorld, &proxy, filter, &queryClosest, &closestShape);
     if (!b2Shape_IsValid(closestShape.shape))
@@ -112,26 +119,32 @@ public:
 
   void run(EntityWorld& world, float deltaTime) override {
     RefT<CollisionQueueComponent> queue = m_collisionQueue.get<CollisionQueueComponent>();
-    for (CollisionQueueComponent::Collision& collision : queue->queue) {
-      // its possible for a bullet to be destroyed by the HealthModule before we can get to it.
-      if (!world.isAlive(collision.primary))
+    for (const CollisionQueueComponent::Collision& collision : queue->queue) {
+      // its possible for a bullet to be destroyed by the HealthModule before we
+      // can get to it.
+      if (!world.isAlive(collision.primary)) {
+        logGeneric("Bullet not alive, skipping!\n");
         continue;
+      }
       Entity bullet = world.get(collision.primary);
-      // its possible for a enemy to be destroyed by the HealthModule before we can get to it.
-      if (!world.isAlive(collision.secondary))
+      // its possible for a enemy to be destroyed by the HealthModule before we
+      // can get to it.
+      if (!world.isAlive(collision.secondary)) {
+        logGeneric("Zombie not alive, skipping!\n");
         continue;
+      }
       Entity other = world.get(collision.secondary);
 
       assert(other.has<HealthComponent>());
 
       RefT<HealthComponent> health = other.get<HealthComponent>();
-      RefT<ContactDamageComponent> damage = bullet.get<ContactDamageComponent>();
+      RefT<BulletDamageComponent> damage = bullet.get<BulletDamageComponent>();
       health->health -= damage->damage;
 
       RefT<HealthComponent> bulletHealth = bullet.get<HealthComponent>();
       bulletHealth->health -= damage->damage * 0.1f;
 
-      //logGeneric("Shot: %i\n", collision.primary);
+      logGeneric("Shot: %i\n", collision.primary);
     }
     queue->queue.clear();
 
@@ -140,7 +153,8 @@ public:
     b2WorldId physicsWorld = world.getContext<b2WorldId>();
     for (SummonBullet& bullet : m_summonBullets) {
       Entity bulletEntity = world.create();
-      bulletEntity.add(world.set<LifetimeComponent, HealthComponent, ContactDamageComponent, BodyComponent, SubmitToCollisionQueueComponent, CircleRenderComponent, TransformComponent>());
+      bulletEntity.add(world.set<LifetimeComponent, HealthComponent, BulletDamageComponent, BodyComponent,
+                                 CircleRenderComponent, TransformComponent>());
 
       bulletEntity.get<TransformComponent>()->pos = bullet.pos;
 
@@ -148,16 +162,15 @@ public:
       cirlceRender->radius = bullet.radius;
       cirlceRender->color = glm::vec3(1.0f, 1.0f, 0.0f);
 
-      bulletEntity.get<SubmitToCollisionQueueComponent>()->queue = m_collisionQueue;
-
       bulletEntity.get<HealthComponent>()->health = bullet.health;
-      bulletEntity.get<ContactDamageComponent>()->damage = bullet.damage;
+      bulletEntity.get<BulletDamageComponent>()->damage = bullet.damage;
 
       RefT<BodyComponent> bodyComp = bulletEntity.get<BodyComponent>();
       b2BodyDef bodyDef = b2DefaultBodyDef();
       bodyDef.type = b2_dynamicBody;
       bodyDef.linearVelocity = bullet.shootVelocity;
       bodyDef.position = bullet.pos;
+      bodyDef.userData = entityToB2Data(bulletEntity);
       bodyComp->id = b2CreateBody(physicsWorld, &bodyDef);
       b2Circle circle;
       circle.center = Vec2(0);
@@ -175,7 +188,8 @@ public:
     }
     m_summonBullets.clear();
   }
-private:
+
+  private:
   System m_turretSys;
   std::vector<SummonBullet> m_summonBullets;
   Entity m_collisionQueue;

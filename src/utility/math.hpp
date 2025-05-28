@@ -5,17 +5,13 @@
 struct Vec2 : glm::vec2 {
   Vec2() {}
 
-  Vec2(float scalar)
-    : glm::vec2(scalar) {}
+  Vec2(float scalar) : glm::vec2(scalar) {}
 
-  Vec2(float x, float y)
-    : glm::vec2(x, y) {}
+  Vec2(float x, float y) : glm::vec2(x, y) {}
 
-  Vec2(const glm::vec2& other)
-    : glm::vec2(other) {}
+  Vec2(const glm::vec2& other) : glm::vec2(other) {}
 
-  Vec2(const b2Vec2& other)
-    : glm::vec2(other.x, other.y) {}
+  Vec2(const b2Vec2& other) : glm::vec2(other.x, other.y) {}
 
   Vec2& operator=(const b2Vec2& other) {
     x = other.x;
@@ -23,21 +19,13 @@ struct Vec2 : glm::vec2 {
     return *this;
   }
 
-  b2Vec2 b2() const {
-    return b2Vec2(x, y);
-  }
+  b2Vec2 b2() const { return b2Vec2(x, y); }
 
-  operator b2Vec2() const {
-    return b2();
-  }
+  operator b2Vec2() const { return b2(); }
 
-  tgui::Vector2f tgui() const {
-    return tgui::Vector2f(x, y);
-  }
+  tgui::Vector2f tgui() const { return tgui::Vector2f(x, y); }
 
-  operator tgui::Vector2f() const {
-    return tgui();
-  }
+  operator tgui::Vector2f() const { return tgui(); }
 };
 
 struct Rot : b2Rot {
@@ -56,25 +44,13 @@ struct Rot : b2Rot {
     c = cosf(angle);
   }
 
-  float radians() const {
-    return b2Rot_GetAngle(*this);
-  }
+  float radians() const { return b2Rot_GetAngle(*this); }
 
-  operator float() const {
-    return radians();
-  }
+  operator float() const { return radians(); }
 
-  bool operator==(const b2Rot& other) const {
-    return
-      s == other.s &&
-      c == other.c;
-  }
+  bool operator==(const b2Rot& other) const { return s == other.s && c == other.c; }
 
-  bool operator!=(const b2Rot& other) const {
-    return
-      s != other.s ||
-      c != other.c;
-  }
+  bool operator!=(const b2Rot& other) const { return s != other.s || c != other.c; }
 
   Rot operator-(const Rot& other) const {
     Rot dif;
@@ -96,17 +72,13 @@ struct Transform {
   Rot rot = Rot(0);
 
   Transform() = default;
-  
-  Transform(const Vec2& pos, const Rot& rot)
-    : pos(pos), rot(rot) {}
 
-  Transform(const b2Transform& other)
-    : pos(other.p), rot(other.q) {}
+  Transform(const Vec2& pos, const Rot& rot) : pos(pos), rot(rot) {}
 
-  operator b2Transform() const {
-    return b2Transform(pos.b2(), rot);
-  }
-  
+  Transform(const b2Transform& other) : pos(other.p), rot(other.q) {}
+
+  operator b2Transform() const { return b2Transform(pos.b2(), rot); }
+
   Transform& operator=(const b2Transform& other) {
     pos = other.p;
     rot = other.q;
@@ -114,32 +86,24 @@ struct Transform {
   }
 
   bool operator==(const b2Transform& other) const {
-    return 
-      pos.x == other.p.x && 
-      pos.y == other.p.y && 
-      rot == other.q;
+    return pos.x == other.p.x && pos.y == other.p.y && rot == other.q;
   }
 
   bool operator!=(const b2Transform& other) const {
-    return 
-      pos.x != other.p.x || 
-      pos.y != other.p.y || 
-      rot != other.q;
+    return pos.x != other.p.x || pos.y != other.p.y || rot != other.q;
   }
 
-  Vec2 getWorldPoint(const Vec2& localPos) const {
-    return b2TransformPoint((b2Transform)*this, localPos);
-  }
+  Vec2 getWorldPoint(const Vec2& localPos) const { return b2TransformPoint((b2Transform) * this, localPos); }
 
   Vec2 getLocalPoint(const Vec2& worldPos) const {
-    return b2InvTransformPoint((b2Transform)*this, worldPos);
+    return b2InvTransformPoint((b2Transform) * this, worldPos);
   }
 
   glm::mat4 matrix() const {
     glm::mat4 model = glm::identity<glm::mat4>();
     model = glm::translate(model, glm::vec3(pos, 0.0f));
     model = glm::rotate(model, rot.radians(), glm::vec3(0.0f, 0.0f, 1.0f));
-    
+
     return model;
   }
 };
@@ -148,9 +112,7 @@ inline bool isApprox(Vec2 value1, Vec2 value2, float max) {
   return isApprox(value1.x, value2.x, max) && isApprox(value1.y, value2.y, max);
 }
 
-inline float angleOf(const Vec2& vec) {
-  return atan2(vec.y, vec.x);
-}
+inline float angleOf(const Vec2& vec) { return atan2(vec.y, vec.x); }
 
 inline Vec2 fast2DRotate(const Vec2& vec, float angle) {
   Vec2 rotVec;
@@ -164,7 +126,7 @@ inline Vec2 fast2DRotate(const Vec2& vec, float angle) {
   return rotVec;
 }
 
-template<typename T>
+template <typename T>
 void callInGrid(int startx, int starty, int w, int h, T&& callback) {
   int x = startx;
   int y = starty;
@@ -195,19 +157,19 @@ constexpr size_t maxNumberBits(size_t numBits) {
   return num + 1;
 }
 
-template<>
+template <>
 struct glz::meta<glm::i16vec2> {
   using T = glm::i16vec2;
   static constexpr auto value = object("x", &T::x, "y", &T::y);
 };
 
-template<>
+template <>
 struct glz::meta<glm::u16vec2> {
   using T = glm::u16vec2;
   static constexpr auto value = object("x", &T::x, "y", &T::y);
 };
 
-template<>
+template <>
 struct glz::meta<Vec2> {
   using T = Vec2;
   static constexpr auto value = object("x", &T::x, "y", &T::y);

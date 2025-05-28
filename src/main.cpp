@@ -1,11 +1,11 @@
 ﻿#include "app.hpp"
 
 int main() {
-	logInit();
+  logInit();
 
-	App app("Rampage", 60);
-	if (app.getStatus() == Status::CriticalError)
-		return -1;
+  App app("Rampage", 60);
+  if (app.getStatus() == Status::CriticalError)
+    return -1;
 
-	return app.run();
+  return app.run();
 }

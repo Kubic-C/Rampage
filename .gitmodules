@@ -22,3 +22,57 @@
 [submodule "deps/SDL_ttf"]
 	path = deps/SDL_ttf
 	url = https://github.com/libsdl-org/SDL_ttf
+[submodule "deps/boost/pool"]
+	path = deps/boost/pool
+	url = https://github.com/boostorg/pool
+[submodule "deps/boost/container"]
+	path = deps/boost/container
+	url = https://github.com/boostorg/container
+[submodule "deps/boost/type_index"]
+	path = deps/boost/type_index
+	url = https://github.com/boostorg/type_index
+[submodule "deps/boost/unordered"]
+	path = deps/boost/unordered
+	url = https://github.com/boostorg/unordered
+[submodule "deps/boost/assert"]
+	path = deps/boost/assert
+	url = https://github.com/boostorg/assert
+[submodule "deps/boost/core"]
+	path = deps/boost/core
+	url = https://github.com/boostorg/core
+[submodule "deps/boost/config"]
+	path = deps/boost/config
+	url = https://github.com/boostorg/config
+[submodule "deps/boost/intrusive"]
+	path = deps/boost/intrusive
+	url = https://github.com/boostorg/intrusive
+[submodule "deps/boost/move"]
+	path = deps/boost/move
+	url = https://github.com/boostorg/move
+[submodule "deps/boost/integer"]
+	path = deps/boost/integer
+	url = https://github.com/boostorg/integer
+[submodule "deps/boost/static_assert"]
+	path = deps/boost/static_assert
+	url = https://github.com/boostorg/static_assert
+[submodule "deps/boost/throw_exception"]
+	path = deps/boost/throw_exception
+	url = https://github.com/boostorg/throw_exception
+[submodule "deps/boost/type_traits"]
+	path = deps/boost/type_traits
+	url = https://github.com/boostorg/type_traits
+[submodule "deps/boost/winapi"]
+	path = deps/boost/winapi
+	url = https://github.com/boostorg/winapi
+[submodule "deps/boost/predef"]
+	path = deps/boost/predef
+	url = https://github.com/boostorg/predef
+[submodule "deps/boost/container_hash"]
+	path = deps/boost/container_hash
+	url = https://github.com/boostorg/container_hash
+[submodule "deps/boost/describe"]
+	path = deps/boost/describe
+	url = https://github.com/boostorg/describe
+[submodule "deps/boost/mp11"]
+	path = deps/boost/mp11
+	url = https://github.com/boostorg/mp11

@@ -1,14 +1,15 @@
 #pragma once
 
-#include "../components/transform.hpp"
 #include "../components/body.hpp"
 #include "../components/collisionQueue.hpp"
+#include "../components/transform.hpp"
 
 inline void copyTransformsIntoBodies(RefT<TransformComponent> transform, RefT<BodyComponent> body) {
   if (!b2Body_IsValid(body->id))
     return;
 
-  /* SetTransform is expensive to call, only set the transform of the body if transform does not match*/
+  /* SetTransform is expensive to call, only set the transform of the body if
+   * transform does not match*/
   if (*transform != b2Body_GetTransform(body->id)) {
     b2Body_SetTransform(body->id, transform->pos, transform->rot);
   }
@@ -26,10 +27,10 @@ inline void copyBodiesIntoTransforms(RefT<TransformComponent> transform, RefT<Bo
 }
 
 struct PhysicsModule : Module {
-private:
+  private:
   inline static bool m_created = false;
-public:
 
+  public:
   static void registerComponents(EntityWorld& world) {
     world.component<BodyComponent>();
     world.component<TransformComponent>();
@@ -37,8 +38,7 @@ public:
     world.component<SubmitToCollisionQueueComponent>();
   }
 
-  PhysicsModule(EntityWorld& world, int steps)
-    : m_steps(steps) {
+  PhysicsModule(EntityWorld& world, int steps) : m_steps(steps) {
     if (m_created) {
       logGeneric("PhysicsModule can not be instanced twice\n");
       throw std::runtime_error("Error: double instanced");
@@ -48,20 +48,22 @@ public:
     world.component<AddBodyComponent>();
     world.component<AddShapeComponent>();
 
-    world.observe(EntityWorld::EventType::Remove, world.component<BodyComponent>(), {},
-      [&](Entity e) {
-        auto it = m_ongoingCollisions.find(e);
-        if (it != m_ongoingCollisions.end()) {
-          for (EntityId other : it->second) {
-            m_ongoingCollisions[other].erase(e);
-            if (m_ongoingCollisions[other].empty())
-              m_ongoingCollisions.erase(other);
-          }
-          m_ongoingCollisions.erase(it);
-          if (e.has<SubmitToCollisionQueueComponent>())
-            e.world().get(e.get<SubmitToCollisionQueueComponent>()->queue).get<CollisionQueueComponent>()->queue.clear();
+    world.observe(EntityWorld::EventType::Remove, world.component<BodyComponent>(), {}, [&](Entity e) {
+      auto it = m_ongoingCollisions.find(e);
+      if (it != m_ongoingCollisions.end()) {
+        for (EntityId other : it->second) {
+          m_ongoingCollisions[other].erase(e);
+          if (m_ongoingCollisions[other].empty())
+            m_ongoingCollisions.erase(other);
         }
-      });
+        m_ongoingCollisions.erase(it);
+      }
+      if (e.has<SubmitToCollisionQueueComponent>())
+        e.world()
+            .get(e.get<SubmitToCollisionQueueComponent>()->queue)
+            .get<CollisionQueueComponent>()
+            ->queue.clear();
+    });
   }
 
   void run(EntityWorld& world, float deltaTime) override final {
@@ -85,8 +87,8 @@ public:
 
     b2ContactEvents events = b2World_GetContactEvents(physicsWorldId);
     for (int i = 0; i < events.beginCount; i++) {
-      const b2ContactBeginTouchEvent& touch = events.beginEvents[i]; 
-      
+      const b2ContactBeginTouchEvent& touch = events.beginEvents[i];
+
       void* Ab2Data = b2Shape_GetUserData(touch.shapeIdA);
       void* Bb2Data = b2Shape_GetUserData(touch.shapeIdB);
       if (!Ab2Data || !Bb2Data)
@@ -100,9 +102,10 @@ public:
     for (int i = 0; i < events.endCount; i++) {
       const b2ContactEndTouchEvent& touch = events.endEvents[i];
 
-      if (!b2Shape_IsValid(touch.shapeIdA) || 
-          !b2Shape_IsValid(touch.shapeIdB))
+      if (!b2Shape_IsValid(touch.shapeIdA) || !b2Shape_IsValid(touch.shapeIdB)) {
+        logGeneric("Invalid body!\n");
         continue;
+      }
 
       void* Ab2Data = b2Shape_GetUserData(touch.shapeIdA);
       void* Bb2Data = b2Shape_GetUserData(touch.shapeIdB);
@@ -189,11 +192,9 @@ public:
     world.endDefer();
   }
 
-  Map<EntityId, std::set<EntityId>>& getOngoingCollisions() {
-    return m_ongoingCollisions;
-  }
+  Map<EntityId, std::set<EntityId>>& getOngoingCollisions() { return m_ongoingCollisions; }
 
-private:
+  private:
   int m_steps;
 
   Map<EntityId, std::set<EntityId>> m_ongoingCollisions;

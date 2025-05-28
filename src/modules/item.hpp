@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../inventory.hpp"
 #include "../components/item.hpp"
+#include "../inventory.hpp"
 
 class ItemModule : public Module {
-public:
+  public:
   static void registerComponents(EntityWorld& world) {
     world.component<ItemAttrStackCost>();
     world.component<ItemAttrUnique>();
@@ -12,16 +12,14 @@ public:
     world.component<ItemAttrTile>();
     world.component<TileItemComponent>();
 
-    world.observe(EntityWorld::EventType::Remove, world.component<InventoryComponent>(), {},
-      [](Entity e) {
-        InventoryManager& mgr = e.world().getContext<InventoryManager>();
-        if (mgr.hasInventory(e.get<InventoryComponent>()->id))
-          mgr.destroyInventory(e.get<InventoryComponent>()->id);
-      });
+    world.observe(EntityWorld::EventType::Remove, world.component<InventoryComponent>(), {}, [](Entity e) {
+      InventoryManager& mgr = e.world().getContext<InventoryManager>();
+      if (mgr.hasInventory(e.get<InventoryComponent>()->id))
+        mgr.destroyInventory(e.get<InventoryComponent>()->id);
+    });
   }
 
-  ItemModule(EntityWorld& world)
-    : m_world(world) {}
+  ItemModule(EntityWorld& world) : m_world(world) {}
 
   void run(EntityWorld& world, float deltaTime) override {
     InventoryManager& itemMgr = m_world.getContext<InventoryManager>();
@@ -32,6 +30,6 @@ public:
     }
   }
 
-private:
+  private:
   EntityWorld& m_world;
 };

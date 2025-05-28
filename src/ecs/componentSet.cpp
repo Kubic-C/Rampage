@@ -1,12 +1,10 @@
 #include "componentSet.hpp"
 
-ComponentSet::ComponentSet(const std::vector<ComponentId>& ids)
-  : m_comps(ids) {
+ComponentSet::ComponentSet(const std::vector<ComponentId>& ids) : m_comps(ids) {
   std::sort(m_comps.begin(), m_comps.end());
 }
 
-ComponentSet::ComponentSet(const std::initializer_list<ComponentId>& ids)
-  : m_comps(ids) {
+ComponentSet::ComponentSet(const std::initializer_list<ComponentId>& ids) : m_comps(ids) {
   std::sort(m_comps.begin(), m_comps.end());
 }
 
@@ -65,16 +63,11 @@ ComponentSetId ComponentSet::getSetId() const {
   return hashValue;
 }
 
-const std::vector<ComponentId>& ComponentSet::list() const {
-  return m_comps;
-}
+const std::vector<ComponentId>& ComponentSet::list() const { return m_comps; }
 
-ComponentSetBuilder::ComponentSetBuilder(const ComponentSet& ids)
-  : m_comps(ids.list()) {
-}
+ComponentSetBuilder::ComponentSetBuilder(const ComponentSet& ids) : m_comps(ids.list()) {}
 
-ComponentSetBuilder::ComponentSetBuilder(const std::initializer_list<ComponentId>& ids)
-  : m_comps(ids) {
+ComponentSetBuilder::ComponentSetBuilder(const std::initializer_list<ComponentId>& ids) : m_comps(ids) {
   std::sort(m_comps.begin(), m_comps.end());
 }
 
@@ -82,7 +75,6 @@ const void ComponentSetBuilder::add(ComponentId id) {
   auto it = std::lower_bound(m_comps.begin(), m_comps.end(), id);
   if (it == m_comps.end() || *it != id)
     m_comps.insert(it, id);
-
 }
 
 const void ComponentSetBuilder::add(const ComponentSet& set) {
@@ -137,10 +129,6 @@ ComponentSetId ComponentSetBuilder::getSetId() const {
   return hashValue;
 }
 
-const std::vector<ComponentId>& ComponentSetBuilder::list() const {
-  return m_comps;
-}
+const std::vector<ComponentId>& ComponentSetBuilder::list() const { return m_comps; }
 
-ComponentSet ComponentSetBuilder::build() const {
-  return ComponentSet(m_comps);
-}
+ComponentSet ComponentSetBuilder::build() const { return ComponentSet(m_comps); }

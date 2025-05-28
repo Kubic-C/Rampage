@@ -1,15 +1,16 @@
 #pragma once
 
-#include "ecs/ecs.hpp"
 #include "components/sprite.hpp"
 #include "components/tile.hpp"
+#include "ecs/ecs.hpp"
+#include "scene.hpp"
 
 typedef u32 AssetId;
 
 struct AssetJson;
 
 class AssetLoader {
-public:
+  public:
   struct SpriteAsset {
     SpriteComponent sprite;
   };
@@ -18,22 +19,24 @@ public:
     EntityId entity;
   };
 
-private:
-  using Asset = std::variant<SpriteAsset, PrefabAsset, TileDef>;
-public:
-  AssetLoader(EntityWorld& world)
-    : m_world(world) {}
+  struct SceneAsset {
+    std::shared_ptr<Scene> scene;
+  };
+
+  private:
+  using Asset = std::variant<SpriteAsset, PrefabAsset, TileDef, SceneAsset>;
+
+  public:
+  explicit AssetLoader(EntityWorld& world) : m_world(world) {}
 
   AssetLoader(AssetLoader&&) = delete;
 
   bool loadAssets(const std::string& path);
   AssetId loadAsset(const std::string& parentDir, const AssetJson& json);
 
-  AssetId getAssetId(const std::string& name) {
-    return m_assetsByName.find(name)->second;
-  }
+  AssetId getAssetId(const std::string& name) { return m_assetsByName.find(name)->second; }
 
-public:
+  public:
   SpriteComponent& getSprite(AssetId assetId) {
     return std::get<SpriteAsset>(m_assets.find(assetId)->second).sprite;
   }
@@ -42,10 +45,8 @@ public:
     return std::get<SpriteAsset>(m_assets.find(getAssetId(assetName))->second).sprite;
   }
 
-public:
-  TileDef& getTilePrefab(AssetId assetId) {
-    return std::get<TileDef>(m_assets.find(assetId)->second);
-  }
+  public:
+  TileDef& getTilePrefab(AssetId assetId) { return std::get<TileDef>(m_assets.find(assetId)->second); }
 
   TileDef& getTilePrefab(const std::string& assetName) {
     return std::get<TileDef>(m_assets.find(getAssetId(assetName))->second);
@@ -53,19 +54,16 @@ public:
 
   TileDef cloneTilePrefab(AssetId assetId) {
     TileDef& prefab = getTilePrefab(assetId);
-    TileDef clone;
+    TileDef clone = prefab;
 
-    clone = prefab;
     clone.entity = m_world.get(prefab.entity).clone();
 
     return clone;
   }
 
-  TileDef cloneTilePrefab(const std::string& assetName) {
-    return cloneTilePrefab(getAssetId(assetName));
-  }
+  TileDef cloneTilePrefab(const std::string& assetName) { return cloneTilePrefab(getAssetId(assetName)); }
 
-public:
+  public:
   EntityId& getPrefabRawId(AssetId assetId) {
     return std::get<PrefabAsset>(m_assets.find(assetId)->second).entity;
   }
@@ -74,16 +72,15 @@ public:
     return std::get<PrefabAsset>(m_assets.find(getAssetId(assetName))->second).entity;
   }
 
-  Entity getPrefab(AssetId assetId) {
-    return m_world.get(getPrefabRawId(assetId));
-  }
+  Entity getPrefab(AssetId assetId) { return m_world.get(getPrefabRawId(assetId)); }
 
-  Entity getPrefab(const std::string& assetName) {
-    return m_world.get(getPrefabRawId(assetName));
-  }
+  Entity getPrefab(const std::string& assetName) { return m_world.get(getPrefabRawId(assetName)); }
 
-private:
-  template<typename T>
+  public:
+  Scene& getScene(AssetId assetId) { return *std::get<SceneAsset>(m_assets.find(assetId)->second).scene; }
+
+  private:
+  template <typename T>
   AssetId createAsset(const std::string& name) {
     AssetId asset = m_idMgr.generate();
 
@@ -93,7 +90,7 @@ private:
     return asset;
   }
 
-  template<typename T>
+  template <typename T>
   AssetId createAsset(const std::string& name, T&& value) {
     AssetId asset = m_idMgr.generate();
 
@@ -103,7 +100,7 @@ private:
     return asset;
   }
 
-private:
+  private:
   EntityWorld& m_world;
   IdManager<AssetId> m_idMgr;
   Map<AssetId, Asset> m_assets;

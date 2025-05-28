@@ -1,5 +1,0 @@
-// scene handling
-
-State, EntityScene
-	- Module 1
-	- Module 2
