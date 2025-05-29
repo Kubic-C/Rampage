@@ -22,6 +22,10 @@ add_subdirectory("boost/pool")
 add_subdirectory("boost/type_index")
 add_subdirectory("boost/unordered")
 
+if(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set(BOX2D_SANITIZE ON)
+endif()
+
 set(BOX2D_SAMPLES OFF)
 set(BOX2D_UNIT_TESTS OFF)
 add_subdirectory("box2d")

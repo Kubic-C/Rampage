@@ -296,7 +296,7 @@ class EventManager {
     bool hold = false;
   };
 
-  public:
+public:
   void poll() {
     m_signalResized = false;
 
@@ -351,7 +351,7 @@ class EventManager {
     return Vec2(x, y);
   }
 
-  private:
+private:
   std::vector<SDL_Event> m_polledEvents;
   bool m_signalResized = false;
   Vec2 m_windowSize;

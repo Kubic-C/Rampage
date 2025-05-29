@@ -9,6 +9,24 @@
     <mapping directory="$PROJECT_DIR$/deps/SDL_ttf/external/plutosvg" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/SDL_ttf/external/plutovg" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/TGUI" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/boost/assert" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/boost/config" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/boost/container" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/boost/container_hash" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/boost/core" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/boost/describe" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/boost/integer" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/boost/intrusive" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/boost/move" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/boost/mp11" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/boost/pool" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/boost/predef" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/boost/static_assert" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/boost/throw_exception" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/boost/type_index" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/boost/type_traits" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/boost/unordered" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/boost/winapi" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/box2d" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/glad" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/glaze" vcs="Git" />

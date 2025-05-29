@@ -47,23 +47,6 @@ struct PhysicsModule : Module {
 
     world.component<AddBodyComponent>();
     world.component<AddShapeComponent>();
-
-    world.observe(EntityWorld::EventType::Remove, world.component<BodyComponent>(), {}, [&](Entity e) {
-      auto it = m_ongoingCollisions.find(e);
-      if (it != m_ongoingCollisions.end()) {
-        for (EntityId other : it->second) {
-          m_ongoingCollisions[other].erase(e);
-          if (m_ongoingCollisions[other].empty())
-            m_ongoingCollisions.erase(other);
-        }
-        m_ongoingCollisions.erase(it);
-      }
-      if (e.has<SubmitToCollisionQueueComponent>())
-        e.world()
-            .get(e.get<SubmitToCollisionQueueComponent>()->queue)
-            .get<CollisionQueueComponent>()
-            ->queue.clear();
-    });
   }
 
   void run(EntityWorld& world, float deltaTime) override final {
@@ -98,22 +81,17 @@ struct PhysicsModule : Module {
       Entity eB = b2DataToEntity(world, Bb2Data);
       m_ongoingCollisions[eA].insert(eB);
       m_ongoingCollisions[eB].insert(eA);
+      insertShapeEntity(touch.shapeIdA, eA);
+      insertShapeEntity(touch.shapeIdB, eB);
     }
     for (int i = 0; i < events.endCount; i++) {
       const b2ContactEndTouchEvent& touch = events.endEvents[i];
 
-      if (!b2Shape_IsValid(touch.shapeIdA) || !b2Shape_IsValid(touch.shapeIdB)) {
-        logGeneric("Invalid body!\n");
-        continue;
-      }
-
-      void* Ab2Data = b2Shape_GetUserData(touch.shapeIdA);
-      void* Bb2Data = b2Shape_GetUserData(touch.shapeIdB);
-      if (!Ab2Data || !Bb2Data)
+      EntityId eA = m_sparseShapeEntity[touch.shapeIdA.index1];
+      EntityId eB = m_sparseShapeEntity[touch.shapeIdB.index1];
+      if (eA == NullEntityId || eB == NullEntityId)
         continue;
 
-      Entity eA = b2DataToEntity(world, Ab2Data);
-      Entity eB = b2DataToEntity(world, Bb2Data);
       m_ongoingCollisions[eA].erase(eB);
       m_ongoingCollisions[eB].erase(eA);
       if (m_ongoingCollisions[eA].empty())
@@ -194,8 +172,17 @@ struct PhysicsModule : Module {
 
   Map<EntityId, std::set<EntityId>>& getOngoingCollisions() { return m_ongoingCollisions; }
 
-  private:
-  int m_steps;
+private:
+  void insertShapeEntity(b2ShapeId shapeId, EntityId entity) {
+    int index = shapeId.index1;
 
+    if (index  >= m_sparseShapeEntity.size())
+      m_sparseShapeEntity.resize(index + 1, 0);
+
+    m_sparseShapeEntity[index] = entity;
+  }
+
+  int m_steps;
+  std::vector<EntityId> m_sparseShapeEntity;
   Map<EntityId, std::set<EntityId>> m_ongoingCollisions;
 };

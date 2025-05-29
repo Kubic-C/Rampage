@@ -2,7 +2,9 @@
 <project version="4">
   <component name="CMakeSharedSettings">
     <configurations>
+      <configuration PROFILE_NAME="Debug-MSVC" ENABLED="true" GENERATION_DIR="out/debug-mvsc-out" CONFIG_NAME="Debug" TOOLCHAIN_NAME="Visual Studio" GENERATION_OPTIONS="-G Ninja" />
       <configuration PROFILE_NAME="Release-MSVC" ENABLED="true" GENERATION_DIR="out/release-mvsc-out" CONFIG_NAME="Release" TOOLCHAIN_NAME="Visual Studio" />
+      <configuration PROFILE_NAME="Release-MSVC-event-trace" ENABLED="true" CONFIG_NAME="Release" TOOLCHAIN_NAME="Visual Studio" GENERATION_OPTIONS="--profiling-format=google-trace --profiling-output=CMakeFiles\clion-event-trace.json" />
     </configurations>
   </component>
 </project>

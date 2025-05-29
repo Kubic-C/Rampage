@@ -42,6 +42,8 @@ class PlayState : public State {
     base.add<OwnedBy<PlayState>>();
 
     m_bodyCallback = [this, baseId = base.id()](int x, int y) {
+      Vec2 mousePos = m_world.getContext<Render>().getWorldCoords(m_world.getContext<EventManager>().getMouseCoords());
+
       auto& loader = m_world.getContext<AssetLoader>();
 
       std::string enemyType = "BasicZombie";
@@ -50,7 +52,7 @@ class PlayState : public State {
 
       Entity seeker = loader.getPrefab(enemyType).clone();
       m_world.get(baseId).copyInto(seeker);
-      seeker.get<TransformComponent>()->pos = Vec2(x * 0.3f - 7, y * 0.3f + 14);
+      seeker.get<TransformComponent>()->pos = mousePos + Vec2(x * 0.3f, y * 0.3f) - Vec2(2 * 0.3f, 2 * 0.3f);
     };
   }
 
@@ -157,7 +159,7 @@ class PlayState : public State {
     m_entityCountText->setText("Set Count: " + std::to_string(m_world.getSetCount()));
 
     b2WorldId physicsWorld = m_world.getContext<b2WorldId>();
-    if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F3]) {
+    if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F3] && tick % 3 == 0) {
       callInGrid(-2, -2, 2, 2, m_bodyCallback);
     }
   }
