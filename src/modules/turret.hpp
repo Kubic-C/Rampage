@@ -114,7 +114,10 @@ class TurretModule : public Module {
         turret->rot += dir;
     }
 
-    sprite->getLast().rot = turret->rot;
+    for (auto& row : sprite->subSprites)
+      for (auto& col : row) {
+        col.getLast().rot = turret->rot;
+      }
   }
 
   void run(EntityWorld& world, float deltaTime) override {

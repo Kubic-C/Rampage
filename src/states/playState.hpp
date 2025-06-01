@@ -78,6 +78,9 @@ class PlayState : public State {
     playerInvetory.addItem(assetLoader.getPrefab("BasicTurretItem"), 20);
     playerInvetory.addItem(assetLoader.getPrefab("PlaceableHighStoneItem"), 2);
     playerInvetory.addItem(assetLoader.getPrefab("WoodItem"), 32);
+    playerInvetory.addItem(assetLoader.getPrefab("BigGunItem"), 4);
+    playerInvetory.addItem(assetLoader.getPrefab("BigGunItem"), 2);
+
 
     // Render
     RefT<RectangleRenderComponent> renderRect = player.get<RectangleRenderComponent>();

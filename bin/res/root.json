@@ -1,0 +1,16 @@
+[
+  {
+    "name": "RootLoader_DONOTREFERENCE",
+    "data": {
+      "type": "scene",
+      "desc": "Root Loading File",
+      "load": [
+        "entities/sprites.json",
+        "entities/items.json",
+        "entities/tiles.json",
+        "entities/scenes/basicScene.json"
+      ],
+      "scene": []
+    }
+  }
+] 

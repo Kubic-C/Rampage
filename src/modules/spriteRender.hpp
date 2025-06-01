@@ -26,20 +26,23 @@ class SpriteRenderModule : public BaseRenderModule {
 
   void bindInstanceBufferAttribs() {
     m_va.addVertexArrayAttrib(instanceBuffer, 2, 2, GL_FLOAT, GL_FALSE, sizeof(Instance),
+                          offsetof(Instance, localPos));
+    m_va.addVertexArrayAttrib(instanceBuffer, 3, 2, GL_FLOAT, GL_FALSE, sizeof(Instance),
                               offsetof(Instance, worldPos));
-    m_va.addIntegerVertexArrayAttrib(instanceBuffer, 3, 1, GL_UNSIGNED_SHORT, sizeof(Instance),
+    m_va.addIntegerVertexArrayAttrib(instanceBuffer, 4, 1, GL_UNSIGNED_SHORT, sizeof(Instance),
                                      offsetof(Instance, layer));
-    m_va.addIntegerVertexArrayAttrib(instanceBuffer, 4, 1, GL_UNSIGNED_BYTE, sizeof(Instance),
-                                     offsetof(Instance, rot5z3));
     m_va.addIntegerVertexArrayAttrib(instanceBuffer, 5, 1, GL_UNSIGNED_BYTE, sizeof(Instance),
+                                     offsetof(Instance, rot5z3));
+    m_va.addIntegerVertexArrayAttrib(instanceBuffer, 6, 1, GL_UNSIGNED_BYTE, sizeof(Instance),
                                      offsetof(Instance, dim));
-    m_va.addVertexArrayAttrib(instanceBuffer, 6, 1, GL_FLOAT, GL_FALSE, sizeof(Instance),
+    m_va.addVertexArrayAttrib(instanceBuffer, 7, 1, GL_FLOAT, GL_FALSE, sizeof(Instance),
                               offsetof(Instance, scale));
     m_va.attribDivisor(2, 1);
     m_va.attribDivisor(3, 1);
     m_va.attribDivisor(4, 1);
     m_va.attribDivisor(5, 1);
     m_va.attribDivisor(6, 1);
+    m_va.attribDivisor(7, 1);
   }
 
   public:
@@ -56,9 +59,10 @@ class SpriteRenderModule : public BaseRenderModule {
     static constexpr u8 dimXMask = 0b00001111; // 15
     static constexpr u8 dimYMask = 0b11110000; // 240 (15)
 
+    glm::vec2 localPos;
     glm::vec2 worldPos;
     u16 layer;
-    u8 rot5z3;
+    u8 rot5z3 = 0;
     u8 dim;
     float scale;
 
@@ -69,7 +73,7 @@ class SpriteRenderModule : public BaseRenderModule {
       constexpr float inv2pi = 1.0f / pi2;
 
       float zeroToOne = glm::mod(fRot, pi2) * inv2pi;
-      u8 rot = (u8)(zeroToOne * rangeLimit);
+      u8 rot = static_cast<u8>(zeroToOne * rangeLimit);
       rot <<= bitShiftLeft;
       rot5z3 &= ~rotMask;
       rot5z3 |= rot;
@@ -155,26 +159,52 @@ class SpriteRenderModule : public BaseRenderModule {
         glm::vec2 tileWorldPos = transform->getWorldPoint(tm.getLocalTileCenter(tilePos, dim));
         if (!tile.entity) {
           Instance instance;
+          instance.localPos = {0, 0};
           instance.worldPos = tileWorldPos;
           instance.layer = 0;
           instance.scale = 1.0f;
-          instance.setZ((u8)WorldLayer::Bottom);
+          instance.setZ(static_cast<u8>(WorldLayer::Bottom));
           instance.setRot(0);
           instance.setDim(1, 1);
           addInstance(instance);
         } else {
-          Entity tileEntity = e.world().get(tile.entity);
-          RefT<SpriteComponent> sprite = tileEntity.get<SpriteComponent>();
+          RefT<SpriteComponent> sprite = e.world().get(tile.entity).get<SpriteComponent>();
 
-          for (int i = 0; i < sprite->layerCount; i++) {
-            Instance instance;
-            instance.worldPos = tileWorldPos;
-            instance.layer = sprite->get(i).texIndex;
-            instance.scale = sprite->scaling;
-            instance.setZ((u8)sprite->get(i).layer);
-            instance.setRot(sprite->get(i).rot);
-            instance.setDim(dim.x, dim.y);
-            addInstance(instance);
+          // if the tile is a single tile, or a multi tile whose sprite component contains only one sprite,
+          // draw in repeat tile mode
+          if (!(tile.flags & TileFlags::IS_MULTI_TILE) ||
+            (tile.flags & TileFlags::IS_MULTI_TILE && sprite->subSprites.size() == 1 && sprite->subSprites[0].size() == 1)) {
+            SpriteComponent::SubSprite& subSprite = sprite->subSprites[0][0];
+
+            for (int i = 0; i < subSprite.layerCount; i++) {
+              Instance instance;
+              instance.localPos = subSprite.get(i).offset;
+              instance.worldPos = tileWorldPos;
+              instance.layer = subSprite.get(i).texIndex;
+              instance.scale = sprite->scaling;
+              instance.setZ(static_cast<u8>(subSprite.get(i).layer));
+              instance.setRot(subSprite.get(i).rot);
+              instance.setDim(dim.x, dim.y);
+              addInstance(instance);
+            }
+          } else {
+            for (int x = 0; x < dim.x; x++) {
+              for (int y = 0; y < dim.y; y++) {
+                SpriteComponent::SubSprite& subSprite = sprite->subSprites[y][x];
+
+                for (int i = 0; i < subSprite.layerCount; i++) {
+                  Instance instance;
+                  instance.localPos = subSprite.get(i).offset;
+                  instance.worldPos = tileWorldPos;
+                  instance.layer = subSprite.get(i).texIndex;
+                  instance.scale = sprite->scaling;
+                  instance.setZ(static_cast<u8>(subSprite.get(i).layer));
+                  instance.setRot(subSprite.get(i).rot);
+                  instance.setDim(1, 1);
+                  addInstance(instance);
+                }
+              }
+            }
           }
         }
 
@@ -186,7 +216,7 @@ class SpriteRenderModule : public BaseRenderModule {
           RefT<ArrowComponent> arrow = tileE.get<ArrowComponent>();
 
           shapeRender.drawLine(worldPos, worldPos + arrow->dir * 0.5f,
-                               glm::vec3(1.0f, (float)arrow->generation / 255, 0.0f), 0.01f, 1.0f);
+                               glm::vec3(1.0f, static_cast<float>(arrow->generation) / 255, 0.0f), 0.01f, 1.0f);
         }
       }
     }
@@ -199,13 +229,15 @@ class SpriteRenderModule : public BaseRenderModule {
     if (e.has<TileBoundComponent>())
       return;
 
-    for (int i = 0; i < sprite->layerCount; i++) {
+    SpriteComponent::SubSprite& subSprite = sprite->subSprites[0][0];
+    for (int i = 0; i < subSprite.layerCount; i++) {
       Instance instance;
+      instance.localPos = subSprite.get(i).offset;
       instance.worldPos = transform->pos;
-      instance.layer = sprite->get(i).texIndex;
+      instance.layer = subSprite.get(i).texIndex;
       instance.scale = sprite->scaling;
-      instance.setZ((u8)sprite->get(i).layer);
-      instance.setRot(sprite->get(i).rot + transform->rot);
+      instance.setZ(static_cast<u8>(subSprite.get(i).layer));
+      instance.setRot(subSprite.get(i).rot + transform->rot);
       instance.setDim(1, 1);
       addInstance(instance);
     }
@@ -264,6 +296,7 @@ class SpriteRenderModule : public BaseRenderModule {
     int width, height, channels;
     u8* data;
 
+    stbi_set_flip_vertically_on_load(true);
     data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
     if (!data)
       return false;
@@ -281,7 +314,7 @@ class SpriteRenderModule : public BaseRenderModule {
     instanceCount++;
   }
 
-  std::array<MeshVertex, 4> generateDefaultMesh() {
+  static std::array<MeshVertex, 4> generateDefaultMesh() {
     std::array<glm::vec2, 4> tileRect = {glm::vec2(-0.5f, -0.5f), glm::vec2(0.5f, -0.5f),
                                          glm::vec2(0.5f, 0.5f), glm::vec2(-0.5f, 0.5f)};
 
@@ -292,18 +325,19 @@ class SpriteRenderModule : public BaseRenderModule {
             MeshVertex(tileRect[2], texCoords[2]), MeshVertex(tileRect[3], texCoords[3])};
   }
 
-  std::array<u32, 6> generateIndicies() { return {0, 1, 2, 2, 3, 0}; }
+  static std::array<u32, 6> generateIndicies() { return {0, 1, 2, 2, 3, 0}; }
 
   private:
   const char* tileVertexShaderSource = R"###(
         #version 400 core
         layout(location = 0) in vec2 pos;
         layout(location = 1) in vec2 texCoords;
-        layout(location = 2) in vec2 worldPos;
-        layout(location = 3) in uint layer;
-        layout(location = 4) in uint rot5z3;
-        layout(location = 5) in uint dimByte;
-        layout(location = 6) in float scaling;
+        layout(location = 2) in vec2 localPos;
+        layout(location = 3) in vec2 worldPos;
+        layout(location = 4) in uint layer;
+        layout(location = 5) in uint rot5z3;
+        layout(location = 6) in uint dimByte;
+        layout(location = 7) in float scaling;
 
         uniform mat4 uVP; 
         uniform float uTileSideLength;
@@ -332,7 +366,7 @@ class SpriteRenderModule : public BaseRenderModule {
             float localRot = (rot5z3 >> 3) / 31.0f * pi * 2;
             vec2 dim = vec2(dimByte & 15, (dimByte & 240) >> 4);
 
-            gl_Position = uVP * vec4(worldPos + rotate(pos * uTileSideLength * dim, localRot) * scaling, -z, 1.0);
+            gl_Position = uVP * vec4(worldPos + rotate(pos * uTileSideLength * dim + localPos, localRot) * scaling, -z, 1.0);
             vTexCoords = vec3(texCoords * dim, layer);
         })###";
 
@@ -352,7 +386,7 @@ class SpriteRenderModule : public BaseRenderModule {
             fragColor = frag;
         })###";
 
-  private:
+private:
   u32 m_lastFreeTexture = 0;
   Map<std::string, u32> m_textureIds;
 

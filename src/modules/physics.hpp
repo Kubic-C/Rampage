@@ -87,6 +87,9 @@ struct PhysicsModule : Module {
     for (int i = 0; i < events.endCount; i++) {
       const b2ContactEndTouchEvent& touch = events.endEvents[i];
 
+      if (touch.shapeIdA.index1 > m_sparseShapeEntity.size() || touch.shapeIdB.index1 > m_sparseShapeEntity.size())
+        continue;
+
       EntityId eA = m_sparseShapeEntity[touch.shapeIdA.index1];
       EntityId eB = m_sparseShapeEntity[touch.shapeIdB.index1];
       if (eA == NullEntityId || eB == NullEntityId)

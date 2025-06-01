@@ -129,13 +129,13 @@
           },
           {
             "type": "turret",
-            "fireRate": 0.00,
+            "fireRate": 0.5,
             "radius": 10.0,
-            "turnSpeed": 0.04,
-            "shootRange": 6.0,
+            "turnSpeed": 0.02,
+            "shootRange": 0.3,
             "stopRange": 0.02,
             "muzzleVelocity": 10.0,
-            "bulletRadius": 0.05,
+            "bulletRadius": 0.025,
             "bulletDamage": 100.0
           }
         ]
@@ -143,8 +143,8 @@
       "tile": {
         "enableCollision": true,
         "size": {
-          "x": 3,
-          "y": 3
+          "x": 1,
+          "y": 1
         }
       }
     }
@@ -199,6 +199,46 @@
         "size": {
           "x": 1,
           "y": 1
+        }
+      }
+    }
+  },
+  {
+    "name": "BigGunTurretTile",
+    "data": {
+      "type": "tileDef",
+      "entity": {
+        "comps": [
+          {
+            "type": "itemName",
+            "name": "BigGunItem"
+          },
+          {
+            "type": "spriteName",
+            "name": "BigGunSprite"
+          },
+          {
+            "type": "breakable",
+            "health": 1000
+          },
+          {
+            "type": "turret",
+            "fireRate": 0.00,
+            "radius": 10.0,
+            "turnSpeed": 0.004,
+            "shootRange": 0.5,
+            "stopRange": 0.02,
+            "muzzleVelocity": 10.0,
+            "bulletRadius": 0.05,
+            "bulletDamage": 100.0
+          }
+        ]
+      },
+      "tile": {
+        "enableCollision": true,
+        "size": {
+          "x": 2,
+          "y": 2
         }
       }
     }

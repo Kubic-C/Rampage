@@ -74,5 +74,21 @@
         }
       ]
     }
+  },
+  {
+    "name": "BigGunItem",
+    "data": {
+      "type": "prefab",
+      "comps": [
+        {
+          "type": "itemIcon",
+          "iconPath": "biggun/biggunIcon.png"
+        },
+        {
+          "type": "stackCost",
+          "stackCost": 16
+        }
+      ]
+    }
   }
 ]

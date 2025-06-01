@@ -101,11 +101,7 @@ class App {
     m_world.addContext<InventoryManager>(m_world);
     m_world.addContext<AssetLoader>(m_world);
     auto& loader = m_world.getContext<AssetLoader>();
-    loader.loadAssets("./res/sprites.json");
-    loader.loadAssets("./res/items.json");
-    loader.loadAssets("./res/tiles.json");
-    loader.loadAssets("./res/entity.json");
-    loader.loadAssets("./res/scenes/basicScene.json");
+    loader.loadAssets("./res/root.json");
 
     auto& itemMgr = m_world.getContext<InventoryManager>();
     itemMgr.setDefaultItemIcon("./res/clear.png");

@@ -20,15 +20,29 @@ struct glz::meta<SpritePrototypeLayer> {
   static constexpr auto value = object("path", &T::path, "layer", &T::layer);
 };
 
+struct SubSpritePrototype {
+  int x = 0;
+  int y = 0;
+  std::vector<SpritePrototypeLayer> layers;
+};
+
+template <>
+struct glz::meta<SubSpritePrototype> {
+  using T = SubSpritePrototype;
+  static constexpr auto value = object("x", &T::x, "y", &T::y, "layers", &T::layers);
+};
+
 struct SpritePrototype {
-  std::vector<SpritePrototypeLayer> sprites;
+  int dimX = 1;
+  int dimY = 1;
   float scale = 1.0f;
+  std::vector<SubSpritePrototype> subSprites;
 };
 
 template <>
 struct glz::meta<SpritePrototype> {
   using T = SpritePrototype;
-  static constexpr auto value = object("sprites", &T::sprites, "scale", &T::scale);
+  static constexpr auto value = object("dimX", &T::dimX, "dimY", &T::dimY, "scale", &T::scale, "subSprites", &T::subSprites);
 };
 
 //////////////////// SpriteName
@@ -252,16 +266,28 @@ struct glz::meta<AssetJson> {
 AssetLoader::SpriteAsset loadSprite(EntityWorld& world, const std::string& path,
                                     const SpritePrototype& spriteProto) {
   auto& render = world.getModule<SpriteRenderModule>();
-  SpriteComponent sprite;
-  sprite.scaling = spriteProto.scale;
+  SpriteComponent sprites;
+  sprites.subSprites.resize(spriteProto.dimY);
+  for (auto& col : sprites.subSprites) {
+    col.resize(spriteProto.dimX);
+  }
+  sprites.scaling = spriteProto.scale;
 
-  for (const SpritePrototypeLayer& layer : spriteProto.sprites) {
-    u32 index = render.getSpriteFromPath(path + layer.path);
+  bool isSingle = spriteProto.dimX == 1 && spriteProto.dimY == 1;
+  for (const SubSpritePrototype& subSpriteProto : spriteProto.subSprites) {
+    SpriteComponent::SubSprite& sprite = sprites.subSprites[subSpriteProto.y][subSpriteProto.x];
 
-    sprite.addLayer(index, Vec2(0), 0, layer.layer);
+    for (const SpritePrototypeLayer& layer : subSpriteProto.layers) {
+      u32 index = render.getSpriteFromPath(path + layer.path);
+
+      if (isSingle)
+        sprite.addLayer(index, glm::vec2(0, 0), 0, layer.layer);
+      else
+        sprite.addLayer(index, (glm::vec2(subSpriteProto.x, subSpriteProto.y) - tileSize) * tileSize, 0, layer.layer);
+    }
   }
 
-  return AssetLoader::SpriteAsset(sprite);
+  return AssetLoader::SpriteAsset(sprites);
 }
 
 AssetLoader::PrefabAsset loadPrefabPrototype(AssetLoader& loader, EntityWorld& world, const std::string& path,

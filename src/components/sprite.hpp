@@ -23,43 +23,52 @@ struct SpriteLayer {
   SpriteLayer(u16 texIndex, glm::vec2 offset, float rot, WorldLayer layer) :
       texIndex(texIndex), offset(offset), rot(rot), layer(layer) {}
 
+  // The texture index of the sprite
   u16 texIndex = 0;
+  // The offset of the sprite, also used as the center of rotation.
   glm::vec2 offset = {0.0f, 0.0f};
+  // The rotation of the sprite.
   float rot = 0.0f;
+  // The layer of the sprite, affects which sprite is drawn on top.
   WorldLayer layer = WorldLayer::Invalid;
 };
 
 struct SpriteComponent {
-  static constexpr size_t MaxSpriteLaters = maxNumberBits(3);
-  SpriteLayer layers[MaxSpriteLaters];
-  u8 layerCount = 0;
+  struct SubSprite {
+    static constexpr size_t MaxSpriteLaters = maxNumberBits(3);
+    SpriteLayer layers[MaxSpriteLaters];
+    u8 layerCount = 0;
+
+    void addLayer(const SpriteLayer& layer) {
+      assert(layerCount < MaxSpriteLaters && "Too many sprite layers!");
+      layers[layerCount++] = layer;
+      if (layer.layer == WorldLayer::Invalid) {
+        layers[layerCount - 1].layer = (WorldLayer)(MaxSpriteLaters - layerCount);
+      }
+    }
+
+    void addLayer(u32 texIndex, glm::vec2 offset = Vec2(0), float rot = 0,
+                  WorldLayer layer = WorldLayer::Invalid) {
+      assert(layerCount < MaxSpriteLaters && "Too many sprite layers!");
+      if (layer == WorldLayer::Invalid) {
+        layer = (WorldLayer)(MaxSpriteLaters - layerCount);
+      }
+      layers[layerCount++] = SpriteLayer(texIndex, offset, rot, layer);
+    }
+
+    SpriteLayer& getLast() { return layers[layerCount - 1]; }
+
+    const SpriteLayer& operator[](size_t index) const {
+      assert(index < layerCount);
+      return layers[index];
+    }
+
+    const SpriteLayer& get(size_t index) const { return layers[index]; }
+  };
+
   float scaling = 1.0f;
-
-  void addLayer(const SpriteLayer& layer) {
-    assert(layerCount < MaxSpriteLaters && "Too many sprite layers!");
-    layers[layerCount++] = layer;
-    if (layer.layer == WorldLayer::Invalid) {
-      layers[layerCount - 1].layer = (WorldLayer)(MaxSpriteLaters - layerCount);
-    }
-  }
-
-  void addLayer(u32 texIndex, glm::vec2 offset = Vec2(0), float rot = 0,
-                WorldLayer layer = WorldLayer::Invalid) {
-    assert(layerCount < MaxSpriteLaters && "Too many sprite layers!");
-    if (layer == WorldLayer::Invalid) {
-      layer = (WorldLayer)(MaxSpriteLaters - layerCount);
-    }
-    layers[layerCount++] = SpriteLayer(texIndex, offset, rot, layer);
-  }
-
-  SpriteLayer& getLast() { return layers[layerCount - 1]; }
-
-  const SpriteLayer& operator[](size_t index) const {
-    assert(index < layerCount);
-    return layers[index];
-  }
-
-  const SpriteLayer& get(size_t index) const { return layers[index]; }
+  // Always in a non-jagged array.
+  std::vector<std::vector<SubSprite>> subSprites;
 };
 
 // The sprite is not part of a tilemap
