@@ -1,6 +1,8 @@
 set(BUILD_SHARED_LIBS OFF)
 
-# Needed Boost libraries' dependencies
+add_subdirectory("capnproto")
+
+# Boost dependencies
 add_subdirectory("boost/assert")
 add_subdirectory("boost/static_assert")
 add_subdirectory("boost/config")

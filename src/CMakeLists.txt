@@ -17,7 +17,8 @@ add_executable(Rampage
   "utility/TaskScheduler.cpp"
   "utility/TaskScheduler.hpp"
   "utility/LockLessMultiReadPipe.hpp"
-  scene.hpp)
+  "ecs/serter.cpp"
+  "ecs/serter.hpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Rampage PROPERTY CXX_STANDARD 20)
@@ -115,4 +116,11 @@ target_link_libraries(Rampage PUBLIC
   box2d
   TGUI::TGUI
   SDL3::SDL3
-  glaze::glaze)
+  glaze::glaze
+  CapnProto::capnp)
+
+file(GLOB schemasCXX "./schema/*.c++" "./schema/*.h")
+
+target_sources(Rampage PUBLIC ${schemasCXX})
+
+add_dependencies(Rampage capnpc_cpp capnp_tool)

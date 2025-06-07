@@ -42,6 +42,13 @@ class App {
       return;
     }
     m_world.getContext<SDL_Window*>() = window;
+    {
+      int x, y, channels;
+      u8* data = stbi_load("./res/appIcon.png", &x, &y, &channels, STBI_rgb_alpha);
+      if (data != nullptr) {
+        SDL_SetWindowIcon(window, SDL_CreateSurfaceFrom(x, y, SDL_PIXELFORMAT_RGBA32, data, x * 4));
+      }
+    }
 
     /* Camera and rendering */
     m_world.addContext<Render>(m_world, false);

@@ -28,6 +28,7 @@
     <mapping directory="$PROJECT_DIR$/deps/boost/unordered" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/boost/winapi" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/box2d" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/capnproto" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/glad" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/glaze" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/glm" vcs="Git" />

@@ -76,3 +76,6 @@
 [submodule "deps/boost/mp11"]
 	path = deps/boost/mp11
 	url = https://github.com/boostorg/mp11
+[submodule "deps/capnproto"]
+	path = deps/capnproto
+	url = https://github.com/capnproto/capnproto/

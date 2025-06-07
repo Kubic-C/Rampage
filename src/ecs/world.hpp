@@ -284,7 +284,6 @@ private:
   const ComponentSet* getEntitySet(EntityId id);
   void addToSuperSets(const ComponentSet* baseSet);
 
-  private:
   /* Deferred operations */
   bool m_isDefer = false;
   std::vector<const ComponentSet*> m_deferredSuperSetCalc;

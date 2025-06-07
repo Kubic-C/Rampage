@@ -2,6 +2,9 @@
 
 #include "world.hpp"
 
+template<typename T>
+class RefT;
+
 // A safe-access version for components
 class Ref {
   public:
@@ -9,6 +12,9 @@ class Ref {
   Ref(Entity entity, ComponentId comp);
 
   void* get();
+
+  template<typename T>
+  RefT<T> cast();
 
   private:
   EntityWorld& m_world;
@@ -28,3 +34,9 @@ class RefT : protected Ref {
 
   T copy() { return *reinterpret_cast<T*>(get()); }
 };
+
+template<typename T>
+RefT<T> Ref::cast() {
+  assert(m_world.component<T>() == m_comp);
+  return RefT<T>(m_world, m_entity);
+}

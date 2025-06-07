@@ -112,3 +112,22 @@ class IdManager {
   std::vector<IdType> m_oldIds;
   std::vector<IdType> m_oldLocalIds;
 };
+
+/**
+ * Runtime generated IDs, for static compile time-types.
+ */
+template <typename T>
+class StaticId {
+public:
+  template <typename X>
+  static int id() {
+    static int id = nextID();
+    return id;
+  }
+
+private:
+  static int nextID() {
+    static int counter = 0;
+    return counter++;
+  }
+};
