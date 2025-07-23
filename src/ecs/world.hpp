@@ -138,7 +138,7 @@ private:
   EntityWorld();
   EntityWorld(const EntityWorld& other) = delete;
   EntityWorld(EntityWorld&& other) = delete;
-  ~EntityWorld();
+  virtual ~EntityWorld();
 
   EntityWorld& operator=(const EntityWorld& other) = delete;
   EntityWorld& operator=(EntityWorld&& other) = delete;

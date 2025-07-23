@@ -20,7 +20,7 @@
 #include "utility/box2dScheduler.hpp"
 
 class App {
-  public:
+public:
   App(const std::string_view& appName, float ticksPerSecond) :
       m_localAppStatus(Status::Ok), m_ticksPerSecond(ticksPerSecond) {
     /* Really dont wanna forget this ... */
@@ -210,7 +210,7 @@ class App {
 
   private:
   Status m_localAppStatus;
-  EntityWorld m_world;
+  EntityWorldSerializable m_world;
   float m_ticksPerSecond;
 
   std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();

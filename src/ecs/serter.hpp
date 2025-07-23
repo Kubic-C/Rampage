@@ -20,8 +20,16 @@ public:
       [](capnp::MessageReader& reader, Ref component) {});
   }
 
+  ~EntityWorldSerializable() override = default;
+
   using SerializeFunc = void(*)(capnp::MessageBuilder& builder, Ref component);
   using DeserializeFunc = void(*)(capnp::MessageReader& reader, Ref component);
+
+  // Registers a serializable type, using its static methods: serialize and deserialize
+  template<typename T>
+  void registerSerializable() {
+    registerSerializable(component<T>(), T::serialize, T::deserialize);
+  }
 
   template<typename T>
   void registerSerializable(SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) {

@@ -99,7 +99,7 @@ class PlayState : public State {
     b2Polygon rect = b2MakeBox(0.12f, 0.12f);
     b2CreatePolygonShape(bodyId, &shapeDef, &rect);
 
-    RefT<Transform> playerTransform = player.get<TransformComponent>();
+    RefT<TransformComponent> playerTransform = player.get<TransformComponent>();
     playerTransform->pos = Vec2(5.0f, -7.0f);
 
     /* WorldMap & Tilemap Component */

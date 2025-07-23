@@ -27,15 +27,20 @@ inline void copyBodiesIntoTransforms(RefT<TransformComponent> transform, RefT<Bo
 }
 
 struct PhysicsModule : Module {
-  private:
+private:
   inline static bool m_created = false;
 
-  public:
+public:
   static void registerComponents(EntityWorld& world) {
     world.component<BodyComponent>();
     world.component<TransformComponent>();
     world.component<CollisionQueueComponent>();
     world.component<SubmitToCollisionQueueComponent>();
+
+    EntityWorldSerializable* ser = dynamic_cast<EntityWorldSerializable*>(&world);
+    if (ser) {
+      ser->registerSerializable<TransformComponent>();
+    }
   }
 
   PhysicsModule(EntityWorld& world, int steps) : m_steps(steps) {
