@@ -40,8 +40,8 @@ struct Rot : b2Rot {
   }
 
   Rot(float angle) {
-    s = sinf(angle);
-    c = cosf(angle);
+    s = glm::sin(angle);
+    c = glm::cos(angle);
   }
 
   float radians() const { return b2Rot_GetAngle(*this); }

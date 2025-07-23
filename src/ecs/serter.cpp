@@ -61,6 +61,7 @@ bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) 
       else
         compBuilderMsg.initRoot<Schema::Void>();
 
+      scratchCompStream.clear();
       capnp::writePackedMessage(scratchCompStream, compBuilderMsg);
       size_t outputSize = scratchCompStream.getArray().size();
       auto dataBuilder = compListBuilder.init(i, outputSize);
@@ -75,6 +76,66 @@ bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) 
   kj::StringTree tree = capnp::prettyPrint(root);
   std::string debugOutput = tree.flatten().cStr();
   std::cout << debugOutput << std::endl;
+
+  return true;
+}
+
+bool EntityWorldSerializable::loadState(const char* path, bool overwrite) {
+  FILE* file;
+  errno_t error = fopen_s(&file, path, "rb");
+  if (error != 0)
+    return false;
+
+  // sparse mapping of serialized comp ids to this worlds comp ids.
+  // [SerCompId] -> Matching current World Id.
+  // This is found by names
+  std::vector<ComponentId> serCompRegistry;
+
+  capnp::PackedFdMessageReader reader(_fileno(file));
+
+  auto state = reader.getRoot<Schema::State>();
+
+  for (auto comp : state.getRegisteredComponents()) {
+    // o(n) search to find components names, too lazy to find something faster.
+    for (int i = 0; i < m_componentNames.size(); ++i) {
+      if (comp.getName() == m_componentNames[i]) {
+        if (serCompRegistry.size() <= comp.getCompId())
+          serCompRegistry.resize(comp.getCompId() + 1, 0);
+        serCompRegistry[comp.getCompId()] = i;
+      }
+    }
+  }
+
+  for (auto entity : state.getEntities()) {
+    EntityId eid = entity.getId();
+    auto serCompsData = entity.getCompData();
+    auto compIds = entity.getCompIds();
+
+    if (overwrite && exists(eid)) {
+      destroy(eid);
+    }
+    Entity e = ensure(eid); // it exists
+
+    for (int i = 0; i < compIds.size(); ++i) {
+      ComponentId realCompId = serCompRegistry[compIds[i]];
+
+      e.add(realCompId);
+      Ref compRef = e.get(realCompId);
+
+      auto compData = serCompsData[i].asBytes();
+      kj::ArrayInputStream stream(compData);
+      capnp::PackedMessageReader compReader(stream);
+
+      if (m_componentDeserializeFuncs[realCompId] == nullptr) {
+        logGeneric("Component Deserialization for this component not implemented: %u %s\n", realCompId, m_componentNames[realCompId].c_str());
+        continue;
+      }
+
+      m_componentDeserializeFuncs[realCompId](compReader, compRef);
+    }
+  }
+
+  fclose(file);
 
   return true;
 }

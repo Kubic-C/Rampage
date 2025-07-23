@@ -11,6 +11,13 @@ public:
   EntityWorldSerializable()
     : m_scratchBuffer(new capnp::word[m_maxScratchWordSize], m_maxScratchWordSize) {
     std::memset(m_scratchBuffer.begin(), 0, m_scratchBuffer.size() * sizeof(capnp::word));
+
+    // issa' tag
+    registerSerializable<Enabled>(
+      [](capnp::MessageBuilder& builder, Ref component) {
+        builder.initRoot<Schema::Void>();
+      },
+      [](capnp::MessageReader& reader, Ref component) {});
   }
 
   using SerializeFunc = void(*)(capnp::MessageBuilder& builder, Ref component);
@@ -25,6 +32,11 @@ public:
 
   // Saves the current state of serializable data with a particular set to a file.
   bool saveState(const char* path, ComponentSet saveSet);
+
+  // Loads the state from a file. If overwrite is true, any entities found within the file
+  // that have an id already existent in the current state will replace that entity, if false
+  // a new additional free id will be assigned.
+  bool loadState(const char* path, bool overwrite);
 
 private:
   kj::ArrayPtr<capnp::word> m_scratchBuffer;
