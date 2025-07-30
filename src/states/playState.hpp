@@ -9,6 +9,8 @@
 class PlayState : public State {
   const std::string& menuName = "PlayMenu";
   const std::string& returnBtnName = "PlayReturn";
+  const std::string& playSaveStateTextName = "PlaySaveState";
+  const std::string& playLoadStateTextName = "PlayLoadState";
   const std::string& tickTextName = "PlayTick";
   const std::string& tpsTextName = "PlayTPS";
   const std::string& fpsTextName = "PlayFPS";
@@ -23,12 +25,37 @@ class PlayState : public State {
 
     tgui::Gui& gui = m_world.getContext<tgui::Gui>();
     m_menu = world.getContext<tgui::Gui>().get(menuName);
-    tgui::Button::Ptr returnBtn = gui.get(returnBtnName)->cast<tgui::Button>();
 
+    tgui::Button::Ptr returnBtn = gui.get(returnBtnName)->cast<tgui::Button>();
     returnBtn->onMousePress([&]() {
       StateManager& stateMgr = world.getContext<StateManager>();
       stateMgr.disableState("PlayState");
       stateMgr.enableState("MenuState");
+    });
+
+    tgui::Button::Ptr saveStateBtn = gui.get(playSaveStateTextName)->cast<tgui::Button>();
+    saveStateBtn->onMousePress([&]() {
+      StateManager& stateMgr = world.getContext<StateManager>();
+      logGeneric("Saving state...\n");
+
+      auto serWorld = dynamic_cast<EntityWorldSerializable*>(&world);
+      if (serWorld) {
+        auto saveAllEntitiesWith = world.set<>();
+        serWorld->saveState("./dat/testSave.save", saveAllEntitiesWith);
+      }
+    });
+
+    tgui::Button::Ptr loadStateBtn = gui.get(playLoadStateTextName)->cast<tgui::Button>();
+    loadStateBtn->onMousePress([&]() {
+      StateManager& stateMgr = world.getContext<StateManager>();
+      logGeneric("Loading state...\n");
+
+      auto serWorld = dynamic_cast<EntityWorldSerializable*>(&world);
+      if (serWorld) {
+        bool appendEntities = false;
+        bool clearPreviousEntities = false;
+        serWorld->loadState("./dat/testSave.save", appendEntities, clearPreviousEntities);
+      }
     });
 
     m_tickText = gui.get(tickTextName)->cast<tgui::Label>();

@@ -101,11 +101,34 @@ Group.PlayMenu {
         }
     }
 
-    Button.PlayReturn {
-        Position = (10, 10);
-        Renderer = &3;
-        Text = Return;
-        TextSize = 13;
+    VerticalLayout.VerticalLayout3 {
+        Position = (5, 10);
+        Ratios = [1, 1, 1];
+        Renderer = &1;
+        Size = (75, 100);
+
+        Button.PlayReturn {
+            Renderer = &3;
+            Size = (75, 33.3333);
+            Text = Return;
+            TextSize = 13;
+        }
+
+        Button.PlaySaveState {
+            Position = (0, 33.3333);
+            Renderer = &3;
+            Size = (75, 33.3333);
+            Text = "Save State";
+            TextSize = 13;
+        }
+
+        Button.PlayLoadState {
+            Position = (0, 66.6667);
+            Renderer = &3;
+            Size = (75, 33.3333);
+            Text = "Load State";
+            TextSize = 13;
+        }
     }
 }
 

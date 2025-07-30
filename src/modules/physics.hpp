@@ -37,7 +37,7 @@ public:
     world.component<CollisionQueueComponent>();
     world.component<SubmitToCollisionQueueComponent>();
 
-    EntityWorldSerializable* ser = dynamic_cast<EntityWorldSerializable*>(&world);
+    auto ser = dynamic_cast<EntityWorldSerializable*>(&world);
     if (ser) {
       ser->registerSerializable<TransformComponent>();
     }

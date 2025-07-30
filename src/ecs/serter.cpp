@@ -46,6 +46,9 @@ bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) 
     Entity e = it.next();
     auto entityBuilder = root.getEntities()[entityI++];
 
+    logGeneric("id %u\n", e.id());
+    entityBuilder.setId(e.id());
+
     auto compIds = e.set().list(); // yes, copy
     const kj::ArrayPtr<ComponentId> kjCompIds(compIds.data(), compIds.size());
     entityBuilder.setCompIds(kjCompIds);
@@ -54,6 +57,9 @@ bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) 
     for (int i = 0; i < compIds.size(); ++i) {
       ComponentId compId = compIds[i];
       capnp::MallocMessageBuilder compBuilderMsg(m_scratchBuffer);
+
+      if (compId >= m_componentSerializeFuncs.size())
+        continue;
 
       // Serialize what we can.
       if (m_componentSerializeFuncs[compId])
@@ -72,15 +78,10 @@ bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) 
   capnp::writePackedMessageToFd(_fileno(file), msg);
   fclose(file);
 
-  // Print root to a string tree
-  kj::StringTree tree = capnp::prettyPrint(root);
-  std::string debugOutput = tree.flatten().cStr();
-  std::cout << debugOutput << std::endl;
-
   return true;
 }
 
-bool EntityWorldSerializable::loadState(const char* path, bool overwrite) {
+bool EntityWorldSerializable::loadState(const char* path, bool appendEntities, bool clearPrevious) {
   FILE* file;
   errno_t error = fopen_s(&file, path, "rb");
   if (error != 0)
@@ -111,13 +112,24 @@ bool EntityWorldSerializable::loadState(const char* path, bool overwrite) {
     auto serCompsData = entity.getCompData();
     auto compIds = entity.getCompIds();
 
-    if (overwrite && exists(eid)) {
-      destroy(eid);
+    if (eid == NullEntityId) {
+      logGeneric("Entity Id is null, skipping...\n");
+      continue;
+    }
+
+    if (!appendEntities && exists(eid)) {
+      if (clearPrevious)
+        destroy(eid);
+    } else {
+      eid = NullEntityId;
     }
     Entity e = ensure(eid); // it exists
 
     for (int i = 0; i < compIds.size(); ++i) {
       ComponentId realCompId = serCompRegistry[compIds[i]];
+      if (realCompId >= m_componentDeserializeFuncs.size() ||
+          m_componentDeserializeFuncs[realCompId] == nullptr)
+        continue;
 
       e.add(realCompId);
       Ref compRef = e.get(realCompId);
@@ -125,11 +137,6 @@ bool EntityWorldSerializable::loadState(const char* path, bool overwrite) {
       auto compData = serCompsData[i].asBytes();
       kj::ArrayInputStream stream(compData);
       capnp::PackedMessageReader compReader(stream);
-
-      if (m_componentDeserializeFuncs[realCompId] == nullptr) {
-        logGeneric("Component Deserialization for this component not implemented: %u %s\n", realCompId, m_componentNames[realCompId].c_str());
-        continue;
-      }
 
       m_componentDeserializeFuncs[realCompId](compReader, compRef);
     }

@@ -41,10 +41,13 @@ public:
   // Saves the current state of serializable data with a particular set to a file.
   bool saveState(const char* path, ComponentSet saveSet);
 
-  // Loads the state from a file. If overwrite is true, any entities found within the file
-  // that have an id already existent in the current state will replace that entity, if false
-  // a new additional free id will be assigned.
-  bool loadState(const char* path, bool overwrite);
+  // Loads the state from a file. if appendEntities is true, any new entities loaded in
+  // from the save file will be created with a newly generated ID, regardless of what their
+  // assigned id is in the save file. clearPrevious is only used if the former is false
+  // if clearPrevious is true: if an entity is loaded and the world already contains
+  // an entity designated at that ID, it will be cleared of all of its components and then loaded,
+  // if false, it will simply append or overwrite the already existing components.
+  bool loadState(const char* path, bool appendEntities, bool clearPrevious = false);
 
 private:
   kj::ArrayPtr<capnp::word> m_scratchBuffer;

@@ -12,6 +12,5 @@ int main() {
     code = app.run();
   }
 
-  system("pause");
   return code;
 }
