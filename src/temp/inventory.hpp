@@ -2,10 +2,10 @@
 
 #include "utility/hashes.hpp"
 
-#include "components/body.hpp"
-#include "components/item.hpp"
-#include "components/tilemap.hpp"
-#include "components/transform.hpp"
+#include "../components/body.hpp"
+#include "../components/item.hpp"
+#include "../components/tilemap.hpp"
+#include "../components/transform.hpp"
 
 #include "assetLoader.hpp"
 

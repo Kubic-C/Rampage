@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../components/item.hpp"
-#include "../inventory.hpp"
+#include "../temp/inventory.hpp"
 
 class ItemModule : public Module {
   public:

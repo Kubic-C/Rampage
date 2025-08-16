@@ -5,8 +5,10 @@
     <mapping directory="$PROJECT_DIR$/deps/SDL" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/SDL_ttf" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/SDL_ttf/external/freetype" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/SDL_ttf/external/freetype/subprojects/dlg" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/SDL_ttf/external/harfbuzz" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/SDL_ttf/external/plutosvg" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/SDL_ttf/external/plutosvg/plutovg" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/SDL_ttf/external/plutovg" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/TGUI" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/boost/assert" vcs="Git" />
@@ -29,6 +31,7 @@
     <mapping directory="$PROJECT_DIR$/deps/boost/winapi" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/box2d" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/capnproto" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/cr" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/glad" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/glaze" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/deps/glm" vcs="Git" />

@@ -1,20 +1,20 @@
 #pragma once
 
-#include "modules/guiRender.hpp"
-#include "modules/health.hpp"
-#include "modules/item.hpp"
-#include "modules/pathfinding.hpp"
-#include "modules/physics.hpp"
-#include "modules/player.hpp"
-#include "modules/shapeRender.hpp"
-#include "modules/spriteRender.hpp"
-#include "modules/tilemap.hpp"
-#include "modules/turret.hpp"
+#include "../modules/guiRender.hpp"
+#include "../modules/health.hpp"
+#include "../modules/item.hpp"
+#include "../modules/pathfinding.hpp"
+#include "../modules/physics.hpp"
+#include "../modules/player.hpp"
+#include "../modules/shapeRender.hpp"
+#include "../modules/spriteRender.hpp"
+#include "../modules/tilemap.hpp"
+#include "../modules/turret.hpp"
 
-#include "states/menuState.hpp"
-#include "states/playState.hpp"
+#include "../states/menuState.hpp"
+#include "../states/playState.hpp"
 
-#include "assetLoader.hpp"
+#include "../assetLoader.hpp"
 #include "eventManager.hpp"
 
 #include "utility/box2dScheduler.hpp"

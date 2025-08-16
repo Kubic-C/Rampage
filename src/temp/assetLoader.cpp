@@ -1,11 +1,11 @@
-#include "assetLoader.hpp"
+#include "../assetLoader.hpp"
 
-#include "components/arrow.hpp"
-#include "components/health.hpp"
-#include "components/turret.hpp"
+#include "../components/arrow.hpp"
+#include "../components/health.hpp"
+#include "../components/turret.hpp"
 #include "inventory.hpp"
 
-#include "modules/spriteRender.hpp"
+#include "../modules/spriteRender.hpp"
 
 //////////////////// Sprite Prototype
 

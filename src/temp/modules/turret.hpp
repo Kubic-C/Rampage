@@ -146,8 +146,6 @@ class TurretModule : public Module {
 
       RefT<HealthComponent> bulletHealth = bullet.get<HealthComponent>();
       bulletHealth->health -= damage->damage * 0.1f;
-
-      logGeneric("Shot: %i\n", collision.primary);
     }
     queue->queue.clear();
 

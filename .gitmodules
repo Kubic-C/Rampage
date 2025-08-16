@@ -79,3 +79,6 @@
 [submodule "deps/capnproto"]
 	path = deps/capnproto
 	url = https://github.com/capnproto/capnproto/
+[submodule "deps/cr"]
+	path = deps/cr
+	url = https://github.com/fungos/cr

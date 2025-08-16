@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../assetLoader.hpp"
+#include "../temp/assetLoader.hpp"
 
 using InventoryId = u32;
 

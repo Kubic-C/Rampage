@@ -50,3 +50,5 @@ add_subdirectory("SDL_ttf")
 add_subdirectory("TGUI")
 
 add_subdirectory("glaze")
+
+add_subdirectory("cr")

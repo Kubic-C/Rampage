@@ -1,0 +1,11 @@
+{
+  "tempDir": "temp\\",
+  "modules": [
+    {
+      "name": "RLog.dll"
+    },
+    {
+      "name": "RCore.dll"
+    }
+  ]
+}

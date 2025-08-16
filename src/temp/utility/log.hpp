@@ -1,6 +1,5 @@
 #pragma once
 
-#include "base.hpp"
 
 void logInit();
 void logGeneric(const char* format, ...);

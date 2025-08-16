@@ -6,8 +6,8 @@
 
 #include "../render/render.hpp"
 
-#include "../eventManager.hpp"
-#include "../inventory.hpp"
+#include "../temp/eventManager.hpp"
+#include "../temp/inventory.hpp"
 
 class PlayerModule : public Module {
   public:

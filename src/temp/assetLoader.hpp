@@ -1,8 +1,8 @@
 #pragma once
 
-#include "components/sprite.hpp"
-#include "components/tile.hpp"
-#include "ecs/ecs.hpp"
+#include "../components/sprite.hpp"
+#include "../components/tile.hpp"
+#include "../ecs/ecs.hpp"
 #include "scene.hpp"
 
 typedef u32 AssetId;
