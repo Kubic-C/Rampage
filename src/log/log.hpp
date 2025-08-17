@@ -55,7 +55,12 @@ inline std::string formatStr(const std::string& fmt) {
         continue;
       } else if (formatted[i] == fsEndCh) {
         for (std::string& str : ansiAttr) {
-          str = m_formatMap.at(trim(str));
+          std::string key = trim(str);
+          if (!m_formatMap.contains(key)) {
+            std::cout << "Unknown Key: " << key << std::endl;
+          } else {
+            str = m_formatMap.at(trim(str));
+          }
         }
 
         i = fsBegin;

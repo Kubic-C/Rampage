@@ -11,19 +11,20 @@ int onUnload(HostCtx& ctx) {
 int onUpdate(HostCtx& ctx) {
   HostFuncs& hostFuncs = ctx.funcs;
 
-  hostFuncs.trace("<fgGreen>Core Module");
+  hostFuncs.trace("<fgGreen>Core Module 2<reset>\n");
 
   return 0;
 }
 
-CR_EXPORT int cr_main(struct cr_plugin *ctx, enum cr_op operation) {
+static unsigned int ASAN_SAFE CR_STATE version = 1;
+CR_EXPORT int cr_main(cr_plugin *ctx, cr_op operation) {
   HostCtx& hostCtx = *static_cast<HostCtx*>(ctx->userdata);
   HostFuncs& hostFuncs = hostCtx.funcs;
 
-  if (ctx->failure != CR_NONE) {
-    hostFuncs.traceError(1, "Failed entry in module");
-    return -1;
+  if (ctx->version < version) {
+    hostFuncs.traceError(ctx->failure, "<-(CR) Failed entry in module\n");
   }
+  version = ctx->version;
 
   switch (operation) {
   case CR_LOAD:

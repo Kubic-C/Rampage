@@ -44,14 +44,18 @@ bool getModuleList(const std::string& moduleFilePath, ModuleList& modules) {
   return true;
 }
 
+void pause() {
+  std::cout << "Press enter to continue...";
+  char c;
+  std::cin >> c;
+}
+
 int main () {
   HostCtx host;
   if (!getModuleList("module.json", host.modules)) {
     std::cout << std::endl;
 
-    std::cout << "Press enter to continue...";
-    char c;
-    std::cin >> c;
+    pause();
     return 1;
   }
 
@@ -59,6 +63,10 @@ int main () {
   for (auto& module : host.modules.modules) {
     std::cout << '\t' << module.name << '\n';
     module.isLoaded = cr_plugin_open(module.ctx, module.name.c_str());
+    if (!module.isLoaded) {
+      std::cout << "^^^ FAILED LOAD ^^^" << '\n';
+      continue;
+    }
     cr_set_temporary_path(module.ctx, host.modules.tempDir);
     module.ctx.userdata = &host;
   }
@@ -104,7 +112,7 @@ int main () {
         module.isLoaded = false;
         break;
       default:
-        std::cout << module.name << ": Unknown/Unhandled error: " << ctx.failure << "\n";
+        std::cout << module.name << ":\n\t Unknown/Unhandled error: " << ctx.failure << "\n";
         break;
       }
     }
@@ -114,5 +122,6 @@ int main () {
     cr_plugin_close(module.ctx);
   }
 
+  pause();
   return 0;
 }

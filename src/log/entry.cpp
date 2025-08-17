@@ -1,10 +1,11 @@
-#define CR_HOST
 #include "../common/host.hpp"
 #include "log.hpp"
 
 int onLoad(HostCtx& host) {
   std::lock_guard lock(host.mutex);
   HostFuncs& funcs = host.funcs;
+
+  logInit();
 
   funcs.trace = logGeneric;
   funcs.traceError = logError;
@@ -26,14 +27,15 @@ int onUpdate(HostCtx& host) {
   return 0;
 }
 
-CR_EXPORT int cr_main(struct cr_plugin *ctx, enum cr_op operation) {
+CR_STATE ASAN_SAFE static unsigned int version = 1;
+CR_EXPORT int cr_main(cr_plugin *ctx, cr_op operation) {
   HostCtx& hostCtx = *static_cast<HostCtx*>(ctx->userdata);
   HostFuncs& hostFuncs = hostCtx.funcs;
 
-  if (ctx->failure != CR_NONE) {
-    hostFuncs.traceError(1, "Failed entry in module");
-    return -1;
+  if (ctx->version < version) {
+    hostFuncs.traceError(ctx->failure, "<-(CR) Failed entry in module\n");
   }
+  version = ctx->version;
 
   switch (operation) {
   case CR_LOAD:

@@ -11,7 +11,8 @@ endif ()
 
 project ("Rampage")
 
-if(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+option(ASAN_ON False)
+if(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug" AND ASAN_ON)
   message("USING ASAN FOR DEBUG BUILD ON THE MSVC PLATFORM")
   add_compile_options("/fsanitize=address")
   add_compile_definitions("_DISABLE_VECTOR_ANNOTATION")
@@ -30,7 +31,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "$<0:>${CMAKE_SOURCE_DIR}/bin")
 add_subdirectory("deps")
 add_subdirectory("src")
 
-if(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug" AND ASAN_ON)
   message("USING ASAN FOR DEBUG BUILD ON THE MSVC PLATFORM")
   add_compile_options("/Zi")
 endif()
