@@ -1,7 +1,7 @@
 {
   "tempDir": "temp\\",
   "modules": [
-    {
+    { // Always make sure RLog.dll is always loaded FIRST, and do not reload it! Shit will break.
       "name": "RLog.dll"
     },
     {

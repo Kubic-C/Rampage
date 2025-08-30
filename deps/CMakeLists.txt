@@ -24,8 +24,10 @@ add_subdirectory("boost/pool")
 add_subdirectory("boost/type_index")
 add_subdirectory("boost/unordered")
 
-if(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug" AND ASAN_ON)
-  set(BOX2D_SANITIZE ON)
+if(ASAN_ON)
+  if(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(BOX2D_SANITIZE ON)
+  endif()
 endif()
 
 set(BOX2D_SAMPLES OFF)
@@ -51,4 +53,5 @@ add_subdirectory("TGUI")
 
 add_subdirectory("glaze")
 
+set(BUILD_EXAMPLES OFF)
 add_subdirectory("cr")

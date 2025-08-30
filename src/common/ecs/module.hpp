@@ -1,5 +1,9 @@
 #pragma once
 
+#include "../commondef.hpp"
+
+RAMPAGE_START
+
 class EntityWorld;
 
 class Module {
@@ -10,3 +14,5 @@ class Module {
 
   private:
 };
+
+RAMPAGE_END

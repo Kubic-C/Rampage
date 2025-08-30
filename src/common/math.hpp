@@ -1,6 +1,17 @@
 #pragma once
 
-#include "base.hpp"
+#include <glm/glm.hpp>
+#include <box2d/box2d.h>
+
+#include "commondef.hpp"
+
+/* OpenGL Mathematics (GLM) */
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/norm.hpp>
+#include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtx/vector_angle.hpp>
 
 struct Vec2 : glm::vec2 {
   Vec2() {}
@@ -22,10 +33,6 @@ struct Vec2 : glm::vec2 {
   b2Vec2 b2() const { return b2Vec2(x, y); }
 
   operator b2Vec2() const { return b2(); }
-
-  tgui::Vector2f tgui() const { return tgui::Vector2f(x, y); }
-
-  operator tgui::Vector2f() const { return tgui(); }
 };
 
 struct Rot : b2Rot {

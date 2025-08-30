@@ -1,5 +1,7 @@
 #include "componentSet.hpp"
 
+RAMPAGE_START
+
 ComponentSet::ComponentSet(const std::vector<ComponentId>& ids) : m_comps(ids) {
   std::sort(m_comps.begin(), m_comps.end());
 }
@@ -132,3 +134,5 @@ ComponentSetId ComponentSetBuilder::getSetId() const {
 const std::vector<ComponentId>& ComponentSetBuilder::list() const { return m_comps; }
 
 ComponentSet ComponentSetBuilder::build() const { return ComponentSet(m_comps); }
+
+RAMPAGE_END

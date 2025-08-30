@@ -1,52 +1,38 @@
-#include "../common/host.hpp"
 #include "log.hpp"
 
-int onLoad(HostCtx& host) {
-  std::lock_guard lock(host.mutex);
-  HostFuncs& funcs = host.funcs;
+#include "../common/common.hpp"
+#include "../host/host.hpp"
 
-  logInit();
+using namespace rmp;
 
-  funcs.trace = logGeneric;
-  funcs.traceError = logError;
+class LogModule final : public DynamicModule {
+public:
+  LogModule()
+    : DynamicModule("LogModule") {}
 
-  return 0;
-}
+protected:
+  int onLoad(Host& host, u32 version) override {
+    logInit();
+    host.setLogFuncs(logGeneric, logError);
 
-int onUnload(HostCtx& host) {
-  std::lock_guard lock(host.mutex);
-  HostFuncs& funcs = host.funcs;
+    host.log("Print dat mufo\n");
 
-  funcs.trace = nullptr;
-  funcs.traceError = nullptr;
-
-  return 0;
-}
-
-int onUpdate(HostCtx& host) {
-  return 0;
-}
-
-CR_STATE ASAN_SAFE static unsigned int version = 1;
-CR_EXPORT int cr_main(cr_plugin *ctx, cr_op operation) {
-  HostCtx& hostCtx = *static_cast<HostCtx*>(ctx->userdata);
-  HostFuncs& hostFuncs = hostCtx.funcs;
-
-  if (ctx->version < version) {
-    hostFuncs.traceError(ctx->failure, "<-(CR) Failed entry in module\n");
-  }
-  version = ctx->version;
-
-  switch (operation) {
-  case CR_LOAD:
-    return onLoad(hostCtx);
-  case CR_UNLOAD:
-    return onUnload(hostCtx);
-  case CR_STEP:
-    return onUpdate(hostCtx);
-  case CR_CLOSE:
-    break;
+    return 0;
   }
 
-  return -127;
+  int onUnload(Host& host) override {
+    host.setLogFuncs(nullptr, nullptr);
+
+    return 0;
+  }
+
+  int onUpdate(Host& host) override {
+    return 0;
+  }
+};
+
+LogModule module;
+static u32 ASAN_SAFE CR_STATE version = 1;
+CR_EXPORT int cr_main(const cr_plugin* ctx, cr_op op) {
+  return module.run(ctx, op, version);
 }

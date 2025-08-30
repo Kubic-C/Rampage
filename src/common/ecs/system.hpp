@@ -3,6 +3,8 @@
 #include "entity.hpp"
 #include "world.hpp"
 
+RAMPAGE_START
+
 class System {
   friend class EntityWorld;
 
@@ -25,3 +27,5 @@ class System {
   EntityIterator m_it;
   EntityWorld::SystemFunc m_func;
 };
+
+RAMPAGE_END

@@ -4,6 +4,8 @@
 #include "capnp/message.h"
 #include "../schema/rampage.capnp.h"
 
+RAMPAGE_START
+
 /* An extension of entity world that defines a set of methods to serialize component data. */
 class EntityWorldSerializable : public EntityWorld {
   static constexpr size_t m_maxScratchWordSize = 512;
@@ -55,3 +57,4 @@ private:
   std::vector<DeserializeFunc> m_componentDeserializeFuncs;
 };
 
+RAMPAGE_END

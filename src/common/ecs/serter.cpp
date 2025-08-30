@@ -3,6 +3,8 @@
 #include "capnp/pretty-print.h"
 #include "capnp/serialize-packed.h"
 
+RAMPAGE_START
+
 void EntityWorldSerializable::registerSerializable(ComponentId compId, SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) {
   if (m_componentSerializeFuncs.size() <= compId)
     m_componentSerializeFuncs.resize(compId + 1, nullptr);
@@ -46,7 +48,6 @@ bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) 
     Entity e = it.next();
     auto entityBuilder = root.getEntities()[entityI++];
 
-    logGeneric("id %u\n", e.id());
     entityBuilder.setId(e.id());
 
     auto compIds = e.set().list(); // yes, copy
@@ -112,10 +113,8 @@ bool EntityWorldSerializable::loadState(const char* path, bool appendEntities, b
     auto serCompsData = entity.getCompData();
     auto compIds = entity.getCompIds();
 
-    if (eid == NullEntityId) {
-      logGeneric("Entity Id is null, skipping...\n");
+    if (eid == NullEntityId)
       continue;
-    }
 
     if (!appendEntities && exists(eid)) {
       if (clearPrevious)
@@ -146,3 +145,5 @@ bool EntityWorldSerializable::loadState(const char* path, bool appendEntities, b
 
   return true;
 }
+
+RAMPAGE_END

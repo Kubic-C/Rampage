@@ -87,21 +87,6 @@ target_sources(
   "modules/turret.hpp"
   "modules/item.hpp")
 
-# Ecs
-target_sources(
-  RMaster PUBLIC
-  "ecs/componentSet.cpp"
-  "ecs/componentSet.hpp"
-  "ecs/ecs.hpp"
-  "ecs/entity.cpp"
-  "ecs/entity.hpp"
-  "ecs/id.hpp"
-  "ecs/module.hpp"
-  "ecs/pool.hpp"
-  "ecs/system.hpp"
-  "ecs/world.hpp"
-  "ecs/world.cpp")
-
 target_sources(RMaster PUBLIC ${srcFiles})
 
 set(NeededBoostLibs

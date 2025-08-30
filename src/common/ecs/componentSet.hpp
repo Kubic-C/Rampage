@@ -2,6 +2,8 @@
 
 #include "id.hpp"
 
+RAMPAGE_START
+
 class ComponentSetBuilder;
 
 class ComponentSet {
@@ -61,16 +63,19 @@ class ComponentSetBuilder {
   std::vector<ComponentId> m_comps;
 };
 
+RAMPAGE_END
+
 namespace boost {
   template <>
-  struct hash<ComponentSet> {
-    size_t operator()(const ComponentSet& set) const { return set.getSetId(); }
+  struct hash<rmp::ComponentSet> {
+    size_t operator()(const rmp::ComponentSet& set) const { return set.getSetId(); }
   };
 } // namespace boost
 
 namespace std {
   template <>
-  struct hash<ComponentSet> {
-    size_t operator()(const ComponentSet& set) const { return set.getSetId(); }
+  struct hash<rmp::ComponentSet> {
+    size_t operator()(const rmp::ComponentSet& set) const { return set.getSetId(); }
   };
 } // namespace std
+

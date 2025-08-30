@@ -1,6 +1,8 @@
 #pragma once
 
-#include "base.hpp"
+#include "../commondef.hpp"
+
+RAMPAGE_START
 
 template <typename IdType>
 class IdManager {
@@ -9,7 +11,7 @@ class IdManager {
   static constexpr IdType invalidId = 0;
 
   // set the last biggest id
-  void setLastId(uint32_t lastId) { m_lastId = lastId; }
+  void setLastId(u32 lastId) { m_lastId = lastId; }
 
   void setLocalRange(IdType startingId) {
     m_startingLocalRange = startingId;
@@ -131,3 +133,11 @@ private:
     return counter++;
   }
 };
+
+using EntityId = u32;
+using ComponentId = u16;
+using ComponentSetId = u64;
+static constexpr EntityId NullEntityId = 0;
+static constexpr ComponentId NullComponentId = 0;
+
+RAMPAGE_END

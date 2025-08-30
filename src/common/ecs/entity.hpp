@@ -2,6 +2,8 @@
 
 #include "ref.hpp"
 
+RAMPAGE_START
+
 class Entity {
   public:
   Entity(EntityWorld& world);
@@ -102,3 +104,5 @@ T& EntityWorld::getModule() {
 
   throw std::runtime_error("Module does not exist\n");
 }
+
+RAMPAGE_END

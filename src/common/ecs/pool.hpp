@@ -2,6 +2,8 @@
 
 #include "id.hpp"
 
+RAMPAGE_START
+
 class IPool {
   public:
   virtual ~IPool() = default;
@@ -41,7 +43,7 @@ class Pool : public IPool {
     return (u8*)m_objects.at(id);
   }
 
-  private:
+private:
   Map<EntityId, T*> m_objects;
   boost::object_pool<T> m_pool;
 };
@@ -98,3 +100,5 @@ class SparsePool : public IPool {
   std::vector<std::optional<T>> m_dense;
   std::vector<size_t> m_sparse;
 };
+
+RAMPAGE_END

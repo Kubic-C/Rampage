@@ -2,6 +2,8 @@
 
 #include "entity.hpp"
 
+RAMPAGE_START
+
 Ref::Ref(EntityWorld& world, EntityId id, ComponentId comp) : m_world(world), m_entity(id), m_comp(comp) {}
 
 Ref::Ref(Entity entity, ComponentId comp) : m_world(entity.world()), m_entity(entity), m_comp(comp) {}
@@ -15,3 +17,5 @@ void* Ref::get() {
 
   return comp;
 }
+
+RAMPAGE_END

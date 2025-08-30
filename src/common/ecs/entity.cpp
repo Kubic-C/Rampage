@@ -1,5 +1,7 @@
 #include "entity.hpp"
 
+RAMPAGE_START
+
 Entity::Entity(EntityWorld& world) : m_world(&world), m_id(NullEntityId) {}
 
 Entity::Entity(EntityWorld& world, EntityId id) : m_world(&world), m_id(id) {}
@@ -103,3 +105,5 @@ void Entity::copyInto(EntityId dstId) {
 }
 
 const ComponentSet& Entity::set() const { return *m_world->getEntitySet(m_id); }
+
+RAMPAGE_END

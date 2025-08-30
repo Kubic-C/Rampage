@@ -1,6 +1,8 @@
 #include "ecs.hpp"
 #include "entity.hpp"
 
+RAMPAGE_START
+
 EntityWorld::SetIterator::SetIterator(EntityWorld& world, const ComponentSet* match) :
     m_world(&world), m_base(match), m_next(Set<const ComponentSet*>::const_iterator()) {}
 
@@ -360,3 +362,5 @@ void EntityWorld::addToSuperSets(const ComponentSet* baseSet) {
   for (const ComponentSet* set : subsets)
     m_superSets[set].insert(baseSet);
 }
+
+RAMPAGE_END

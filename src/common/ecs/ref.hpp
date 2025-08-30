@@ -2,6 +2,8 @@
 
 #include "world.hpp"
 
+RAMPAGE_START
+
 template<typename T>
 class RefT;
 
@@ -40,3 +42,5 @@ RefT<T> Ref::cast() {
   assert(m_world.component<T>() == m_comp);
   return RefT<T>(m_world, m_entity);
 }
+
+RAMPAGE_END

@@ -1,4 +1,5 @@
 #pragma once
+
 #include <cstdarg>
 #include <string>
 #include <map>
@@ -149,7 +150,6 @@ inline void logInit() {
   m_formatMap["bgBrightWhite"] = "107";
 
   std::cout << std::setw(2);
-  std::cout << "Log init\n";
 }
 
 inline void logGeneric(const char* fmt, ...) {

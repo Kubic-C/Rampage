@@ -1,9 +1,10 @@
 #pragma once
 
-#include "../utility/log.hpp"
 #include "componentSet.hpp"
 #include "module.hpp"
 #include "pool.hpp"
+
+RAMPAGE_START
 
 class Ref;
 class Entity;
@@ -36,14 +37,14 @@ class EntityWorld {
 
   template <typename T>
   class StaticId {
-public:
+  public:
     template <typename X>
     static int id() {
       static int id = nextID();
       return id;
     }
 
-private:
+  private:
     static int nextID() {
       static int counter = 0;
       return counter++;
@@ -161,9 +162,6 @@ private:
   void addContext(Params&&... args) {
     int id = StaticId<ContextGen>::id<T>();
 
-#ifndef NDEBUG
-    logGeneric("Added CONTEXT: %i at %s\n", id, typeid(T).name());
-#endif
     m_contexts[id].bytes = (u8*)new T(args...);
     m_contexts[id].destroy = [](u8* bytes) { delete (T*)bytes; };
     m_contextsLifo.push_back(id);
@@ -199,10 +197,6 @@ private:
 
       m_componentCopyCtor[compId] = [](u8* dst, u8* src) { new ((T*)dst) T(*(T*)src); };
     }
-
-#ifndef NDEBUG
-    logGeneric("Registered Comp: %s @ %u\n", m_componentNames[compId].c_str(), compId);
-#endif
 
     // Necessary for modules.
     findOrCreateSet(set<Enabled, T>());
@@ -313,3 +307,5 @@ private:
 };
 
 using EntityIterator = EntityWorld::EntityIterator;
+
+RAMPAGE_END
