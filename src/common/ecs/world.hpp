@@ -3,6 +3,7 @@
 #include "componentSet.hpp"
 #include "module.hpp"
 #include "pool.hpp"
+#include "staticId.hpp"
 
 RAMPAGE_START
 
@@ -29,26 +30,6 @@ class EntityWorld {
   struct ContextData {
     u8* bytes = nullptr;
     std::function<void(u8*)> destroy;
-  };
-
-  struct ComponentGen {};
-
-  struct ContextGen {};
-
-  template <typename T>
-  class StaticId {
-  public:
-    template <typename X>
-    static int id() {
-      static int id = nextID();
-      return id;
-    }
-
-  private:
-    static int nextID() {
-      static int counter = 0;
-      return counter++;
-    }
   };
 
   struct EntityData {
@@ -160,7 +141,7 @@ private:
 
   template <typename T, typename... Params>
   void addContext(Params&&... args) {
-    int id = StaticId<ContextGen>::id<T>();
+    u32 id = m_contextIdMgr.id<T>();
 
     m_contexts[id].bytes = (u8*)new T(args...);
     m_contexts[id].destroy = [](u8* bytes) { delete (T*)bytes; };
@@ -169,14 +150,14 @@ private:
 
   template <typename T>
   T& getContext() {
-    int id = StaticId<ContextGen>::id<T>();
+    u32 id = m_contextIdMgr.id<T>();
     assert(m_contexts.contains(id));
     return *(T*)m_contexts[id].bytes;
   }
 
   template <typename T>
   ComponentId component(const std::string_view& name = "") {
-    ComponentId compId = StaticId<ComponentGen>::id<T>();
+    ComponentId compId = m_componentIdMgr.id<T>();
     if (compId < m_componentPools.size())
       return compId;
 
@@ -285,6 +266,7 @@ private:
   std::vector<EntityId> m_deferredDestroy;
 
   /* Contexts */
+  StaticIdManager<u32> m_contextIdMgr;
   std::vector<u32> m_contextsLifo;
   Map<u32, ContextData> m_contexts;
 
@@ -293,6 +275,7 @@ private:
   IdManager<EntityId> m_idMgr;
 
   /* Components */
+  StaticIdManager<ComponentId> m_componentIdMgr;
   Map<EventType, Map<ComponentId, std::vector<ObserverData>>> m_observers;
 
   std::vector<std::string> m_componentNames;

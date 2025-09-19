@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <queue>
 
 #include <boost/container/flat_map.hpp>
 #include <boost/container/list.hpp>
@@ -19,8 +20,6 @@
 #include <boost/unordered_set.hpp>
 
 #include <glaze/glaze.hpp>
-
-#include <cr.h>
 
 #define RAMPAGE_START namespace rmp {
 #define RAMPAGE_END }

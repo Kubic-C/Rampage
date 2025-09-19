@@ -152,18 +152,10 @@ inline void logInit() {
   std::cout << std::setw(2);
 }
 
-inline void logGeneric(const char* fmt, ...) {
-  va_list args;
-
-  va_start(args, fmt);
+inline void logGeneric(const char* fmt, va_list args) {
   log(0, fmt, args);
-  va_end(args);
 }
 
-inline void logError(int ec, const char* fmt, ...) {
-  va_list args;
-
-  va_start(args, fmt);
+inline void logError(int ec, const char* fmt, va_list args) {
   log(ec, fmt, args);
-  va_end(args);
 }

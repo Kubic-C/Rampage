@@ -1,82 +1,54 @@
 #pragma once
 
 #include <mutex>
-#include "../common/module.hpp"
+#include <cstdarg>
+#include "../common/ihost.hpp"
 
 RAMPAGE_START
 
-typedef void(*TraceErrorFunc)(int ec, const char* format, ...);
-typedef void(*TraceFunc)(const char* format, ...);
-
-class Host {
+class Host final : public IHost {
   struct HostFuncs {
     TraceErrorFunc traceError = nullptr;
     TraceFunc trace = nullptr;
   };
 
-  bool getModuleList(const std::string& moduleFilePath, DynamicModuleListMeta& modules) {
-    const std::string& workingDir = std::filesystem::current_path().string();
-    const std::string& fullFilePath = workingDir + "/" + moduleFilePath;
-    std::ifstream file(fullFilePath);
-    if (!file.is_open()) {
-      log("Failed to load file, does not exist\n");
-      return false;
-    }
-
-    std::string fileData;
-    fileData.resize(std::filesystem::file_size(moduleFilePath));
-    file.read(fileData.data(), fileData.size());
-    file.close();
-
-    constexpr glz::opts readOps{
-      .comments = true,
-      .error_on_unknown_keys = true,
-      .append_arrays = true,
-      .error_on_missing_keys = false // turn this to true for debug reasons
-    };
-
-    glz::error_ctx ec = glz::read<readOps>(modules, fileData);
-    if (ec) {
-      std::string msg = glz::format_error(ec, fileData);
-      log("Failed to load modules:\n\t%s\n", msg);
-      return false;
-    }
-
-    for (auto& module : modules.modules) {
-      module.name = workingDir + "\\" + module.name;
-      if (!std::filesystem::exists(module.name)) {
-        log("%s does not exist\n", module.name);
-        return false;
-      }
-    }
-
-    return true;
-  }
-
 public:
-  Host(const std::string& moduleFilePath);
-
-  template<class ... Params>
-  void log(int ec, const char* format, Params&& ... args) {
+  void log(int ec, const char* format, ...) override {
     std::lock_guard lock(m_mutex);
+    va_list args;
 
+    va_start(args, format);
     if (m_funcs.traceError)
-      m_funcs.traceError(ec, format, args...);
+      m_funcs.traceError(ec, format, args);
     else
-      printf(format, args...);
+      vprintf(format, args);
+    va_end(args);
   }
 
-  template<class ... Params>
-  void log(const char* format, Params&& ... args) {
-    log(0, format, std::forward<Params>(args)...);
-  }
+  void log(const char* format, ...) override {
+    std::lock_guard lock(m_mutex);
+    va_list args;
 
-  void setLogFuncs(const TraceFunc trace, const TraceErrorFunc traceErr) {
+    va_start(args, format);
+    if (m_funcs.traceError)
+      m_funcs.traceError(0, format, args);
+    else
+      vprintf(format, args);
+    va_end(args);
+  }
+  void setLogFuncs(const TraceFunc trace, const TraceErrorFunc traceErr) override {
     std::lock_guard lock(m_mutex);
 
     m_funcs.trace = trace;
     m_funcs.traceError = traceErr;
   }
+
+  EntityWorld& getWorld() override {
+    return m_world;
+  }
+
+public:
+  explicit Host();
 
   int run();
 
@@ -98,12 +70,20 @@ private:
   Status m_status;
   volatile bool m_exit = false;
 
-  DynamicModuleListMeta m_modules;
+  EntityWorld m_world;
   HostFuncs m_funcs;
-};
 
-inline Host& getHost(const cr_plugin* plugin) {
-  return *static_cast<Host*>(plugin->userdata);
-}
+  std::vector<IStaticModule*> m_staticModules;
+  Map<std::type_index, IStaticModule*> m_typeMap;
+
+private:
+  void sortModulesByDependencies();
+
+  template<typename T>
+  void addModule() {
+    m_staticModules.push_back(new T());
+    m_typeMap[typeid(T)] = m_staticModules.back();
+  }
+};
 
 RAMPAGE_END

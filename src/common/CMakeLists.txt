@@ -19,6 +19,7 @@ target_sources(
   "ecs/entity.cpp"
   "ecs/entity.hpp"
   "ecs/id.hpp"
+  "ecs/staticId.hpp"
   "ecs/module.hpp"
   "ecs/pool.hpp"
   "ecs/ref.cpp"
@@ -33,8 +34,8 @@ target_sources(
   RCommon PUBLIC
   "commondef.hpp"
   "math.hpp"
-  "module.hpp"
-  "module.cpp")
+  "imodule.hpp"
+  "ihost.hpp")
 
 file(GLOB schemasCXX "./schema/*.c++" "./schema/*.h")
 

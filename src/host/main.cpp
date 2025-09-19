@@ -13,7 +13,7 @@ void pause() {
 }
 
 int main () {
-  Host host("module.json");
+  Host host;
 
   if (host.getStatus() == Status::CriticalError) {
     host.log("Host error, status returned is critical error\n");
