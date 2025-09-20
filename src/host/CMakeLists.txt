@@ -4,7 +4,7 @@
 add_executable(RHost "main.cpp")
 set_property(TARGET RHost PROPERTY CXX_STANDARD 20)
 
-target_link_libraries(RHost PUBLIC RCommon RLog RCore)
+target_link_libraries(RHost PUBLIC RCommon RLog RCore RRender REvent)
 
 target_sources(RHost PUBLIC
   "host.hpp"

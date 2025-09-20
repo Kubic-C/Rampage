@@ -1,7 +1,8 @@
 #pragma once
 
+#include <utility>
+
 #include "componentSet.hpp"
-#include "module.hpp"
 #include "pool.hpp"
 #include "staticId.hpp"
 
@@ -12,62 +13,24 @@ class Entity;
 class System;
 
 class EntityWorld {
-  public:
+  friend class Entity;
+  friend class System;
+  friend class Ref;
+public:
   using EntityList = std::list<EntityId, boost::fast_pool_allocator<EntityId>>;
   using EntityListIterator = EntityList::const_iterator;
 
   enum class EventType { Add, Remove };
 
-  struct ModuleData {
-    std::shared_ptr<Module> m_module;
-  };
-
   struct Destroy {};
-
   struct Enabled {};
 
-  private:
-  struct ContextData {
-    u8* bytes = nullptr;
-    std::function<void(u8*)> destroy;
-  };
-
-  struct EntityData {
-    const ComponentSet* comps = nullptr;
-    EntityListIterator pos = EntityListIterator();
-  };
-
+public:
+  using SystemFunc = std::function<void(Entity entity, float deltaTime)>;
   using ObserverCallback = std::function<void(Entity)>;
 
-  struct ObserverData {
-    ObserverData& operator=(const ObserverData& other) {
-      if (this == &other)
-        return *this;
-
-      callback = other.callback;
-      with = other.with;
-
-      return *this;
-    }
-
-    ObserverData(const ComponentSet* with, ObserverCallback observer) : with(with), callback(observer) {}
-
-    ObserverCallback callback;
-    const ComponentSet* with;
-  };
-
-  using SystemFunc = std::function<void(Entity entity, float deltaTime)>;
-
-  template <typename T>
-  struct ModuleType {};
-
-  friend class Entity;
-  friend class System;
-  friend class Ref;
-
-  public:
   class SetIterator {
-public:
+  public:
     SetIterator& operator=(const SetIterator& other) {
       m_base = other.m_base;
       m_next = other.m_next;
@@ -83,7 +46,7 @@ public:
     EntityList& next();
     EntityWorld& getWorld();
 
-private:
+  private:
     EntityWorld* m_world;
     const ComponentSet* m_base;
     Set<const ComponentSet*>::const_iterator m_next;
@@ -128,31 +91,19 @@ private:
   EntityWorld& operator=(EntityWorld other) = delete;
 
   template <typename T, typename... Params>
-  Entity addModule(Params&&... args);
-
-  template <typename T>
-  void enableModule();
-
-  template <typename T>
-  void disableModule();
-
-  template <typename T>
-  T& getModule();
-
-  template <typename T, typename... Params>
   void addContext(Params&&... args) {
-    u32 id = m_contextIdMgr.id<T>();
+    const u32 id = m_contextIdMgr.id<T>();
 
-    m_contexts[id].bytes = (u8*)new T(args...);
-    m_contexts[id].destroy = [](u8* bytes) { delete (T*)bytes; };
+    m_contexts[id].bytes = reinterpret_cast<u8*>(new T(args...));
+    m_contexts[id].destroy = [](u8* bytes) { delete reinterpret_cast<T*>(bytes); };
     m_contextsLifo.push_back(id);
   }
 
   template <typename T>
   T& getContext() {
-    u32 id = m_contextIdMgr.id<T>();
+    const u32 id = m_contextIdMgr.id<T>();
     assert(m_contexts.contains(id));
-    return *(T*)m_contexts[id].bytes;
+    return *reinterpret_cast<T*>(m_contexts[id].bytes);
   }
 
   template <typename T>
@@ -222,7 +173,6 @@ private:
   Entity getFirstWith(const ComponentSet& components);
 
   // Run them thing homey
-  void run(float deltaTime);
   System system(const ComponentSet& components, const SystemFunc& func);
   System systemWithDisabled(const ComponentSet& components, const SystemFunc& func);
 
@@ -237,7 +187,6 @@ private:
   Entity clone(EntityId entity);
 
   size_t getEntityCount() const { return m_idMgr.count(); }
-
   size_t getSetCount() const { return m_sets.size(); }
 
   template <typename... Params>
@@ -245,7 +194,38 @@ private:
     return ComponentSet({component<Params>()...});
   }
 
-  protected:
+protected:
+  struct ContextData {
+    u8* bytes = nullptr;
+    std::function<void(u8*)> destroy;
+  };
+
+  struct EntityData {
+    const ComponentSet* comps = nullptr;
+    EntityListIterator pos = EntityListIterator();
+  };
+
+  struct ObserverData {
+    ObserverData& operator=(const ObserverData& other) {
+      if (this == &other)
+        return *this;
+
+      callback = other.callback;
+      with = other.with;
+
+      return *this;
+    }
+
+    ObserverData(const ComponentSet* with, ObserverCallback observer) : with(with), callback(std::move(observer)) {}
+
+    ObserverCallback callback;
+    const ComponentSet* with;
+  };
+
+
+  template <typename T>
+  struct ModuleType {};
+
   inline IPool* getPool(ComponentId id) {
     assert(id < m_componentPools.size());
     return m_componentPools[id];
@@ -259,6 +239,7 @@ private:
   const ComponentSet* getEntitySet(EntityId id);
   void addToSuperSets(const ComponentSet* baseSet);
 
+protected:
   /* Deferred operations */
   bool m_isDefer = false;
   std::vector<const ComponentSet*> m_deferredSuperSetCalc;

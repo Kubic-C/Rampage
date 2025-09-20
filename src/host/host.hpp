@@ -2,7 +2,7 @@
 
 #include <mutex>
 #include <cstdarg>
-#include "../common/ihost.hpp"
+#include "../common/common.hpp"
 
 RAMPAGE_START
 
@@ -36,6 +36,7 @@ public:
       vprintf(format, args);
     va_end(args);
   }
+
   void setLogFuncs(const TraceFunc trace, const TraceErrorFunc traceErr) override {
     std::lock_guard lock(m_mutex);
 
@@ -47,6 +48,22 @@ public:
     return m_world;
   }
 
+  std::string getTitle() override {
+    return "Rampage";
+  }
+
+  Pipeline& getPipeline() override {
+    return m_pipeline;
+  }
+
+  bool shouldExit() const override {
+    return m_exit;
+  }
+
+  void exit() override {
+    m_exit = true;
+  }
+
 public:
   explicit Host();
 
@@ -54,14 +71,6 @@ public:
 
   Status getStatus() const {
     return m_status;
-  }
-
-  bool shouldExit() const {
-    return m_exit;
-  }
-
-  void exit() {
-    m_exit = true;
   }
 
 private:
@@ -72,6 +81,7 @@ private:
 
   EntityWorld m_world;
   HostFuncs m_funcs;
+  Pipeline m_pipeline;
 
   std::vector<IStaticModule*> m_staticModules;
   Map<std::type_index, IStaticModule*> m_typeMap;
@@ -81,7 +91,8 @@ private:
 
   template<typename T>
   void addModule() {
-    m_staticModules.push_back(new T());
+    m_world.addContext<T>(*this);
+    m_staticModules.push_back(&m_world.getContext<T>());
     m_typeMap[typeid(T)] = m_staticModules.back();
   }
 };

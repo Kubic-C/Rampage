@@ -2,6 +2,8 @@
 
 #include "util.hpp"
 
+RAMPAGE_START
+
 class Sampler {
   public:
   Sampler() { glCreateSamplers(1, &m_id); }
@@ -13,3 +15,5 @@ class Sampler {
   private:
   u32 m_id;
 };
+
+RAMPAGE_END

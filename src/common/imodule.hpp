@@ -8,8 +8,8 @@ class IHost;
 
 class IStaticModule {
 public:
-  explicit IStaticModule(const std::string& name)
-    : m_name(name) {}
+  explicit IStaticModule(const std::string& name, IHost& host)
+    : m_name(name), m_host(&host) {}
 
   virtual ~IStaticModule() = default;
 
@@ -18,13 +18,14 @@ public:
   }
 
 public:
-  virtual int onLoad(IHost& host) = 0;
-  virtual int onUnload(IHost& host) = 0;
-  virtual int onUpdate(IHost& host) = 0;
+  virtual int onLoad() = 0;
+  virtual int onUnload() = 0;
+  virtual int onUpdate() = 0;
   virtual std::vector<std::type_index> getDependencies() = 0;
 
 protected:
   std::string m_name;
+  IHost* m_host;
 };
 
 RAMPAGE_END

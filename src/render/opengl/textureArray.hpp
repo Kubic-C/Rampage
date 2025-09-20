@@ -1,7 +1,9 @@
 #pragma once
 
-#include "../utility/base.hpp"
-#include "stb_image.h"
+#include "../stb_image.h"
+#include "util.hpp"
+
+RAMPAGE_START
 
 class TextureArray {
   public:
@@ -24,3 +26,5 @@ class TextureArray {
   u32 m_height;
   u32 m_id;
 };
+
+RAMPAGE_END

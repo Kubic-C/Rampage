@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../utility/math.hpp"
+#include "../common/common.hpp"
 
-struct CameraInUse {};
+struct CameraInUseTag {};
 
 struct CameraComponent {
   CameraComponent() : m_zoom(100.0f), m_rot(0) {}
@@ -24,11 +24,6 @@ struct CameraComponent {
     if (m_zoom + amount < 0.01f)
       return;
     m_zoom += amount;
-  }
-
-  template <typename Stream>
-  bool Serialize(Stream& stream) {
-    return true;
   }
 
   float m_zoom;

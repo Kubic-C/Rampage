@@ -190,7 +190,7 @@ class TurretModule : public Module {
     m_summonBullets.clear();
   }
 
-  private:
+private:
   System m_turretSys;
   std::vector<SummonBullet> m_summonBullets;
   Entity m_collisionQueue;

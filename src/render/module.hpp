@@ -1,23 +1,36 @@
 #pragma once
-#include "../common/common.hpp"
-
-/* DO NOT EXPOSE UNDERLYING MODULE IMPLEMENTATION IN THIS FILE. */
+#include "../log/module.hpp"
+#include "../core/module.hpp"
 
 RAMPAGE_START
+
+struct PreRenderStage {};
+struct ClearWindowStage {};
+struct OnRenderStage {};
+struct OnGUIRenderStage {};
+struct SwapBuffersStage {};
+struct PostRenderStage {};
 
 class RenderModule final : public IStaticModule {
 public:
   std::vector<std::type_index> getDependencies() override {
-    return {};
+    return { typeid(LogModule), typeid(CoreModule) };
   }
 
-  RenderModule()
-    : IStaticModule("RenderModule") {}
+  explicit RenderModule(IHost& host)
+    : IStaticModule("RenderModule", host) {}
 
 public:
-  int onLoad(IHost& host) override;
-  int onUnload(IHost& host) override;
-  int onUpdate(IHost& host) override;
+  int onLoad() override;
+  int onUnload() override;
+  int onUpdate() override;
+
+  void enableVsync(bool vsync);
+  glm::mat4 getProj() const;
+  glm::mat4 getView() const;
+  glm::ivec2 getWindowSize() const;
+  glm::vec2 getWorldCoords(const glm::ivec2& screenCoords) const;
+  glm::vec2 getScreenCoords(const glm::ivec2& worldCoords) const;
 };
 
 RAMPAGE_END

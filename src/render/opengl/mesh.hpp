@@ -2,6 +2,8 @@
 
 #include "vertexBuffer.hpp"
 
+RAMPAGE_START
+
 template <typename VertexType, size_t verticePerRender, size_t verticesPerSubdata>
 struct Mesh {
   VertexBuffer buffer;
@@ -31,3 +33,5 @@ struct Mesh {
     verticesToRender += verticePerRender;
   }
 };
+
+RAMPAGE_END

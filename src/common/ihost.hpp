@@ -5,6 +5,9 @@
 
 RAMPAGE_START
 
+class Pipeline;
+class EventManager;
+
 typedef void(*TraceErrorFunc)(int ec, const char* format, va_list args);
 typedef void(*TraceFunc)(const char* format, va_list args);
 
@@ -16,6 +19,10 @@ public:
   virtual void setLogFuncs(const TraceFunc trace, const TraceErrorFunc traceErr) = 0;
 
   virtual EntityWorld& getWorld() = 0;
+  virtual std::string getTitle() = 0;
+  virtual Pipeline& getPipeline() = 0;
+  virtual bool shouldExit() const = 0;
+  virtual void exit() = 0;
 };
 
 RAMPAGE_END

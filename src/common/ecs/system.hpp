@@ -8,10 +8,10 @@ RAMPAGE_START
 class System {
   friend class EntityWorld;
 
-  protected:
+protected:
   System(const EntityIterator& it, const EntityWorld::SystemFunc& func) : m_it(it), m_func(func) {}
 
-  public:
+public:
   void run(float deltaTime = 0.0f) {
     EntityWorld& world = m_it.getWorld();
 
@@ -23,7 +23,7 @@ class System {
     world.endDefer();
   }
 
-  private:
+private:
   EntityIterator m_it;
   EntityWorld::SystemFunc m_func;
 };

@@ -1,0 +1,100 @@
+#pragma once
+
+#include "ihost.hpp"
+
+RAMPAGE_START
+
+/**
+ * Defines a pipeline where a series of functions will be called when .run() is called.
+ * Stages may be added or removed.
+ */
+class Pipeline {
+  typedef int(*StageTask)(IHost& host);
+  typedef int(*WorldStageTask)(EntityWorld& world);
+
+  struct Stage {
+    size_t name = 0;
+    std::vector<StageTask> tasks;
+    std::vector<WorldStageTask> worldTasks;
+  };
+
+public:
+  class Group {
+    friend class Pipeline;
+  public:
+    template<typename Name>
+    Group& createStage();
+
+    template<typename Predecessor, typename Name>
+    Group& createStageAfter();
+
+    template<typename Successor, typename Name>
+    Group& createStageBefore();
+
+    template<typename Name>
+    void attachToStage(StageTask task);
+
+    template<typename Name>
+    void attachToStage(WorldStageTask task);
+  protected:
+    template<typename Name>
+    std::list<Stage>::iterator searchStage() {
+      return std::ranges::find_if(m_stages, [](const Stage& stage){return stage.name == typeid(Name).hash_code(); });
+    }
+
+    std::string m_name;
+    std::list<Stage> m_stages;
+    float m_invRate = -1.0f;
+    float m_tickAccum = 0.0f;
+  };
+
+  Group& createGroup(const std::string& group, float rate);
+  Group& getGroup(const std::string& name);
+
+  void run(IHost& host);
+
+private:
+  std::list<Group>::iterator searchGroup(const std::string& groupName) {
+    return std::ranges::find_if(m_groups, [groupName](const Group& group){return group.m_name == groupName; });
+  }
+
+  std::list<Group> m_groups;
+  float m_invDefaultRate = 60;
+  float m_lastTime = 0.0f;
+};
+
+template<typename Name>
+Pipeline::Group& Pipeline::Group::createStage() {
+  m_stages.emplace_back();
+  m_stages.back().name = typeid(Name).hash_code();
+
+  return *this;
+}
+
+template<typename Predecessor, typename Name>
+Pipeline::Group& Pipeline::Group::createStageAfter() {
+  const auto it = m_stages.insert(++searchStage<Predecessor>(), Stage());
+  it->name = typeid(Name).hash_code();
+
+  return *this;
+}
+
+template<typename Successor, typename Name>
+Pipeline::Group& Pipeline::Group::createStageBefore() {
+  const auto it = m_stages.insert(searchStage<Successor>(), Stage());
+  it->name = typeid(Name).hash_code();
+
+  return *this;
+}
+
+template<typename Name>
+void Pipeline::Group::attachToStage(StageTask task) {
+  searchStage<Name>()->tasks.push_back(task);
+}
+
+template<typename Name>
+void Pipeline::Group::attachToStage(WorldStageTask task) {
+  searchStage<Name>()->worldTasks.push_back(task);
+}
+
+RAMPAGE_END

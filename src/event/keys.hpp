@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../core/contexts.hpp"
+#include "../common/math.hpp"
 
 enum class Key {
   A = SDL_SCANCODE_A,
@@ -288,75 +288,4 @@ enum class Event : Uint32 {
   Private1 = SDL_EVENT_PRIVATE1,
   Private2 = SDL_EVENT_PRIVATE2,
   Private3 = SDL_EVENT_PRIVATE3,
-};
-
-class EventManager {
-  struct KeyData {
-    bool pressed = false;
-    bool hold = false;
-  };
-
-public:
-  void poll() {
-    m_signalResized = false;
-
-    for (SDL_Scancode code : m_pressedKeys) {
-      m_keys[code].pressed = false;
-    }
-    m_pressedKeys.clear();
-
-    m_polledEvents.clear();
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-      m_polledEvents.push_back(event);
-
-      switch ((Event)event.type) {
-      case Event::Quit:
-        m_signalExit = true;
-        break;
-      case Event::WindowResized:
-        m_signalResized = true;
-        m_windowSize.x = event.window.data1;
-        m_windowSize.y = event.window.data2;
-        break;
-      case Event::KeyDown:
-        m_keys[event.key.scancode].pressed = true;
-        m_keys[event.key.scancode].hold = true;
-        m_pressedKeys.push_back(event.key.scancode);
-        break;
-      case Event::KeyUp:
-        m_keys[event.key.scancode].hold = false;
-        break;
-      }
-    }
-  }
-
-  const std::vector<SDL_Event>& getPolledEvents() const { return m_polledEvents; }
-
-  bool isKeyPressed(Key key) { return m_keys[(u32)key].pressed; }
-
-  bool isKeyHeld(Key key) { return m_keys[(u32)key].hold; }
-
-  bool hasWindowReized() { return m_signalResized; }
-
-  glm::vec2 getWindowSize() { return m_windowSize; }
-
-  bool shouldExit() const { return m_signalExit; }
-
-  Vec2 getMouseCoords() {
-    float x, y;
-
-    SDL_GetMouseState(&x, &y);
-
-    return Vec2(x, y);
-  }
-
-private:
-  std::vector<SDL_Event> m_polledEvents;
-  bool m_signalResized = false;
-  Vec2 m_windowSize;
-  bool m_signalExit = false;
-
-  std::vector<SDL_Scancode> m_pressedKeys;
-  std::array<KeyData, SDL_SCANCODE_COUNT> m_keys;
 };

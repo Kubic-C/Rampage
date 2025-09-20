@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../components/arrow.hpp"
-#include "../components/body.hpp"
-#include "../components/player.hpp"
-#include "../components/shapes.hpp"
+#include "../../game/components/arrow.hpp"
+#include "../../game/components/body.hpp"
+#include "../../game/components/player.hpp"
+#include "../../game/components/shapes.hpp"
 #include "state.hpp"
 
 class PlayState : public State {

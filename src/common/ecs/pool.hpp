@@ -53,7 +53,7 @@ template <typename T>
 class SparsePool : public IPool {
   static constexpr std::size_t npos = static_cast<std::size_t>(-1);
 
-  public:
+public:
   static IPool* createPool() { return new SparsePool<T>(); }
 
   u8* create(EntityId id) override {
@@ -95,7 +95,7 @@ class SparsePool : public IPool {
     return reinterpret_cast<u8*>(&m_dense[m_sparse[id]].value());
   }
 
-  private:
+private:
   std::vector<size_t> m_freed;
   std::vector<std::optional<T>> m_dense;
   std::vector<size_t> m_sparse;

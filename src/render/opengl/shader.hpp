@@ -2,13 +2,15 @@
 
 #include "util.hpp"
 
+RAMPAGE_START
+
 class Shader {
   public:
   Shader() : m_id(glCreateProgram()) {}
 
   ~Shader() { glDeleteProgram(m_id); }
 
-  bool loadShaderFiles(const char* vsh_path, const char* fsh_path) {
+  bool loadShaderFiles(const char* vsh_path, const char* fsh_path, std::string& res) {
     uint32_t vsh, fsh;
     bool vsh_invalid, fsh_invalid, leave;
 
@@ -31,24 +33,24 @@ class Shader {
       return false;
     }
 
-    if (!loadShaderModules(vsh, fsh, true)) {
+    if (!loadShaderModules(vsh, fsh, true, res)) {
       return false;
     }
 
     return true;
   }
 
-  bool loadShaderStr(const char* vs, const char* fs) {
+  bool loadShaderStr(const char* vs, const char* fs, std::string& res) {
     uint32_t vs_shader = createShaderFromSource(GL_VERTEX_SHADER, vs, nullptr);
     uint32_t fs_shader = createShaderFromSource(GL_FRAGMENT_SHADER, fs, nullptr);
 
     if (vs_shader == UINT32_MAX || fs_shader == UINT32_MAX)
       return false;
 
-    return loadShaderModules(vs_shader, fs_shader, true);
+    return loadShaderModules(vs_shader, fs_shader, true, res);
   }
 
-  bool loadShaderModules(uint32_t vsh, uint32_t fsh, bool delete_shaders) {
+  bool loadShaderModules(uint32_t vsh, uint32_t fsh, bool delete_shaders, std::string& result) {
     bool ret = true;
 
     glAttachShader(m_id, vsh);
@@ -60,8 +62,9 @@ class Shader {
       char info_log[512];
       glGetProgramiv(m_id, GL_LINK_STATUS, &success);
       if (!success) {
-        glGetShaderInfoLog(m_id, 512, NULL, info_log);
-        logError(-1, "Program failure to compile %s\n", info_log);
+        glGetShaderInfoLog(m_id, 512, nullptr, info_log);
+        result += info_log;
+        result += "\n\n";
         ret = false;
       }
     }
@@ -127,3 +130,5 @@ class Shader {
   private:
   uint32_t m_id;
 };
+
+RAMPAGE_END

@@ -2,6 +2,8 @@
 
 #include "vertexBuffer.hpp"
 
+RAMPAGE_START
+
 class VertexArrayBuffer {
   public:
   static void unbind() { glBindVertexArray(0); }
@@ -54,3 +56,5 @@ class VertexArrayBuffer {
   private:
   u32 m_id;
 };
+
+RAMPAGE_END

@@ -3,41 +3,41 @@
 
 RAMPAGE_START
 
-int LogModule::onLoad(IHost& host) {
+struct LogStage {};
+struct PostLogStage {};
+
+int LogModule::onLoad() {
   logInit();
-  host.setLogFuncs(logGeneric, logError);
+  m_host->setLogFuncs(logGeneric, logError);
+
+  auto& pipeline = m_host->getPipeline();
+  Pipeline::Group& group = pipeline.createGroup("LogGroup", 1.0f)
+    .createStage<LogStage>()
+    .createStage<PostLogStage>();
+
+  group.attachToStage<LogStage>(
+    [](IHost& host) {
+      host.log("We logging yo\n");
+      return 0;
+    });
+
+  group.attachToStage<PostLogStage>(
+    [](IHost& host) {
+      host.log("From stage 2\n");
+      return 0;
+    });
 
   return 0;
 }
 
-int LogModule::onUnload(IHost& host) {
-  host.setLogFuncs(nullptr, nullptr);
-
-  // EntityWorld& world = host.getWorld();
-  // auto iter = world.getWith(world.set<TestComponent>());
-  // while (iter.hasNext()) {
-  //   Entity e = iter.next();
-  //   auto test = e.get<TestComponent>();
-  //
-  //   test->print = true;
-  // }
+int LogModule::onUnload() {
+  m_host->setLogFuncs(nullptr, nullptr);
 
   return 0;
 }
 
-int LogModule::onUpdate(IHost& host) {
-  EntityWorld& world = host.getWorld();
-
-  // auto iter = world.getWith(world.set<TestComponent>());
-  // while (iter.hasNext()) {
-  //   Entity e = iter.next();
-  //
-  //   auto test = e.get<TestComponent>();
-  //   if (test->print) {
-  //     host.log("LLL %i %f %s\n", test->x, test->y, test->str);
-  //     test->print = false;
-  //   }
-  // }
+int LogModule::onUpdate() {
+  EntityWorld& world = m_host->getWorld();
 
   return 0;
 }

@@ -70,7 +70,6 @@ EntityWorld::EntityWorld() {
   m_sets.insert(std::make_pair(findOrCreateSet(ComponentSet()), EntityList()));
 
   component<Destroy>();
-  component<ModuleData>();
   component<Enabled>();
 }
 
@@ -200,16 +199,6 @@ Entity EntityWorld::getFirstWith(const ComponentSet& components) {
 struct EntityChanged {
   ComponentSetBuilder removed, added;
 };
-
-void EntityWorld::run(float deltaTime) {
-  EntityIterator it = getWith(set<ModuleData>());
-  while (it.hasNext()) {
-    Entity e = it.next();
-    RefT<ModuleData> data = e.get<ModuleData>();
-
-    data->m_module->run(*this, deltaTime);
-  }
-}
 
 System EntityWorld::system(const ComponentSet& set, const SystemFunc& func) {
   return systemWithDisabled(set.add(component<Enabled>()), func);

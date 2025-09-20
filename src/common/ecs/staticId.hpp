@@ -30,19 +30,17 @@ public:
   }
 
 private:
-  // This is called once per initialization per type per seperate compilation units..
+  // This is called once per initialization per type per seperate compilation units.. (it works across DLLs)
   template<typename T>
   IntT nextID() {
     size_t idHash = std::hash<std::string_view>{}(typeName<T>());
     auto it = m_registry.find(idHash);
     if (it != m_registry.end()) {
-      std::cout << "Found: " << boost::typeindex::type_id<T>().pretty_name() << " id: " << it->second << std::endl;
       return it->second;
     }
 
     int newId = ++m_counter;
     m_registry[idHash] = newId;
-    std::cout << "New: " <<  boost::typeindex::type_id<T>().pretty_name()  << " id: " << newId << std::endl;
     return newId;
   }
 

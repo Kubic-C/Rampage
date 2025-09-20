@@ -2,6 +2,8 @@
 
 #include "util.hpp"
 
+RAMPAGE_START
+
 class VertexBuffer {
   public:
   static void unbind(GLenum target) { glBindBuffer(target, 0); }
@@ -95,3 +97,5 @@ class VertexBuffer {
   private:
   u32 m_id;
 };
+
+RAMPAGE_END

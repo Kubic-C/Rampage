@@ -1,6 +1,7 @@
 #pragma once
 
-#include "ecs.hpp"
+#include "system.hpp"
+#include "world.hpp"
 #include "capnp/message.h"
 #include "../schema/rampage.capnp.h"
 

@@ -2,6 +2,8 @@
 
 #include "../log/module.hpp"
 #include "../core/module.hpp"
+#include "../render/module.hpp"
+#include "../event/module.hpp"
 
 RAMPAGE_START
 
@@ -47,14 +49,22 @@ void Host::sortModulesByDependencies() {
   m_staticModules = loadOrder;
 }
 
-Host::Host() {
+Host::Host()
+  : m_status(Status::Ok) {
   addModule<CoreModule>();
   addModule<LogModule>();
+  addModule<RenderModule>();
+  addModule<EventModule>();
 
   sortModulesByDependencies();
 
   for (IStaticModule* module : m_staticModules) {
-    module->onLoad(*this);
+    int rc = module->onLoad();
+    if (rc !=0) {
+      log(rc, "Failed to load module: %s\n", module->getName().c_str());
+      m_status = Status::CriticalError;
+      break;
+    }
     log("Loaded: %s\n", module->getName().c_str());
   }
 }
@@ -62,12 +72,14 @@ Host::Host() {
 int Host::run() {
   while (!m_exit) {
     for (auto module : m_staticModules) {
-      module->onUpdate(*this);
+      module->onUpdate();
     }
+
+    m_pipeline.run(*this);
   }
 
   for (auto module : m_staticModules) {
-    module->onUnload(*this);
+    module->onUnload();
   }
 
   return 0;

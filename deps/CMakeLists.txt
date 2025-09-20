@@ -52,6 +52,3 @@ add_subdirectory("SDL_ttf")
 add_subdirectory("TGUI")
 
 add_subdirectory("glaze")
-
-set(BUILD_EXAMPLES OFF)
-add_subdirectory("cr")

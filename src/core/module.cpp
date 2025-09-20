@@ -2,23 +2,27 @@
 
 RAMPAGE_START
 
-int CoreModule::onLoad(IHost& host) {
-  EntityWorld& world = host.getWorld();
+int CoreModule::onLoad() {
+  auto& world = m_host->getWorld();
 
-  // world.component<TestComponent>();
-  //
-  // Entity e = world.create();
-  // e.add<TestComponent>();
-  // e.get<TestComponent>()->str = "This is anotha str yo!\n";
+  world.addContext<AppStats>();
+  world.addContext<DoExit>();
+
+  world.component<TransformComponent>();
 
   return 0;
 }
 
-int CoreModule::onUnload(IHost& host) {
+int CoreModule::onUnload() {
   return 0;
 }
 
-int CoreModule::onUpdate(IHost& host) {
+int CoreModule::onUpdate() {
+  auto& world = m_host->getWorld();
+
+  if (world.getContext<DoExit>().exit)
+    m_host->exit();
+
   return 0;
 }
 

@@ -1,18 +1,19 @@
 #pragma once
-#include "../common/common.hpp"
+#include "../render/module.hpp"
+#include "../event/module.hpp"
 
 /* DO NOT EXPOSE UNDERLYING MODULE IMPLEMENTATION IN THIS FILE. */
 
 RAMPAGE_START
 
-class LogModule final : public IStaticModule {
+class GameModule final : public IStaticModule {
 public:
   std::vector<std::type_index> getDependencies() override {
-    return {};
+    return { typeid(RenderModule), typeid(EventModule) };
   }
 
-  LogModule(IHost& host)
-    : IStaticModule("LogModule", host) {}
+  explicit GameModule(IHost& host)
+    : IStaticModule("GameModule", host) {}
 
 public:
   int onLoad() override;

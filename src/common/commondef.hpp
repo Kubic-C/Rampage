@@ -21,6 +21,10 @@
 
 #include <glaze/glaze.hpp>
 
+/* SDL/OpenGL */
+#include <glad/gl.h>
+#include <SDL3/SDL.h>
+
 #define RAMPAGE_START namespace rmp {
 #define RAMPAGE_END }
 

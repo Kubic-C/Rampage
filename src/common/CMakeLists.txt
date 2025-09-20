@@ -1,3 +1,5 @@
+glad_add_library(GLAD STATIC REPRODUCIBLE API gl:core=4.0)
+
 add_library(RCommon STATIC
   "empty.cpp")
 
@@ -8,7 +10,14 @@ set(NeededBoostLibs
   "boost_container"
   "boost_unordered"
   "boost_pool")
-target_link_libraries(RCommon PUBLIC cr glaze::glaze ${NeededBoostLibs} glm::glm CapnProto::capnp box2d::box2d)
+target_link_libraries(RCommon PUBLIC
+  glaze::glaze
+  ${NeededBoostLibs}
+  glm::glm
+  CapnProto::capnp
+  box2d::box2d
+  SDL3::SDL3
+  GLAD)
 
 # ECS
 target_sources(
@@ -20,7 +29,6 @@ target_sources(
   "ecs/entity.hpp"
   "ecs/id.hpp"
   "ecs/staticId.hpp"
-  "ecs/module.hpp"
   "ecs/pool.hpp"
   "ecs/ref.cpp"
   "ecs/ref.hpp"
@@ -35,7 +43,9 @@ target_sources(
   "commondef.hpp"
   "math.hpp"
   "imodule.hpp"
-  "ihost.hpp")
+  "ihost.hpp"
+  "pipeline.cpp"
+  "pipeline.hpp")
 
 file(GLOB schemasCXX "./schema/*.c++" "./schema/*.h")
 
