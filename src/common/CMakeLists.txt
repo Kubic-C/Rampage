@@ -61,3 +61,5 @@ target_sources(
 file(GLOB schemasCXX "./schema/*.c++" "./schema/*.h")
 
 target_sources(RCommon PUBLIC ${schemasCXX})
+
+add_dependencies(RCommon capnpc_cpp capnp_tool)
