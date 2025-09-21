@@ -1,13 +1,9 @@
 #pragma once
 
-#include "utility/hashes.hpp"
-
-#include "../components/body.hpp"
-#include "../components/item.hpp"
-#include "../components/tilemap.hpp"
-#include "../components/transform.hpp"
-
+#include "components/components.hpp"
 #include "assetLoader.hpp"
+
+RAMPAGE_START
 
 struct ItemStack {
   u32 maxStackCost = 64;
@@ -395,3 +391,5 @@ inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& sta
 
   return true;
 }
+
+RAMPAGE_END

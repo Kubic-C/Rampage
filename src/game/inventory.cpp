@@ -1,5 +1,7 @@
 #include "inventory.hpp"
 
+RAMPAGE_START
+
 Inventory InventoryManager::createInventory(std::string name, u8 rows, u8 cols) {
   InventoryId invId = m_idMgr.generate();
 
@@ -72,3 +74,5 @@ void InventoryManager::destroyInventory(InventoryId id) {
   m_inventories.erase(id);
   m_idMgr.destroy(id);
 }
+
+RAMPAGE_END

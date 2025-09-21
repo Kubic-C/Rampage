@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../ecs/ecs.hpp"
-#include "../utility/math.hpp"
 #include "sprite.hpp"
+
+RAMPAGE_START
 
 constexpr glm::vec2 tileSize = glm::vec2(baseSpriteScale);
 
@@ -54,9 +54,11 @@ struct Tile {
   u16 height() const { return y.h; }
 };
 
+RAMPAGE_END
+
 template <>
-struct glz::meta<TileDef> {
-  using T = TileDef;
+struct glz::meta<rmp::TileDef> {
+  using T = rmp::TileDef;
   static constexpr auto value =
       object("shapeDef", &T::shapeDef, "enableCollision", &T::enableCollision, "size", &T::size);
 };

@@ -1,7 +1,9 @@
 #pragma once
 
-#include "../../common/utility/TaskScheduler.hpp"
-#include "base.hpp"
+#include "TaskScheduler.hpp"
+#include "../commondef.hpp"
+
+RAMPAGE_START
 
 struct b2TaskSet : public enki::ITaskSet {
   b2TaskCallback* m_task = nullptr;
@@ -33,3 +35,5 @@ void enki_b2FinishTaskCallback(void* userTask, void* userContext) {
   scheduler.WaitforTask(set);
   delete set;
 }
+
+RAMPAGE_END

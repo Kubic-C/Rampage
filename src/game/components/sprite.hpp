@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../ecs/ecs.hpp"
-#include "../utility/math.hpp"
+#include "../../common/common.hpp"
+
+RAMPAGE_START
 
 constexpr float baseSpriteScale = 0.5f;
 
@@ -83,8 +84,11 @@ struct TilePosComponent {
   EntityId parent;
 };
 
+RAMPAGE_END
+
 template <>
-struct glz::meta<WorldLayer> {
+struct glz::meta<rmp::WorldLayer> {
+  using WorldLayer = rmp::WorldLayer;
   static constexpr auto value =
       glz::enumerate("Top", WorldLayer::Top, "Res2", WorldLayer::Res2, "Res", WorldLayer::Res, "Item",
                      WorldLayer::Item, "Turret", WorldLayer::Turret, "Wall", WorldLayer::Wall, "Floor",
@@ -92,6 +96,6 @@ struct glz::meta<WorldLayer> {
 };
 
 template <>
-struct glz::meta<SpriteIndependentTag> {
+struct glz::meta<rmp::SpriteIndependentTag> {
   static constexpr auto value = glz::object();
 };

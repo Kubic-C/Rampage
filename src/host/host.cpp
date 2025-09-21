@@ -4,6 +4,7 @@
 #include "../core/module.hpp"
 #include "../render/module.hpp"
 #include "../event/module.hpp"
+#include "../game/module.hpp"
 
 RAMPAGE_START
 
@@ -55,6 +56,7 @@ Host::Host()
   addModule<LogModule>();
   addModule<RenderModule>();
   addModule<EventModule>();
+  addModule<GameModule>();
 
   sortModulesByDependencies();
 

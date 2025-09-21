@@ -17,6 +17,8 @@ target_link_libraries(RCommon PUBLIC
   CapnProto::capnp
   box2d::box2d
   SDL3::SDL3
+  TGUI::TGUI
+  box2d::box2d
   GLAD)
 
 # ECS
@@ -40,12 +42,21 @@ target_sources(
 
 target_sources(
   RCommon PUBLIC
+  "box2d/TaskScheduler.cpp"
+  "box2d/TaskScheduler.hpp"
+  "box2d/LockLessMultiReadPipe.hpp"
+  "box2d/box2dScheduler.hpp")
+
+target_sources(
+  RCommon PUBLIC
+  "common.hpp"
   "commondef.hpp"
   "math.hpp"
   "imodule.hpp"
   "ihost.hpp"
   "pipeline.cpp"
-  "pipeline.hpp")
+  "pipeline.hpp"
+  "hashes.hpp")
 
 file(GLOB schemasCXX "./schema/*.c++" "./schema/*.h")
 

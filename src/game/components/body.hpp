@@ -1,6 +1,8 @@
 #pragma once
 
-#include "../utility/base.hpp"
+#include "../../common/common.hpp"
+
+RAMPAGE_START
 
 enum PhysicsCategories { Friendly = 0x01, Enemy = 0x02, Static = 0x04, All = 0xFFFF };
 
@@ -38,11 +40,6 @@ struct AddShapeComponent {
   ShapeVariant shape;
 };
 
-template <>
-struct glz::meta<b2BodyType> {
-  static constexpr auto value =
-      enumerate("static", b2_staticBody, "kinematic", b2_kinematicBody, "dynamic", b2_dynamicBody);
-};
 
 struct AddBodyComponent : public b2BodyDef {
   AddBodyComponent() { dynamic_cast<b2BodyDef&>(*this) = b2DefaultBodyDef(); }
@@ -50,8 +47,16 @@ struct AddBodyComponent : public b2BodyDef {
   AddBodyComponent(glz::make_reflectable) { dynamic_cast<b2BodyDef&>(*this) = b2DefaultBodyDef(); }
 };
 
+RAMPAGE_END
+
 template <>
-struct glz::meta<AddBodyComponent> {
+struct glz::meta<b2BodyType> {
+  static constexpr auto value =
+      enumerate("static", b2_staticBody, "kinematic", b2_kinematicBody, "dynamic", b2_dynamicBody);
+};
+
+template <>
+struct glz::meta<rmp::AddBodyComponent> {
   using T = b2BodyDef;
   static constexpr auto value =
       object("bodyType", &T::type, "linearVelocity", &T::linearVelocity, "angularVelocity",
@@ -106,7 +111,7 @@ struct glz::meta<b2Polygon> {
 };
 
 template <>
-struct glz::meta<ShapeVariant> {
+struct glz::meta<rmp::ShapeVariant> {
   static constexpr std::string_view tag = "shapeType";
   static constexpr auto ids = std::array{"circle", "polygon"};
 };

@@ -25,6 +25,12 @@
 #include <glad/gl.h>
 #include <SDL3/SDL.h>
 
+/* TGUI */
+#include <TGUI/TGUI.hpp>
+#include <TGUI/Backend/SDL-TTF-OpenGL3.hpp>
+
+#include <box2d/box2d.h>
+
 #define RAMPAGE_START namespace rmp {
 #define RAMPAGE_END }
 

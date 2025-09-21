@@ -1,6 +1,9 @@
 #pragma once
 
+#include "../../common/commondef.hpp"
 #include "state.hpp"
+
+RAMPAGE_START
 
 class MenuState : public State {
   const std::string& menuName = "MainMenu";
@@ -38,3 +41,5 @@ class MenuState : public State {
   tgui::Widget::Ptr m_menu;
   EntityWorld& m_world;
 };
+
+RAMPAGE_END

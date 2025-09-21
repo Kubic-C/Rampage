@@ -13,6 +13,4 @@ target_sources(RRender PUBLIC
   "opengl/textureArray.hpp"
   "opengl/mesh.hpp")
 
-target_link_libraries(RRender PUBLIC
-  RCommon
-  TGUI::TGUI)
+target_link_libraries(RRender PUBLIC RCommon)

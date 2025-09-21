@@ -1,6 +1,8 @@
 #pragma once
 
-#include "../ecs/ecs.hpp"
+#include "../../common/common.hpp"
+
+RAMPAGE_START
 
 struct CollisionQueueComponent {
   struct Collision {
@@ -14,3 +16,5 @@ struct CollisionQueueComponent {
 struct SubmitToCollisionQueueComponent {
   EntityId queue;
 };
+
+RAMPAGE_END

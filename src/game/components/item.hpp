@@ -1,7 +1,10 @@
 #pragma once
 
-#include "../temp/assetLoader.hpp"
+#include "../../common/common.hpp"
 
+RAMPAGE_START
+
+using AssetId = u32;
 using InventoryId = u32;
 
 struct InventoryComponent {
@@ -30,14 +33,16 @@ struct TileItemComponent {
   EntityId item;
 };
 
+RAMPAGE_END
+
 template <>
-struct glz::meta<ItemAttrStackCost> {
-  using T = ItemAttrStackCost;
+struct glz::meta<rmp::ItemAttrStackCost> {
+  using T = rmp::ItemAttrStackCost;
   static constexpr auto value = object("stackCost", &T::stackCost);
 };
 
 template <>
-struct glz::meta<ItemAttrUnique> {
-  using T = ItemAttrUnique;
+struct glz::meta<rmp::ItemAttrUnique> {
+  using T = rmp::ItemAttrUnique;
   static constexpr auto value = object();
 };

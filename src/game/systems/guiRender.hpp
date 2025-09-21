@@ -13,6 +13,6 @@ class GuiRenderModule : public BaseRenderModule {
     glEnable(GL_DEPTH_TEST);
   }
 
-  private:
+private:
   tgui::Gui& m_gui;
 };

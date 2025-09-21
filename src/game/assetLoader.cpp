@@ -1,11 +1,9 @@
-#include "../assetLoader.hpp"
+#include "assetLoader.hpp"
 
-#include "../components/arrow.hpp"
-#include "../components/health.hpp"
-#include "../components/turret.hpp"
 #include "inventory.hpp"
 
-#include "../modules/spriteRender.hpp"
+// Aint no way, im type all dat out. (THANK YOU)
+using namespace rmp;
 
 //////////////////// Sprite Prototype
 
@@ -125,7 +123,7 @@ inline uint64_t convertToBitmask(const std::vector<std::string>& mask) {
     if (it != categoryMapping.end()) {
       bitmask |= it->second;
     } else {
-      logGeneric("Unknown mask: %s\n", category.c_str());
+      // TODO: logGeneric("Unknown mask: %s\n", category.c_str());
     }
   }
   return bitmask;
@@ -252,10 +250,15 @@ struct glz::meta<AssetPrototype> {
   static constexpr auto ids = std::array{"spriteLoad", "prefab", "tileDef", "scene"};
 };
 
+RAMPAGE_START
+
 struct AssetJson {
   std::string name;
   AssetPrototype prototype;
 };
+
+RAMPAGE_END
+
 
 template <>
 struct glz::meta<AssetJson> {
@@ -263,29 +266,31 @@ struct glz::meta<AssetJson> {
   static constexpr auto value = object("name", &T::name, "data", &T::prototype);
 };
 
+RAMPAGE_START
+
 AssetLoader::SpriteAsset loadSprite(EntityWorld& world, const std::string& path,
                                     const SpritePrototype& spriteProto) {
-  auto& render = world.getModule<SpriteRenderModule>();
+  //TODO: auto& render = world.getModule<SpriteRenderModule>();
   SpriteComponent sprites;
-  sprites.subSprites.resize(spriteProto.dimY);
-  for (auto& col : sprites.subSprites) {
-    col.resize(spriteProto.dimX);
-  }
-  sprites.scaling = spriteProto.scale;
-
-  bool isSingle = spriteProto.dimX == 1 && spriteProto.dimY == 1;
-  for (const SubSpritePrototype& subSpriteProto : spriteProto.subSprites) {
-    SpriteComponent::SubSprite& sprite = sprites.subSprites[subSpriteProto.y][subSpriteProto.x];
-
-    for (const SpritePrototypeLayer& layer : subSpriteProto.layers) {
-      u32 index = render.getSpriteFromPath(path + layer.path);
-
-      if (isSingle)
-        sprite.addLayer(index, glm::vec2(0, 0), 0, layer.layer);
-      else
-        sprite.addLayer(index, (glm::vec2(subSpriteProto.x, subSpriteProto.y) - tileSize) * tileSize, 0, layer.layer);
-    }
-  }
+  //TODO:  sprites.subSprites.resize(spriteProto.dimY);
+  //TODO: for (auto& col : sprites.subSprites) {
+  //TODO:   col.resize(spriteProto.dimX);
+  //TODO:  }
+  //TODO:  sprites.scaling = spriteProto.scale;
+  //TODO:
+  //TODO:  bool isSingle = spriteProto.dimX == 1 && spriteProto.dimY == 1;
+  //TODO:  for (const SubSpritePrototype& subSpriteProto : spriteProto.subSprites) {
+  //TODO:    SpriteComponent::SubSprite& sprite = sprites.subSprites[subSpriteProto.y][subSpriteProto.x];
+  //TODO:
+  //TODO:    for (const SpritePrototypeLayer& layer : subSpriteProto.layers) {
+  //TODO:      u32 index = render.getSpriteFromPath(path + layer.path);
+  //TODO:
+  //TODO:      if (isSingle)
+  //TODO:        sprite.addLayer(index, glm::vec2(0, 0), 0, layer.layer);
+  //TODO:      else
+  //TODO:        sprite.addLayer(index, (glm::vec2(subSpriteProto.x, subSpriteProto.y) - tileSize) * tileSize, 0, layer.layer);
+  //TODO:    }
+  //TODO:  }
 
   return AssetLoader::SpriteAsset(sprites);
 }
@@ -458,12 +463,12 @@ Scene loadScenePrototype(AssetLoader& loader, EntityWorld& world, const std::str
                          const ScenePrototype& proto) {
   Scene scene(world, proto.name, proto.desc);
 
-  logGeneric("<bgYellow, fgWhite>Creating scene %s\n<reset>", proto.name.c_str());
+  // TODO: logGeneric("<bgYellow, fgWhite>Creating scene %s\n<reset>", proto.name.c_str());
   for (const std::string& assetFile : proto.load) {
     if (!loader.loadAssets(path + assetFile)) {
-      logGeneric("\t<bgRed, fgWhite>Failed load! %s\n<reset>", assetFile.c_str());
+      // TODO: logGeneric("\t<bgRed, fgWhite>Failed load! %s\n<reset>", assetFile.c_str());
     } else {
-      logGeneric("\tLoaded for scene: %s\n", assetFile.c_str());
+      // TODO: logGeneric("\tLoaded for scene: %s\n", assetFile.c_str());
     }
   }
 
@@ -475,7 +480,7 @@ Scene loadScenePrototype(AssetLoader& loader, EntityWorld& world, const std::str
     scene.addPrefab(loader.getPrefab(proto.basePrefab), overrideEntity);
   }
 
-  logGeneric("<bgGreen, fgWhite>Scene created.<reset>\n", proto.name.c_str());
+  // TODO: logGeneric("<bgGreen, fgWhite>Scene created.<reset>\n", proto.name.c_str());
 
   return scene;
 }
@@ -502,14 +507,12 @@ bool AssetLoader::loadAssets(const std::string& path) {
   glz::error_ctx ec = glz::read<readOps>(readAssets, fileData);
   if (ec) {
     std::string msg = glz::format_error(ec, fileData);
-    logGeneric("<bgRed, bold>Failed to load assets\n Ec: %i\n File:%s\n Msg: "
-               "%s\n<reset>",
-               ec.ec, path.c_str(), msg.c_str());
+    // TODO: logGeneric("<bgRed, bold>Failed to load assets\n Ec: %i\n File:%s\n Msg: "%s\n<reset>", ec.ec, path.c_str(), msg.c_str());
     return false;
   }
 
   for (const AssetJson& json : readAssets) {
-    logGeneric("<fgGreen>Loading Asset: %s\n<reset>", json.name.c_str());
+    // TODO: logGeneric("<fgGreen>Loading Asset: %s\n<reset>", json.name.c_str());
     loadAsset(parentDir, json);
   }
 
@@ -544,7 +547,9 @@ AssetId AssetLoader::loadAsset(const std::string& parentDir, const AssetJson& as
       return assetId;
     }
   default:
-    logGeneric("Failed to load asset %s\n", asset.name.c_str());
+    // TODO: logGeneric("Failed to load asset %s\n", asset.name.c_str());
     return 0;
   }
 }
+
+RAMPAGE_END

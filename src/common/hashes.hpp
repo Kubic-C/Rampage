@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base.hpp"
+#include "commondef.hpp"
 
 // hashin' time
 

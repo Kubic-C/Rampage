@@ -53,9 +53,9 @@ target_sources(
 # State
 target_sources(
   RMaster PUBLIC
-  "states/menuState.hpp"
-  "states/playState.hpp"
-  "states/state.hpp")
+  "../game/states/menuState.hpp"
+  "../game/states/playState.hpp"
+  "../game/states/state.hpp")
 
 # Components
 target_sources(

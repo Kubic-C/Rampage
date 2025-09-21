@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../ecs/ecs.hpp"
-#include "../temp/contexts.hpp"
+#include "../../common/common.hpp"
+
+RAMPAGE_START
 
 class State {
   public:
@@ -97,3 +98,5 @@ class StateManager {
   Map<std::string, std::shared_ptr<State>> m_states;
   Map<std::string, std::shared_ptr<State>> m_enabledStates;
 };
+
+RAMPAGE_END

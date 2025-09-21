@@ -1,6 +1,8 @@
 #pragma once
 
-#include "../ecs/ecs.hpp"
+#include "../../common/common.hpp"
+
+RAMPAGE_START
 
 struct SpawnerComponent {
   // The entity to summon
@@ -13,3 +15,5 @@ struct SpawnerComponent {
   // The amount to spawn per summon
   u32 spawnCount;
 };
+
+RAMPAGE_END

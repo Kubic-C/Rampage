@@ -1,8 +1,9 @@
 #pragma once
 
-#include "../../temp/components/transform.hpp"
-#include "../components/tile.hpp"
-#include "../utility/hashes.hpp"
+#include "../../core/module.hpp"
+#include "tile.hpp"
+
+RAMPAGE_START
 
 class TilemapComponent;
 
@@ -220,3 +221,5 @@ struct TilemapComponent {
 };
 
 struct DestroyTileOnEntityRemovalTag {};
+
+RAMPAGE_END

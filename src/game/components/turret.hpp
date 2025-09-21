@@ -2,6 +2,8 @@
 
 #include "body.hpp"
 
+RAMPAGE_START
+
 struct TurretComponent {
   EntityId summon = 0; /* Currently unused, will be used later. */
   float fireRate = 1; // Per second
@@ -19,9 +21,11 @@ struct TurretComponent {
   float bulletHealth = 1.0f;
 };
 
+RAMPAGE_END
+
 template <>
-struct glz::meta<TurretComponent> {
-  using T = TurretComponent;
+struct glz::meta<rmp::TurretComponent> {
+  using T = rmp::TurretComponent;
   static constexpr auto value =
       object("summon", &T::summon, "fireRate", &T::fireRate, "timeSinceLastShot", &T::timeSinceLastShot,
              "radius", &T::radius, "rot", &T::rot, "turnSpeed", &T::turnSpeed, "shootRange", &T::shootRange,

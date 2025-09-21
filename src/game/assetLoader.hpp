@@ -1,18 +1,16 @@
 #pragma once
 
-#include "../components/sprite.hpp"
-#include "../components/tile.hpp"
-#include "../ecs/ecs.hpp"
 #include "scene.hpp"
+#include "components/components.hpp"
 
-typedef u32 AssetId;
+RAMPAGE_START
 
 struct AssetJson;
 
 class AssetLoader {
   public:
   struct SpriteAsset {
-    SpriteComponent sprite;
+    rmp::SpriteComponent sprite;
   };
 
   struct PrefabAsset {
@@ -106,3 +104,5 @@ class AssetLoader {
   Map<AssetId, Asset> m_assets;
   Map<std::string, AssetId> m_assetsByName;
 };
+
+RAMPAGE_END

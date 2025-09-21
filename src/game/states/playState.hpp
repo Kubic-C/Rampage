@@ -1,10 +1,9 @@
 #pragma once
 
-#include "../../game/components/arrow.hpp"
-#include "../../game/components/body.hpp"
-#include "../../game/components/player.hpp"
-#include "../../game/components/shapes.hpp"
+#include "../components/components.hpp"
 #include "state.hpp"
+
+RAMPAGE_START
 
 class PlayState : public State {
   const std::string& menuName = "PlayMenu";
@@ -17,8 +16,9 @@ class PlayState : public State {
   const std::string& activeBodiesTextName = "PlayActiveBodies";
   const std::string& playEntityCountTextName = "PlayEntityCount";
 
-  public:
-  PlayState(EntityWorld& world) : m_world(world) {
+public:
+  PlayState(EntityWorld& world)
+    : m_world(world) {
     m_world.component<OwnedBy<PlayState>>();
     m_addedPlayerComponents = m_world.set<PlayerComponent, PrimaryTargetTag, BodyComponent,
                                           RectangleRenderComponent, InventoryComponent>();
@@ -107,7 +107,6 @@ class PlayState : public State {
     playerInvetory.addItem(assetLoader.getPrefab("WoodItem"), 32);
     playerInvetory.addItem(assetLoader.getPrefab("BigGunItem"), 4);
     playerInvetory.addItem(assetLoader.getPrefab("BigGunItem"), 2);
-
 
     // Render
     RefT<RectangleRenderComponent> renderRect = player.get<RectangleRenderComponent>();
@@ -218,3 +217,5 @@ class PlayState : public State {
   ComponentSet m_addedPlayerComponents;
   EntityWorld& m_world;
 };
+
+RAMPAGE_END

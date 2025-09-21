@@ -1,6 +1,8 @@
 #pragma once
 
-#include "../ecs/ecs.hpp"
+#include "../common/common.hpp"
+
+RAMPAGE_START
 
 class Scene {
   public:
@@ -42,3 +44,5 @@ class Scene {
   std::vector<EntityId> m_prefabs;
   std::vector<EntityId> m_override;
 };
+
+RAMPAGE_END

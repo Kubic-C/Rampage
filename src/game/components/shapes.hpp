@@ -1,6 +1,8 @@
 #pragma once
 
-#include "../utility/math.hpp"
+#include "../../common/common.hpp"
+
+RAMPAGE_START
 
 struct CircleRenderComponent {
   float radius = 0.0f;
@@ -15,3 +17,5 @@ struct RectangleRenderComponent {
   float z = 1;
   glm::vec3 color = glm::vec3(1.0f, 0.0f, 0.0f);
 };
+
+RAMPAGE_END

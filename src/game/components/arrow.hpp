@@ -1,6 +1,8 @@
 #pragma once
 
-#include "../utility/math.hpp"
+#include "../../common/common.hpp"
+
+RAMPAGE_START
 
 struct ArrowComponent {
   // Normalized vector
@@ -23,16 +25,18 @@ struct SeekPrimaryTargetTag {
   SeekPrimaryTargetTag(glz::make_reflectable) {}
 };
 
+RAMPAGE_END
+
 // Specialization of glz::meta for PrimaryTargetTag
 template <>
-struct glz::meta<PrimaryTargetTag> {
-  using T = PrimaryTargetTag;
+struct glz::meta<rmp::PrimaryTargetTag> {
+  using T = rmp::PrimaryTargetTag;
   static constexpr std::string_view tag = "primaryTarget";
 };
 
 // Specialization of glz::meta for SeekPrimaryTargetTag
 template <>
-struct glz::meta<SeekPrimaryTargetTag> {
-  using T = SeekPrimaryTargetTag;
+struct glz::meta<rmp::SeekPrimaryTargetTag> {
+  using T = rmp::SeekPrimaryTargetTag;
   static constexpr auto value = object();
 };

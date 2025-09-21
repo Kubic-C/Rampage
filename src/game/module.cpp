@@ -1,9 +1,12 @@
 #include "module.hpp"
+#include "components/components.hpp"
 
 RAMPAGE_START
 
 int GameModule::onLoad() {
   auto& world = m_host->getWorld();
+
+  registerGameComponents(world);
 
   return 0;
 }
