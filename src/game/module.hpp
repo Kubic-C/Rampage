@@ -6,6 +6,10 @@
 
 RAMPAGE_START
 
+struct GameGroup {
+  struct TickStage {};
+};
+
 class GameModule final : public IStaticModule {
 public:
   std::vector<std::type_index> getDependencies() override {

@@ -8,6 +8,11 @@ int GameModule::onLoad() {
 
   registerGameComponents(world);
 
+  auto& pipeline = m_host->getPipeline();
+
+  pipeline.createGroup<GameGroup>(60)
+    .createStage<GameGroup::TickStage>();
+
   return 0;
 }
 

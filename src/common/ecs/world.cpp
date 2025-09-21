@@ -65,7 +65,8 @@ Entity EntityWorld::EntityIterator::next() {
 
 EntityWorld& EntityWorld::EntityIterator::getWorld() { return m_setIt.getWorld(); }
 
-EntityWorld::EntityWorld() {
+EntityWorld::EntityWorld(IHost& host)
+  : m_host(host) {
   m_sets.reserve(10000);
   m_sets.insert(std::make_pair(findOrCreateSet(ComponentSet()), EntityList()));
 
@@ -83,6 +84,10 @@ EntityWorld::~EntityWorld() {
 
     data.destroy(data.bytes);
   }
+}
+
+IHost& EntityWorld::getHost() {
+  return m_host;
 }
 
 void EntityWorld::observe(EventType event, ComponentId comp, const ComponentSet& with,

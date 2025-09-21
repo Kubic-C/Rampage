@@ -11,6 +11,7 @@ RAMPAGE_START
 class Ref;
 class Entity;
 class System;
+class IHost;
 
 class EntityWorld {
   friend class Entity;
@@ -80,7 +81,7 @@ private:
     SetIterator m_setIt;
   };
 
-  EntityWorld();
+  EntityWorld(IHost& host);
   EntityWorld(const EntityWorld& other) = delete;
   EntityWorld(EntityWorld&& other) = delete;
   virtual ~EntityWorld();
@@ -89,6 +90,8 @@ private:
   EntityWorld& operator=(EntityWorld&& other) = delete;
   EntityWorld& operator=(EntityWorld& other) = delete;
   EntityWorld& operator=(EntityWorld other) = delete;
+
+  IHost& getHost();
 
   template <typename T, typename... Params>
   void addContext(Params&&... args) {
@@ -240,6 +243,8 @@ protected:
   void addToSuperSets(const ComponentSet* baseSet);
 
 protected:
+  IHost& m_host;
+
   /* Deferred operations */
   bool m_isDefer = false;
   std::vector<const ComponentSet*> m_deferredSuperSetCalc;

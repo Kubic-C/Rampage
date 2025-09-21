@@ -4,12 +4,14 @@
 
 RAMPAGE_START
 
-struct PreRenderStage {};
-struct ClearWindowStage {};
-struct OnRenderStage {};
-struct OnGUIRenderStage {};
-struct SwapBuffersStage {};
-struct PostRenderStage {};
+struct RenderGroup {
+  struct PreRenderStage {};
+  struct ClearWindowStage {};
+  struct OnRenderStage {};
+  struct OnGUIRenderStage {};
+  struct SwapBuffersStage {};
+  struct PostRenderStage {};
+};
 
 class RenderModule final : public IStaticModule {
 public:

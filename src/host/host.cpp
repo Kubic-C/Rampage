@@ -50,8 +50,50 @@ void Host::sortModulesByDependencies() {
   m_staticModules = loadOrder;
 }
 
+struct StatsCounterGroup {
+  struct StatsCounterStage {};
+};
+
+void registerStatsSystems(Pipeline& pipeline) {
+  auto& renderGroup = pipeline.getGroup<RenderGroup>();
+  renderGroup.attachToStage<RenderGroup::PreRenderStage>(
+    [](EntityWorld& world){
+      AppStats& stats = world.getContext<AppStats>();
+
+      stats.cumFrames++;
+
+      return 0;
+    });
+
+  auto& gameGroup = pipeline.getGroup<GameGroup>();
+  gameGroup.attachToStage<GameGroup::TickStage>(
+  [](EntityWorld& world){
+    AppStats& stats = world.getContext<AppStats>();
+
+    stats.cumTicks++;
+
+    return 0;
+  });
+
+  auto& statsCounterGroup = pipeline.createGroup<StatsCounterGroup>(1.0f)
+    .createStage<StatsCounterGroup::StatsCounterStage>();
+  statsCounterGroup.attachToStage<StatsCounterGroup::StatsCounterStage>(
+  [](EntityWorld& world){
+    AppStats& stats = world.getContext<AppStats>();
+
+    stats.tps = stats.cumTicks;
+    stats.fps = stats.cumFrames;
+    stats.cumTicks = stats.cumFrames = 0;
+
+    auto& host = world.getHost();
+    host.log("FPS/TPS: %4.1f/%4.1f\n", stats.fps, stats.tps);
+
+    return 0;
+  });
+}
+
 Host::Host()
-  : m_status(Status::Ok) {
+  : m_status(Status::Ok), m_world(*this) {
   addModule<CoreModule>();
   addModule<LogModule>();
   addModule<RenderModule>();
@@ -69,6 +111,8 @@ Host::Host()
     }
     log("Loaded: %s\n", module->getName().c_str());
   }
+
+  registerStatsSystems(m_pipeline);
 }
 
 int Host::run() {

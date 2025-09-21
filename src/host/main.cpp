@@ -6,18 +6,11 @@
 
 using namespace rmp;
 
-void pause() {
-  std::cout << "Press enter to continue...";
-  char c;
-  std::cin >> c;
-}
-
 int main () {
   Host host;
 
   if (host.getStatus() == Status::CriticalError) {
     host.log("Host error, status returned is critical error\n");
-    pause();
     return 1;
   }
 
@@ -26,6 +19,5 @@ int main () {
     host.log("Error running host %i\n", rcode);
   }
 
-  pause();
   return rcode;
 }

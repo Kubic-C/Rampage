@@ -9,11 +9,8 @@ class State {
   virtual ~State() = default;
 
   virtual void onEntry() {}
-
   virtual void onLeave() {}
-
   virtual void onTick(u32 tick, float deltaTime) {}
-
   virtual void onUpdate() {}
 
   void attachModule();

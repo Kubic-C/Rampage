@@ -11,8 +11,8 @@ RAMPAGE_START
 class EntityWorldSerializable : public EntityWorld {
   static constexpr size_t m_maxScratchWordSize = 512;
 public:
-  EntityWorldSerializable()
-    : m_scratchBuffer(new capnp::word[m_maxScratchWordSize], m_maxScratchWordSize) {
+  EntityWorldSerializable(IHost& host)
+    : EntityWorld(host), m_scratchBuffer(new capnp::word[m_maxScratchWordSize], m_maxScratchWordSize) {
     std::memset(m_scratchBuffer.begin(), 0, m_scratchBuffer.size() * sizeof(capnp::word));
 
     // issa' tag

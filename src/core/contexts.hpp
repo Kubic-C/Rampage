@@ -4,6 +4,8 @@
 // within an EntityWorld
 
 struct AppStats {
+  float cumTicks;
+  float cumFrames;
   float tps;
   float fps;
 };

@@ -2,22 +2,6 @@
 
 RAMPAGE_START
 
-Pipeline::Group&  Pipeline::createGroup(const std::string& group, float rate) {
-  m_groups.emplace_back();
-  m_groups.back().m_name = "group";
-  m_groups.back().m_invRate = 1.0f / rate;
-
-  return m_groups.back();
-}
-
-Pipeline::Group& Pipeline::getGroup(const std::string& name) {
-  const auto it = searchGroup(name);
-  if (it == m_groups.end())
-    throw std::runtime_error("Group not found: " + name);
-
-  return *it;
-}
-
 float now() {
   static std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
   auto current_time = std::chrono::steady_clock::now();

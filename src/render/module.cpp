@@ -81,16 +81,16 @@ int RenderModule::onLoad() {
 
   auto& pipeline = m_host->getPipeline();
   Pipeline::Group& group =
-    pipeline.createGroup("RenderGroup", 144.0f)
-      .createStage<PreRenderStage>()
-      .createStage<ClearWindowStage>()
-      .createStage<OnRenderStage>()
-      .createStage<OnGUIRenderStage>()
-      .createStage<SwapBuffersStage>()
-      .createStage<PostRenderStage>();
+    pipeline.createGroup<RenderGroup>(144.0f)
+      .createStage<RenderGroup::PreRenderStage>()
+      .createStage<RenderGroup::ClearWindowStage>()
+      .createStage<RenderGroup::OnRenderStage>()
+      .createStage<RenderGroup::OnGUIRenderStage>()
+      .createStage<RenderGroup::SwapBuffersStage>()
+      .createStage<RenderGroup::PostRenderStage>();
 
-  group.attachToStage<ClearWindowStage>(clearWindow);
-  group.attachToStage<SwapBuffersStage>(swapBuffers);
+  group.attachToStage<RenderGroup::ClearWindowStage>(clearWindow);
+  group.attachToStage<RenderGroup::SwapBuffersStage>(swapBuffers);
 
   return 0;
 }
