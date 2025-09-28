@@ -31,9 +31,9 @@ void Pipeline::run(IHost& host) {
 
     for (Stage& stage : group.m_stages) {
       for (const auto& task : stage.tasks)
-        task(host);
+        task(host,  realRate);
       for (const auto& task : stage.worldTasks)
-        task(host.getWorld());
+        task(host.getWorld(), realRate);
     }
   }
 }

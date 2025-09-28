@@ -5,10 +5,16 @@
 RAMPAGE_START
 
 class Shader {
-  public:
+public:
   Shader() : m_id(glCreateProgram()) {}
 
-  ~Shader() { glDeleteProgram(m_id); }
+  Shader(Shader&& shader) noexcept : m_id(shader.m_id) { shader.m_id = 0; }
+
+  ~Shader() {
+    if (m_id) {
+      glDeleteProgram(m_id);
+    }
+  }
 
   bool loadShaderFiles(const char* vsh_path, const char* fsh_path, std::string& res) {
     uint32_t vsh, fsh;

@@ -31,3 +31,26 @@ target_sources(
   "inventory.cpp"
   "inventory.hpp"
   "scene.hpp")
+
+target_sources(
+  RGame PUBLIC
+  "systems/spriteRender.cpp"
+  "systems/spriteRender.hpp"
+  "systems/tilemap.cpp"
+  "systems/tilemap.hpp"
+  "systems/spawner.cpp"
+  "systems/spawner.hpp"
+  "systems/player.cpp"
+  "systems/player.hpp"
+  "systems/physics.cpp"
+  "systems/physics.hpp"
+  "systems/pathfinding.cpp"
+  "systems/pathfinding.hpp"
+  "systems/item.cpp"
+  "systems/item.hpp"
+  "systems/health.cpp"
+  "systems/health.hpp"
+  "systems/guiRender.cpp"
+  "systems/guiRender.hpp"
+  "systems/shapeRender.cpp"
+  "systems/shapeRender.hpp")

@@ -130,7 +130,8 @@ private:
     if (size != 0) {
       m_componentPools[compId] = SparsePool<T>::createPool();
 
-      m_componentCopyCtor[compId] = [](u8* dst, u8* src) { new ((T*)dst) T(*(T*)src); };
+      if constexpr (std::is_copy_constructible_v<T>)
+        m_componentCopyCtor[compId] = [](u8* dst, u8* src) { new ((T*)dst) T(*(T*)src); };
     }
 
     // Necessary for modules.

@@ -12,8 +12,8 @@ struct Mesh {
 
   Mesh() { buffer.resize(GL_ARRAY_BUFFER, sizeof(VertexType) * 1024); }
 
-  Mesh(const Mesh<VertexType, verticePerRender, verticesPerSubdata>& other) {
-    buffer = other.buffer;
+  Mesh(Mesh<VertexType, verticePerRender, verticesPerSubdata>&& other) noexcept {
+    buffer = std::move(other.buffer);
     verticesToRender = other.verticesToRender;
     verticesOnBuffer = other.verticesOnBuffer;
   }

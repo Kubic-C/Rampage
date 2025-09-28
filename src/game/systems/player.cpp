@@ -1,0 +1,95 @@
+#include "player.hpp"
+
+#include "../module.hpp"
+#include "../../render/module.hpp"
+#include "../../render/camera.hpp"
+#include "../../event/module.hpp"
+
+#include "../components/player.hpp"
+#include "../components/tilemap.hpp"
+#include "../components/worldMap.hpp"
+
+#include "../inventory.hpp"
+
+RAMPAGE_START
+
+void updatePlayer(Entity e, float dt) {
+  EntityWorld& world = e.world();
+  auto& render = world.getContext<RenderModule>();
+  auto& invMgr = world.getContext<InventoryManager>();
+  auto& eventMgr = world.getContext<EventModule>();
+  auto& assetLoader = world.getContext<AssetLoader>();
+
+  auto body = e.get<BodyComponent>();
+  auto transform = e.get<TransformComponent>();
+  auto player = e.get<PlayerComponent>();
+  auto camera = e.get<CameraComponent>();
+  Inventory inv = invMgr.getInventory(e.get<InventoryComponent>()->id);
+
+  /* Linear Movement */
+  float mass = b2Body_GetMass(body->id);
+  if (eventMgr.isKeyHeld(Key::A))
+    b2Body_ApplyLinearImpulseToCenter(body->id, fast2DRotate({mass * -player->accel, 0.0f}, camera->m_rot),
+                                      true);
+  if (eventMgr.isKeyHeld(Key::D))
+    b2Body_ApplyLinearImpulseToCenter(body->id, fast2DRotate({mass * player->accel, 0.0f}, camera->m_rot),
+                                      true);
+  if (eventMgr.isKeyHeld(Key::W))
+    b2Body_ApplyLinearImpulseToCenter(body->id, fast2DRotate({0.0f, mass * player->accel}, camera->m_rot),
+                                      true);
+  if (eventMgr.isKeyHeld(Key::S))
+    b2Body_ApplyLinearImpulseToCenter(body->id, fast2DRotate({0.0f, mass * -player->accel}, camera->m_rot),
+                                      true);
+
+  float maxSpeed = player->maxSpeed;
+  if (eventMgr.isKeyHeld(Key::LeftShift))
+    maxSpeed *= 8;
+  glm::vec2 vel = (Vec2)b2Body_GetLinearVelocity(body->id);
+  if (glm::length(vel) > maxSpeed) {
+    vel = glm::normalize(vel) * maxSpeed;
+    b2Body_SetLinearVelocity(body->id, (Vec2)vel);
+  }
+
+  /* Zoom */
+  if (eventMgr.isKeyHeld(Key::Z))
+    camera->safeZoom(10);
+  if (eventMgr.isKeyHeld(Key::X))
+    camera->safeZoom(-10);
+
+  /* Camera Rotation */
+  if (eventMgr.isKeyHeld(Key::Q))
+    camera->m_rot += 0.1f;
+  if (eventMgr.isKeyHeld(Key::E))
+    camera->m_rot -= 0.1f;
+
+  /* Cursor */
+  Vec2 mouseScreen = eventMgr.getMouseCoords();
+  player->mouse = render.getWorldCoords(mouseScreen);
+  glm::vec2 dir = glm::normalize((Vec2)b2Body_GetPosition(body->id) - player->mouse);
+  transform->rot = Rot(atan2(dir.y, dir.x));
+
+  /* Inventory Stuff */
+  if (eventMgr.isKeyPressed(Key::Tab))
+    inv.setVisible(!inv.getVisible());
+  if (eventMgr.isKeyHeld(Key::F4))
+    inv.addItem(assetLoader.getPrefab("WoodItem"), 4);
+  if (eventMgr.isKeyHeld(Key::F) && invMgr.isHandEmpty() && world.getContext<tgui::Gui>().getWidgetAtPos(mouseScreen, false).get() != nullptr)
+    tryPlaceItem(world.getFirstWith(world.set<WorldMapTag>()), invMgr.getHandInventory(),
+                 invMgr.getHandInventoryPos(), player->mouse);
+}
+
+int updatePlayers(EntityWorld& world, float dt) {
+  auto it = world.getWith(world.set<BodyComponent, TransformComponent, PlayerComponent, CameraComponent, InventoryComponent>());
+  while (it.hasNext())
+    updatePlayer(it.next(), dt);
+
+  return 0;
+}
+
+void loadPlayerSystems(IHost& host) {
+  Pipeline& pipeline = host.getPipeline();
+
+  pipeline.getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(updatePlayers);
+}
+
+RAMPAGE_END

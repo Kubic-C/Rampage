@@ -6,7 +6,6 @@
 RAMPAGE_START
 
 class Pipeline;
-class EventManager;
 
 typedef void(*TraceErrorFunc)(int ec, const char* format, va_list args);
 typedef void(*TraceFunc)(const char* format, va_list args);

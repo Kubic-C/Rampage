@@ -1,41 +1,9 @@
 #pragma once
 
-#include "../components/health.hpp"
+#include "../../common/common.hpp"
 
-class HealthModule : public Module {
-  public:
-  static void registerComponents(EntityWorld& world) {
-    world.component<LifetimeComponent>();
-    world.component<ContactDamageComponent>();
-  }
+RAMPAGE_START
 
-  HealthModule(EntityWorld& world) :
-      m_shouldDieSys(world.system(world.set<LifetimeComponent>(), &lifetimeSystem)),
-      m_healthSys(world.system(world.set<HealthComponent>(), &healthSystem)) {}
+void loadHealthSystems(IHost& host);
 
-  static void healthSystem(Entity e, float dt) {
-    RefT<HealthComponent> health = e.get<HealthComponent>();
-
-    if (health->health <= 0) {
-      e.world().destroy(e);
-    }
-  }
-
-  static void lifetimeSystem(Entity e, float dt) {
-    RefT<LifetimeComponent> destroyAfter = e.get<LifetimeComponent>();
-
-    if (destroyAfter->timeLeft < 0) {
-      e.world().destroy(e);
-    }
-    destroyAfter->timeLeft -= dt;
-  }
-
-  void run(EntityWorld& world, float dt) override {
-    m_shouldDieSys.run(dt);
-    m_healthSys.run(dt);
-  }
-
-  private:
-  System m_shouldDieSys;
-  System m_healthSys;
-};
+RAMPAGE_END

@@ -57,7 +57,7 @@ struct StatsCounterGroup {
 void registerStatsSystems(Pipeline& pipeline) {
   auto& renderGroup = pipeline.getGroup<RenderGroup>();
   renderGroup.attachToStage<RenderGroup::PreRenderStage>(
-    [](EntityWorld& world){
+    [](EntityWorld& world, float dt){
       AppStats& stats = world.getContext<AppStats>();
 
       stats.cumFrames++;
@@ -67,7 +67,7 @@ void registerStatsSystems(Pipeline& pipeline) {
 
   auto& gameGroup = pipeline.getGroup<GameGroup>();
   gameGroup.attachToStage<GameGroup::TickStage>(
-  [](EntityWorld& world){
+  [](EntityWorld& world, float dt){
     AppStats& stats = world.getContext<AppStats>();
 
     stats.cumTicks++;
@@ -78,7 +78,7 @@ void registerStatsSystems(Pipeline& pipeline) {
   auto& statsCounterGroup = pipeline.createGroup<StatsCounterGroup>(1.0f)
     .createStage<StatsCounterGroup::StatsCounterStage>();
   statsCounterGroup.attachToStage<StatsCounterGroup::StatsCounterStage>(
-  [](EntityWorld& world){
+  [](EntityWorld& world, float dt){
     AppStats& stats = world.getContext<AppStats>();
 
     stats.tps = stats.cumTicks;

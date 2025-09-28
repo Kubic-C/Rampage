@@ -33,6 +33,10 @@ struct Vec2 : glm::vec2 {
   b2Vec2 b2() const { return b2Vec2(x, y); }
 
   operator b2Vec2() const { return b2(); }
+
+  tgui::Vector2f tgui() const { return tgui::Vector2f(x, y); }
+
+  operator tgui::Vector2f() const { return tgui(); }
 };
 
 struct Rot : b2Rot {

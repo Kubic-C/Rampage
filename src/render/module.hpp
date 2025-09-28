@@ -30,6 +30,7 @@ public:
   void enableVsync(bool vsync);
   glm::mat4 getProj() const;
   glm::mat4 getView() const;
+  glm::mat4 getViewProj() const;
   glm::ivec2 getWindowSize() const;
   glm::vec2 getWorldCoords(const glm::ivec2& screenCoords) const;
   glm::vec2 getScreenCoords(const glm::ivec2& worldCoords) const;

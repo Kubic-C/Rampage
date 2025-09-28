@@ -18,7 +18,7 @@ static void setNecessaryGLAttributes() {
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, MinimumMinorGLVersion);
 }
 
-int clearWindow(EntityWorld& world) {
+int clearWindow(EntityWorld& world, float dt) {
   auto render = world.getContext<RenderModule>();
   auto size = render.getWindowSize();
 
@@ -27,7 +27,7 @@ int clearWindow(EntityWorld& world) {
   return 0;
 }
 
-int swapBuffers(EntityWorld& world) {
+int swapBuffers(EntityWorld& world, float dt) {
   auto window = world.getContext<SDL_Window*>();
 
   return SDL_GL_SwapWindow(window);
@@ -123,6 +123,9 @@ glm::mat4 RenderModule::getView() const {
   return camera->view(Transform(transform->pos, camera->m_rot), static_cast<glm::vec2>(screenDim));
 }
 
+glm::mat4 RenderModule::getViewProj() const {
+  return getProj() * getView();
+}
 
 glm::ivec2 RenderModule::getWindowSize() const {
   glm::ivec2 screenSize;
@@ -135,7 +138,7 @@ glm::vec2 RenderModule::getWorldCoords(const glm::ivec2& _screenCoords) const {
   glm::ivec2 screenSize = getWindowSize();
   glm::vec2 screenCoords = {(float)_screenCoords.x, (float)_screenCoords.y};
   glm::mat4 view = getView();
-  glm::mat4 proj = getView();
+  glm::mat4 proj = getProj();
 
   screenCoords.y = screenSize.y - screenCoords.y;
 
@@ -148,7 +151,7 @@ glm::vec2 RenderModule::getWorldCoords(const glm::ivec2& _screenCoords) const {
 glm::vec2 RenderModule::getScreenCoords(const glm::ivec2& worldCoords) const {
   glm::ivec2 screenSize = getWindowSize();
   glm::mat4 view = getView();
-  glm::mat4 proj = getView();
+  glm::mat4 proj = getProj();
 
   glm::vec2 screenCoords = glm::project(glm::vec3(screenCoords, -1.0f), view, proj,
                                         glm::vec4(0.0f, 0.0f, (float)screenSize.x, (float)screenSize.y));

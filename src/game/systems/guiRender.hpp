@@ -1,18 +1,9 @@
 #pragma once
 
-#include "../render/baseRender.hpp"
+#include "../../common/common.hpp"
 
-class GuiRenderModule : public BaseRenderModule {
-  public:
-  GuiRenderModule(EntityWorld& world, size_t priority, tgui::Gui& gui) :
-      BaseRenderModule(world, priority), m_gui(gui) {}
+RAMPAGE_START
 
-  void onRender(const glm::mat4& vp) override {
-    glDisable(GL_DEPTH_TEST);
-    m_gui.draw();
-    glEnable(GL_DEPTH_TEST);
-  }
+void loadGuiRender(IHost& host);
 
-private:
-  tgui::Gui& m_gui;
-};
+RAMPAGE_END

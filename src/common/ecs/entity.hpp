@@ -5,7 +5,7 @@
 RAMPAGE_START
 
 class Entity {
-  public:
+public:
   Entity(EntityWorld& world);
   Entity(EntityWorld& world, EntityId id);
   Entity& operator=(Entity other);
@@ -50,7 +50,7 @@ class Entity {
 
   operator EntityId() const { return m_id; }
 
-  private:
+private:
   EntityWorld* m_world;
   EntityId m_id;
 };

@@ -9,8 +9,8 @@ RAMPAGE_START
  * Stages may be added or removed.
  */
 class Pipeline {
-  typedef int(*StageTask)(IHost& host);
-  typedef int(*WorldStageTask)(EntityWorld& world);
+  typedef int(*StageTask)(IHost& host, float dt);
+  typedef int(*WorldStageTask)(EntityWorld& world, float dt);
 
   struct Stage {
     size_t name = 0;
@@ -32,10 +32,10 @@ public:
     Group& createStageBefore();
 
     template<typename Name>
-    void attachToStage(StageTask task);
+    Group& attachToStage(StageTask task);
 
     template<typename Name>
-    void attachToStage(WorldStageTask task);
+    Group& attachToStage(WorldStageTask task);
   protected:
     template<typename Name>
     std::list<Stage>::iterator searchStage() {
@@ -110,13 +110,17 @@ Pipeline::Group& Pipeline::Group::createStageBefore() {
 }
 
 template<typename Name>
-void Pipeline::Group::attachToStage(StageTask task) {
+Pipeline::Group& Pipeline::Group::attachToStage(StageTask task) {
   searchStage<Name>()->tasks.push_back(task);
+
+  return *this;
 }
 
 template<typename Name>
-void Pipeline::Group::attachToStage(WorldStageTask task) {
+Pipeline::Group& Pipeline::Group::attachToStage(WorldStageTask task) {
   searchStage<Name>()->worldTasks.push_back(task);
+
+  return *this;
 }
 
 RAMPAGE_END

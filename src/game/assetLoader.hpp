@@ -8,7 +8,7 @@ RAMPAGE_START
 struct AssetJson;
 
 class AssetLoader {
-  public:
+public:
   struct SpriteAsset {
     rmp::SpriteComponent sprite;
   };
@@ -21,10 +21,10 @@ class AssetLoader {
     std::shared_ptr<Scene> scene;
   };
 
-  private:
+private:
   using Asset = std::variant<SpriteAsset, PrefabAsset, TileDef, SceneAsset>;
 
-  public:
+public:
   explicit AssetLoader(EntityWorld& world) : m_world(world) {}
 
   AssetLoader(AssetLoader&&) = delete;
@@ -98,7 +98,7 @@ class AssetLoader {
     return asset;
   }
 
-  private:
+private:
   EntityWorld& m_world;
   IdManager<AssetId> m_idMgr;
   Map<AssetId, Asset> m_assets;
