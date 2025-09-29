@@ -27,10 +27,6 @@ int CoreModule::onLoad() {
   return 0;
 }
 
-int CoreModule::onUnload() {
-  return 0;
-}
-
 int CoreModule::onUpdate() {
   auto& world = m_host->getWorld();
 

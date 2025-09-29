@@ -90,7 +90,7 @@ class InventoryManager {
     m_handPicture->setVisible(false);
   }
 
-  bool isHandEmpty() { return m_handInvId != 0; }
+  bool isHandEmpty() const { return m_handInvId == 0; }
 
   Inventory getHandInventory();
 

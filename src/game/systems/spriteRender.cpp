@@ -326,20 +326,10 @@ Entity createSpriteRenderEntity(IHost& host) {
   va->addVertexArrayAttrib(instances->meshBuffer, 1, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), offsetof(MeshVertex, texCoords));
 
   // Per Instance
+  instances->capacity = 1024;
   instances->instanceBuffer.bufferStorage(sizeof(Instance) * instances->capacity, nullptr, instanceBufferFlags);
   instances->instances = instances->instanceBuffer.mapBuffer(GL_WRITE_ONLY);
-  va->addVertexArrayAttrib(instances->instanceBuffer, 2, 2, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, localPos));
-  va->addVertexArrayAttrib(instances->instanceBuffer, 3, 2, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, worldPos));
-  va->addIntegerVertexArrayAttrib(instances->instanceBuffer, 4, 1, GL_UNSIGNED_SHORT, sizeof(Instance), offsetof(Instance, layer));
-  va->addIntegerVertexArrayAttrib(instances->instanceBuffer, 5, 1, GL_UNSIGNED_BYTE, sizeof(Instance), offsetof(Instance, rot5z3));
-  va->addIntegerVertexArrayAttrib(instances->instanceBuffer, 6, 1, GL_UNSIGNED_BYTE, sizeof(Instance), offsetof(Instance, dim));
-  va->addVertexArrayAttrib(instances->instanceBuffer, 7, 1, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, scale));
-  va->attribDivisor(2, 1);
-  va->attribDivisor(3, 1);
-  va->attribDivisor(4, 1);
-  va->attribDivisor(5, 1);
-  va->attribDivisor(6, 1);
-  va->attribDivisor(7, 1);
+  bindInstanceBufferAttribs(*va, instances->instanceBuffer);
 
   std::string resultStr;
   if (!shader->loadShaderStr(tileVertexShaderSource, tileFragShaderSource, resultStr)) {

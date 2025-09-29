@@ -9,7 +9,6 @@ RAMPAGE_START
 static constexpr int MinimumMajorGLVersion = 4;
 static constexpr int MinimumMinorGLVersion = 0;
 static void setNecessaryGLAttributes() {
-  SDL_Init(SDL_INIT_VIDEO);
 #ifndef NDEBUG
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 #endif
@@ -37,6 +36,7 @@ int RenderModule::onLoad() {
   EntityWorld& world = m_host->getWorld();
 
   /* Window and render setup */
+  SDL_Init(SDL_INIT_VIDEO);
   setNecessaryGLAttributes();
   SDL_Window* window = SDL_CreateWindow(m_host->getTitle().data(), 800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
   if (!window) {
@@ -69,7 +69,10 @@ int RenderModule::onLoad() {
   enableOpenglErrorCallback(m_host);
 #endif
 
-  TTF_Init();
+  if (!TTF_Init()) {
+    m_host->log("Failed to init SDL_TTF: %s\n", SDL_GetError());
+    return -1;
+  }
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -92,10 +95,6 @@ int RenderModule::onLoad() {
   group.attachToStage<RenderGroup::ClearWindowStage>(clearWindow);
   group.attachToStage<RenderGroup::SwapBuffersStage>(swapBuffers);
 
-  return 0;
-}
-
-int RenderModule::onUnload() {
   return 0;
 }
 

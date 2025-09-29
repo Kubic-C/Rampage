@@ -5,8 +5,8 @@
 
 RAMPAGE_START
 
-
 int healthSystem(EntityWorld& world, float dt) {
+  world.beginDefer();
   auto it = world.getWith(world.set<HealthComponent>());
   while (it.hasNext()) {
     Entity e = it.next();
@@ -16,12 +16,14 @@ int healthSystem(EntityWorld& world, float dt) {
       e.world().destroy(e);
     }
   }
+  world.endDefer();
 
   return 0;
 }
 
 int lifetimeSystem(EntityWorld& world, float dt) {
-  auto it = world.getWith(world.set<HealthComponent>());
+  world.beginDefer();
+  auto it = world.getWith(world.set<LifetimeComponent>());
   while (it.hasNext()) {
     Entity e = it.next();
     auto destroyAfter = e.get<LifetimeComponent>();
@@ -31,6 +33,7 @@ int lifetimeSystem(EntityWorld& world, float dt) {
     }
     destroyAfter->timeLeft -= dt;
   }
+  world.endDefer();
 
   return 0;
 }

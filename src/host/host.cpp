@@ -58,7 +58,7 @@ void registerStatsSystems(Pipeline& pipeline) {
   auto& renderGroup = pipeline.getGroup<RenderGroup>();
   renderGroup.attachToStage<RenderGroup::PreRenderStage>(
     [](EntityWorld& world, float dt){
-      AppStats& stats = world.getContext<AppStats>();
+      auto& stats = world.getContext<AppStats>();
 
       stats.cumFrames++;
 
@@ -68,9 +68,10 @@ void registerStatsSystems(Pipeline& pipeline) {
   auto& gameGroup = pipeline.getGroup<GameGroup>();
   gameGroup.attachToStage<GameGroup::TickStage>(
   [](EntityWorld& world, float dt){
-    AppStats& stats = world.getContext<AppStats>();
+    auto& stats = world.getContext<AppStats>();
 
     stats.cumTicks++;
+    stats.tick++;
 
     return 0;
   });
@@ -79,7 +80,7 @@ void registerStatsSystems(Pipeline& pipeline) {
     .createStage<StatsCounterGroup::StatsCounterStage>();
   statsCounterGroup.attachToStage<StatsCounterGroup::StatsCounterStage>(
   [](EntityWorld& world, float dt){
-    AppStats& stats = world.getContext<AppStats>();
+    auto& stats = world.getContext<AppStats>();
 
     stats.tps = stats.cumTicks;
     stats.fps = stats.cumFrames;
@@ -93,7 +94,7 @@ void registerStatsSystems(Pipeline& pipeline) {
 }
 
 Host::Host()
-  : m_status(Status::Ok), m_world(*this) {
+  : m_status(Status::Ok), m_world(std::make_unique<EntityWorld>(*this)) {
   addModule<CoreModule>();
   addModule<LogModule>();
   addModule<RenderModule>();
@@ -124,9 +125,7 @@ int Host::run() {
     m_pipeline.run(*this);
   }
 
-  for (auto module : m_staticModules) {
-    module->onUnload();
-  }
+  m_world.reset();
 
   return 0;
 }

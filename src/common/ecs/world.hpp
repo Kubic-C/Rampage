@@ -97,6 +97,8 @@ private:
   void addContext(Params&&... args) {
     const u32 id = m_contextIdMgr.id<T>();
 
+    assert(!m_contexts.contains(id));
+
     m_contexts[id].bytes = reinterpret_cast<u8*>(new T(args...));
     m_contexts[id].destroy = [](u8* bytes) { delete reinterpret_cast<T*>(bytes); };
     m_contextsLifo.push_back(id);

@@ -21,10 +21,11 @@ public:
   NODISCARD bool hasWindowResized() const;
   NODISCARD glm::vec2 getWindowSize() const;
   NODISCARD Vec2 getMouseCoords() const;
+  NODISCARD const std::vector<SDL_Event>& getPolledEvents() const;
+  void clearPolledEvents();
 
 public:
   int onLoad() override;
-  int onUnload() override;
   int onUpdate() override;
 };
 

@@ -4,6 +4,6 @@
 
 RAMPAGE_START
 
-void loadGuiRender(IHost& host);
+void loadGuiSystems(IHost& host);
 
 RAMPAGE_END

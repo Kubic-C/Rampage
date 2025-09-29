@@ -24,7 +24,6 @@ public:
 
 public:
   int onLoad() override;
-  int onUnload() override;
   int onUpdate() override;
 
   void enableVsync(bool vsync);

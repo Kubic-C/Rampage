@@ -50,7 +50,9 @@ target_sources(
   "systems/item.hpp"
   "systems/health.cpp"
   "systems/health.hpp"
-  "systems/guiRender.cpp"
-  "systems/guiRender.hpp"
+  "systems/gui.cpp"
+  "systems/gui.hpp"
+  "systems/turret.cpp"
+  "systems/turret.hpp"
   "systems/shapeRender.cpp"
   "systems/shapeRender.hpp")

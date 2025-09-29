@@ -18,7 +18,6 @@ public:
 
 public:
   int onLoad() override;
-  int onUnload() override;
   int onUpdate() override;
 };
 

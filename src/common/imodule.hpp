@@ -19,7 +19,6 @@ public:
 
 public:
   virtual int onLoad() = 0;
-  virtual int onUnload() = 0;
   virtual int onUpdate() = 0;
   virtual std::vector<std::type_index> getDependencies() = 0;
 

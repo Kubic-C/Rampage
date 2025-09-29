@@ -48,8 +48,10 @@ static float signedAngleDiff(float a, float b) {
 const Vec2 right = {1.0f, 0.0f};
 
 struct TurretContext {
-  TurretContext(EntityWorld& world)
+  explicit TurretContext(EntityWorld& world)
     : collisionQueue(world.create()) {}
+
+  TurretContext(TurretContext& ctx) = delete;
 
   std::vector<SummonBullet> summonBullets;
   Entity collisionQueue;
@@ -73,6 +75,8 @@ void updateTurret(Entity e, float dt, TurretContext& context) {
   b2World_OverlapShape(physicsWorld, &proxy, filter, &queryClosest, &closestShape);
   if (!b2Shape_IsValid(closestShape.shape))
     return;
+
+  // e.world().getHost().log("Found target\n");
 
   b2BodyId targetBody = b2Shape_GetBody(closestShape.shape);
   Vec2 targetPos = b2Body_GetPosition(targetBody);
@@ -192,8 +196,11 @@ int updateTurrets(EntityWorld& world, float deltaTime) {
 }
 
 void setBulletDamageEntityToCollisionQueue(Entity e) {
+  EntityWorld& world = e.world();
+  auto& context = world.getContext<TurretContext>();
+
   e.add<SubmitToCollisionQueueComponent>();
-  RefT<SubmitToCollisionQueueComponent> queue = e.get<SubmitToCollisionQueueComponent>();
+  auto queue = e.get<SubmitToCollisionQueueComponent>();
   queue->queue = context.collisionQueue;
 }
 

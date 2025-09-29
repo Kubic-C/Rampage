@@ -2,41 +2,42 @@
 
 #include "../components/components.hpp"
 #include "state.hpp"
+#include "../../render/module.hpp"
+#include "../../event/module.hpp"
 
 RAMPAGE_START
 
 class PlayState : public State {
-  const std::string& menuName = "PlayMenu";
-  const std::string& returnBtnName = "PlayReturn";
-  const std::string& playSaveStateTextName = "PlaySaveState";
-  const std::string& playLoadStateTextName = "PlayLoadState";
-  const std::string& tickTextName = "PlayTick";
-  const std::string& tpsTextName = "PlayTPS";
-  const std::string& fpsTextName = "PlayFPS";
-  const std::string& activeBodiesTextName = "PlayActiveBodies";
-  const std::string& playEntityCountTextName = "PlayEntityCount";
+  const std::string menuName = "PlayMenu";
+  const std::string returnBtnName = "PlayReturn";
+  const std::string playSaveStateTextName = "PlaySaveState";
+  const std::string playLoadStateTextName = "PlayLoadState";
+  const std::string tickTextName = "PlayTick";
+  const std::string tpsTextName = "PlayTPS";
+  const std::string fpsTextName = "PlayFPS";
+  const std::string activeBodiesTextName = "PlayActiveBodies";
+  const std::string playEntityCountTextName = "PlayEntityCount";
 
 public:
-  PlayState(EntityWorld& world)
+  explicit PlayState(EntityWorld& world)
     : m_world(world) {
     m_world.component<OwnedBy<PlayState>>();
     m_addedPlayerComponents = m_world.set<PlayerComponent, PrimaryTargetTag, BodyComponent,
                                           RectangleRenderComponent, InventoryComponent>();
 
-    tgui::Gui& gui = m_world.getContext<tgui::Gui>();
+    auto& gui = m_world.getContext<tgui::Gui>();
     m_menu = world.getContext<tgui::Gui>().get(menuName);
 
     tgui::Button::Ptr returnBtn = gui.get(returnBtnName)->cast<tgui::Button>();
     returnBtn->onMousePress([&]() {
-      StateManager& stateMgr = world.getContext<StateManager>();
+      auto& stateMgr = world.getContext<StateManager>();
       stateMgr.disableState("PlayState");
       stateMgr.enableState("MenuState");
     });
 
     tgui::Button::Ptr saveStateBtn = gui.get(playSaveStateTextName)->cast<tgui::Button>();
     saveStateBtn->onMousePress([&]() {
-      StateManager& stateMgr = world.getContext<StateManager>();
-      logGeneric("Saving state...\n");
+      auto& stateMgr = world.getContext<StateManager>();
 
       auto serWorld = dynamic_cast<EntityWorldSerializable*>(&world);
       if (serWorld) {
@@ -47,8 +48,7 @@ public:
 
     tgui::Button::Ptr loadStateBtn = gui.get(playLoadStateTextName)->cast<tgui::Button>();
     loadStateBtn->onMousePress([&]() {
-      StateManager& stateMgr = world.getContext<StateManager>();
-      logGeneric("Loading state...\n");
+      auto& stateMgr = world.getContext<StateManager>();
 
       auto serWorld = dynamic_cast<EntityWorldSerializable*>(&world);
       if (serWorld) {
@@ -69,7 +69,7 @@ public:
     base.add<OwnedBy<PlayState>>();
 
     m_bodyCallback = [this, baseId = base.id()](int x, int y) {
-      Vec2 mousePos = m_world.getContext<Render>().getWorldCoords(m_world.getContext<EventManager>().getMouseCoords());
+      Vec2 mousePos = m_world.getContext<RenderModule>().getWorldCoords(m_world.getContext<EventModule>().getMouseCoords());
 
       auto& loader = m_world.getContext<AssetLoader>();
 
@@ -84,19 +84,14 @@ public:
   }
 
   void onEntry() {
-    StateManager& stateMgr = m_world.getContext<StateManager>();
-    b2WorldId physicsWorld = m_world.getContext<b2WorldId>();
-    InventoryManager& invMgr = m_world.getContext<InventoryManager>();
-    AssetLoader& assetLoader = m_world.getContext<AssetLoader>();
-    Entity player = m_world.getFirstWith(m_world.set<CameraInUse>());
+    const b2WorldId physicsWorld = m_world.getContext<b2WorldId>();
+    auto& stateMgr = m_world.getContext<StateManager>();
+    auto& invMgr = m_world.getContext<InventoryManager>();
+    auto& assetLoader = m_world.getContext<AssetLoader>();
+    Entity player = m_world.getFirstWith(m_world.set<CameraInUseTag>());
 
     m_menu->setEnabled(true);
     m_menu->setVisible(true);
-
-    /* Needed Modules */
-    m_world.enableModule<PhysicsModule>();
-    m_world.enableModule<PathfindingModule>();
-    m_world.enableModule<PlayerModule>();
 
     /* Player */
     player.add(m_addedPlayerComponents);
@@ -109,7 +104,7 @@ public:
     playerInvetory.addItem(assetLoader.getPrefab("BigGunItem"), 2);
 
     // Render
-    RefT<RectangleRenderComponent> renderRect = player.get<RectangleRenderComponent>();
+    auto renderRect = player.get<RectangleRenderComponent>();
     renderRect->hw = 0.12f;
     renderRect->hh = 0.12f;
 
@@ -168,9 +163,9 @@ public:
   }
 
   void onTick(u32 tick, float deltaTime) override {
-    AppStats& appStats = m_world.getContext<AppStats>();
-    b2WorldId& physicsWorldId = m_world.getContext<b2WorldId>();
-    u32 activeBodies = b2World_GetAwakeBodyCount(physicsWorldId);
+    auto& appStats = m_world.getContext<AppStats>();
+    auto& physicsWorldId = m_world.getContext<b2WorldId>();
+    const u32 activeBodies = b2World_GetAwakeBodyCount(physicsWorldId);
 
     m_tickText->setText("Tick: " + std::to_string(tick));
     m_tpsText->setText("TPS: " + std::to_string(appStats.tps));
@@ -187,7 +182,7 @@ public:
 
     m_entityCountText->setText("Set Count: " + std::to_string(m_world.getSetCount()));
 
-    b2WorldId physicsWorld = m_world.getContext<b2WorldId>();
+    const b2WorldId physicsWorld = m_world.getContext<b2WorldId>();
     if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F3] && tick % 3 == 0) {
       callInGrid(-2, -2, 2, 2, m_bodyCallback);
     }
@@ -198,15 +193,12 @@ public:
 
     m_world.destroyAllEntitiesWith(m_world.set<OwnedBy<PlayState>, EntityWorld::Enabled>());
     player.remove(m_addedPlayerComponents);
-    m_world.disableModule<PhysicsModule>();
-    m_world.disableModule<PathfindingModule>();
-    m_world.disableModule<PlayerModule>();
 
     m_menu->setEnabled(false);
     m_menu->setVisible(false);
   }
 
-  private:
+private:
   std::function<void(int, int)> m_bodyCallback;
   tgui::Label::Ptr m_tickText;
   tgui::Label::Ptr m_tpsText;

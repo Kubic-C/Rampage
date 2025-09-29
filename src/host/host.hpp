@@ -45,7 +45,7 @@ public:
   }
 
   EntityWorld& getWorld() override {
-    return m_world;
+    return *m_world;
   }
 
   std::string getTitle() override {
@@ -79,7 +79,7 @@ private:
   Status m_status;
   volatile bool m_exit = false;
 
-  EntityWorld m_world;
+  std::unique_ptr<EntityWorld> m_world;
   HostFuncs m_funcs;
   Pipeline m_pipeline;
 
@@ -91,8 +91,8 @@ private:
 
   template<typename T>
   void addModule() {
-    m_world.addContext<T>(*this);
-    m_staticModules.push_back(&m_world.getContext<T>());
+    m_world->addContext<T>(*this);
+    m_staticModules.push_back(&m_world->getContext<T>());
     m_typeMap[typeid(T)] = m_staticModules.back();
   }
 };

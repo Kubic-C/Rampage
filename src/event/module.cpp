@@ -24,10 +24,6 @@ int EventModule::onLoad() {
   return 0;
 }
 
-int EventModule::onUnload() {
-  return 0;
-}
-
 int EventModule::onUpdate() {
   auto& eventData = m_host->getWorld().getContext<EventData>();
 
@@ -38,7 +34,6 @@ int EventModule::onUpdate() {
   }
   eventData.pressedKeys.clear();
 
-  eventData.polledEvents.clear();
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     eventData.polledEvents.push_back(event);
@@ -98,6 +93,18 @@ Vec2 EventModule::getMouseCoords() const {
   SDL_GetMouseState(&x, &y);
 
   return Vec2(x, y);
+}
+
+NODISCARD const std::vector<SDL_Event>& EventModule::getPolledEvents() const {
+  auto& eventData = m_host->getWorld().getContext<EventData>();
+
+  return eventData.polledEvents;
+}
+
+void EventModule::clearPolledEvents() {
+  auto& eventData = m_host->getWorld().getContext<EventData>();
+
+  eventData.polledEvents.clear();
 }
 
 RAMPAGE_END

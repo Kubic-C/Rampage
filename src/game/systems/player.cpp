@@ -73,7 +73,7 @@ void updatePlayer(Entity e, float dt) {
     inv.setVisible(!inv.getVisible());
   if (eventMgr.isKeyHeld(Key::F4))
     inv.addItem(assetLoader.getPrefab("WoodItem"), 4);
-  if (eventMgr.isKeyHeld(Key::F) && invMgr.isHandEmpty() && world.getContext<tgui::Gui>().getWidgetAtPos(mouseScreen, false).get() != nullptr)
+  if (eventMgr.isKeyHeld(Key::F) && !invMgr.isHandEmpty() && !world.getContext<tgui::Gui>().getWidgetAtPos(mouseScreen, false).get())
     tryPlaceItem(world.getFirstWith(world.set<WorldMapTag>()), invMgr.getHandInventory(),
                  invMgr.getHandInventoryPos(), player->mouse);
 }

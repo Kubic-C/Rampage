@@ -10,12 +10,6 @@ int LogModule::onLoad() {
   return 0;
 }
 
-int LogModule::onUnload() {
-  m_host->setLogFuncs(nullptr, nullptr);
-
-  return 0;
-}
-
 int LogModule::onUpdate() {
   EntityWorld& world = m_host->getWorld();
 
