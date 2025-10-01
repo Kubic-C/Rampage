@@ -1,10 +1,10 @@
 #include "host.hpp"
 
-#include "../log/module.hpp"
 #include "../core/module.hpp"
-#include "../render/module.hpp"
 #include "../event/module.hpp"
 #include "../game/module.hpp"
+#include "../log/module.hpp"
+#include "../render/module.hpp"
 
 RAMPAGE_START
 
@@ -56,18 +56,16 @@ struct StatsCounterGroup {
 
 void registerStatsSystems(Pipeline& pipeline) {
   auto& renderGroup = pipeline.getGroup<RenderGroup>();
-  renderGroup.attachToStage<RenderGroup::PreRenderStage>(
-    [](EntityWorld& world, float dt){
-      auto& stats = world.getContext<AppStats>();
+  renderGroup.attachToStage<RenderGroup::PreRenderStage>([](EntityWorld& world, float dt) {
+    auto& stats = world.getContext<AppStats>();
 
-      stats.cumFrames++;
+    stats.cumFrames++;
 
-      return 0;
-    });
+    return 0;
+  });
 
   auto& gameGroup = pipeline.getGroup<GameGroup>();
-  gameGroup.attachToStage<GameGroup::TickStage>(
-  [](EntityWorld& world, float dt){
+  gameGroup.attachToStage<GameGroup::TickStage>([](EntityWorld& world, float dt) {
     auto& stats = world.getContext<AppStats>();
 
     stats.cumTicks++;
@@ -76,10 +74,9 @@ void registerStatsSystems(Pipeline& pipeline) {
     return 0;
   });
 
-  auto& statsCounterGroup = pipeline.createGroup<StatsCounterGroup>(1.0f)
-    .createStage<StatsCounterGroup::StatsCounterStage>();
-  statsCounterGroup.attachToStage<StatsCounterGroup::StatsCounterStage>(
-  [](EntityWorld& world, float dt){
+  auto& statsCounterGroup =
+      pipeline.createGroup<StatsCounterGroup>(1.0f).createStage<StatsCounterGroup::StatsCounterStage>();
+  statsCounterGroup.attachToStage<StatsCounterGroup::StatsCounterStage>([](EntityWorld& world, float dt) {
     auto& stats = world.getContext<AppStats>();
 
     stats.tps = stats.cumTicks;
@@ -93,8 +90,7 @@ void registerStatsSystems(Pipeline& pipeline) {
   });
 }
 
-Host::Host()
-  : m_status(Status::Ok), m_world(std::make_unique<EntityWorld>(*this)) {
+Host::Host() : m_status(Status::Ok), m_world(std::make_unique<EntityWorld>(*this)) {
   addModule<CoreModule>();
   addModule<LogModule>();
   addModule<RenderModule>();
@@ -105,7 +101,7 @@ Host::Host()
 
   for (IStaticModule* module : m_staticModules) {
     int rc = module->onLoad();
-    if (rc !=0) {
+    if (rc != 0) {
       log(rc, "Failed to load module: %s\n", module->getName().c_str());
       m_status = Status::CriticalError;
       break;

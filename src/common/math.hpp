@@ -1,17 +1,9 @@
 #pragma once
 
-#include <glm/glm.hpp>
 #include <box2d/box2d.h>
+#include <glm/glm.hpp>
 
 #include "commondef.hpp"
-
-/* OpenGL Mathematics (GLM) */
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/norm.hpp>
-#include <glm/gtx/rotate_vector.hpp>
-#include <glm/gtx/vector_angle.hpp>
 
 struct Vec2 : glm::vec2 {
   Vec2() {}
@@ -30,13 +22,21 @@ struct Vec2 : glm::vec2 {
     return *this;
   }
 
-  b2Vec2 b2() const { return b2Vec2(x, y); }
+  b2Vec2 b2() const {
+    return b2Vec2(x, y);
+  }
 
-  operator b2Vec2() const { return b2(); }
+  operator b2Vec2() const {
+    return b2();
+  }
 
-  tgui::Vector2f tgui() const { return tgui::Vector2f(x, y); }
+  tgui::Vector2f tgui() const {
+    return tgui::Vector2f(x, y);
+  }
 
-  operator tgui::Vector2f() const { return tgui(); }
+  operator tgui::Vector2f() const {
+    return tgui();
+  }
 };
 
 struct Rot : b2Rot {
@@ -55,13 +55,21 @@ struct Rot : b2Rot {
     c = glm::cos(angle);
   }
 
-  float radians() const { return b2Rot_GetAngle(*this); }
+  float radians() const {
+    return b2Rot_GetAngle(*this);
+  }
 
-  operator float() const { return radians(); }
+  operator float() const {
+    return radians();
+  }
 
-  bool operator==(const b2Rot& other) const { return s == other.s && c == other.c; }
+  bool operator==(const b2Rot& other) const {
+    return s == other.s && c == other.c;
+  }
 
-  bool operator!=(const b2Rot& other) const { return s != other.s || c != other.c; }
+  bool operator!=(const b2Rot& other) const {
+    return s != other.s || c != other.c;
+  }
 
   Rot operator-(const Rot& other) const {
     Rot dif;
@@ -88,7 +96,9 @@ struct Transform {
 
   Transform(const b2Transform& other) : pos(other.p), rot(other.q) {}
 
-  operator b2Transform() const { return b2Transform(pos.b2(), rot); }
+  operator b2Transform() const {
+    return b2Transform(pos.b2(), rot);
+  }
 
   Transform& operator=(const b2Transform& other) {
     pos = other.p;
@@ -104,7 +114,9 @@ struct Transform {
     return pos.x != other.p.x || pos.y != other.p.y || rot != other.q;
   }
 
-  Vec2 getWorldPoint(const Vec2& localPos) const { return b2TransformPoint((b2Transform) * this, localPos); }
+  Vec2 getWorldPoint(const Vec2& localPos) const {
+    return b2TransformPoint((b2Transform) * this, localPos);
+  }
 
   Vec2 getLocalPoint(const Vec2& worldPos) const {
     return b2InvTransformPoint((b2Transform) * this, worldPos);
@@ -123,7 +135,9 @@ inline bool isApprox(Vec2 value1, Vec2 value2, float max) {
   return isApprox(value1.x, value2.x, max) && isApprox(value1.y, value2.y, max);
 }
 
-inline float angleOf(const Vec2& vec) { return atan2(vec.y, vec.x); }
+inline float angleOf(const Vec2& vec) {
+  return atan2(vec.y, vec.x);
+}
 
 inline Vec2 fast2DRotate(const Vec2& vec, float angle) {
   Vec2 rotVec;

@@ -56,7 +56,8 @@ int EventModule::onUpdate() {
       eventData.keys[event.key.scancode].hold = false;
       break;
     default:
-      break;;
+      break;
+      ;
     }
   }
 

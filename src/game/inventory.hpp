@@ -1,7 +1,7 @@
 #pragma once
 
-#include "components/components.hpp"
 #include "assetLoader.hpp"
+#include "components/components.hpp"
 
 RAMPAGE_START
 
@@ -37,7 +37,7 @@ class Inventory;
 class InventoryManager {
   friend class Inventory;
 
-  public:
+public:
   InventoryManager(EntityWorld& world) : m_world(world) {
     tgui::Gui& gui = m_world.getContext<tgui::Gui>();
     m_handPicture = tgui::Picture::create();
@@ -90,18 +90,26 @@ class InventoryManager {
     m_handPicture->setVisible(false);
   }
 
-  bool isHandEmpty() const { return m_handInvId == 0; }
+  bool isHandEmpty() const {
+    return m_handInvId == 0;
+  }
 
   Inventory getHandInventory();
 
-  glm::u16vec2 getHandInventoryPos() { return m_handInvPos; }
+  glm::u16vec2 getHandInventoryPos() {
+    return m_handInvPos;
+  }
 
-  protected:
-  InventoryData& getInventoryData(InventoryId id) { return m_inventories.find(id)->second; }
+protected:
+  InventoryData& getInventoryData(InventoryId id) {
+    return m_inventories.find(id)->second;
+  }
 
-  Entity getEntity(EntityId entity) { return m_world.get(entity); }
+  Entity getEntity(EntityId entity) {
+    return m_world.get(entity);
+  }
 
-  private:
+private:
   EntityWorld& m_world;
 
   tgui::Texture m_defaultTexture;
@@ -116,7 +124,7 @@ class InventoryManager {
 
 /* A proxy class used to extend functionality */
 class Inventory {
-  public:
+public:
   Inventory(InventoryManager& mgr, InventoryId id) : m_mgr(mgr), m_id(id) {}
 
   bool addItem(EntityId entity, const glm::u16vec2& pos, u32 count = 1) {
@@ -203,9 +211,13 @@ class Inventory {
     return false; // Inventory is full
   }
 
-  const ItemStack getStack(const glm::u16vec2& pos) const { return getData().items.find(pos)->second; }
+  const ItemStack getStack(const glm::u16vec2& pos) const {
+    return getData().items.find(pos)->second;
+  }
 
-  bool isStackEmpty(const glm::u16vec2& pos) { return getData().items.find(pos)->second.item == 0; }
+  bool isStackEmpty(const glm::u16vec2& pos) {
+    return getData().items.find(pos)->second.item == 0;
+  }
 
   bool swapItems(const glm::u16vec2& posA, InventoryId invIdB, const glm::u16vec2& posB) {
     // its not as bad as it looks i swear
@@ -325,16 +337,24 @@ class Inventory {
       gui.remove(inv.window);
   }
 
-  bool getVisible() const { return getData().m_visible; }
+  bool getVisible() const {
+    return getData().m_visible;
+  }
 
-  operator InventoryId() const { return m_id; }
+  operator InventoryId() const {
+    return m_id;
+  }
 
-  protected:
-  InventoryData& getData() { return m_mgr.getInventoryData(m_id); }
+protected:
+  InventoryData& getData() {
+    return m_mgr.getInventoryData(m_id);
+  }
 
-  const InventoryData& getData() const { return m_mgr.getInventoryData(m_id); }
+  const InventoryData& getData() const {
+    return m_mgr.getInventoryData(m_id);
+  }
 
-  private:
+private:
   InventoryManager& m_mgr;
   InventoryId m_id;
 };

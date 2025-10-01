@@ -6,7 +6,9 @@ float now() {
   static std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
   auto current_time = std::chrono::steady_clock::now();
 
-  return static_cast<float>(std::chrono::duration_cast<std::chrono::microseconds>(current_time - start_time).count()) / (1000000);
+  return static_cast<float>(
+             std::chrono::duration_cast<std::chrono::microseconds>(current_time - start_time).count()) /
+      (1000000);
 }
 
 void Pipeline::run(IHost& host) {
@@ -31,7 +33,7 @@ void Pipeline::run(IHost& host) {
 
     for (Stage& stage : group.m_stages) {
       for (const auto& task : stage.tasks)
-        task(host,  realRate);
+        task(host, realRate);
       for (const auto& task : stage.worldTasks)
         task(host.getWorld(), realRate);
     }

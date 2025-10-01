@@ -57,14 +57,18 @@ struct SpriteComponent {
       layers[layerCount++] = SpriteLayer(texIndex, offset, rot, layer);
     }
 
-    SpriteLayer& getLast() { return layers[layerCount - 1]; }
+    SpriteLayer& getLast() {
+      return layers[layerCount - 1];
+    }
 
     const SpriteLayer& operator[](size_t index) const {
       assert(index < layerCount);
       return layers[index];
     }
 
-    const SpriteLayer& get(size_t index) const { return layers[index]; }
+    const SpriteLayer& get(size_t index) const {
+      return layers[index];
+    }
   };
 
   float scaling = 1.0f;

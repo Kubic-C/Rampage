@@ -1,12 +1,12 @@
 #include "turret.hpp"
 
-#include "../module.hpp"
 #include "../../core/transform.hpp"
-#include "../components/shapes.hpp"
 #include "../components/collisionQueue.hpp"
+#include "../components/health.hpp"
+#include "../components/shapes.hpp"
 #include "../components/sprite.hpp"
 #include "../components/turret.hpp"
-#include "../components/health.hpp"
+#include "../module.hpp"
 
 RAMPAGE_START
 
@@ -48,8 +48,7 @@ static float signedAngleDiff(float a, float b) {
 const Vec2 right = {1.0f, 0.0f};
 
 struct TurretContext {
-  explicit TurretContext(EntityWorld& world)
-    : collisionQueue(world.create()) {}
+  explicit TurretContext(EntityWorld& world) : collisionQueue(world.create()) {}
 
   TurretContext(TurretContext& ctx) = delete;
 
@@ -212,7 +211,8 @@ void loadTurretSystems(IHost& host) {
   auto& context = world.getContext<TurretContext>();
   context.collisionQueue.add<CollisionQueueComponent>();
 
-  world.observe(EntityWorld::EventType::Add, world.component<BulletDamageComponent>(), world.set<EntityWorld::Enabled>(), setBulletDamageEntityToCollisionQueue);
+  world.observe<ComponentAdded>(world.component<BulletDamageComponent>(),
+                world.set<EntityWorld::Enabled>(), setBulletDamageEntityToCollisionQueue);
 
   pipeline.getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(updateTurrets);
 }

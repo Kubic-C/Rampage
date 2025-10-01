@@ -5,7 +5,7 @@
 RAMPAGE_START
 
 class State {
-  public:
+public:
   virtual ~State() = default;
 
   virtual void onEntry() {}
@@ -13,7 +13,7 @@ class State {
   virtual void onTick(u32 tick, float deltaTime) {}
   virtual void onUpdate() {}
 
-  protected:
+protected:
   std::vector<EntityId> m_modules;
   std::string m_name;
 };
@@ -26,7 +26,7 @@ template <typename T>
 struct OwnedBy {};
 
 class StateManager {
-  public:
+public:
   template <typename T, typename... Params>
   void createState(const std::string& name, EntityWorld& world, Params&&... args) {
     assert(!m_states.contains(name));
@@ -44,7 +44,9 @@ class StateManager {
     m_commandBuffer.push_back(Command{Command::Type::Disable, name});
   }
 
-  bool isStateEnabled(const std::string& name) { return m_enabledStates.contains(name); }
+  bool isStateEnabled(const std::string& name) {
+    return m_enabledStates.contains(name);
+  }
 
   void onTick(u32 tick, float deltaTime) {
     for (Command& command : m_commandBuffer) {
@@ -80,7 +82,7 @@ class StateManager {
     }
   }
 
-  private:
+private:
   struct Command {
     enum Type { Enable, Disable };
 

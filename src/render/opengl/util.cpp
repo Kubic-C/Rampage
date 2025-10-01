@@ -50,7 +50,7 @@ uint32_t createShader(uint32_t shader_type, const char* file_path) {
 }
 
 void GLAPIENTRY glErrorCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
-                                       const GLchar* message, const void* userParam) {
+                                const GLchar* message, const void* userParam) {
   if (severity == GL_DEBUG_SEVERITY_NOTIFICATION)
     return;
 

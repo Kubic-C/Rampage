@@ -11,8 +11,7 @@ public:
     return {};
   }
 
-  LogModule(IHost& host)
-    : IStaticModule("LogModule", host) {}
+  LogModule(IHost& host) : IStaticModule("LogModule", host) {}
 
 public:
   int onLoad() override;

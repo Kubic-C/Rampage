@@ -9,7 +9,7 @@ class ComponentSetBuilder;
 class ComponentSet {
   friend class ComponentSetBuilder;
 
-  public:
+public:
   ComponentSet() = default;
   ComponentSet(const ComponentSet&) = default;
   ComponentSet(ComponentSet&&) = default;
@@ -29,14 +29,16 @@ class ComponentSet {
 
   ComponentSet& operator=(const ComponentSet& other) = default;
 
-  bool operator==(const ComponentSet& other) const { return getSetId() == other.getSetId(); }
+  bool operator==(const ComponentSet& other) const {
+    return getSetId() == other.getSetId();
+  }
 
-  protected:
+protected:
   std::vector<ComponentId> m_comps;
 };
 
 class ComponentSetBuilder {
-  public:
+public:
   static const ComponentSet empty;
 
   ComponentSetBuilder() = default;
@@ -59,7 +61,7 @@ class ComponentSetBuilder {
   const std::vector<ComponentId>& list() const;
   ComponentSet build() const;
 
-  protected:
+protected:
   std::vector<ComponentId> m_comps;
 };
 
@@ -68,14 +70,17 @@ RAMPAGE_END
 namespace boost {
   template <>
   struct hash<rmp::ComponentSet> {
-    size_t operator()(const rmp::ComponentSet& set) const { return set.getSetId(); }
+    size_t operator()(const rmp::ComponentSet& set) const {
+      return set.getSetId();
+    }
   };
 } // namespace boost
 
 namespace std {
   template <>
   struct hash<rmp::ComponentSet> {
-    size_t operator()(const rmp::ComponentSet& set) const { return set.getSetId(); }
+    size_t operator()(const rmp::ComponentSet& set) const {
+      return set.getSetId();
+    }
   };
 } // namespace std
-

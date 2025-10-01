@@ -65,7 +65,9 @@ ComponentSetId ComponentSet::getSetId() const {
   return hashValue;
 }
 
-const std::vector<ComponentId>& ComponentSet::list() const { return m_comps; }
+const std::vector<ComponentId>& ComponentSet::list() const {
+  return m_comps;
+}
 
 ComponentSetBuilder::ComponentSetBuilder(const ComponentSet& ids) : m_comps(ids.list()) {}
 
@@ -131,8 +133,12 @@ ComponentSetId ComponentSetBuilder::getSetId() const {
   return hashValue;
 }
 
-const std::vector<ComponentId>& ComponentSetBuilder::list() const { return m_comps; }
+const std::vector<ComponentId>& ComponentSetBuilder::list() const {
+  return m_comps;
+}
 
-ComponentSet ComponentSetBuilder::build() const { return ComponentSet(m_comps); }
+ComponentSet ComponentSetBuilder::build() const {
+  return ComponentSet(m_comps);
+}
 
 RAMPAGE_END

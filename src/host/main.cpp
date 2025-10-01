@@ -1,12 +1,12 @@
-#include <iostream>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 
 #include "host.hpp"
 
 using namespace rmp;
 
-int main () {
+int main() {
   Host host;
 
   if (host.getStatus() == Status::CriticalError) {

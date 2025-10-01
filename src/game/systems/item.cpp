@@ -1,8 +1,8 @@
 #include "item.hpp"
 
-#include "../module.hpp"
 #include "../components/item.hpp"
 #include "../inventory.hpp"
+#include "../module.hpp"
 
 RAMPAGE_START
 
@@ -27,7 +27,8 @@ void loadItemSystems(IHost& host) {
   Pipeline& pipeline = host.getPipeline();
   EntityWorld& world = host.getWorld();
 
-  world.observe(EntityWorld::EventType::Remove, world.component<InventoryComponent>(), {}, destroyInventoryOnEntityDestruction);
+  world.observe<ComponentRemoved>(world.component<InventoryComponent>(), {},
+                destroyInventoryOnEntityDestruction);
 
   pipeline.getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(updateItemHands);
 }

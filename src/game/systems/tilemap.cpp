@@ -1,6 +1,6 @@
 #include "tilemap.hpp"
-#include "../module.hpp"
 #include "../components/tilemap.hpp"
+#include "../module.hpp"
 
 RAMPAGE_START
 
@@ -67,26 +67,28 @@ void loadTilemapSystems(IHost& host) {
   Pipeline& pipeline = host.getPipeline();
   EntityWorld& world = host.getWorld();
 
-  world.observe(EntityWorld::EventType::Remove, world.component<DestroyTileOnEntityRemovalTag>(), world.set<TileBoundComponent>(), removeTileIfEntityDestroyed);
-  world.observe(EntityWorld::EventType::Remove, world.component<TilemapComponent>(), {}, destroyTileBoundEntities);
+  world.observe<ComponentRemoved>(world.component<DestroyTileOnEntityRemovalTag>(),
+                world.set<TileBoundComponent>(), removeTileIfEntityDestroyed);
+  world.observe<ComponentRemoved>(world.component<TilemapComponent>(), {},
+                destroyTileBoundEntities);
 
-  //TODO: world.observe(EntityWorld::EventType::Remove, world.component<TileBoundComponent>(), {}, [&](Entity e) {
-  //TODO:   Map<EntityId, std::set<EntityId>>& ongoingCollisions =
-  //TODO:       e.world().getModule<PhysicsModule>().getOngoingCollisions();
-  //TODO:
-  //TODO:   auto it = ongoingCollisions.find(e);
-  //TODO:   if (it != ongoingCollisions.end()) {
-  //TODO:     for (EntityId other : it->second) {
-  //TODO:       ongoingCollisions[other].erase(e);
-  //TODO:       if (ongoingCollisions[other].empty())
-  //TODO:         ongoingCollisions.erase(other);
-  //TODO:     }
-  //TODO:     ongoingCollisions.erase(it);
-  //TODO:   }
-  //TODO: });
+  // TODO: world.observe(EntityWorld::EventType::Remove, world.component<TileBoundComponent>(), {}, [&](Entity
+  // e) {
+  // TODO:   Map<EntityId, std::set<EntityId>>& ongoingCollisions =
+  // TODO:       e.world().getModule<PhysicsModule>().getOngoingCollisions();
+  // TODO:
+  // TODO:   auto it = ongoingCollisions.find(e);
+  // TODO:   if (it != ongoingCollisions.end()) {
+  // TODO:     for (EntityId other : it->second) {
+  // TODO:       ongoingCollisions[other].erase(e);
+  // TODO:       if (ongoingCollisions[other].empty())
+  // TODO:         ongoingCollisions.erase(other);
+  // TODO:     }
+  // TODO:     ongoingCollisions.erase(it);
+  // TODO:   }
+  // TODO: });
 
   pipeline.getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(updateTileBoundTransformsForAll);
 }
 
 RAMPAGE_END
-

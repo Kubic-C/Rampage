@@ -5,11 +5,15 @@
 RAMPAGE_START
 
 class VertexBuffer {
-  public:
-  static void unbind(GLenum target) { glBindBuffer(target, 0); }
+public:
+  static void unbind(GLenum target) {
+    glBindBuffer(target, 0);
+  }
 
-  public:
-  VertexBuffer() { glCreateBuffers(1, &m_id); }
+public:
+  VertexBuffer() {
+    glCreateBuffers(1, &m_id);
+  }
 
   VertexBuffer(VertexBuffer&& other) noexcept {
     m_id = other.m_id;
@@ -29,15 +33,21 @@ class VertexBuffer {
     return *this;
   }
 
-  void unmapBuffer() { glUnmapNamedBuffer(m_id); }
+  void unmapBuffer() {
+    glUnmapNamedBuffer(m_id);
+  }
 
   void* mapBufferRange(int offset, int length, int access) {
     return glMapNamedBufferRange(m_id, offset, length, access);
   }
 
-  void* mapBuffer(int access) { return glMapNamedBuffer(m_id, access); }
+  void* mapBuffer(int access) {
+    return glMapNamedBuffer(m_id, access);
+  }
 
-  void bufferData(u32 size, void* data, GLenum usage) const { glNamedBufferData(m_id, size, data, usage); }
+  void bufferData(u32 size, void* data, GLenum usage) const {
+    glNamedBufferData(m_id, size, data, usage);
+  }
 
   void bufferStorage(u32 size, void* data, GLenum usage) const {
     glNamedBufferStorage(m_id, size, data, usage);
@@ -47,9 +57,13 @@ class VertexBuffer {
     glNamedBufferSubData(m_id, offset, size, data);
   }
 
-  void bind(GLenum target) const { glBindBuffer(target, m_id); }
+  void bind(GLenum target) const {
+    glBindBuffer(target, m_id);
+  }
 
-  bool isValid() const { return m_id != 0; }
+  bool isValid() const {
+    return m_id != 0;
+  }
 
   int getSize() {
     int size;
@@ -94,7 +108,7 @@ class VertexBuffer {
     glBindBuffer(GL_COPY_READ_BUFFER, 0);
   }
 
-  private:
+private:
   u32 m_id;
 };
 

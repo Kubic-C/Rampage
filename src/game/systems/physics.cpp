@@ -1,7 +1,7 @@
 #include "physics.hpp"
 
-#include "../module.hpp"
 #include "../../core/module.hpp"
+#include "../module.hpp"
 
 #include "../components/body.hpp"
 #include "../components/collisionQueue.hpp"
@@ -16,7 +16,7 @@ struct PhysicsContext {
   void insertShapeEntity(b2ShapeId shapeId, EntityId entity) {
     int index = shapeId.index1;
 
-    if (index  >= sparseShapeEntity.size())
+    if (index >= sparseShapeEntity.size())
       sparseShapeEntity.resize(index + 1, 0);
 
     sparseShapeEntity[index] = entity;
@@ -39,6 +39,7 @@ int copyTransformsIntoBodies(EntityWorld& world, float dt) {
       b2Body_SetTransform(body->id, transform->pos, transform->rot);
     }
   }
+
   return 0;
 }
 
@@ -57,6 +58,7 @@ int copyBodiesIntoTransforms(EntityWorld& world, float dt) {
       transform->rot = bodyTransform.q;
     }
   }
+
   return 0;
 }
 
@@ -86,7 +88,8 @@ int physicsStep(EntityWorld& world, float dt) {
   for (int i = 0; i < events.endCount; i++) {
     const b2ContactEndTouchEvent& touch = events.endEvents[i];
 
-    if (touch.shapeIdA.index1 > context.sparseShapeEntity.size() || touch.shapeIdB.index1 > context.sparseShapeEntity.size())
+    if (touch.shapeIdA.index1 > context.sparseShapeEntity.size() ||
+        touch.shapeIdB.index1 > context.sparseShapeEntity.size())
       continue;
 
     EntityId eA = context.sparseShapeEntity[touch.shapeIdA.index1];
@@ -185,12 +188,12 @@ void loadPhysicsSystems(IHost& host, int steps) {
   context.steps = steps;
 
   pipeline.getGroup<GameGroup>()
-    .createStageAfter<GameGroup::TickStage, PrePhysicsStepStage>()
-    .createStageAfter<PrePhysicsStepStage, PhysicsStepStage>()
-    .createStageAfter<PhysicsStepStage, PostPhysicsStepStage>()
-    .attachToStage<PrePhysicsStepStage>(copyTransformsIntoBodies)
-    .attachToStage<PhysicsStepStage>(physicsStep)
-    .attachToStage<PostPhysicsStepStage>(copyBodiesIntoTransforms);
+      .createStageAfter<GameGroup::TickStage, PrePhysicsStepStage>()
+      .createStageAfter<PrePhysicsStepStage, PhysicsStepStage>()
+      .createStageAfter<PhysicsStepStage, PostPhysicsStepStage>()
+      .attachToStage<PrePhysicsStepStage>(copyTransformsIntoBodies)
+      .attachToStage<PhysicsStepStage>(physicsStep)
+      .attachToStage<PostPhysicsStepStage>(copyBodiesIntoTransforms);
 }
 
 RAMPAGE_END

@@ -26,8 +26,7 @@ struct TextureMap3DComponent {
   TextureArray texArray;
   Sampler sampler;
 
-  TextureMap3DComponent()
-    : texArray(32, 32, 256) {
+  TextureMap3DComponent() : texArray(32, 32, 256) {
     sampler.parameter(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     sampler.parameter(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     sampler.parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);

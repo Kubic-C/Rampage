@@ -42,9 +42,13 @@ struct AddShapeComponent {
 
 
 struct AddBodyComponent : public b2BodyDef {
-  AddBodyComponent() { dynamic_cast<b2BodyDef&>(*this) = b2DefaultBodyDef(); }
+  AddBodyComponent() {
+    dynamic_cast<b2BodyDef&>(*this) = b2DefaultBodyDef();
+  }
 
-  AddBodyComponent(glz::make_reflectable) { dynamic_cast<b2BodyDef&>(*this) = b2DefaultBodyDef(); }
+  AddBodyComponent(glz::make_reflectable) {
+    dynamic_cast<b2BodyDef&>(*this) = b2DefaultBodyDef();
+  }
 };
 
 RAMPAGE_END

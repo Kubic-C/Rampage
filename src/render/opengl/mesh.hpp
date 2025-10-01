@@ -10,7 +10,9 @@ struct Mesh {
   uint32_t verticesToRender = 0;
   uint32_t verticesOnBuffer = 0;
 
-  Mesh() { buffer.resize(GL_ARRAY_BUFFER, sizeof(VertexType) * 1024); }
+  Mesh() {
+    buffer.resize(GL_ARRAY_BUFFER, sizeof(VertexType) * 1024);
+  }
 
   Mesh(Mesh<VertexType, verticePerRender, verticesPerSubdata>&& other) noexcept {
     buffer = std::move(other.buffer);

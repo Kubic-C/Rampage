@@ -4,7 +4,7 @@
 
 RAMPAGE_START
 
-template<typename T>
+template <typename T>
 class RefT;
 
 // A safe-access version for components
@@ -15,7 +15,7 @@ public:
 
   void* get();
 
-  template<typename T>
+  template <typename T>
   RefT<T> cast();
 
 private:
@@ -29,14 +29,20 @@ class RefT : protected Ref {
 public:
   RefT(EntityWorld& world, EntityId id) : Ref(world, id, world.component<T>()) {}
 
-  T* operator->() { return reinterpret_cast<T*>(get()); }
+  T* operator->() {
+    return reinterpret_cast<T*>(get());
+  }
 
-  T& operator*() { return *reinterpret_cast<T*>(get()); }
+  T& operator*() {
+    return *reinterpret_cast<T*>(get());
+  }
 
-  T copy() { return *reinterpret_cast<T*>(get()); }
+  T copy() {
+    return *reinterpret_cast<T*>(get());
+  }
 };
 
-template<typename T>
+template <typename T>
 RefT<T> Ref::cast() {
   assert(m_world.component<T>() == m_comp);
   return RefT<T>(m_world, m_entity);

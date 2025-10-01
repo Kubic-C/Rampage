@@ -105,8 +105,10 @@ namespace enki {
   // Can be used with dependencies to wait for their completion.
   // Derive from ITaskSet or IPinnedTask for running parallel tasks.
   class ICompletable {
-public:
-    bool GetIsComplete() const { return 0 == m_RunningCount.load(std::memory_order_acquire); }
+  public:
+    bool GetIsComplete() const {
+      return 0 == m_RunningCount.load(std::memory_order_acquire);
+    }
 
     virtual ~ICompletable();
 
@@ -127,14 +129,14 @@ public:
 
     TaskPriority m_Priority = TASK_PRIORITY_HIGH;
 
-protected:
+  protected:
     // Deriving from an ICompletable and overriding OnDependenciesComplete is
     // advanced use. If you do override OnDependenciesComplete() call:
     // ICompletable::OnDependenciesComplete( pTaskScheduler_, threadNum_ );
     // in your implementation.
     virtual void OnDependenciesComplete(TaskScheduler* pTaskScheduler_, uint32_t threadNum_);
 
-private:
+  private:
     friend class TaskScheduler;
     friend class Dependency;
     std::atomic<int32_t> m_RunningCount = {0};
@@ -147,7 +149,7 @@ private:
   // Subclass ITaskSet to create tasks.
   // TaskSets can be re-used, but check completion first.
   class ITaskSet : public ICompletable {
-public:
+  public:
     ITaskSet() = default;
 
     ITaskSet(uint32_t setSize_) : m_SetSize(setSize_) {}
@@ -179,7 +181,7 @@ public:
     // grain size in literature.
     uint32_t m_MinRange = 1;
 
-private:
+  private:
     friend class TaskScheduler;
     void OnDependenciesComplete(TaskScheduler* pTaskScheduler_, uint32_t threadNum_) final;
     uint32_t m_RangeToRun = 1;
@@ -188,19 +190,21 @@ private:
   // Subclass IPinnedTask to create tasks which can be run on a given thread
   // only.
   class IPinnedTask : public ICompletable {
-public:
+  public:
     IPinnedTask() = default;
 
     IPinnedTask(uint32_t threadNum_) : threadNum(threadNum_) {} // default is to run a task on main thread
 
     // IPinnedTask needs to be non-abstract for intrusive list functionality.
     // Should never be called as is, should be overridden.
-    virtual void Execute() { ENKI_ASSERT(false); }
+    virtual void Execute() {
+      ENKI_ASSERT(false);
+    }
 
     uint32_t threadNum = 0; // thread to run this pinned task on
     std::atomic<IPinnedTask*> pNext = {NULL};
 
-private:
+  private:
     void OnDependenciesComplete(TaskScheduler* pTaskScheduler_, uint32_t threadNum_) final;
   };
 
@@ -208,7 +212,7 @@ private:
   typedef std::function<void(TaskSetPartition range, uint32_t threadnum)> TaskSetFunction;
 
   class TaskSet : public ITaskSet {
-public:
+  public:
     TaskSet() = default;
 
     TaskSet(TaskSetFunction func_) : m_Function(std::move(func_)) {}
@@ -226,7 +230,7 @@ public:
   typedef std::function<void()> PinnedTaskFunction;
 
   class LambdaPinnedTask : public IPinnedTask {
-public:
+  public:
     LambdaPinnedTask() = default;
 
     LambdaPinnedTask(PinnedTaskFunction func_) : m_Function(std::move(func_)) {}
@@ -234,12 +238,14 @@ public:
     LambdaPinnedTask(uint32_t threadNum_, PinnedTaskFunction func_) :
         IPinnedTask(threadNum_), m_Function(std::move(func_)) {}
 
-    void Execute() override { m_Function(); }
+    void Execute() override {
+      m_Function();
+    }
     PinnedTaskFunction m_Function;
   };
 
   class Dependency {
-public:
+  public:
     Dependency() = default;
     Dependency(const Dependency&) = delete;
     ENKITS_API Dependency(Dependency&&) noexcept;
@@ -249,10 +255,14 @@ public:
     ENKITS_API void SetDependency(const ICompletable* pDependencyTask_,
                                   ICompletable* pTaskToRunOnCompletion_);
     ENKITS_API void ClearDependency();
-    ICompletable* GetTaskToRunOnCompletion() { return pTaskToRunOnCompletion; }
-    const ICompletable* GetDependencyTask() { return pDependencyTask; }
+    ICompletable* GetTaskToRunOnCompletion() {
+      return pTaskToRunOnCompletion;
+    }
+    const ICompletable* GetDependencyTask() {
+      return pDependencyTask;
+    }
 
-private:
+  private:
     friend class TaskScheduler;
     friend class ICompletable;
     ICompletable* pTaskToRunOnCompletion = NULL;
@@ -311,7 +321,7 @@ private:
   };
 
   class TaskScheduler {
-public:
+  public:
     ENKITS_API TaskScheduler();
     ENKITS_API ~TaskScheduler();
 
@@ -352,7 +362,9 @@ public:
     // be used with code which calls WaitforAll(). This is also set when the
     // task manager is shutting down, so no need to have an additional check for
     // GetIsShutdownRequested()
-    inline bool GetIsWaitforAllCalled() const { return m_bWaitforAllCalled.load(std::memory_order_acquire); }
+    inline bool GetIsWaitforAllCalled() const {
+      return m_bWaitforAllCalled.load(std::memory_order_acquire);
+    }
 
     // Adds the TaskSet to pipe and returns if the pipe is not full.
     // If the pipe is full, pTaskSet is run.
@@ -455,14 +467,18 @@ public:
     //      externalThreadNum < ( GetNumFirstExternalTaskThread() +
     //      numExternalTaskThreads
     //      ++externalThreadNum ) { // do something with externalThreadNum }
-    inline static constexpr uint32_t GetNumFirstExternalTaskThread() { return 1; }
+    inline static constexpr uint32_t GetNumFirstExternalTaskThread() {
+      return 1;
+    }
 
     // ------------- Start DEPRECATED Functions -------------
     // DEPRECATED: use GetIsShutdownRequested() instead of GetIsRunning() in
     // external code while( GetIsRunning() ) {} can be used in tasks which loop,
     // to check if enkiTS has been shutdown. If GetIsRunning() returns false
     // should then exit. Not required for finite tasks.
-    ENKI_DEPRECATED inline bool GetIsRunning() const { return !GetIsShutdownRequested(); }
+    ENKI_DEPRECATED inline bool GetIsRunning() const {
+      return !GetIsShutdownRequested();
+    }
 
     // DEPRECATED - WaitforTaskSet, deprecated interface use WaitforTask.
     ENKI_DEPRECATED inline void WaitforTaskSet(const ICompletable* pCompletable_) {
@@ -472,10 +488,12 @@ public:
     // DEPRECATED - GetProfilerCallbacks.  Use TaskSchedulerConfig instead.
     // Returns the ProfilerCallbacks structure so that it can be modified to
     // set the callbacks. Should be set prior to initialization.
-    ENKI_DEPRECATED inline ProfilerCallbacks* GetProfilerCallbacks() { return &m_Config.profilerCallbacks; }
+    ENKI_DEPRECATED inline ProfilerCallbacks* GetProfilerCallbacks() {
+      return &m_Config.profilerCallbacks;
+    }
     // -------------  End DEPRECATED Functions  -------------
 
-private:
+  private:
     friend class ICompletable;
     friend class ITaskSet;
     friend class IPinnedTask;
@@ -493,7 +511,9 @@ private:
     void WakeThreadsForTaskCompletion();
     bool WakeSuspendedThreadsWithPinnedTasks(uint32_t threadNum_);
     void InitDependencies(ICompletable* pCompletable_);
-    inline bool GetIsRunningInt() const { return m_bRunning.load(std::memory_order_acquire); }
+    inline bool GetIsRunningInt() const {
+      return m_bRunning.load(std::memory_order_acquire);
+    }
 
     ENKITS_API void TaskComplete(ICompletable* pTask_, bool bWakeThreads_, uint32_t threadNum_);
     ENKITS_API void AddTaskSetToPipeInt(ITaskSet* pTaskSet_, uint32_t threadNum_);
@@ -537,7 +557,7 @@ private:
     TaskScheduler(const TaskScheduler& nocopy_);
     TaskScheduler& operator=(const TaskScheduler& nocopy_);
 
-protected:
+  protected:
     void SetCustomAllocator(CustomAllocator customAllocator_); // for C interface
   };
 

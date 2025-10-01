@@ -39,7 +39,7 @@ namespace enki {
   // form of lock state.
   template <uint8_t cSizeLog2, typename T>
   class LockLessMultiReadPipe {
-public:
+  public:
     LockLessMultiReadPipe();
 
     ~LockLessMultiReadPipe() {}
@@ -71,7 +71,7 @@ public:
       memset((void*)m_Flags, 0, sizeof(m_Flags));
     }
 
-private:
+  private:
     const static uint32_t ms_cSize = (1 << cSizeLog2);
     const static uint32_t ms_cIndexMask = ms_cSize - 1;
     const static uint32_t FLAG_INVALID = 0xFFFFFFFF; // 32bit for CAS
@@ -216,10 +216,14 @@ private:
     std::atomic<T*> pHead;
     T tail;
 
-public:
-    LocklessMultiWriteIntrusiveList() : pHead(&tail) { tail.pNext = NULL; }
+  public:
+    LocklessMultiWriteIntrusiveList() : pHead(&tail) {
+      tail.pNext = NULL;
+    }
 
-    bool IsListEmpty() const { return pHead == &tail; }
+    bool IsListEmpty() const {
+      return pHead == &tail;
+    }
 
     // Add - safe to perform from any thread
     void WriterWriteFront(T* pNode_) {

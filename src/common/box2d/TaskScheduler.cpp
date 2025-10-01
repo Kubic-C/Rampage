@@ -266,7 +266,9 @@ void TaskScheduler::DeRegisterExternalTaskThread() {
   }
 }
 
-uint32_t TaskScheduler::GetNumRegisteredExternalTaskThreads() { return m_NumExternalTaskThreadsRegistered; }
+uint32_t TaskScheduler::GetNumRegisteredExternalTaskThreads() {
+  return m_NumExternalTaskThreadsRegistered;
+}
 
 void TaskScheduler::TaskingThreadFunction(const ThreadArgs& args_) {
   uint32_t threadNum = args_.threadNum;
@@ -721,8 +723,7 @@ void TaskScheduler::WakeThreadsForNewTasks() {
   int32_t waiting = m_NumThreadsWaitingForNewTasks.load(std::memory_order_relaxed);
   while (waiting > 0 &&
          !m_NumThreadsWaitingForNewTasks.compare_exchange_weak(waiting, 0, std::memory_order_release,
-                                                               std::memory_order_relaxed)) {
-  }
+                                                               std::memory_order_relaxed)) {}
 
   if (waiting > 0) {
     SemaphoreSignal(*m_pNewTaskSemaphore, waiting);
@@ -738,8 +739,7 @@ void TaskScheduler::WakeThreadsForTaskCompletion() {
   int32_t waiting = m_NumThreadsWaitingForTaskCompletion.load(std::memory_order_relaxed);
   while (waiting > 0 &&
          !m_NumThreadsWaitingForTaskCompletion.compare_exchange_weak(waiting, 0, std::memory_order_release,
-                                                                     std::memory_order_relaxed)) {
-  }
+                                                                     std::memory_order_relaxed)) {}
 
   if (waiting > 0) {
     SemaphoreSignal(*m_pTaskCompleteSemaphore, waiting);
@@ -812,7 +812,9 @@ void TaskScheduler::SplitAndAddTask(uint32_t threadNum_, SubTaskSet subTask_, ui
   WakeThreadsForNewTasks();
 }
 
-TaskSchedulerConfig TaskScheduler::GetConfig() const { return m_Config; }
+TaskSchedulerConfig TaskScheduler::GetConfig() const {
+  return m_Config;
+}
 
 void TaskScheduler::AddTaskSetToPipeInt(ITaskSet* pTaskSet_, uint32_t threadNum_) {
   ENKI_ASSERT(pTaskSet_->m_RunningCount == gc_TaskStartCount);
@@ -1097,10 +1099,14 @@ void TaskScheduler::WaitForNewPinnedTasks() {
 }
 
 
-uint32_t TaskScheduler::GetNumTaskThreads() const { return m_NumThreads; }
+uint32_t TaskScheduler::GetNumTaskThreads() const {
+  return m_NumThreads;
+}
 
 
-uint32_t TaskScheduler::GetThreadNum() const { return gtl_threadNum; }
+uint32_t TaskScheduler::GetThreadNum() const {
+  return gtl_threadNum;
+}
 
 template <typename T>
 T* TaskScheduler::NewArray(size_t num_, const char* file_, int line_) {
@@ -1177,7 +1183,9 @@ void TaskScheduler::Initialize(TaskSchedulerConfig config_) {
   StartThreads();
 }
 
-void TaskScheduler::Initialize() { Initialize(std::thread::hardware_concurrency()); }
+void TaskScheduler::Initialize() {
+  Initialize(std::thread::hardware_concurrency());
+}
 
 // Semaphore implementation
 #ifdef _WIN32
@@ -1203,7 +1211,9 @@ namespace enki {
 #endif
   }
 
-  inline void SemaphoreClose(semaphoreid_t& semaphoreid) { CloseHandle(semaphoreid.sem); }
+  inline void SemaphoreClose(semaphoreid_t& semaphoreid) {
+    CloseHandle(semaphoreid.sem);
+  }
 
   inline void SemaphoreWait(semaphoreid_t& semaphoreid) {
     DWORD retval = WaitForSingleObject(semaphoreid.sem, INFINITE);
@@ -1235,9 +1245,13 @@ namespace enki {
     dispatch_semaphore_t sem;
   };
 
-  inline void SemaphoreCreate(semaphoreid_t& semaphoreid) { semaphoreid.sem = dispatch_semaphore_create(0); }
+  inline void SemaphoreCreate(semaphoreid_t& semaphoreid) {
+    semaphoreid.sem = dispatch_semaphore_create(0);
+  }
 
-  inline void SemaphoreClose(semaphoreid_t& semaphoreid) { dispatch_release(semaphoreid.sem); }
+  inline void SemaphoreClose(semaphoreid_t& semaphoreid) {
+    dispatch_release(semaphoreid.sem);
+  }
 
   inline void SemaphoreWait(semaphoreid_t& semaphoreid) {
     dispatch_semaphore_wait(semaphoreid.sem, DISPATCH_TIME_FOREVER);
@@ -1267,11 +1281,12 @@ namespace enki {
     (void)err;
   }
 
-  inline void SemaphoreClose(semaphoreid_t& semaphoreid) { sem_destroy(&semaphoreid.sem); }
+  inline void SemaphoreClose(semaphoreid_t& semaphoreid) {
+    sem_destroy(&semaphoreid.sem);
+  }
 
   inline void SemaphoreWait(semaphoreid_t& semaphoreid) {
-    while (sem_wait(&semaphoreid.sem) == -1 && errno == EINTR) {
-    }
+    while (sem_wait(&semaphoreid.sem) == -1 && errno == EINTR) {}
   }
 
   inline void SemaphoreSignal(semaphoreid_t& semaphoreid, int32_t countWaiting) {
@@ -1326,7 +1341,9 @@ Dependency::Dependency(Dependency&& rhs_) noexcept {
 }
 
 
-Dependency::~Dependency() { ClearDependency(); }
+Dependency::~Dependency() {
+  ClearDependency();
+}
 
 void Dependency::SetDependency(const ICompletable* pDependencyTask_, ICompletable* pTaskToRunOnCompletion_) {
   ClearDependency();

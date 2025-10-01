@@ -11,7 +11,7 @@ class MenuState : public State {
   const std::string& loadSceneBtnName = "MainLoadScene";
   const std::string& playSceneBtnName = "MainPlayScene";
 
-  public:
+public:
   MenuState(EntityWorld& world) : m_world(world) {
     tgui::Gui& gui = m_world.getContext<tgui::Gui>();
     m_menu = gui.get(menuName);
@@ -37,7 +37,7 @@ class MenuState : public State {
     m_menu->setVisible(false);
   }
 
-  private:
+private:
   tgui::Widget::Ptr m_menu;
   EntityWorld& m_world;
 };

@@ -8,7 +8,9 @@ class Shader {
 public:
   Shader() : m_id(glCreateProgram()) {}
 
-  Shader(Shader&& shader) noexcept : m_id(shader.m_id) { shader.m_id = 0; }
+  Shader(Shader&& shader) noexcept : m_id(shader.m_id) {
+    shader.m_id = 0;
+  }
 
   ~Shader() {
     if (m_id) {
@@ -83,7 +85,9 @@ public:
     return ret;
   }
 
-  void use() { glUseProgram(m_id); }
+  void use() {
+    glUseProgram(m_id);
+  }
 
   void setBool(const std::string& name, bool value) const {
     glUniform1i(glGetUniformLocation(m_id, name.c_str()), (int)value);
@@ -133,7 +137,7 @@ public:
     glUniformMatrix4fv(glGetUniformLocation(m_id, name.c_str()), 1, GL_FALSE, &mat[0][0]);
   }
 
-  private:
+private:
   uint32_t m_id;
 };
 

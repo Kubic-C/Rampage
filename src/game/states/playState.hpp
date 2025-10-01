@@ -1,9 +1,9 @@
 #pragma once
 
+#include "../../event/module.hpp"
+#include "../../render/module.hpp"
 #include "../components/components.hpp"
 #include "state.hpp"
-#include "../../render/module.hpp"
-#include "../../event/module.hpp"
 
 RAMPAGE_START
 
@@ -19,8 +19,7 @@ class PlayState : public State {
   const std::string playEntityCountTextName = "PlayEntityCount";
 
 public:
-  explicit PlayState(EntityWorld& world)
-    : m_world(world) {
+  explicit PlayState(EntityWorld& world) : m_world(world) {
     m_world.component<OwnedBy<PlayState>>();
     m_addedPlayerComponents = m_world.set<PlayerComponent, PrimaryTargetTag, BodyComponent,
                                           RectangleRenderComponent, InventoryComponent>();
@@ -69,7 +68,8 @@ public:
     base.add<OwnedBy<PlayState>>();
 
     m_bodyCallback = [this, baseId = base.id()](int x, int y) {
-      Vec2 mousePos = m_world.getContext<RenderModule>().getWorldCoords(m_world.getContext<EventModule>().getMouseCoords());
+      Vec2 mousePos = m_world.getContext<RenderModule>().getWorldCoords(
+          m_world.getContext<EventModule>().getMouseCoords());
 
       auto& loader = m_world.getContext<AssetLoader>();
 

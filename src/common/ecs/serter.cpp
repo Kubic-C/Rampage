@@ -5,7 +5,8 @@
 
 RAMPAGE_START
 
-void EntityWorldSerializable::registerSerializable(ComponentId compId, SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) {
+void EntityWorldSerializable::registerSerializable(ComponentId compId, SerializeFunc serializeFunc,
+                                                   DeserializeFunc deserializeFunc) {
   if (m_componentSerializeFuncs.size() <= compId)
     m_componentSerializeFuncs.resize(compId + 1, nullptr);
   if (m_componentDeserializeFuncs.size() <= compId)

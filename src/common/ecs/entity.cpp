@@ -13,19 +13,31 @@ Entity& Entity::operator=(Entity other) {
   return *this;
 }
 
-EntityId Entity::id() const { return m_id; }
+EntityId Entity::id() const {
+  return m_id;
+}
 
-bool Entity::exists() const { return m_world->exists(m_id); }
+bool Entity::exists() const {
+  return m_world->exists(m_id);
+}
 
-bool Entity::alive() const { return m_world->isAlive(m_id); }
+bool Entity::alive() const {
+  return m_world->isAlive(m_id);
+}
 
-bool Entity::isNull() const { return m_id == NullEntityId; }
+bool Entity::isNull() const {
+  return m_id == NullEntityId;
+}
 
-void Entity::add(ComponentId compId, bool notify) { add(ComponentSet({compId}), notify); }
+void Entity::add(ComponentId compId, bool emit) {
+  add(ComponentSet({compId}), emit);
+}
 
-void Entity::remove(ComponentId compId, bool notify) { remove(ComponentSet({compId}), notify); }
+void Entity::remove(ComponentId compId, bool emit) {
+  remove(ComponentSet({compId}), emit);
+}
 
-void Entity::add(const ComponentSet& addComps, bool notify) {
+void Entity::add(const ComponentSet& addComps, bool emit) {
   const ComponentSet& oldSet = set();
 
   ComponentSetBuilder tempSet(oldSet);
@@ -40,15 +52,15 @@ void Entity::add(const ComponentSet& addComps, bool notify) {
   }
   m_world->tryMoveSets(m_id, m_world->findOrCreateSet(tempSet.build()));
 
-  if (notify && &oldSet != m_world->findOrCreateSet(tempSet.build()))
+  if (emit && &oldSet != m_world->findOrCreateSet(tempSet.build()))
     for (ComponentId compId : addComps.list()) {
       if (oldSet.has(compId))
         continue;
-      m_world->notify(EntityWorld::EventType::Add, m_id, compId);
+      m_world->emit<ComponentAdded>(m_id, compId);
     }
 }
 
-void Entity::remove(const ComponentSet& remComps, bool notify) {
+void Entity::remove(const ComponentSet& remComps, bool emit) {
 #ifndef NDEBUG
   {
     const ComponentSet& oldSet = set();
@@ -57,9 +69,9 @@ void Entity::remove(const ComponentSet& remComps, bool notify) {
   }
 #endif
 
-  if (notify)
+  if (emit)
     for (ComponentId compId : remComps.list())
-      m_world->notify(EntityWorld::EventType::Remove, m_id, compId);
+      m_world->emit<ComponentRemoved>(m_id, compId);
 
   const ComponentSet& oldSet = set();
   ComponentSetBuilder tempSet(oldSet);
@@ -76,19 +88,33 @@ void Entity::remove(const ComponentSet& remComps, bool notify) {
   m_world->tryMoveSets(m_id, m_world->findOrCreateSet(tempSet.build()));
 }
 
-Ref Entity::get(ComponentId compId) { return Ref(*m_world, m_id, compId); }
+Ref Entity::get(ComponentId compId) {
+  return Ref(*m_world, m_id, compId);
+}
 
-bool Entity::has(ComponentId compId) const { return m_world->hasComponent(m_id, compId); }
+bool Entity::has(ComponentId compId) const {
+  return m_world->hasComponent(m_id, compId);
+}
 
-EntityWorld& Entity::world() { return *m_world; }
+EntityWorld& Entity::world() {
+  return *m_world;
+}
 
-bool Entity::isEnabled() const { return has<EntityWorld::Enabled>(); }
+bool Entity::isEnabled() const {
+  return has<EntityWorld::Enabled>();
+}
 
-void Entity::enable() { add<EntityWorld::Enabled>(); }
+void Entity::enable() {
+  add<EntityWorld::Enabled>();
+}
 
-void Entity::disable() { remove<EntityWorld::Enabled>(); }
+void Entity::disable() {
+  remove<EntityWorld::Enabled>();
+}
 
-Entity Entity::clone() const { return m_world->clone(m_id); }
+Entity Entity::clone() const {
+  return m_world->clone(m_id);
+}
 
 void Entity::copyInto(EntityId dstId) {
   const ComponentSet& srcSet = *m_world->getEntitySet(m_id);
@@ -104,6 +130,8 @@ void Entity::copyInto(EntityId dstId) {
   }
 }
 
-const ComponentSet& Entity::set() const { return *m_world->getEntitySet(m_id); }
+const ComponentSet& Entity::set() const {
+  return *m_world->getEntitySet(m_id);
+}
 
 RAMPAGE_END

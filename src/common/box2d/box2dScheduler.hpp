@@ -1,7 +1,7 @@
 #pragma once
 
-#include "TaskScheduler.hpp"
 #include "../commondef.hpp"
+#include "TaskScheduler.hpp"
 
 RAMPAGE_START
 

@@ -42,7 +42,8 @@ struct SpritePrototype {
 template <>
 struct glz::meta<SpritePrototype> {
   using T = SpritePrototype;
-  static constexpr auto value = object("dimX", &T::dimX, "dimY", &T::dimY, "scale", &T::scale, "subSprites", &T::subSprites);
+  static constexpr auto value =
+      object("dimX", &T::dimX, "dimY", &T::dimY, "scale", &T::scale, "subSprites", &T::subSprites);
 };
 
 //////////////////// SpriteName
@@ -104,7 +105,9 @@ struct TransformPrototype {
 
   TransformPrototype(const Transform& transform) : pos(transform.pos), rot(transform.rot.radians()) {}
 
-  Transform toTransform() const { return Transform(pos, Rot(rot)); }
+  Transform toTransform() const {
+    return Transform(pos, Rot(rot));
+  }
 };
 
 template <>
@@ -277,7 +280,7 @@ AssetLoader::SpriteAsset loadSprite(EntityWorld& world, const std::string& path,
   SpriteComponent sprites;
   sprites.subSprites.resize(spriteProto.dimY);
   for (auto& col : sprites.subSprites) {
-   col.resize(spriteProto.dimX);
+    col.resize(spriteProto.dimX);
   }
   sprites.scaling = spriteProto.scale;
 
@@ -291,7 +294,8 @@ AssetLoader::SpriteAsset loadSprite(EntityWorld& world, const std::string& path,
       if (isSingle)
         sprite.addLayer(index, glm::vec2(0, 0), 0, layer.layer);
       else
-        sprite.addLayer(index, (glm::vec2(subSpriteProto.x, subSpriteProto.y) - tileSize) * tileSize, 0, layer.layer);
+        sprite.addLayer(index, (glm::vec2(subSpriteProto.x, subSpriteProto.y) - tileSize) * tileSize, 0,
+                        layer.layer);
     }
   }
 
@@ -510,7 +514,8 @@ bool AssetLoader::loadAssets(const std::string& path) {
   glz::error_ctx ec = glz::read<readOps>(readAssets, fileData);
   if (ec) {
     std::string msg = glz::format_error(ec, fileData);
-    // TODO: logGeneric("<bgRed, bold>Failed to load assets\n Ec: %i\n File:%s\n Msg: "%s\n<reset>", ec.ec, path.c_str(), msg.c_str());
+    // TODO: logGeneric("<bgRed, bold>Failed to load assets\n Ec: %i\n File:%s\n Msg: "%s\n<reset>", ec.ec,
+    // path.c_str(), msg.c_str());
     return false;
   }
 

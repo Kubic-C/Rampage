@@ -1,7 +1,7 @@
 #pragma once
 
-#include <mutex>
 #include <cstdarg>
+#include <mutex>
 #include "../common/common.hpp"
 
 RAMPAGE_START
@@ -69,7 +69,7 @@ public:
 
   int run();
 
-  Status getStatus() const {
+  NODISCARD Status getStatus() const {
     return m_status;
   }
 
@@ -89,7 +89,7 @@ private:
 private:
   void sortModulesByDependencies();
 
-  template<typename T>
+  template <typename T>
   void addModule() {
     m_world->addContext<T>(*this);
     m_staticModules.push_back(&m_world->getContext<T>());

@@ -11,19 +11,19 @@ RAMPAGE_START
  * The main object is owned by the host process and then
  * shared among its processes.
  */
-template<typename IntT>
+template <typename IntT>
 class StaticIdManager {
   template <typename T>
   constexpr static std::string_view typeName() {
 #if defined(_MSC_VER)
-    return __FUNCSIG__;       // MSVC
+    return __FUNCSIG__; // MSVC
 #else
     return __PRETTY_FUNCTION__; // GCC/Clang
 #endif
   }
-public:
 
-  template<typename T>
+public:
+  template <typename T>
   IntT id() {
     static IntT id = nextID<T>(); // Initialized once per unique build.
     return id;
@@ -31,7 +31,7 @@ public:
 
 private:
   // This is called once per initialization per type per seperate compilation units.. (it works across DLLs)
-  template<typename T>
+  template <typename T>
   IntT nextID() {
     size_t idHash = std::hash<std::string_view>{}(typeName<T>());
     auto it = m_registry.find(idHash);

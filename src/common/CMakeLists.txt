@@ -36,7 +36,6 @@ target_sources(
   "ecs/ref.hpp"
   "ecs/serter.cpp"
   "ecs/serter.hpp"
-  "ecs/system.hpp"
   "ecs/world.hpp"
   "ecs/world.cpp")
 

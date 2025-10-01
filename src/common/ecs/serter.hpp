@@ -1,40 +1,39 @@
 #pragma once
 
-#include "system.hpp"
-#include "world.hpp"
-#include "capnp/message.h"
 #include "../schema/rampage.capnp.h"
+#include "capnp/message.h"
+#include "entity.hpp"
+#include "ref.hpp"
 
 RAMPAGE_START
 
 /* An extension of entity world that defines a set of methods to serialize component data. */
 class EntityWorldSerializable : public EntityWorld {
   static constexpr size_t m_maxScratchWordSize = 512;
+
 public:
-  EntityWorldSerializable(IHost& host)
-    : EntityWorld(host), m_scratchBuffer(new capnp::word[m_maxScratchWordSize], m_maxScratchWordSize) {
+  EntityWorldSerializable(IHost& host) :
+      EntityWorld(host), m_scratchBuffer(new capnp::word[m_maxScratchWordSize], m_maxScratchWordSize) {
     std::memset(m_scratchBuffer.begin(), 0, m_scratchBuffer.size() * sizeof(capnp::word));
 
     // issa' tag
     registerSerializable<Enabled>(
-      [](capnp::MessageBuilder& builder, Ref component) {
-        builder.initRoot<Schema::Void>();
-      },
-      [](capnp::MessageReader& reader, Ref component) {});
+        [](capnp::MessageBuilder& builder, Ref component) { builder.initRoot<Schema::Void>(); },
+        [](capnp::MessageReader& reader, Ref component) {});
   }
 
   ~EntityWorldSerializable() override = default;
 
-  using SerializeFunc = void(*)(capnp::MessageBuilder& builder, Ref component);
-  using DeserializeFunc = void(*)(capnp::MessageReader& reader, Ref component);
+  using SerializeFunc = void (*)(capnp::MessageBuilder& builder, Ref component);
+  using DeserializeFunc = void (*)(capnp::MessageReader& reader, Ref component);
 
   // Registers a serializable type, using its static methods: serialize and deserialize
-  template<typename T>
+  template <typename T>
   void registerSerializable() {
     registerSerializable(component<T>(), T::serialize, T::deserialize);
   }
 
-  template<typename T>
+  template <typename T>
   void registerSerializable(SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) {
     registerSerializable(component<T>(), serializeFunc, deserializeFunc);
   }

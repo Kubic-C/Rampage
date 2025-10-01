@@ -1,7 +1,7 @@
 #include "module.hpp"
 
-#include "../render/render.hpp"
 #include "../render/camera.hpp"
+#include "../render/render.hpp"
 
 #include "assetLoader.hpp"
 #include "inventory.hpp"
@@ -40,8 +40,7 @@ int GameModule::onLoad() {
   registerGameComponents(world);
 
   auto& pipeline = m_host->getPipeline();
-  pipeline.createGroup<GameGroup>(60)
-    .createStage<GameGroup::TickStage>();
+  pipeline.createGroup<GameGroup>(60).createStage<GameGroup::TickStage>();
 
   Entity camera = world.create();
   camera.add<TransformComponent>();
@@ -75,7 +74,7 @@ int GameModule::onLoad() {
 
     auto sprite = entity.get<SpriteComponent>();
     SpriteComponent::SubSprite& subSprite = sprite->subSprites.emplace_back().emplace_back();
-    subSprite.addLayer(texMap.getSprite("zombie"),  Vec2(0, 0), 0, WorldLayer::Top);
+    subSprite.addLayer(texMap.getSprite("zombie"), Vec2(0, 0), 0, WorldLayer::Top);
   }
 
   loadTilemapSystems(*m_host);

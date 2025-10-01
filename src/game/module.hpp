@@ -1,6 +1,6 @@
 #pragma once
-#include "../render/module.hpp"
 #include "../event/module.hpp"
+#include "../render/module.hpp"
 
 /* DO NOT EXPOSE UNDERLYING MODULE IMPLEMENTATION IN THIS FILE. */
 
@@ -13,11 +13,10 @@ struct GameGroup {
 class GameModule final : public IStaticModule {
 public:
   std::vector<std::type_index> getDependencies() override {
-    return { typeid(RenderModule), typeid(EventModule) };
+    return {typeid(RenderModule), typeid(EventModule)};
   }
 
-  explicit GameModule(IHost& host)
-    : IStaticModule("GameModule", host) {}
+  explicit GameModule(IHost& host) : IStaticModule("GameModule", host) {}
 
 public:
   int onLoad() override;

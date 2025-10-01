@@ -25,9 +25,13 @@ struct TileDef {
 
   glm::u16vec2 size = glm::u16vec2(1, 1);
 
-  u16 width() const { return size.x; }
+  u16 width() const {
+    return size.x;
+  }
 
-  u16 height() const { return size.y; }
+  u16 height() const {
+    return size.y;
+  }
 };
 
 struct Tile {
@@ -45,13 +49,21 @@ struct Tile {
     i16 y = 0; // the y position of the main multi tile
   } y;
 
-  glm::vec2 size() const { return {x.w, y.h}; }
+  glm::vec2 size() const {
+    return {x.w, y.h};
+  }
 
-  glm::vec2 pos() const { return {x.x, y.y}; }
+  glm::vec2 pos() const {
+    return {x.x, y.y};
+  }
 
-  u16 width() const { return x.w; }
+  u16 width() const {
+    return x.w;
+  }
 
-  u16 height() const { return y.h; }
+  u16 height() const {
+    return y.h;
+  }
 };
 
 RAMPAGE_END

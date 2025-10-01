@@ -1,9 +1,9 @@
 #include "player.hpp"
 
-#include "../module.hpp"
-#include "../../render/module.hpp"
-#include "../../render/camera.hpp"
 #include "../../event/module.hpp"
+#include "../../render/camera.hpp"
+#include "../../render/module.hpp"
+#include "../module.hpp"
 
 #include "../components/player.hpp"
 #include "../components/tilemap.hpp"
@@ -73,13 +73,15 @@ void updatePlayer(Entity e, float dt) {
     inv.setVisible(!inv.getVisible());
   if (eventMgr.isKeyHeld(Key::F4))
     inv.addItem(assetLoader.getPrefab("WoodItem"), 4);
-  if (eventMgr.isKeyHeld(Key::F) && !invMgr.isHandEmpty() && !world.getContext<tgui::Gui>().getWidgetAtPos(mouseScreen, false).get())
+  if (eventMgr.isKeyHeld(Key::F) && !invMgr.isHandEmpty() &&
+      !world.getContext<tgui::Gui>().getWidgetAtPos(mouseScreen, false).get())
     tryPlaceItem(world.getFirstWith(world.set<WorldMapTag>()), invMgr.getHandInventory(),
                  invMgr.getHandInventoryPos(), player->mouse);
 }
 
 int updatePlayers(EntityWorld& world, float dt) {
-  auto it = world.getWith(world.set<BodyComponent, TransformComponent, PlayerComponent, CameraComponent, InventoryComponent>());
+  auto it = world.getWith(
+      world.set<BodyComponent, TransformComponent, PlayerComponent, CameraComponent, InventoryComponent>());
   while (it.hasNext())
     updatePlayer(it.next(), dt);
 

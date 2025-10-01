@@ -10,11 +10,10 @@ RAMPAGE_START
 class EventModule final : public IStaticModule {
 public:
   std::vector<std::type_index> getDependencies() override {
-    return { typeid(LogModule), typeid(RenderModule) };
+    return {typeid(LogModule), typeid(RenderModule)};
   }
 
-  explicit EventModule(IHost& host)
-    : IStaticModule("EventModule", host) {}
+  explicit EventModule(IHost& host) : IStaticModule("EventModule", host) {}
 
   NODISCARD bool isKeyPressed(Key key) const;
   NODISCARD bool isKeyHeld(Key key) const;

@@ -6,7 +6,9 @@ RAMPAGE_START
 EntityWorld::SetIterator::SetIterator(EntityWorld& world, const ComponentSet* match) :
     m_world(&world), m_base(match), m_next(Set<const ComponentSet*>::const_iterator()) {}
 
-void EntityWorld::SetIterator::reset() { m_next = Set<const ComponentSet*>::const_iterator(); }
+void EntityWorld::SetIterator::reset() {
+  m_next = Set<const ComponentSet*>::const_iterator();
+}
 
 bool EntityWorld::SetIterator::hasNext() const {
   Set<const ComponentSet*>::const_iterator next = m_next;
@@ -35,9 +37,13 @@ EntityWorld::EntityList& EntityWorld::SetIterator::next() {
   return m_world->m_sets.find(*m_next)->second;
 }
 
-EntityWorld& EntityWorld::SetIterator::getWorld() { return *m_world; }
+EntityWorld& EntityWorld::SetIterator::getWorld() {
+  return *m_world;
+}
 
-EntityWorld::EntityIterator::EntityIterator(EntityWorld::SetIterator setIt) : m_setIt(setIt) { reset(); }
+EntityWorld::EntityIterator::EntityIterator(EntityWorld::SetIterator setIt) : m_setIt(setIt) {
+  reset();
+}
 
 void EntityWorld::EntityIterator::reset() {
   m_setIt.reset();
@@ -63,15 +69,18 @@ Entity EntityWorld::EntityIterator::next() {
   return m_setIt.getWorld().get(*m_next);
 }
 
-EntityWorld& EntityWorld::EntityIterator::getWorld() { return m_setIt.getWorld(); }
+EntityWorld& EntityWorld::EntityIterator::getWorld() {
+  return m_setIt.getWorld();
+}
 
-EntityWorld::EntityWorld(IHost& host)
-  : m_host(host) {
+EntityWorld::EntityWorld(IHost& host) : m_host(host) {
   m_sets.reserve(10000);
   m_sets.insert(std::make_pair(findOrCreateSet(ComponentSet()), EntityList()));
 
   component<Destroy>();
   component<Enabled>();
+  component<ComponentAdded>();
+  component<ComponentRemoved>();
 }
 
 EntityWorld::~EntityWorld() {
@@ -88,13 +97,6 @@ EntityWorld::~EntityWorld() {
 
 IHost& EntityWorld::getHost() {
   return m_host;
-}
-
-void EntityWorld::observe(EventType event, ComponentId comp, const ComponentSet& with,
-                          ObserverCallback callback) {
-  auto forwardLambda = [callback](Entity entity, float deltaTime) { callback(entity); };
-
-  m_observers[event][comp].emplace_back(ObserverData(findOrCreateSet(with), callback));
 }
 
 Entity EntityWorld::create(EntityId explicitId) {
@@ -133,9 +135,13 @@ Entity EntityWorld::ensure(EntityId id) {
   return create(id);
 }
 
-bool EntityWorld::exists(EntityId id) { return m_idMgr.exists(id); }
+bool EntityWorld::exists(EntityId id) {
+  return m_idMgr.exists(id);
+}
 
-bool EntityWorld::isAlive(EntityId id) { return exists(id) && !Entity(*this, id).has<Destroy>(); }
+bool EntityWorld::isAlive(EntityId id) {
+  return exists(id) && !Entity(*this, id).has<Destroy>();
+}
 
 EntityWorld::EntityListIterator EntityWorld::destroy(EntityId id) {
   assert(exists(id));
@@ -161,9 +167,29 @@ EntityWorld::EntityListIterator EntityWorld::destroy(EntityId id) {
   return next;
 }
 
-void EntityWorld::enable(EntityId entity) { Entity(*this, entity).enable(); }
+void EntityWorld::enable(EntityId entity) {
+  Entity(*this, entity).enable();
+}
 
-void EntityWorld::disable(EntityId entity) { Entity(*this, entity).disable(); }
+void EntityWorld::disable(EntityId entity) {
+  Entity(*this, entity).disable();
+}
+
+Entity EntityWorld::clone(EntityId entity) {
+  const ComponentSet& compSet = *getEntitySet(entity);
+
+  Entity cloned = create();
+  cloned.add(compSet);
+
+  for (ComponentId cid : compSet.list()) {
+    auto copyCtor = m_componentCopyCtor[cid];
+
+    if (copyCtor)
+      copyCtor(static_cast<u8*>(cloned.get(cid).get()), static_cast<u8*>(get(entity).get(cid).get()));
+  }
+
+  return cloned;
+}
 
 void EntityWorld::removeAll(const ComponentSet& components, bool notify) {
   EntityIterator it = getWithDisabled(components);
@@ -205,19 +231,17 @@ struct EntityChanged {
   ComponentSetBuilder removed, added;
 };
 
-System EntityWorld::system(const ComponentSet& set, const SystemFunc& func) {
-  return systemWithDisabled(set.add(component<Enabled>()), func);
+void EntityWorld::setLocalRange(EntityId startingId) {
+  m_idMgr.setLocalRange(startingId);
 }
 
-System EntityWorld::systemWithDisabled(const ComponentSet& components, const SystemFunc& func) {
-  return System(getWithDisabled(components), func);
+void EntityWorld::enableRangeCheck(bool enable) {
+  m_idMgr.enableRangeCheck(enable);
 }
 
-void EntityWorld::setLocalRange(EntityId startingId) { m_idMgr.setLocalRange(startingId); }
-
-void EntityWorld::enableRangeCheck(bool enable) { m_idMgr.enableRangeCheck(enable); }
-
-bool EntityWorld::validRange(EntityId id) { return m_idMgr.validRange(id); }
+bool EntityWorld::validRange(EntityId id) {
+  return m_idMgr.validRange(id);
+}
 
 void EntityWorld::beginDefer() {
   assert(!m_isDefer);
@@ -249,22 +273,8 @@ void EntityWorld::endDefer() {
   m_deferredDestroy.clear();
 }
 
-bool EntityWorld::isDefer() { return m_isDefer; }
-
-Entity EntityWorld::clone(EntityId entity) {
-  const ComponentSet& compSet = *getEntitySet(entity);
-
-  Entity cloned = create();
-  cloned.add(compSet);
-
-  for (ComponentId cid : compSet.list()) {
-    auto copyCtor = m_componentCopyCtor[cid];
-
-    if (copyCtor)
-      copyCtor(static_cast<u8*>(cloned.get(cid).get()), static_cast<u8*>(get(entity).get(cid).get()));
-  }
-
-  return cloned;
+bool EntityWorld::isDefer() {
+  return m_isDefer;
 }
 
 void EntityWorld::moveSets(EntityId id, const ComponentSet* to) {
@@ -311,20 +321,9 @@ const ComponentSet* EntityWorld::findOrCreateSet(const ComponentSet& base) {
   }
 }
 
-void EntityWorld::notify(EntityWorld::EventType type, EntityId id, ComponentId compId) {
-  Map<ComponentId, std::vector<ObserverData>>& m_typeObservers = m_observers[type];
-
-  if (m_typeObservers.find(compId) == m_typeObservers.end())
-    return;
-
-  for (EntityWorld::ObserverData& obvData : m_typeObservers.at(compId)) {
-    if (getEntitySet(id)->superset(*obvData.with)) {
-      obvData.callback(get(id));
-    }
-  }
+bool EntityWorld::hasComponent(EntityId id, ComponentId comp) {
+  return getEntitySet(id)->has(comp);
 }
-
-bool EntityWorld::hasComponent(EntityId id, ComponentId comp) { return getEntitySet(id)->has(comp); }
 
 const ComponentSet* EntityWorld::getEntitySet(EntityId id) {
   Map<EntityId, const ComponentSet*>::iterator it = m_deferredMoves.find(id);

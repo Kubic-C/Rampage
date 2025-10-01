@@ -12,8 +12,7 @@
 RAMPAGE_START
 
 struct PathfindingContext {
-  PathfindingContext(EntityWorld& world)
-    : collisionQueue(world.create()) {}
+  PathfindingContext(EntityWorld& world) : collisionQueue(world.create()) {}
 
   u32 currentGeneration = 1;
   glm::i16vec2 oldTarget = {0, 0};
@@ -21,18 +20,18 @@ struct PathfindingContext {
 };
 
 constexpr std::array<glm::i16vec2, 8> directions = {
-  {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}}};
+    {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}}};
 
 const std::array<glm::vec2, 8> normalizedDirs = {
-  glm::normalize(glm::vec2(directions[0])), glm::normalize(glm::vec2(directions[1])),
-  glm::normalize(glm::vec2(directions[2])), glm::normalize(glm::vec2(directions[3])),
-  glm::normalize(glm::vec2(directions[4])), glm::normalize(glm::vec2(directions[5])),
-  glm::normalize(glm::vec2(directions[6])), glm::normalize(glm::vec2(directions[7]))};
+    glm::normalize(glm::vec2(directions[0])), glm::normalize(glm::vec2(directions[1])),
+    glm::normalize(glm::vec2(directions[2])), glm::normalize(glm::vec2(directions[3])),
+    glm::normalize(glm::vec2(directions[4])), glm::normalize(glm::vec2(directions[5])),
+    glm::normalize(glm::vec2(directions[6])), glm::normalize(glm::vec2(directions[7]))};
 
 const std::array<float, 8> costs = {1, 1, 1, 1, sqrtf(2), sqrtf(2), sqrtf(2), sqrtf(2)};
 
 ArrowComponent* getTopArrow(EntityWorld& world, RefT<TilemapComponent> tilemapLayers,
-                                   const glm::i16vec2& pos) {
+                            const glm::i16vec2& pos) {
   for (int i = tilemapLayers->getTilemapCount(); i != 0; i--) {
     Tilemap& tilemap = tilemapLayers->getTilemap(i - 1);
     if (!tilemap.contains(pos))
@@ -170,7 +169,8 @@ void loadPathfindingSystems(IHost& host) {
   auto& context = world.getContext<PathfindingContext>();
   context.collisionQueue.add<CollisionQueueComponent>();
 
-  world.observe(EntityWorld::EventType::Add, world.component<ContactDamageComponent>(), world.set<EntityWorld::Enabled>(), setCollisionQueueOfContactDamageEntity);
+  world.observe<ComponentAdded>(world.component<ContactDamageComponent>(),
+                world.set<EntityWorld::Enabled>(), setCollisionQueueOfContactDamageEntity);
 
   pipeline.getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(updatePathfinding);
 }

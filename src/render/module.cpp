@@ -38,7 +38,8 @@ int RenderModule::onLoad() {
   /* Window and render setup */
   SDL_Init(SDL_INIT_VIDEO);
   setNecessaryGLAttributes();
-  SDL_Window* window = SDL_CreateWindow(m_host->getTitle().data(), 800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+  SDL_Window* window =
+      SDL_CreateWindow(m_host->getTitle().data(), 800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
   if (!window) {
     m_host->log(1, "Failed to create window. SDL_GetError(): %s\n", SDL_GetError());
     return -1;
@@ -83,14 +84,13 @@ int RenderModule::onLoad() {
   glClearColor(0.2, 1, 0, 0);
 
   auto& pipeline = m_host->getPipeline();
-  Pipeline::Group& group =
-    pipeline.createGroup<RenderGroup>(144.0f)
-      .createStage<RenderGroup::PreRenderStage>()
-      .createStage<RenderGroup::ClearWindowStage>()
-      .createStage<RenderGroup::OnRenderStage>()
-      .createStage<RenderGroup::OnGUIRenderStage>()
-      .createStage<RenderGroup::SwapBuffersStage>()
-      .createStage<RenderGroup::PostRenderStage>();
+  Pipeline::Group& group = pipeline.createGroup<RenderGroup>(144.0f)
+                               .createStage<RenderGroup::PreRenderStage>()
+                               .createStage<RenderGroup::ClearWindowStage>()
+                               .createStage<RenderGroup::OnRenderStage>()
+                               .createStage<RenderGroup::OnGUIRenderStage>()
+                               .createStage<RenderGroup::SwapBuffersStage>()
+                               .createStage<RenderGroup::PostRenderStage>();
 
   group.attachToStage<RenderGroup::ClearWindowStage>(clearWindow);
   group.attachToStage<RenderGroup::SwapBuffersStage>(swapBuffers);

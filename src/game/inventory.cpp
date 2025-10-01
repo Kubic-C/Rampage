@@ -53,11 +53,17 @@ Inventory InventoryManager::createInventory(std::string name, u8 rows, u8 cols) 
   return getInventory(invId);
 }
 
-Inventory InventoryManager::getHandInventory() { return Inventory(*this, m_handInvId); }
+Inventory InventoryManager::getHandInventory() {
+  return Inventory(*this, m_handInvId);
+}
 
-Inventory InventoryManager::getInventory(InventoryId id) { return Inventory(*this, id); }
+Inventory InventoryManager::getInventory(InventoryId id) {
+  return Inventory(*this, id);
+}
 
-bool InventoryManager::hasInventory(InventoryId id) { return m_inventories.contains(id); }
+bool InventoryManager::hasInventory(InventoryId id) {
+  return m_inventories.contains(id);
+}
 
 void InventoryManager::destroyInventory(InventoryId id) {
   for (auto& [pos, stack] : m_inventories.find(id)->second.items) {

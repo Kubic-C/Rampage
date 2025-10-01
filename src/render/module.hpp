@@ -1,6 +1,6 @@
 #pragma once
-#include "../log/module.hpp"
 #include "../core/module.hpp"
+#include "../log/module.hpp"
 
 RAMPAGE_START
 
@@ -16,11 +16,10 @@ struct RenderGroup {
 class RenderModule final : public IStaticModule {
 public:
   std::vector<std::type_index> getDependencies() override {
-    return { typeid(LogModule), typeid(CoreModule) };
+    return {typeid(LogModule), typeid(CoreModule)};
   }
 
-  explicit RenderModule(IHost& host)
-    : IStaticModule("RenderModule", host) {}
+  explicit RenderModule(IHost& host) : IStaticModule("RenderModule", host) {}
 
 public:
   int onLoad() override;

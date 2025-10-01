@@ -1,7 +1,7 @@
 #pragma once
 
-#include "scene.hpp"
 #include "components/components.hpp"
+#include "scene.hpp"
 
 RAMPAGE_START
 
@@ -32,9 +32,11 @@ public:
   bool loadAssets(const std::string& path);
   AssetId loadAsset(const std::string& parentDir, const AssetJson& json);
 
-  AssetId getAssetId(const std::string& name) { return m_assetsByName.find(name)->second; }
+  AssetId getAssetId(const std::string& name) {
+    return m_assetsByName.find(name)->second;
+  }
 
-  public:
+public:
   SpriteComponent& getSprite(AssetId assetId) {
     return std::get<SpriteAsset>(m_assets.find(assetId)->second).sprite;
   }
@@ -43,8 +45,10 @@ public:
     return std::get<SpriteAsset>(m_assets.find(getAssetId(assetName))->second).sprite;
   }
 
-  public:
-  TileDef& getTilePrefab(AssetId assetId) { return std::get<TileDef>(m_assets.find(assetId)->second); }
+public:
+  TileDef& getTilePrefab(AssetId assetId) {
+    return std::get<TileDef>(m_assets.find(assetId)->second);
+  }
 
   TileDef& getTilePrefab(const std::string& assetName) {
     return std::get<TileDef>(m_assets.find(getAssetId(assetName))->second);
@@ -59,9 +63,11 @@ public:
     return clone;
   }
 
-  TileDef cloneTilePrefab(const std::string& assetName) { return cloneTilePrefab(getAssetId(assetName)); }
+  TileDef cloneTilePrefab(const std::string& assetName) {
+    return cloneTilePrefab(getAssetId(assetName));
+  }
 
-  public:
+public:
   EntityId& getPrefabRawId(AssetId assetId) {
     return std::get<PrefabAsset>(m_assets.find(assetId)->second).entity;
   }
@@ -70,14 +76,20 @@ public:
     return std::get<PrefabAsset>(m_assets.find(getAssetId(assetName))->second).entity;
   }
 
-  Entity getPrefab(AssetId assetId) { return m_world.get(getPrefabRawId(assetId)); }
+  Entity getPrefab(AssetId assetId) {
+    return m_world.get(getPrefabRawId(assetId));
+  }
 
-  Entity getPrefab(const std::string& assetName) { return m_world.get(getPrefabRawId(assetName)); }
+  Entity getPrefab(const std::string& assetName) {
+    return m_world.get(getPrefabRawId(assetName));
+  }
 
-  public:
-  Scene& getScene(AssetId assetId) { return *std::get<SceneAsset>(m_assets.find(assetId)->second).scene; }
+public:
+  Scene& getScene(AssetId assetId) {
+    return *std::get<SceneAsset>(m_assets.find(assetId)->second).scene;
+  }
 
-  private:
+private:
   template <typename T>
   AssetId createAsset(const std::string& name) {
     AssetId asset = m_idMgr.generate();

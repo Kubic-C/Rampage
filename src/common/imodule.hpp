@@ -8,8 +8,7 @@ class IHost;
 
 class IStaticModule {
 public:
-  explicit IStaticModule(const std::string& name, IHost& host)
-    : m_name(name), m_host(&host) {}
+  explicit IStaticModule(const std::string& name, IHost& host) : m_name(name), m_host(&host) {}
 
   virtual ~IStaticModule() = default;
 

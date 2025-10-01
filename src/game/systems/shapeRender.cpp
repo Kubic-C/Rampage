@@ -1,9 +1,9 @@
 #include "shapeRender.hpp"
 
-#include "../../render/module.hpp"
-#include "../components/shapes.hpp"
 #include "../../core/transform.hpp"
+#include "../../render/module.hpp"
 #include "../../render/render.hpp"
+#include "../components/shapes.hpp"
 
 RAMPAGE_START
 
@@ -66,7 +66,8 @@ std::vector<Vertex> generateCircleVertices(int resolution) {
   return circleMesh;
 }
 
-void drawRectangle(ShapeMeshComponent& mesh, const Transform& transform, glm::vec3 color, float hw, float hh, float z) {
+void drawRectangle(ShapeMeshComponent& mesh, const Transform& transform, glm::vec3 color, float hw, float hh,
+                   float z) {
   const glm::vec3 rect[4] = {glm::vec3(-hw, -hh, z), glm::vec3(hw, -hh, z), glm::vec3(hw, hh, z),
                              glm::vec3(-hw, hh, z)};
 
@@ -81,13 +82,13 @@ void drawRectangle(ShapeMeshComponent& mesh, const Transform& transform, glm::ve
   mesh.addMesh(&vertices[3]);
 }
 
-void drawLine(ShapeMeshComponent& mesh, glm::vec2 from, glm::vec2 to, glm::vec3 color, float hw, float z = -1.0f) {
+void drawLine(ShapeMeshComponent& mesh, glm::vec2 from, glm::vec2 to, glm::vec3 color, float hw,
+              float z = -1.0f) {
   float l = glm::length(to - from);
   glm::vec2 dir = glm::normalize(to - from);
   float angle = atan2(dir.y, dir.x);
 
-  glm::vec3 rect[4] = {glm::vec3(0, hw, z), glm::vec3(0, -hw, z), glm::vec3(l, -hw, z),
-                       glm::vec3(l, hw, z)};
+  glm::vec3 rect[4] = {glm::vec3(0, hw, z), glm::vec3(0, -hw, z), glm::vec3(l, -hw, z), glm::vec3(l, hw, z)};
 
   for (int i = 0; i < 4; i++) {
     rect[i] = glm::rotate(rect[i], angle, glm::vec3(0.0, 0.0f, 1.0f));
@@ -101,8 +102,8 @@ void drawLine(ShapeMeshComponent& mesh, glm::vec2 from, glm::vec2 to, glm::vec3 
   mesh.addMesh(&vertices[3]);
 }
 
-void drawHollowCircle(ShapeMeshComponent& mesh,const Transform& transform, glm::vec3 color, float r, int resolution = 30,
-                      float thickness = 0.01f, float z = -1) {
+void drawHollowCircle(ShapeMeshComponent& mesh, const Transform& transform, glm::vec3 color, float r,
+                      int resolution = 30, float thickness = 0.01f, float z = -1) {
   int count = 0;
   const float anglePerTriangle = glm::pi<float>() * 2 / resolution;
   float x = r;
@@ -118,14 +119,14 @@ void drawHollowCircle(ShapeMeshComponent& mesh,const Transform& transform, glm::
   }
 }
 
-void drawCircle(ShapeMeshComponent& mesh, const std::vector<Vertex>& circleMesh, const Transform& transform, glm::vec3 color, float r, float z = -1) {
+void drawCircle(ShapeMeshComponent& mesh, const std::vector<Vertex>& circleMesh, const Transform& transform,
+                glm::vec3 color, float r, float z = -1) {
   for (int i = 0; i < circleMesh.size(); i += 3) {
     Vertex copy[3];
     std::memcpy(copy, &circleMesh[i], sizeof(Vertex) * 3);
 
     for (int i = 0; i < 3; i++) {
-      copy[i].pos =
-          glm::vec3(transform.getWorldPoint({copy[i].pos.x * r, copy[i].pos.y * r}), copy[i].pos.z);
+      copy[i].pos = glm::vec3(transform.getWorldPoint({copy[i].pos.x * r, copy[i].pos.y * r}), copy[i].pos.z);
       copy[i].color = color;
     }
 
@@ -146,7 +147,8 @@ int meshShapes(EntityWorld& world, float dt) {
     auto circle = e.get<CircleRenderComponent>();
     auto transform = e.get<TransformComponent>();
 
-    drawCircle(*shapeMesh, circleMesh->vertices, Transform(transform->getWorldPoint(circle->offset), transform->rot), circle->color,
+    drawCircle(*shapeMesh, circleMesh->vertices,
+               Transform(transform->getWorldPoint(circle->offset), transform->rot), circle->color,
                circle->radius, circle->z);
   }
 
@@ -186,7 +188,7 @@ Entity createShapeRender(IHost& host) {
   shapeRender.add<ShapeMeshComponent>();
   shapeRender.add<CircleMeshComponent>();
 
-  auto va =shapeRender.get<VertexArrayBuffer>();
+  auto va = shapeRender.get<VertexArrayBuffer>();
   auto shader = shapeRender.get<Shader>();
   auto mesh = shapeRender.get<ShapeMeshComponent>();
   auto circleMesh = shapeRender.get<CircleMeshComponent>();

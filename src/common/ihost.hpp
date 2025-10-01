@@ -7,8 +7,8 @@ RAMPAGE_START
 
 class Pipeline;
 
-typedef void(*TraceErrorFunc)(int ec, const char* format, va_list args);
-typedef void(*TraceFunc)(const char* format, va_list args);
+typedef void (*TraceErrorFunc)(int ec, const char* format, va_list args);
+typedef void (*TraceFunc)(const char* format, va_list args);
 
 class IHost {
 public:

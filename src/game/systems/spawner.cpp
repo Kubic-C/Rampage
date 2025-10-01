@@ -2,9 +2,9 @@
 
 #include <random>
 
-#include "../module.hpp"
-#include "../components/spawner.hpp"
 #include "../../core/module.hpp"
+#include "../components/spawner.hpp"
+#include "../module.hpp"
 
 RAMPAGE_START
 

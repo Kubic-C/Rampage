@@ -1,10 +1,10 @@
 #include "spriteRender.hpp"
 
+#include "../../core/module.hpp"
 #include "../../render/module.hpp"
+#include "../../render/render.hpp"
 #include "../components/sprite.hpp"
 #include "../components/tilemap.hpp"
-#include "../../core/module.hpp"
-#include "../../render/render.hpp"
 
 RAMPAGE_START
 
@@ -17,9 +17,10 @@ const char* tileVertexShaderSource = R"###(
         layout(location = 2) in vec2 localPos;
         layout(location = 3) in vec2 worldPos;
         layout(location = 4) in uint layer;
-        layout(location = 5) in uint rot5z3;
-        layout(location = 6) in uint dimByte;
-        layout(location = 7) in float scaling;
+        layout(location = 5) in float localRot;
+        layout(location = 6) in float z;
+        layout(location = 7) in uint dimByte;
+        layout(location = 8) in float scaling;
 
         uniform mat4 uVP;
         uniform float uTileSideLength;
@@ -39,13 +40,6 @@ const char* tileVertexShaderSource = R"###(
         }
 
         void main() {
-            const float pi = 3.141592653589793;
-            // zMask      = 0b00000111; // 7
-            // rotMask    = 0b11111000; // 248
-            // scaleXMask = 0b00001111; // 15
-            // scaleYMask = 0b11110000; // 240
-            float z = rot5z3 & 7;
-            float localRot = (rot5z3 >> 3) / 31.0f * pi * 2;
             vec2 dim = vec2(dimByte & 15, (dimByte & 240) >> 4);
 
             gl_Position = uVP * vec4(worldPos + rotate(pos * uTileSideLength * dim + localPos, localRot) * scaling, -z, 1.0);
@@ -82,30 +76,10 @@ struct Instance {
   glm::vec2 localPos;
   glm::vec2 worldPos;
   u16 layer;
-  u8 rot5z3 = 0;
+  float rot;
+  float z;
   u8 dim;
   float scale;
-
-  void setRot(float fRot) {
-    constexpr u8 rangeLimit = 31;
-    constexpr u8 bitShiftLeft = 3;
-    constexpr float pi2 = (2.0f * glm::pi<float>());
-    constexpr float inv2pi = 1.0f / pi2;
-
-    float zeroToOne = glm::mod(fRot, pi2) * inv2pi;
-    u8 rot = static_cast<u8>(zeroToOne * rangeLimit);
-    rot <<= bitShiftLeft;
-    rot5z3 &= ~rotMask;
-    rot5z3 |= rot;
-  }
-
-  void setZ(u8 z) {
-    constexpr u8 rangeLimit = 7;
-    assert(z <= rangeLimit);
-
-    rot5z3 &= ~zMask;
-    rot5z3 |= z;
-  }
 
   void setDim(u8 dimX, u8 dimY) {
     constexpr u8 rangeLimit = 15;
@@ -121,18 +95,26 @@ struct Instance {
 static constexpr int instanceBufferFlags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
 
 void bindInstanceBufferAttribs(VertexArrayBuffer& va, const VertexBuffer& instanceBuffer) {
-  va.addVertexArrayAttrib(instanceBuffer, 2, 2, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, localPos));
-  va.addVertexArrayAttrib(instanceBuffer, 3, 2, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, worldPos));
-  va.addIntegerVertexArrayAttrib(instanceBuffer, 4, 1, GL_UNSIGNED_SHORT, sizeof(Instance), offsetof(Instance, layer));
-  va.addIntegerVertexArrayAttrib(instanceBuffer, 5, 1, GL_UNSIGNED_BYTE, sizeof(Instance), offsetof(Instance, rot5z3));
-  va.addIntegerVertexArrayAttrib(instanceBuffer, 6, 1, GL_UNSIGNED_BYTE, sizeof(Instance), offsetof(Instance, dim));
-  va.addVertexArrayAttrib(instanceBuffer, 7, 1, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, scale));
+  va.addVertexArrayAttrib(instanceBuffer, 2, 2, GL_FLOAT, GL_FALSE, sizeof(Instance),
+                          offsetof(Instance, localPos));
+  va.addVertexArrayAttrib(instanceBuffer, 3, 2, GL_FLOAT, GL_FALSE, sizeof(Instance),
+                          offsetof(Instance, worldPos));
+  va.addIntegerVertexArrayAttrib(instanceBuffer, 4, 1, GL_UNSIGNED_SHORT, sizeof(Instance),
+                                 offsetof(Instance, layer));
+  va.addVertexArrayAttrib(instanceBuffer, 5, 1, GL_FLOAT, GL_FALSE, sizeof(Instance),
+                          offsetof(Instance, rot));
+  va.addVertexArrayAttrib(instanceBuffer, 6, 1, GL_FLOAT, GL_FALSE, sizeof(Instance), offsetof(Instance, z));
+  va.addIntegerVertexArrayAttrib(instanceBuffer, 7, 1, GL_UNSIGNED_BYTE, sizeof(Instance),
+                                 offsetof(Instance, dim));
+  va.addVertexArrayAttrib(instanceBuffer, 8, 1, GL_FLOAT, GL_FALSE, sizeof(Instance),
+                          offsetof(Instance, scale));
   va.attribDivisor(2, 1);
   va.attribDivisor(3, 1);
   va.attribDivisor(4, 1);
   va.attribDivisor(5, 1);
   va.attribDivisor(6, 1);
   va.attribDivisor(7, 1);
+  va.attribDivisor(8, 1);
 }
 
 void addSpriteInstance(Instance& newInstance, VertexArrayBuffer& va, InstanceBufferComponent& instances) {
@@ -173,8 +155,8 @@ void meshTilemap(Entity e, VertexArrayBuffer& va, InstanceBufferComponent& insta
         instance.worldPos = tileWorldPos;
         instance.layer = 0;
         instance.scale = 1.0f;
-        instance.setZ(static_cast<u8>(WorldLayer::Bottom));
-        instance.setRot(0);
+        instance.z = static_cast<u8>(WorldLayer::Bottom);
+        instance.rot = 0;
         instance.setDim(1, 1);
         addSpriteInstance(instance, va, instances);
       } else {
@@ -183,7 +165,8 @@ void meshTilemap(Entity e, VertexArrayBuffer& va, InstanceBufferComponent& insta
         // if the tile is a single tile, or a multi tile whose sprite component contains only one sprite,
         // draw in repeat tile mode
         if (!(tile.flags & TileFlags::IS_MULTI_TILE) ||
-          (tile.flags & TileFlags::IS_MULTI_TILE && sprite->subSprites.size() == 1 && sprite->subSprites[0].size() == 1)) {
+            (tile.flags & TileFlags::IS_MULTI_TILE && sprite->subSprites.size() == 1 &&
+             sprite->subSprites[0].size() == 1)) {
           SpriteComponent::SubSprite& subSprite = sprite->subSprites[0][0];
 
           for (int i = 0; i < subSprite.layerCount; i++) {
@@ -192,8 +175,8 @@ void meshTilemap(Entity e, VertexArrayBuffer& va, InstanceBufferComponent& insta
             instance.worldPos = tileWorldPos;
             instance.layer = subSprite.get(i).texIndex;
             instance.scale = sprite->scaling;
-            instance.setZ(static_cast<u8>(subSprite.get(i).layer));
-            instance.setRot(subSprite.get(i).rot);
+            instance.z = static_cast<u8>(subSprite.get(i).layer);
+            instance.rot = subSprite.get(i).rot;
             instance.setDim(dim.x, dim.y);
             addSpriteInstance(instance, va, instances);
           }
@@ -208,8 +191,8 @@ void meshTilemap(Entity e, VertexArrayBuffer& va, InstanceBufferComponent& insta
                 instance.worldPos = tileWorldPos;
                 instance.layer = subSprite.get(i).texIndex;
                 instance.scale = sprite->scaling;
-                instance.setZ(static_cast<u8>(subSprite.get(i).layer));
-                instance.setRot(subSprite.get(i).rot);
+                instance.z = static_cast<u8>(subSprite.get(i).layer);
+                instance.rot = subSprite.get(i).rot;
                 instance.setDim(1, 1);
                 addSpriteInstance(instance, va, instances);
               }
@@ -247,8 +230,8 @@ void meshSprite(Entity e, VertexArrayBuffer& va, InstanceBufferComponent& instan
     instance.worldPos = transform->pos;
     instance.layer = subSprite.get(i).texIndex;
     instance.scale = sprite->scaling;
-    instance.setZ(static_cast<u8>(subSprite.get(i).layer));
-    instance.setRot(subSprite.get(i).rot + transform->rot);
+    instance.z = static_cast<u8>(subSprite.get(i).layer);
+    instance.rot = subSprite.get(i).rot + transform->rot;
     instance.setDim(1, 1);
     addSpriteInstance(instance, va, instances);
   }
@@ -292,14 +275,14 @@ int renderSprites(EntityWorld& world, float dt) {
 }
 
 static std::array<MeshVertex, 4> generateDefaultMesh() {
-  std::array<glm::vec2, 4> tileRect = {glm::vec2(-0.5f, -0.5f), glm::vec2(0.5f, -0.5f),
-                                       glm::vec2(0.5f, 0.5f), glm::vec2(-0.5f, 0.5f)};
+  std::array<glm::vec2, 4> tileRect = {glm::vec2(-0.5f, -0.5f), glm::vec2(0.5f, -0.5f), glm::vec2(0.5f, 0.5f),
+                                       glm::vec2(-0.5f, 0.5f)};
 
   std::array<glm::vec2, 4> texCoords = {glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec2(1.0f, 1.0f),
                                         glm::vec2(0.0f, 1.0f)};
 
   return {MeshVertex(tileRect[0], texCoords[0]), MeshVertex(tileRect[1], texCoords[1]),
-            MeshVertex(tileRect[2], texCoords[2]), MeshVertex(tileRect[3], texCoords[3])};
+          MeshVertex(tileRect[2], texCoords[2]), MeshVertex(tileRect[3], texCoords[3])};
 }
 
 Entity createSpriteRenderEntity(IHost& host) {
@@ -323,11 +306,13 @@ Entity createSpriteRenderEntity(IHost& host) {
   std::array<MeshVertex, 4> mesh = generateDefaultMesh();
   instances->meshBuffer.bufferData(sizeof(mesh), mesh.data(), GL_STATIC_DRAW);
   va->addVertexArrayAttrib(instances->meshBuffer, 0, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), 0);
-  va->addVertexArrayAttrib(instances->meshBuffer, 1, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex), offsetof(MeshVertex, texCoords));
+  va->addVertexArrayAttrib(instances->meshBuffer, 1, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertex),
+                           offsetof(MeshVertex, texCoords));
 
   // Per Instance
   instances->capacity = 1024;
-  instances->instanceBuffer.bufferStorage(sizeof(Instance) * instances->capacity, nullptr, instanceBufferFlags);
+  instances->instanceBuffer.bufferStorage(sizeof(Instance) * instances->capacity, nullptr,
+                                          instanceBufferFlags);
   instances->instances = instances->instanceBuffer.mapBuffer(GL_WRITE_ONLY);
   bindInstanceBufferAttribs(*va, instances->instanceBuffer);
 

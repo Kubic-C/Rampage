@@ -5,7 +5,7 @@
 RAMPAGE_START
 
 class Scene {
-  public:
+public:
   Scene(EntityWorld& world, std::string name, std::string desc) :
       m_world(world), m_name(std::move(name)), m_desc(std::move(desc)) {}
 
@@ -35,7 +35,7 @@ class Scene {
     m_sceneTag = NullComponentId;
   }
 
-  private:
+private:
   EntityWorld& m_world;
   std::string m_name;
   std::string m_desc;

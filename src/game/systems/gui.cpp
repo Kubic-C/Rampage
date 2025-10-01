@@ -1,11 +1,11 @@
 #include "gui.hpp"
 
-#include "../module.hpp"
 #include "../../event/module.hpp"
+#include "../module.hpp"
 
 RAMPAGE_START
 
-int renderGui(EntityWorld& world, float deltaTime)  {
+int renderGui(EntityWorld& world, float deltaTime) {
   glDisable(GL_DEPTH_TEST);
   world.getContext<tgui::Gui>().draw();
   glEnable(GL_DEPTH_TEST);
@@ -13,7 +13,7 @@ int renderGui(EntityWorld& world, float deltaTime)  {
   return 0;
 }
 
-int updateGui(EntityWorld& world, float deltaTime)  {
+int updateGui(EntityWorld& world, float deltaTime) {
   auto& eventMgr = world.getContext<EventModule>();
   auto& gui = world.getContext<tgui::Gui>();
 
@@ -30,11 +30,9 @@ int updateGui(EntityWorld& world, float deltaTime)  {
 void loadGuiSystems(IHost& host) {
   Pipeline& pipeline = host.getPipeline();
 
-  pipeline.getGroup<RenderGroup>()
-    .attachToStage<RenderGroup::OnGUIRenderStage>(renderGui);
+  pipeline.getGroup<RenderGroup>().attachToStage<RenderGroup::OnGUIRenderStage>(renderGui);
 
-  pipeline.getGroup<GameGroup>()
-  .attachToStage<GameGroup::TickStage>(updateGui);
+  pipeline.getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(updateGui);
 }
 
 RAMPAGE_END

@@ -16,7 +16,7 @@ struct TileBoundComponent {
 class Tilemap {
   friend class TilemapComponent;
 
-  public:
+public:
   // Ignores shapeId
   bool insert(EntityWorld& world, b2BodyId body, const glm::i16vec2& pos, EntityId parent,
               const TileDef& clone) {
@@ -130,11 +130,17 @@ class Tilemap {
     return entity;
   }
 
-  Tile& find(const glm::i16vec2& pos) { return m_tiles.find(pos)->second; }
+  Tile& find(const glm::i16vec2& pos) {
+    return m_tiles.find(pos)->second;
+  }
 
-  const Tile& find(const glm::i16vec2& pos) const { return m_tiles.find(pos)->second; }
+  const Tile& find(const glm::i16vec2& pos) const {
+    return m_tiles.find(pos)->second;
+  }
 
-  bool contains(const glm::i16vec2& pos) const { return m_tiles.contains(pos); }
+  bool contains(const glm::i16vec2& pos) const {
+    return m_tiles.contains(pos);
+  }
 
   static Vec2 getLocalTileCenter(const glm::i16vec2& tilePos, const glm::u16vec2& dim = {1, 1}) {
     return static_cast<glm::vec2>(tilePos) * tileSize + ((Vec2)dim * tileSize * 0.5f);
@@ -144,15 +150,17 @@ class Tilemap {
     return glm::i16vec2(glm::floor(localPos / tileSize));
   }
 
-  public:
+public:
   template <typename ItType>
   class Iterator {
     ItType m_it;
 
-public:
+  public:
     Iterator(ItType it) : m_it(it) {}
 
-    const glm::i16vec2& operator*() const { return *m_it; }
+    const glm::i16vec2& operator*() const {
+      return *m_it;
+    }
 
     Iterator<ItType>& operator++() {
       m_it = ++m_it;
@@ -164,16 +172,26 @@ public:
       return *this;
     }
 
-    bool operator!=(const Iterator<ItType>& other) const { return m_it != other.m_it; }
+    bool operator!=(const Iterator<ItType>& other) const {
+      return m_it != other.m_it;
+    }
   };
 
   using MapType = Set<glm::i16vec2>;
-  Iterator<MapType::iterator> begin() { return m_mainTiles.begin(); }
-  Iterator<MapType::iterator> end() { return m_mainTiles.end(); }
-  Iterator<MapType::const_iterator> begin() const { return m_mainTiles.begin(); }
-  Iterator<MapType::const_iterator> end() const { return m_mainTiles.end(); }
+  Iterator<MapType::iterator> begin() {
+    return m_mainTiles.begin();
+  }
+  Iterator<MapType::iterator> end() {
+    return m_mainTiles.end();
+  }
+  Iterator<MapType::const_iterator> begin() const {
+    return m_mainTiles.begin();
+  }
+  Iterator<MapType::const_iterator> end() const {
+    return m_mainTiles.end();
+  }
 
-  protected:
+protected:
   u32 m_layer = 0;
   OpenMap<glm::i16vec2, Tile> m_tiles;
   Set<glm::i16vec2> m_mainTiles;
@@ -199,9 +217,13 @@ struct TilemapComponent {
     return m_tilemaps[layer];
   }
 
-  Tilemap& getBottomtilemap() { return m_tilemaps[0]; }
+  Tilemap& getBottomtilemap() {
+    return m_tilemaps[0];
+  }
 
-  Tilemap& getToptilemap() { return m_tilemaps[m_layerCount - 1]; }
+  Tilemap& getToptilemap() {
+    return m_tilemaps[m_layerCount - 1];
+  }
 
   // returns the tilemap thats top most and contains pos
   u32 getTopTilemapWith(const glm::u16vec2& pos) {
@@ -213,9 +235,11 @@ struct TilemapComponent {
     return UINT32_MAX;
   }
 
-  u32 getTilemapCount() const { return m_layerCount; }
+  u32 getTilemapCount() const {
+    return m_layerCount;
+  }
 
-  private:
+private:
   u32 m_layerCount = 2;
   std::array<Tilemap, 3> m_tilemaps;
 };
