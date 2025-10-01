@@ -44,7 +44,7 @@ int updateSpawners(EntityWorld& world, float dt) {
       for (u32 i = 0; i < spawner->spawnCount; i++) {
         Vec2 point = getUniformCircularPoint(spawner->spawnableRadius);
 
-        spawned.push_back({spawner->spawn, point});
+        spawned.push_back({spawner->spawn, point + transform->pos});
       }
     }
   }

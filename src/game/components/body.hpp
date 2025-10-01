@@ -66,8 +66,8 @@ struct glz::meta<rmp::AddBodyComponent> {
       object("bodyType", &T::type, "linearVelocity", &T::linearVelocity, "angularVelocity",
              &T::angularVelocity, "linearDamping", &T::linearDamping, "angularDamping", &T::angularDamping,
              "gravityScale", &T::gravityScale, "sleepThreshold", &T::sleepThreshold, "enableSleep",
-             &T::enableSleep, "isAwake", &T::isAwake, "fixedRotation", &T::fixedRotation, "isBullet",
-             &T::isBullet, "isEnabled", &T::isEnabled, "allowFastRotation", &T::allowFastRotation);
+             &T::enableSleep, "isAwake", &T::isAwake, "isBullet", &T::isBullet, "isEnabled", &T::isEnabled,
+             "allowFastRotation", &T::allowFastRotation);
 };
 
 template <>

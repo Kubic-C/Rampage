@@ -79,8 +79,8 @@ EntityWorld::EntityWorld(IHost& host) : m_host(host) {
 
   component<Destroy>();
   component<Enabled>();
-  component<ComponentAdded>();
-  component<ComponentRemoved>();
+  component<ComponentAddedEvent>();
+  component<ComponentRemovedEvent>();
 }
 
 EntityWorld::~EntityWorld() {

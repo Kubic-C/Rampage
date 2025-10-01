@@ -27,7 +27,7 @@ void loadItemSystems(IHost& host) {
   Pipeline& pipeline = host.getPipeline();
   EntityWorld& world = host.getWorld();
 
-  world.observe<ComponentRemoved>(world.component<InventoryComponent>(), {},
+  world.observe<ComponentRemovedEvent>(world.component<InventoryComponent>(), {},
                 destroyInventoryOnEntityDestruction);
 
   pipeline.getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(updateItemHands);

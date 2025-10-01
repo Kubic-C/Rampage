@@ -42,8 +42,8 @@ void loadHealthSystems(IHost& host) {
   Pipeline& pipeline = host.getPipeline();
 
   pipeline.getGroup<GameGroup>()
-      .attachToStage<GameGroup::TickStage>(healthSystem)
-      .attachToStage<GameGroup::TickStage>(lifetimeSystem);
+      .attachToStage<GameGroup::PostTickStage>(healthSystem)
+      .attachToStage<GameGroup::PostTickStage>(lifetimeSystem);
 }
 
 RAMPAGE_END

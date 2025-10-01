@@ -2,7 +2,7 @@
 
 #include "arrow.hpp"
 #include "body.hpp"
-#include "collisionQueue.hpp"
+#include "collisionEvent.hpp"
 #include "health.hpp"
 #include "item.hpp"
 #include "player.hpp"
@@ -20,7 +20,8 @@ inline void registerGameComponents(EntityWorld& world) {
   world.component<BodyComponent>();
   world.component<AddBodyComponent>();
   world.component<AddShapeComponent>();
-  world.component<CollisionQueueComponent>();
+  world.component<OnCollisionBeginEvent>();
+  world.component<OnCollisionEndEvent>();
   world.component<HealthComponent>();
   world.component<LifetimeComponent>();
   world.component<BulletDamageComponent>();

@@ -13,9 +13,8 @@ class Entity;
 class System;
 class IHost;
 
-struct ComponentAdded {};
-
-struct ComponentRemoved {};
+struct ComponentAddedEvent {};
+struct ComponentRemovedEvent {};
 
 class EntityWorld {
   friend class Entity;

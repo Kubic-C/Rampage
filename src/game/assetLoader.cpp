@@ -400,6 +400,7 @@ AssetLoader::PrefabAsset loadPrefabPrototype(AssetLoader& loader, EntityWorld& w
       {
         e.add<HealthComponent>();
         RefT<HealthComponent> health = e.get<HealthComponent>();
+        health->health = std::get<TileBreakable>(proto).health;
 
         e.add<ArrowComponent>();
         e.get<ArrowComponent>()->tileCost = static_cast<u32>(health->health);
@@ -449,13 +450,6 @@ TileDef loadTilePrototype(AssetLoader& loader, EntityWorld& world, const std::st
 
     for (const ComponentPrototype& proto : tilePrototype.entityComponents.comps) {
       if (proto.index() == IndexInVariant<ComponentPrototype, TileBreakable>) {
-        e.add<HealthComponent>();
-        RefT<HealthComponent> health = e.get<HealthComponent>();
-        health->health = std::get<TileBreakable>(proto).health;
-
-        e.add<ArrowComponent>();
-        e.get<ArrowComponent>()->tileCost = static_cast<u32>(health->health);
-
         def.shapeDef.enableHitEvents = true;
         def.shapeDef.enableContactEvents = true;
         break;

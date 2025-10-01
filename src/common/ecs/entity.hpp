@@ -61,8 +61,12 @@ inline void* entityToB2Data(const EntityId id) {
   return reinterpret_cast<void*>(id);
 }
 
+inline EntityId b2RawDataToEntity(void* vp) {
+  return static_cast<EntityId>(reinterpret_cast<uintptr_t>(vp));
+}
+
 inline Entity b2DataToEntity(EntityWorld& world, void* vp) {
-  return world.get(static_cast<EntityId>(reinterpret_cast<uintptr_t>(vp)));
+  return world.get(b2RawDataToEntity(vp));
 }
 
 template <typename EventType>

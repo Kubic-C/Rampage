@@ -45,7 +45,7 @@ public:
     if (entity) {
       Entity e = world.get(entity);
       e.add<TileBoundComponent>();
-      RefT<TileBoundComponent> tileBound = e.get<TileBoundComponent>();
+      auto tileBound = e.get<TileBoundComponent>();
       tileBound->parent = parent;
       tileBound->pos = pos;
       tileBound->layer = m_layer;

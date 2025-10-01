@@ -56,7 +56,7 @@ void Entity::add(const ComponentSet& addComps, bool emit) {
     for (ComponentId compId : addComps.list()) {
       if (oldSet.has(compId))
         continue;
-      m_world->emit<ComponentAdded>(m_id, compId);
+      m_world->emit<ComponentAddedEvent>(m_id, compId);
     }
 }
 
@@ -71,7 +71,7 @@ void Entity::remove(const ComponentSet& remComps, bool emit) {
 
   if (emit)
     for (ComponentId compId : remComps.list())
-      m_world->emit<ComponentRemoved>(m_id, compId);
+      m_world->emit<ComponentRemovedEvent>(m_id, compId);
 
   const ComponentSet& oldSet = set();
   ComponentSetBuilder tempSet(oldSet);

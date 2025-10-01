@@ -4,23 +4,12 @@
 #include "../module.hpp"
 
 #include "../components/body.hpp"
-#include "../components/collisionQueue.hpp"
+#include "../components/collisionEvent.hpp"
 
 RAMPAGE_START
 
 struct PhysicsContext {
   int steps = 0;
-  std::vector<EntityId> sparseShapeEntity;
-  Map<EntityId, std::set<EntityId>> ongoingCollisions;
-
-  void insertShapeEntity(b2ShapeId shapeId, EntityId entity) {
-    int index = shapeId.index1;
-
-    if (index >= sparseShapeEntity.size())
-      sparseShapeEntity.resize(index + 1, 0);
-
-    sparseShapeEntity[index] = entity;
-  }
 };
 
 int copyTransformsIntoBodies(EntityWorld& world, float dt) {
@@ -77,57 +66,38 @@ int physicsStep(EntityWorld& world, float dt) {
     void* Bb2Data = b2Shape_GetUserData(touch.shapeIdB);
     if (!Ab2Data || !Bb2Data)
       continue;
-
     Entity eA = b2DataToEntity(world, Ab2Data);
     Entity eB = b2DataToEntity(world, Bb2Data);
-    context.ongoingCollisions[eA].insert(eB);
-    context.ongoingCollisions[eB].insert(eA);
-    context.insertShapeEntity(touch.shapeIdA, eA);
-    context.insertShapeEntity(touch.shapeIdB, eB);
+
+    eA.add<LastCollisionData>();
+    eB.add<LastCollisionData>();
+    eA.get<LastCollisionData>()->other = eB;
+    eB.get<LastCollisionData>()->other = eA;
+
+    world.emit<OnCollisionBeginEvent>(eA, world.component<LastCollisionData>());
+    world.emit<OnCollisionBeginEvent>(eB, world.component<LastCollisionData>());
   }
   for (int i = 0; i < events.endCount; i++) {
     const b2ContactEndTouchEvent& touch = events.endEvents[i];
 
-    if (touch.shapeIdA.index1 > context.sparseShapeEntity.size() ||
-        touch.shapeIdB.index1 > context.sparseShapeEntity.size())
+    if (!b2Shape_IsValid(touch.shapeIdA) ||
+        !b2Shape_IsValid(touch.shapeIdB))
       continue;
 
-    EntityId eA = context.sparseShapeEntity[touch.shapeIdA.index1];
-    EntityId eB = context.sparseShapeEntity[touch.shapeIdB.index1];
-    if (eA == NullEntityId || eB == NullEntityId)
+    void* Ab2Data = b2Shape_GetUserData(touch.shapeIdA);
+    void* Bb2Data = b2Shape_GetUserData(touch.shapeIdB);
+    if (!Ab2Data || !Bb2Data)
       continue;
+    Entity eA = b2DataToEntity(world, Ab2Data);
+    Entity eB = b2DataToEntity(world, Bb2Data);
 
-    context.ongoingCollisions[eA].erase(eB);
-    context.ongoingCollisions[eB].erase(eA);
-    if (context.ongoingCollisions[eA].empty())
-      context.ongoingCollisions.erase(eA);
-    if (context.ongoingCollisions[eB].empty())
-      context.ongoingCollisions.erase(eB);
-  }
+    eA.add<LastCollisionData>();
+    eB.add<LastCollisionData>();
+    eA.get<LastCollisionData>()->other = eB;
+    eB.get<LastCollisionData>()->other = eA;
 
-  for (auto& [entity, contactList] : context.ongoingCollisions) {
-    Entity eA = world.get(entity);
-
-    for (EntityId other : contactList) {
-      Entity eB = world.get(other);
-
-      CollisionQueueComponent::Collision collision;
-      collision.primary = eA;
-      collision.secondary = eB;
-      if (eA.has<SubmitToCollisionQueueComponent>()) {
-        auto submitTo = eA.get<SubmitToCollisionQueueComponent>();
-        auto queue = world.get(submitTo->queue).get<CollisionQueueComponent>();
-
-        queue->queue.push_back(collision);
-      }
-      std::swap(collision.primary, collision.secondary);
-      if (eB.has<SubmitToCollisionQueueComponent>()) {
-        auto submitTo = eB.get<SubmitToCollisionQueueComponent>();
-        auto queue = world.get(submitTo->queue).get<CollisionQueueComponent>();
-
-        queue->queue.push_back(collision);
-      }
-    }
+    world.emit<OnCollisionEndEvent>(eA, world.component<LastCollisionData>());
+    world.emit<OnCollisionEndEvent>(eB, world.component<LastCollisionData>());
   }
 
   world.beginDefer();
@@ -173,11 +143,34 @@ int physicsStep(EntityWorld& world, float dt) {
     e.remove<AddShapeComponent>();
   }
   world.endDefer();
+
+  return 0;
 }
 
 struct PrePhysicsStepStage {};
 struct PhysicsStepStage {};
 struct PostPhysicsStepStage {};
+
+void observeDestroyedBody(Entity entity) {
+  EntityWorld& world = entity.world();
+  auto bodyId = entity.get<BodyComponent>()->id;
+  auto lastCollisionData = entity.get<LastCollisionData>();
+
+  std::vector<b2ContactData> contacts(b2Body_GetContactCapacity(bodyId));
+  int actualSize = b2Body_GetContactData(bodyId, contacts.data(), contacts.size());
+  contacts.resize(actualSize);
+
+  for (const b2ContactData& contactData : contacts) {
+    EntityId other = b2RawDataToEntity(b2Shape_GetUserData(contactData.shapeIdA));
+    if (other == entity)
+        other = b2RawDataToEntity(b2Shape_GetUserData(contactData.shapeIdB));
+    if (other == NullEntityId)
+      continue;
+
+    lastCollisionData->other = other;
+    world.emit<OnCollisionEndEvent>(entity, world.component<LastCollisionData>());
+  }
+}
 
 void loadPhysicsSystems(IHost& host, int steps) {
   Pipeline& pipeline = host.getPipeline();
@@ -188,12 +181,14 @@ void loadPhysicsSystems(IHost& host, int steps) {
   context.steps = steps;
 
   pipeline.getGroup<GameGroup>()
-      .createStageAfter<GameGroup::TickStage, PrePhysicsStepStage>()
+      .createStageBefore<GameGroup::TickStage, PrePhysicsStepStage>()
       .createStageAfter<PrePhysicsStepStage, PhysicsStepStage>()
       .createStageAfter<PhysicsStepStage, PostPhysicsStepStage>()
       .attachToStage<PrePhysicsStepStage>(copyTransformsIntoBodies)
       .attachToStage<PhysicsStepStage>(physicsStep)
       .attachToStage<PostPhysicsStepStage>(copyBodiesIntoTransforms);
+
+  world.observe<ComponentRemovedEvent>(world.component<BodyComponent>(), {}, observeDestroyedBody);
 }
 
 RAMPAGE_END

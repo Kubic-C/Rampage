@@ -84,7 +84,7 @@ int RenderModule::onLoad() {
   glClearColor(0.2, 1, 0, 0);
 
   auto& pipeline = m_host->getPipeline();
-  Pipeline::Group& group = pipeline.createGroup<RenderGroup>(144.0f)
+  Pipeline::Group& group = pipeline.createGroup<RenderGroup>(9999999999.0f)
                                .createStage<RenderGroup::PreRenderStage>()
                                .createStage<RenderGroup::ClearWindowStage>()
                                .createStage<RenderGroup::OnRenderStage>()
@@ -94,6 +94,8 @@ int RenderModule::onLoad() {
 
   group.attachToStage<RenderGroup::ClearWindowStage>(clearWindow);
   group.attachToStage<RenderGroup::SwapBuffersStage>(swapBuffers);
+
+  enableVsync(false);
 
   return 0;
 }

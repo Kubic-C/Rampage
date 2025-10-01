@@ -1,7 +1,7 @@
 #include "turret.hpp"
 
 #include "../../core/transform.hpp"
-#include "../components/collisionQueue.hpp"
+#include "../components/collisionEvent.hpp"
 #include "../components/health.hpp"
 #include "../components/shapes.hpp"
 #include "../components/sprite.hpp"
@@ -121,34 +121,6 @@ void updateTurret(Entity e, float dt, TurretContext& context) {
 int updateTurrets(EntityWorld& world, float deltaTime) {
   auto& context = world.getContext<TurretContext>();
 
-  auto queue = context.collisionQueue.get<CollisionQueueComponent>();
-  for (const CollisionQueueComponent::Collision& collision : queue->queue) {
-    // its possible for a bullet to be destroyed by the HealthModule before we
-    // can get to it.
-    if (!world.isAlive(collision.primary)) {
-      // TODO: logGeneric("Bullet not alive, skipping!\n");
-      continue;
-    }
-    Entity bullet = world.get(collision.primary);
-    // its possible for a enemy to be destroyed by the HealthModule before we
-    // can get to it.
-    if (!world.isAlive(collision.secondary)) {
-      // TODO: logGeneric("Zombie not alive, skipping!\n");
-      continue;
-    }
-    Entity other = world.get(collision.secondary);
-
-    assert(other.has<HealthComponent>());
-
-    RefT<HealthComponent> health = other.get<HealthComponent>();
-    RefT<BulletDamageComponent> damage = bullet.get<BulletDamageComponent>();
-    health->health -= damage->damage;
-
-    RefT<HealthComponent> bulletHealth = bullet.get<HealthComponent>();
-    bulletHealth->health -= damage->damage * 0.1f;
-  }
-  queue->queue.clear();
-
   auto it = world.getWith(world.set<TransformComponent, TurretComponent>());
   while (it.hasNext())
     updateTurret(it.next(), deltaTime, context);
@@ -194,13 +166,23 @@ int updateTurrets(EntityWorld& world, float deltaTime) {
   return 0;
 }
 
-void setBulletDamageEntityToCollisionQueue(Entity e) {
-  EntityWorld& world = e.world();
-  auto& context = world.getContext<TurretContext>();
+void observeBulletCollision(Entity bullet) {
+  auto& world = bullet.world();
+  auto collisionData = bullet.get<LastCollisionData>();
+  Entity other = world.get(collisionData->other);
 
-  e.add<SubmitToCollisionQueueComponent>();
-  auto queue = e.get<SubmitToCollisionQueueComponent>();
-  queue->queue = context.collisionQueue;
+  if(!other.has<HealthComponent>()) {
+    printf("Cannot damage, target has no health component\n");
+    return;
+  }
+
+  /// =========
+  auto health = other.get<HealthComponent>();
+  auto damage = bullet.get<BulletDamageComponent>();
+  health->health -= damage->damage;
+
+  auto bulletHealth = bullet.get<HealthComponent>();
+  bulletHealth->health -= damage->damage * 0.1f;
 }
 
 void loadTurretSystems(IHost& host) {
@@ -209,10 +191,8 @@ void loadTurretSystems(IHost& host) {
 
   world.addContext<TurretContext>(world);
   auto& context = world.getContext<TurretContext>();
-  context.collisionQueue.add<CollisionQueueComponent>();
 
-  world.observe<ComponentAdded>(world.component<BulletDamageComponent>(),
-                world.set<EntityWorld::Enabled>(), setBulletDamageEntityToCollisionQueue);
+  world.observe<OnCollisionBeginEvent>(world.component<LastCollisionData>(), world.set<BulletDamageComponent>(), observeBulletCollision);
 
   pipeline.getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(updateTurrets);
 }

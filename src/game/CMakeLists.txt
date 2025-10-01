@@ -7,7 +7,7 @@ target_sources(
   RGame PUBLIC
   "components/arrow.hpp"
   "components/body.hpp"
-  "components/collisionQueue.hpp"
+  "components/collisionEvent.hpp"
   "components/health.hpp"
   "components/player.hpp"
   "components/sprite.hpp"

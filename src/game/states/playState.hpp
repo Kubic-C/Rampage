@@ -111,7 +111,6 @@ public:
     // Collider
     b2BodyDef bodyDef = b2DefaultBodyDef();
     bodyDef.type = b2_dynamicBody;
-    bodyDef.fixedRotation = true;
     bodyDef.linearDamping = 10;
     b2BodyId bodyId = b2CreateBody(physicsWorld, &bodyDef);
     player.get<BodyComponent>()->id = bodyId;
@@ -121,45 +120,109 @@ public:
     b2CreatePolygonShape(bodyId, &shapeDef, &rect);
 
     RefT<TransformComponent> playerTransform = player.get<TransformComponent>();
-    playerTransform->pos = Vec2(5.0f, -7.0f);
+    playerTransform->pos = Vec2(0.0f, 15.0f);
 
     /* WorldMap & Tilemap Component */
 
-    {
-      // World Map
-      Entity tm = m_world.create();
-      tm.add<TransformComponent>();
-      tm.add<BodyComponent>();
-      tm.add<TilemapComponent>();
-      tm.add<WorldMapTag>();
-      tm.add<OwnedBy<PlayState>>();
+{
+    // World Map
+    Entity tm = m_world.create();
+    tm.add<TransformComponent>();
+    tm.add<BodyComponent>();
+    tm.add<TilemapComponent>();
+    tm.add<WorldMapTag>();
+    tm.add<OwnedBy<PlayState>>();
 
-      RefT<TransformComponent> transform = tm.get<TransformComponent>();
-      transform->pos = Vec2(0, 0);
-      transform->rot = Rot(0);
-      b2BodyDef bodyDef = b2DefaultBodyDef();
-      bodyDef.type = b2_staticBody;
-      bodyDef.position = Vec2(0, 0);
-      b2BodyId bodyId = b2CreateBody(physicsWorld, &bodyDef);
-      tm.get<BodyComponent>()->id = bodyId;
+    RefT<TransformComponent> transform = tm.get<TransformComponent>();
+    transform->pos = Vec2(0, 0);
+    transform->rot = Rot(0);
 
-      RefT<TilemapComponent> tilemapLayers = tm.get<TilemapComponent>();
-      Tilemap& worldLayer = tilemapLayers->getTilemap(TilemapWorldLayer);
-      auto tileCallback = [&](int x, int y) {
-        if (x <= -35 || x >= 35 || y <= -35 || y >= 35 || (x % 5 == 0 && y < 20 && y != -34)) {
-          TileDef highStone = assetLoader.cloneTilePrefab("PermaHighStoneTile");
-          worldLayer.insert(m_world, bodyId, {x, y}, tm, highStone);
-        } else if (rand() % 100 < 5) {
-          TileDef unknown = assetLoader.cloneTilePrefab("UnknownTile");
-          worldLayer.insert(m_world, bodyId, {x, y}, tm, unknown);
+    b2BodyDef bodyDef = b2DefaultBodyDef();
+    bodyDef.type = b2_staticBody;
+    bodyDef.position = Vec2(0, 0);
+    b2BodyId bodyId = b2CreateBody(physicsWorld, &bodyDef);
+    tm.get<BodyComponent>()->id = bodyId;
+
+    RefT<TilemapComponent> tilemapLayers = tm.get<TilemapComponent>();
+    Tilemap& worldLayer = tilemapLayers->getTilemap(TilemapWorldLayer);
+
+    const int gridSize = 3;
+    const int roomRadius = 12;
+    const int spacing = 25; // distance between room centers
+
+    // Precompute room centers
+    std::vector<Vec2> centers;
+    for (int gx = 0; gx < gridSize; gx++) {
+        for (int gy = 0; gy < gridSize; gy++) {
+            int cx = (gx - gridSize/2) * spacing;
+            int cy = (gy - gridSize/2) * spacing;
+            centers.push_back(Vec2(cx, cy));
+        }
+    }
+
+    auto isInsideRoom = [&](int x, int y) {
+        for (auto& c : centers) {
+            int dx = x - c.x;
+            int dy = y - c.y;
+            if (dx*dx + dy*dy <= roomRadius * roomRadius)
+                return true;
+        }
+        return false;
+    };
+
+    auto isInCorridor = [&](int x, int y) {
+        for (auto& c : centers) {
+            // connect right neighbor
+            Vec2 right = {c.x + spacing, c.y};
+            if (std::find(centers.begin(), centers.end(), right) != centers.end()) {
+                if ( (y >= std::min(c.y, right.y) - 2 && y <= std::max(c.y, right.y) + 2) &&
+                     (x >= std::min(c.x, right.x) && x <= std::max(c.x, right.x)) ) {
+                    return true;
+                }
+            }
+            // connect down neighbor
+            Vec2 down = {c.x, c.y + spacing};
+            if (std::find(centers.begin(), centers.end(), down) != centers.end()) {
+                if ( (x >= std::min(c.x, down.x) - 2 && x <= std::max(c.x, down.x) + 2) &&
+                     (y >= std::min(c.y, down.y) && y <= std::max(c.y, down.y)) ) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+
+    auto tileCallback = [&](int x, int y) {
+        if (isInsideRoom(x, y) || isInCorridor(x, y)) {
+            if (rand() % 100 < 5) {
+                TileDef unknown = assetLoader.cloneTilePrefab("UnknownTile");
+                worldLayer.insert(m_world, bodyId, {x, y}, tm, unknown);
+            } else {
+                TileDef stone = assetLoader.cloneTilePrefab("StoneFloorTile");
+                worldLayer.insert(m_world, bodyId, {x, y}, tm, stone);
+            }
         } else {
-          TileDef stone = assetLoader.cloneTilePrefab("StoneFloorTile");
+          TileDef stone = assetLoader.cloneTilePrefab("PermaHighStoneTile");
           worldLayer.insert(m_world, bodyId, {x, y}, tm, stone);
         }
-      };
+    };
 
-      callInGrid(-37, -37, 37, 37, tileCallback);
-    }
+    // Scan enough area to cover all rooms + corridors
+    int bound = gridSize * spacing / 2 + roomRadius + 5;
+    callInGrid(-bound, -bound, bound, bound, tileCallback);
+}
+
+    Entity e = m_world.create();
+    e.add<OwnedBy<PlayState>>();
+    e.add<TransformComponent>();
+    e.add<SpawnerComponent>();
+
+    auto spawner = e.get<SpawnerComponent>();
+    spawner->spawn = assetLoader.getPrefab("BasicZombie");
+    spawner->spawnableRadius = 5.0f;
+    spawner->spawnCount = 50;
+    spawner->spawnRate = 5.0f;
+    spawner->timeSinceLastSpawn = 20.0f;
   }
 
   void onTick(u32 tick, float deltaTime) override {
@@ -173,8 +236,7 @@ public:
     m_activeBodiesText->setText("Active Rigid Bodies: " + std::to_string(activeBodies));
     int count = 0;
     auto eIt = m_world.getWith(
-        m_world.set<LifetimeComponent, HealthComponent, ContactDamageComponent, BodyComponent,
-                    SubmitToCollisionQueueComponent, CircleRenderComponent, TransformComponent>());
+        m_world.set<LifetimeComponent, HealthComponent, ContactDamageComponent, BodyComponent, CircleRenderComponent, TransformComponent>());
     while (eIt.hasNext()) {
       eIt.next();
       count++;

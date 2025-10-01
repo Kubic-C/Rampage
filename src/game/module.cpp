@@ -40,7 +40,9 @@ int GameModule::onLoad() {
   registerGameComponents(world);
 
   auto& pipeline = m_host->getPipeline();
-  pipeline.createGroup<GameGroup>(60).createStage<GameGroup::TickStage>();
+  pipeline.createGroup<GameGroup>(60)
+    .createStage<GameGroup::TickStage>()
+    .createStage<GameGroup::PostTickStage>();
 
   Entity camera = world.create();
   camera.add<TransformComponent>();

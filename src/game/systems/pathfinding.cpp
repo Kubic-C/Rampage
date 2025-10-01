@@ -4,7 +4,7 @@
 
 #include "../components/arrow.hpp"
 #include "../components/body.hpp"
-#include "../components/collisionQueue.hpp"
+#include "../components/collisionEvent.hpp"
 #include "../components/health.hpp"
 #include "../components/tilemap.hpp"
 #include "../components/worldMap.hpp"
@@ -12,11 +12,8 @@
 RAMPAGE_START
 
 struct PathfindingContext {
-  PathfindingContext(EntityWorld& world) : collisionQueue(world.create()) {}
-
   u32 currentGeneration = 1;
   glm::i16vec2 oldTarget = {0, 0};
-  Entity collisionQueue;
 };
 
 constexpr std::array<glm::i16vec2, 8> directions = {
@@ -112,23 +109,6 @@ int updatePathfinding(EntityWorld& world, float deltaTime) {
   if (map.isNull())
     return 0;
 
-  auto queue = context.collisionQueue.get<CollisionQueueComponent>();
-  for (CollisionQueueComponent::Collision& collision : queue->queue) {
-    if (!world.isAlive(collision.primary))
-      continue;
-    Entity enemy = world.get(collision.primary);
-    if (!world.isAlive(collision.secondary))
-      continue;
-    Entity other = world.get(collision.secondary);
-    if (!other.has<HealthComponent>() || other.has<SeekPrimaryTargetTag>())
-      continue;
-
-    RefT<HealthComponent> health = other.get<HealthComponent>();
-    RefT<ContactDamageComponent> damage = enemy.get<ContactDamageComponent>();
-    health->health -= damage->damage;
-  }
-  queue->queue.clear();
-
   updateFlowField(world, map, context);
 
   RefT<TransformComponent> mapTransform = map.get<TransformComponent>();
@@ -153,24 +133,31 @@ int updatePathfinding(EntityWorld& world, float deltaTime) {
   return 0;
 }
 
-void setCollisionQueueOfContactDamageEntity(Entity e) {
-  auto& context = e.world().getContext<PathfindingContext>();
+void observeContactDamageCollision(Entity enemy) {
+  auto& world = enemy.world();
+  auto collisionData = enemy.get<LastCollisionData>();
 
-  e.add<SubmitToCollisionQueueComponent>();
-  RefT<SubmitToCollisionQueueComponent> queue = e.get<SubmitToCollisionQueueComponent>();
-  queue->queue = context.collisionQueue;
+
+  Entity other = world.get(collisionData->other);
+  if (!other.has<HealthComponent>() || other.has<ContactDamageComponent>())
+    return;
+
+  auto damage = enemy.get<ContactDamageComponent>();
+  auto health = other.get<HealthComponent>();
+  health->health -= damage->damage;
+
+  printf("Damaged something\n");
 }
 
 void loadPathfindingSystems(IHost& host) {
   Pipeline& pipeline = host.getPipeline();
   EntityWorld& world = host.getWorld();
 
-  world.addContext<PathfindingContext>(world);
+  world.addContext<PathfindingContext>();
   auto& context = world.getContext<PathfindingContext>();
-  context.collisionQueue.add<CollisionQueueComponent>();
 
-  world.observe<ComponentAdded>(world.component<ContactDamageComponent>(),
-                world.set<EntityWorld::Enabled>(), setCollisionQueueOfContactDamageEntity);
+  world.observe<OnCollisionBeginEvent>(world.component<LastCollisionData>(),
+                world.set<ContactDamageComponent>(), observeContactDamageCollision);
 
   pipeline.getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(updatePathfinding);
 }
