@@ -8,7 +8,7 @@ struct EventData {
     bool hold = false;
   };
 
-  std::vector<SDL_Event> polledEvents;
+  EntityId sdlEventEntity;
   bool signalResized = false;
   Vec2 windowSize;
 
@@ -16,16 +16,9 @@ struct EventData {
   std::array<KeyData, SDL_SCANCODE_COUNT> keys;
 };
 
-int EventModule::onLoad() {
-  EntityWorld& world = m_host->getWorld();
-
-  world.addContext<EventData>();
-
-  return 0;
-}
-
-int EventModule::onUpdate() {
-  auto& eventData = m_host->getWorld().getContext<EventData>();
+int handleWindowEvents(IHost& host, float dt) {
+  EntityWorld& world = host.getWorld();
+  auto& eventData = host.getWorld().getContext<EventData>();
 
   eventData.signalResized = false;
 
@@ -36,11 +29,13 @@ int EventModule::onUpdate() {
 
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
-    eventData.polledEvents.push_back(event);
+    Entity sdlEventEntity = world.get(eventData.sdlEventEntity);
+    *sdlEventEntity.get<SDL_Event>() = event;
+    world.emit<SDL_Event>(sdlEventEntity, world.component<SDL_Event>());
 
-    switch ((Event)event.type) {
+    switch (static_cast<Event>(event.type)) {
     case Event::Quit:
-      m_host->exit();
+      host.exit();
       break;
     case Event::WindowResized:
       eventData.signalResized = true;
@@ -57,10 +52,28 @@ int EventModule::onUpdate() {
       break;
     default:
       break;
-      ;
     }
   }
 
+  return 0;
+}
+
+int EventModule::onLoad() {
+  EntityWorld& world = m_host->getWorld();
+
+  world.addContext<EventData>();
+  auto& eventData = world.getContext<EventData>();
+
+  Entity entity = world.create();
+  entity.add<SDL_Event>();
+  eventData.sdlEventEntity = entity;
+
+  m_host->getPipeline().getGroup<GameGroup>().attachToStage<GameGroup::PreTickStage>(handleWindowEvents);
+
+  return 0;
+}
+
+int EventModule::onUpdate() {
   return 0;
 }
 
@@ -94,18 +107,6 @@ Vec2 EventModule::getMouseCoords() const {
   SDL_GetMouseState(&x, &y);
 
   return Vec2(x, y);
-}
-
-NODISCARD const std::vector<SDL_Event>& EventModule::getPolledEvents() const {
-  auto& eventData = m_host->getWorld().getContext<EventData>();
-
-  return eventData.polledEvents;
-}
-
-void EventModule::clearPolledEvents() {
-  auto& eventData = m_host->getWorld().getContext<EventData>();
-
-  eventData.polledEvents.clear();
 }
 
 RAMPAGE_END

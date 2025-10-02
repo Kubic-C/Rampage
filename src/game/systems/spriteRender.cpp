@@ -346,8 +346,6 @@ bool loadSpriteRender(IHost& host) {
   // Render System
   pipeline.getGroup<RenderGroup>().attachToStage<RenderGroup::OnRenderStage>(renderSprites);
 
-  host.log("Successfully Created the Sprite Renderer!\n");
-
   return true;
 }
 

@@ -13,26 +13,23 @@ int renderGui(EntityWorld& world, float deltaTime) {
   return 0;
 }
 
-int updateGui(EntityWorld& world, float deltaTime) {
-  auto& eventMgr = world.getContext<EventModule>();
+int observeSdlEvent(Entity sdlEventEntity) {
+  EntityWorld& world = sdlEventEntity.world();
   auto& gui = world.getContext<tgui::Gui>();
+  auto sdlEvent = sdlEventEntity.get<SDL_Event>();
 
-  const std::vector<SDL_Event>& polledEvents = eventMgr.getPolledEvents();
-  for (const SDL_Event& event : polledEvents) {
-    gui.handleEvent(event);
-  }
-
-  eventMgr.clearPolledEvents();
+  gui.handleEvent(*sdlEvent);
 
   return 0;
 }
 
 void loadGuiSystems(IHost& host) {
+  EntityWorld& world = host.getWorld();
   Pipeline& pipeline = host.getPipeline();
 
   pipeline.getGroup<RenderGroup>().attachToStage<RenderGroup::OnGUIRenderStage>(renderGui);
 
-  pipeline.getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(updateGui);
+  world.observe<SDL_Event>(world.component<SDL_Event>(), {}, observeSdlEvent);
 }
 
 RAMPAGE_END

@@ -24,6 +24,13 @@ int CoreModule::onLoad() {
 
   world.component<TransformComponent>();
 
+
+  auto& pipeline = m_host->getPipeline();
+  pipeline.createGroup<GameGroup>(60)
+    .createStage<GameGroup::PreTickStage>()
+    .createStage<GameGroup::TickStage>()
+    .createStage<GameGroup::PostTickStage>();
+
   return 0;
 }
 

@@ -137,7 +137,6 @@ void observeContactDamageCollision(Entity enemy) {
   auto& world = enemy.world();
   auto collisionData = enemy.get<LastCollisionData>();
 
-
   Entity other = world.get(collisionData->other);
   if (!other.has<HealthComponent>() || other.has<ContactDamageComponent>())
     return;
@@ -145,8 +144,6 @@ void observeContactDamageCollision(Entity enemy) {
   auto damage = enemy.get<ContactDamageComponent>();
   auto health = other.get<HealthComponent>();
   health->health -= damage->damage;
-
-  printf("Damaged something\n");
 }
 
 void loadPathfindingSystems(IHost& host) {

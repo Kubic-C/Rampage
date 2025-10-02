@@ -219,10 +219,10 @@ public:
 
     auto spawner = e.get<SpawnerComponent>();
     spawner->spawn = assetLoader.getPrefab("BasicZombie");
-    spawner->spawnableRadius = 5.0f;
-    spawner->spawnCount = 50;
-    spawner->spawnRate = 5.0f;
-    spawner->timeSinceLastSpawn = 20.0f;
+    spawner->spawnableRadius = 2.5f;
+    spawner->spawnCount = 100;
+    spawner->spawnRate = 0.5f;
+    spawner->timeSinceLastSpawn = 25.0f;
   }
 
   void onTick(u32 tick, float deltaTime) override {

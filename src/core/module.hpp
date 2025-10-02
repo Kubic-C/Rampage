@@ -7,6 +7,18 @@
 
 RAMPAGE_START
 
+struct GameGroup {
+  // A physics steps happens every tick, before the TickStage but after the PreTickStage.
+
+  // Window events handled here.
+  struct PreTickStage {};
+  // *Physics Stages*
+  // When most game systems will be executed
+  struct TickStage {};
+  // Call systems that remove entities here.
+  struct PostTickStage {};
+};
+
 class CoreModule final : public IStaticModule {
 public:
   std::vector<std::type_index> getDependencies() override {

@@ -39,11 +39,6 @@ int GameModule::onLoad() {
 
   registerGameComponents(world);
 
-  auto& pipeline = m_host->getPipeline();
-  pipeline.createGroup<GameGroup>(60)
-    .createStage<GameGroup::TickStage>()
-    .createStage<GameGroup::PostTickStage>();
-
   Entity camera = world.create();
   camera.add<TransformComponent>();
   camera.add<CameraComponent>();
@@ -66,19 +61,6 @@ int GameModule::onLoad() {
   auto& loader = world.getContext<AssetLoader>();
   loader.loadAssets("./res/root.json");
 
-  {
-    TextureMap3DComponent& texMap = *textureMap.get<TextureMap3DComponent>();
-
-    Entity entity = world.create();
-    entity.add<TransformComponent>();
-    entity.add<SpriteComponent>();
-    entity.add<SpriteIndependentTag>();
-
-    auto sprite = entity.get<SpriteComponent>();
-    SpriteComponent::SubSprite& subSprite = sprite->subSprites.emplace_back().emplace_back();
-    subSprite.addLayer(texMap.getSprite("zombie"), Vec2(0, 0), 0, WorldLayer::Top);
-  }
-
   loadTilemapSystems(*m_host);
   loadSpawnerSystems(*m_host);
   loadPhysicsSystems(*m_host, 4);
@@ -95,7 +77,7 @@ int GameModule::onLoad() {
   stateMgr.createState<MenuState>("MenuState", world);
   stateMgr.enableState("MenuState");
 
-  pipeline.getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(tickState);
+  m_host->getPipeline().getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(tickState);
 
   return 0;
 }

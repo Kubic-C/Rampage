@@ -10,7 +10,7 @@ RAMPAGE_START
 class EventModule final : public IStaticModule {
 public:
   std::vector<std::type_index> getDependencies() override {
-    return {typeid(LogModule), typeid(RenderModule)};
+    return {typeid(LogModule), typeid(RenderModule), typeid(CoreModule)};
   }
 
   explicit EventModule(IHost& host) : IStaticModule("EventModule", host) {}
@@ -20,8 +20,6 @@ public:
   NODISCARD bool hasWindowResized() const;
   NODISCARD glm::vec2 getWindowSize() const;
   NODISCARD Vec2 getMouseCoords() const;
-  NODISCARD const std::vector<SDL_Event>& getPolledEvents() const;
-  void clearPolledEvents();
 
 public:
   int onLoad() override;

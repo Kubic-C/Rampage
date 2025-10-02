@@ -1,5 +1,6 @@
 #include "module.hpp"
 
+#include "../event/module.hpp"
 #include "camera.hpp"
 #include "opengl/opengl.hpp"
 #include "stb_image.h"
@@ -19,9 +20,7 @@ static void setNecessaryGLAttributes() {
 
 int clearWindow(EntityWorld& world, float dt) {
   auto render = world.getContext<RenderModule>();
-  auto size = render.getWindowSize();
 
-  glViewport(0, 0, size.x, size.y);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   return 0;
 }
@@ -30,6 +29,19 @@ int swapBuffers(EntityWorld& world, float dt) {
   auto window = world.getContext<SDL_Window*>();
 
   return SDL_GL_SwapWindow(window);
+}
+
+void observeResizeEvent(Entity sdlEventEntity) {
+  EntityWorld& world = sdlEventEntity.world();
+  auto sdlEvent = sdlEventEntity.get<SDL_Event>();
+
+  switch (static_cast<Event>(sdlEvent->type)) {
+  case Event::WindowResized:
+    glViewport(0, 0, sdlEvent->window.data1, sdlEvent->window.data2);
+    break;
+  default:
+    break;
+  }
 }
 
 int RenderModule::onLoad() {
@@ -94,6 +106,8 @@ int RenderModule::onLoad() {
 
   group.attachToStage<RenderGroup::ClearWindowStage>(clearWindow);
   group.attachToStage<RenderGroup::SwapBuffersStage>(swapBuffers);
+
+  world.observe<SDL_Event>(world.component<SDL_Event>(), {}, observeResizeEvent);
 
   enableVsync(false);
 
