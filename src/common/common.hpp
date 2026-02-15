@@ -4,3 +4,4 @@
 #include "hashes.hpp"
 #include "math.hpp"
 #include "pipeline.hpp"
+#include "schema/rampage.capnp.h"

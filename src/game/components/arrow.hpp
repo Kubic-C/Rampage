@@ -5,6 +5,28 @@
 RAMPAGE_START
 
 struct ArrowComponent {
+  static void serialize(capnp::MessageBuilder& builder, Ref component) {
+    auto arrowBuilder = builder.initRoot<Schema::Arrow>();
+    auto arrow = component.cast<ArrowComponent>();
+
+    arrowBuilder.getDir().setX(arrow->dir.x);
+    arrowBuilder.getDir().setY(arrow->dir.y);
+    arrowBuilder.setCost(arrow->cost);
+    arrowBuilder.setGeneration(arrow->generation);
+    arrowBuilder.setTileCost(arrow->tileCost);
+  }
+
+  static void deserialize(capnp::MessageReader& reader, Ref component) {
+    auto arrowReader = reader.getRoot<Schema::Arrow>();
+    auto arrow = component.cast<ArrowComponent>();
+
+    arrow->dir.x       = arrowReader.getDir().getX();
+    arrow->dir.y       = arrowReader.getDir().getY();
+    arrow->cost        = arrowReader.getCost();
+    arrow->generation  = arrowReader.getGeneration();
+    arrow->tileCost    = arrowReader.getTileCost();
+  }
+
   // Normalized vector
   // points up, down, left, or right
   Vec2 dir = {1.0f, 0.0f};

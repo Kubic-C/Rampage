@@ -299,7 +299,6 @@ ComponentId EntityWorld::component(const std::string_view& name) {
 
   if constexpr (SerializableComponent<T>) {
     registerSerializable(compId,  T::serialize, T::deserialize);
-    std::cout << "Autoserialized a comp: " << m_componentNames[compId] << '\n';
   }
 
   return compId;

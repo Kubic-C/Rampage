@@ -16,7 +16,7 @@ struct ItemAttrStackCost {
 };
 
 struct ItemAttrIcon {
-  tgui::Texture icon;
+  tgui::Texture icon; 
 };
 
 struct ItemAttrUnique {
