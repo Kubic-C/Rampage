@@ -1,0 +1,89 @@
+Rampage: Outline and Development
+
+Rampage serves firstly as a game, and secondly as a prototype for Over The Ether.
+Rampage is a 2D top-down strategy zombie game. Players harvest resources and try
+their best to fight off the invading hordes. This is not a rogue-like so players
+should be able to save the game and play previous saves.
+
+= Typical Play Cycle:
+
+Intro: Players will start off with a few bare resources to get themselves
+started. This may include 1 turret with a few basic terrain harvesters.
+
+1. Collect and process resources from the local terrain. 
+
+2. Used processed resources to construct defenses or R&D, including repairs.
+
+3. Fight off the invading horde.
+
+4. Repeat.
+
+Ideas:
+
+Add a research tree that players can use by putting down
+special research buildings, unlocking more powerful tech.
+
+= Modularity:
+
+	Rampage, and by extension, Over The Ether, are at its core meant to be highly easy-to-mod games.
+If there is one thing that helps keep a game alive, its by allowing its players to mod the game.
+Based on the fact that Rampage is made in C++, adding mod support will allow modders to create
+visually and physically complicated scenes but not hinder performance in any way.
+
+= Engine:
+
+	The Rampage engine is ECS oriented. Meaning mostly everything in the game will have an ID.
+Obviously, assigning everything an ID does not necessarily constitute efficiency or flexibility,
+so for more rigid data types, or once instantiated data types, the ECS world also contains contexts.
+Contexts are data types that are singletons. You may access them simply by just knowing their data type.
+Being that they are singletons, there is only one per application execution. For sake of reading comprehension,
+this idea will be shortened to ECSC, or Entity Component Systems with Contexts (ECSC)
+
+	The only other drastic change to the typical ECS approach is that fact that component registration and 
+systems execution is grouped together in something called modules. Modules group components and systems
+that directly interact with each other all under one. E.g. transform, rigid body, and collision queue components
+are all under the Physics Module. This paradigm was brought on to help streamline development by 
+organizing similar code together. Modules are not just a data type, but they are full blown objects.
+They can also be accessed much like a context, with the catch being they have a designated .run()
+method that is ran once per world frame. Modules may be disabled, thus disabling .run(). This will not, 
+however, prevent their data from being accessed. I love abbreviations and acronyms:
+Entity Component System with Contexts and Modules (ECSCM)
+
+Serialization...
+
+	The most complicated part is yet to come, that being is serialization. Serialization is something
+I have struggled with as a developer, for quite literally almost years, especially when it comes
+to developing reliable multiplayer protocols that can handle the type of physics interactions that
+Rampage and Over The Ether can violently induce.
+
+	One thing I've slowly realized is that while untyped serialization 
+*can be fine* unless you know exactly what your multiplayer protocol and message layout is going to be,
+the struggle of trying to figure out why all of your incoming or outgoing messages look like garbo
+for hours has made realize that untyped serialization may not be as cool as I thought.
+It looks cool, it looks fast, but there is a catch. There is always a catch. At first its quick and
+fast and bing bada boom, youve already got simple chat system going on, but when these systems
+expand or you add new ones, rather than being a benefit, untyped serialization actually becomes
+a pain. Anyways, cutting to the chase, Rampage will be using typed serialization. Its better
+and causes less tech debt. 
+
+	Serializing entities means serializing their components and then attaching that data to a number.
+Serializing game state is more than just their entities, its also the data contained within contexts and 
+modules that matters as well. So when loading serialized data in we must look also look at what modules 
+and context were loaded in as well. Fortunately this is pretty straightforward due to the fact we are 
+using typed serialization approach paired with an ECSCM approach.
+
+Entities
+  |- Components
+Modules
+Contexts
+
+
+
+
+
+
+
+
+
+
+
