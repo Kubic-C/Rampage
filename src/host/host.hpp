@@ -79,7 +79,7 @@ private:
   Status m_status;
   volatile bool m_exit = false;
 
-  std::unique_ptr<EntityWorld> m_world;
+  std::unique_ptr<EntityWorldSerializable> m_world;
   HostFuncs m_funcs;
   Pipeline m_pipeline;
 

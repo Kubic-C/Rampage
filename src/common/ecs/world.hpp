@@ -5,6 +5,7 @@
 #include "componentSet.hpp"
 #include "pool.hpp"
 #include "staticId.hpp"
+#include "capnp/message.h"
 
 RAMPAGE_START
 
@@ -12,9 +13,19 @@ class Ref;
 class Entity;
 class System;
 class IHost;
+class EntityWorldSerializable;
 
 struct ComponentAddedEvent {};
 struct ComponentRemovedEvent {};
+
+template<typename T>
+concept SerializableComponent =
+    requires(T t, capnp::MessageBuilder& builder, capnp::MessageReader& reader, Ref component) {
+        T::serialize(builder, component);
+        T::deserialize(reader, component);
+    };
+using SerializeFunc = void (*)(capnp::MessageBuilder& builder, Ref component);
+using DeserializeFunc = void (*)(capnp::MessageReader& reader, Ref component);
 
 class EntityWorld {
   friend class Entity;
@@ -203,6 +214,8 @@ protected:
   const ComponentSet* getEntitySet(EntityId id);
   void addToSuperSets(const ComponentSet* baseSet);
 
+  virtual void registerSerializable(ComponentId compId, SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) {}
+
 protected:
   IHost& m_host;
 
@@ -283,6 +296,11 @@ ComponentId EntityWorld::component(const std::string_view& name) {
 
   // Necessary for modules.
   findOrCreateSet(set<Enabled, T>());
+
+  if constexpr (SerializableComponent<T>) {
+    registerSerializable(compId,  T::serialize, T::deserialize);
+    std::cout << "Autoserialized a comp: " << m_componentNames[compId] << '\n';
+  }
 
   return compId;
 }

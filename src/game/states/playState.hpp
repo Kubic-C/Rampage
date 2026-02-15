@@ -120,7 +120,7 @@ public:
     b2CreatePolygonShape(bodyId, &shapeDef, &rect);
 
     RefT<TransformComponent> playerTransform = player.get<TransformComponent>();
-    playerTransform->pos = Vec2(0.0f, 15.0f);
+    playerTransform->pos = Vec2(0.0f, 0.0f);
 
     /* WorldMap & Tilemap Component */
 
@@ -147,8 +147,8 @@ public:
     Tilemap& worldLayer = tilemapLayers->getTilemap(TilemapWorldLayer);
 
     const int gridSize = 3;
-    const int roomRadius = 12;
-    const int spacing = 25; // distance between room centers
+    const int roomRadius = 6;
+    const int spacing = 13; // distance between room centers
 
     // Precompute room centers
     std::vector<Vec2> centers;

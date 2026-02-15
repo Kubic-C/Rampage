@@ -3,6 +3,8 @@
 #include "capnp/pretty-print.h"
 #include "capnp/serialize-packed.h"
 
+#include "../ihost.hpp"
+
 RAMPAGE_START
 
 void EntityWorldSerializable::registerSerializable(ComponentId compId, SerializeFunc serializeFunc,
@@ -17,6 +19,8 @@ void EntityWorldSerializable::registerSerializable(ComponentId compId, Serialize
 }
 
 bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) {
+  std::set<std::string> nameOfComponentsNotSerializable;
+
   FILE* file;
   errno_t error = fopen_s(&file, path, "wb");
   if (error != 0)
@@ -60,14 +64,12 @@ bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) 
       ComponentId compId = compIds[i];
       capnp::MallocMessageBuilder compBuilderMsg(m_scratchBuffer);
 
-      if (compId >= m_componentSerializeFuncs.size())
+      if (compId >= m_componentSerializeFuncs.size() || !m_componentSerializeFuncs[compId]) {
+        nameOfComponentsNotSerializable.insert(m_componentNames[compId]);
         continue;
+      }
 
-      // Serialize what we can.
-      if (m_componentSerializeFuncs[compId])
-        m_componentSerializeFuncs[compId](compBuilderMsg, e.get(compId));
-      else
-        compBuilderMsg.initRoot<Schema::Void>();
+      m_componentSerializeFuncs[compId](compBuilderMsg, e.get(compId));
 
       scratchCompStream.clear();
       capnp::writePackedMessage(scratchCompStream, compBuilderMsg);
@@ -79,6 +81,11 @@ bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) 
 
   capnp::writePackedMessageToFd(_fileno(file), msg);
   fclose(file);
+
+  m_host.log("List of components wo/ serializable\n");
+  for(auto& name : nameOfComponentsNotSerializable) {
+    m_host.log("\t%s\n", name.c_str());
+  }
 
   return true;
 }

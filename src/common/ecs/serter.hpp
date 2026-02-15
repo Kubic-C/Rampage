@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../schema/rampage.capnp.h"
-#include "capnp/message.h"
 #include "entity.hpp"
 #include "ref.hpp"
 
@@ -24,21 +23,20 @@ public:
 
   ~EntityWorldSerializable() override = default;
 
-  using SerializeFunc = void (*)(capnp::MessageBuilder& builder, Ref component);
-  using DeserializeFunc = void (*)(capnp::MessageReader& reader, Ref component);
-
-  // Registers a serializable type, using its static methods: serialize and deserialize
-  template <typename T>
+  // Registers/overides a serializable type, using its static methods: serialize and deserialize
+  template <SerializableComponent T>
   void registerSerializable() {
     registerSerializable(component<T>(), T::serialize, T::deserialize);
   }
 
+  // Registers/overides a serializable type's serialize/deserialize functions
   template <typename T>
   void registerSerializable(SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) {
     registerSerializable(component<T>(), serializeFunc, deserializeFunc);
   }
 
-  void registerSerializable(ComponentId compId, SerializeFunc serializeFunc, DeserializeFunc deserializeFunc);
+  // Registers/overides a serializable type's serialize/deserialize functions
+  void registerSerializable(ComponentId compId, SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) override;
 
   // Saves the current state of serializable data with a particular set to a file.
   bool saveState(const char* path, ComponentSet saveSet);

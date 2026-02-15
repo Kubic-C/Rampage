@@ -90,7 +90,7 @@ void registerStatsSystems(Pipeline& pipeline) {
   });
 }
 
-Host::Host() : m_status(Status::Ok), m_world(std::make_unique<EntityWorld>(*this)) {
+Host::Host() : m_status(Status::Ok), m_world(std::make_unique<EntityWorldSerializable>(*this)) {
   addModule<CoreModule>();
   addModule<LogModule>();
   addModule<RenderModule>();
