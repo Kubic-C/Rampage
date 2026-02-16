@@ -22,17 +22,17 @@ CAPNP_DECLARE_SCHEMA(a9e6ab088fb12bd3);
 CAPNP_DECLARE_SCHEMA(aa4969aafed57949);
 CAPNP_DECLARE_SCHEMA(b6b875d105f93bc2);
 CAPNP_DECLARE_SCHEMA(b286d739864eb1fd);
-CAPNP_DECLARE_SCHEMA(e262e5b439742cac);
-CAPNP_DECLARE_SCHEMA(9ad0142b9d85d6e0);
-CAPNP_DECLARE_SCHEMA(a43d69d95be7ce94);
+CAPNP_DECLARE_SCHEMA(c20fe7c807d7fb38);
+CAPNP_DECLARE_SCHEMA(cc42a9ba24c41f74);
+CAPNP_DECLARE_SCHEMA(86afb0eb4584dca5);
 CAPNP_DECLARE_SCHEMA(cb637bd845811715);
-CAPNP_DECLARE_SCHEMA(d73143037744b2ce);
+CAPNP_DECLARE_SCHEMA(e16a16b21eaf8301);
 CAPNP_DECLARE_SCHEMA(8aca00a572816934);
 CAPNP_DECLARE_SCHEMA(a6300e38d3b75a9e);
-CAPNP_DECLARE_SCHEMA(fbd69c9d2388e85d);
-CAPNP_DECLARE_SCHEMA(aa2b87e9c7c133fa);
-CAPNP_DECLARE_SCHEMA(a1350533aa2fb15c);
-CAPNP_DECLARE_SCHEMA(d81d075844993a48);
+CAPNP_DECLARE_SCHEMA(f4ef1ba59d753bf2);
+CAPNP_DECLARE_SCHEMA(a1f425f276ceb783);
+CAPNP_DECLARE_SCHEMA(9a0373c1c07c8a36);
+CAPNP_DECLARE_SCHEMA(c7ba077f3a6b39a4);
 CAPNP_DECLARE_SCHEMA(e4467db5109b421d);
 CAPNP_DECLARE_SCHEMA(bb270f698d8ef5ea);
 enum class WorldLayer_bb270f698d8ef5ea: uint16_t {
@@ -54,7 +54,24 @@ CAPNP_DECLARE_SCHEMA(cfdafdaad5258332);
 CAPNP_DECLARE_SCHEMA(d1e456c2ce05147e);
 CAPNP_DECLARE_SCHEMA(92563ae6a8094bd1);
 CAPNP_DECLARE_SCHEMA(86a8c3d9ff302653);
+CAPNP_DECLARE_SCHEMA(8a3987ea0b5f8f3e);
 CAPNP_DECLARE_SCHEMA(db1f0b9bc360eb5f);
+CAPNP_DECLARE_SCHEMA(a9e753408edb6a57);
+CAPNP_DECLARE_SCHEMA(d8aee0453808ccb1);
+CAPNP_DECLARE_SCHEMA(d66669bddde3f408);
+CAPNP_DECLARE_SCHEMA(f87492e4c583cb01);
+CAPNP_DECLARE_SCHEMA(9b2b92dbd81d29e8);
+CAPNP_DECLARE_SCHEMA(d7b7fdfefb3cffb6);
+CAPNP_DECLARE_SCHEMA(bffa95aa01269f58);
+enum class BodyType_bffa95aa01269f58: uint16_t {
+  STATIC_BODY,
+  KINEMATIC_BODY,
+  DYNAMIC_BODY,
+  INVALID,
+};
+CAPNP_DECLARE_ENUM(BodyType, bffa95aa01269f58);
+CAPNP_DECLARE_SCHEMA(fbbdb9955f4ced70);
+CAPNP_DECLARE_SCHEMA(d818c0a9c8e5cea6);
 CAPNP_DECLARE_SCHEMA(eed9d9743adb7221);
 CAPNP_DECLARE_SCHEMA(c8d41821c1f3f50a);
 CAPNP_DECLARE_SCHEMA(e9a986a1c0f08f71);
@@ -125,45 +142,45 @@ struct Vec2I16 {
   };
 };
 
-struct Transform {
-  Transform() = delete;
+struct TransformComponent {
+  TransformComponent() = delete;
 
   class Reader;
   class Builder;
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(e262e5b439742cac, 1, 1)
+    CAPNP_DECLARE_STRUCT_HEADER(c20fe7c807d7fb38, 1, 1)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
   };
 };
 
-struct Camera {
-  Camera() = delete;
+struct CameraComponent {
+  CameraComponent() = delete;
 
   class Reader;
   class Builder;
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(9ad0142b9d85d6e0, 1, 0)
+    CAPNP_DECLARE_STRUCT_HEADER(cc42a9ba24c41f74, 1, 0)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
   };
 };
 
-struct Arrow {
-  Arrow() = delete;
+struct ArrowComponent {
+  ArrowComponent() = delete;
 
   class Reader;
   class Builder;
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(a43d69d95be7ce94, 2, 1)
+    CAPNP_DECLARE_STRUCT_HEADER(86afb0eb4584dca5, 2, 1)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -185,15 +202,15 @@ struct ItemStack {
   };
 };
 
-struct Inventory {
-  Inventory() = delete;
+struct InventoryData {
+  InventoryData() = delete;
 
   class Reader;
   class Builder;
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(d73143037744b2ce, 1, 2)
+    CAPNP_DECLARE_STRUCT_HEADER(e16a16b21eaf8301, 1, 2)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -230,60 +247,60 @@ struct ItemAttrStackCost {
   };
 };
 
-struct ItemAttrTile {
-  ItemAttrTile() = delete;
+struct ItemAttrTileComponent {
+  ItemAttrTileComponent() = delete;
 
   class Reader;
   class Builder;
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(fbd69c9d2388e85d, 1, 0)
+    CAPNP_DECLARE_STRUCT_HEADER(f4ef1ba59d753bf2, 1, 0)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
   };
 };
 
-struct Player {
-  Player() = delete;
+struct PlayerComponent {
+  PlayerComponent() = delete;
 
   class Reader;
   class Builder;
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(aa2b87e9c7c133fa, 1, 1)
+    CAPNP_DECLARE_STRUCT_HEADER(a1f425f276ceb783, 1, 1)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
   };
 };
 
-struct CircleRender {
-  CircleRender() = delete;
+struct CircleRenderComponent {
+  CircleRenderComponent() = delete;
 
   class Reader;
   class Builder;
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(a1350533aa2fb15c, 1, 2)
+    CAPNP_DECLARE_STRUCT_HEADER(9a0373c1c07c8a36, 1, 2)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
   };
 };
 
-struct RectangleRender {
-  RectangleRender() = delete;
+struct RectangleRenderComponent {
+  RectangleRenderComponent() = delete;
 
   class Reader;
   class Builder;
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(d81d075844993a48, 2, 1)
+    CAPNP_DECLARE_STRUCT_HEADER(c7ba077f3a6b39a4, 2, 1)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -412,6 +429,21 @@ struct Tile {
   };
 };
 
+struct Tilemap {
+  Tilemap() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(8a3987ea0b5f8f3e, 1, 1)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
 struct TilemapComponent {
   TilemapComponent() = delete;
 
@@ -420,7 +452,133 @@ struct TilemapComponent {
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(db1f0b9bc360eb5f, 1, 1)
+    CAPNP_DECLARE_STRUCT_HEADER(db1f0b9bc360eb5f, 0, 1)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct SurfaceMaterial {
+  SurfaceMaterial() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(a9e753408edb6a57, 3, 0)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct Filter {
+  Filter() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(d8aee0453808ccb1, 3, 0)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct Circle {
+  Circle() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(d66669bddde3f408, 1, 0)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct Polygon {
+  Polygon() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(f87492e4c583cb01, 1, 3)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct Shape {
+  Shape() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+  enum Which: uint16_t {
+    CIRCLE,
+    POLYGON,
+  };
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(9b2b92dbd81d29e8, 1, 2)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct ShapeDef {
+  ShapeDef() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(d7b7fdfefb3cffb6, 1, 2)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+typedef ::capnp::schemas::BodyType_bffa95aa01269f58 BodyType;
+
+struct Body {
+  Body() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(fbbdb9955f4ced70, 3, 2)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct BodyComponent {
+  BodyComponent() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(d818c0a9c8e5cea6, 0, 1)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -818,9 +976,9 @@ private:
 };
 #endif  // !CAPNP_LITE
 
-class Transform::Reader {
+class TransformComponent::Reader {
 public:
-  typedef Transform Reads;
+  typedef TransformComponent Reads;
 
   Reader() = default;
   inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
@@ -852,9 +1010,9 @@ private:
   friend class ::capnp::Orphanage;
 };
 
-class Transform::Builder {
+class TransformComponent::Builder {
 public:
-  typedef Transform Builds;
+  typedef TransformComponent Builds;
 
   Builder() = delete;  // Deleted to discourage incorrect usage.
                        // You can explicitly initialize to nullptr instead.
@@ -888,9 +1046,9 @@ private:
 };
 
 #if !CAPNP_LITE
-class Transform::Pipeline {
+class TransformComponent::Pipeline {
 public:
-  typedef Transform Pipelines;
+  typedef TransformComponent Pipelines;
 
   inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
@@ -905,9 +1063,9 @@ private:
 };
 #endif  // !CAPNP_LITE
 
-class Camera::Reader {
+class CameraComponent::Reader {
 public:
-  typedef Camera Reads;
+  typedef CameraComponent Reads;
 
   Reader() = default;
   inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
@@ -938,9 +1096,9 @@ private:
   friend class ::capnp::Orphanage;
 };
 
-class Camera::Builder {
+class CameraComponent::Builder {
 public:
-  typedef Camera Builds;
+  typedef CameraComponent Builds;
 
   Builder() = delete;  // Deleted to discourage incorrect usage.
                        // You can explicitly initialize to nullptr instead.
@@ -970,9 +1128,9 @@ private:
 };
 
 #if !CAPNP_LITE
-class Camera::Pipeline {
+class CameraComponent::Pipeline {
 public:
-  typedef Camera Pipelines;
+  typedef CameraComponent Pipelines;
 
   inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
@@ -986,9 +1144,9 @@ private:
 };
 #endif  // !CAPNP_LITE
 
-class Arrow::Reader {
+class ArrowComponent::Reader {
 public:
-  typedef Arrow Reads;
+  typedef ArrowComponent Reads;
 
   Reader() = default;
   inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
@@ -1024,9 +1182,9 @@ private:
   friend class ::capnp::Orphanage;
 };
 
-class Arrow::Builder {
+class ArrowComponent::Builder {
 public:
-  typedef Arrow Builds;
+  typedef ArrowComponent Builds;
 
   Builder() = delete;  // Deleted to discourage incorrect usage.
                        // You can explicitly initialize to nullptr instead.
@@ -1066,9 +1224,9 @@ private:
 };
 
 #if !CAPNP_LITE
-class Arrow::Pipeline {
+class ArrowComponent::Pipeline {
 public:
-  typedef Arrow Pipelines;
+  typedef ArrowComponent Pipelines;
 
   inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
@@ -1180,9 +1338,9 @@ private:
 };
 #endif  // !CAPNP_LITE
 
-class Inventory::Reader {
+class InventoryData::Reader {
 public:
-  typedef Inventory Reads;
+  typedef InventoryData Reads;
 
   Reader() = default;
   inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
@@ -1221,9 +1379,9 @@ private:
   friend class ::capnp::Orphanage;
 };
 
-class Inventory::Builder {
+class InventoryData::Builder {
 public:
-  typedef Inventory Builds;
+  typedef InventoryData Builds;
 
   Builder() = delete;  // Deleted to discourage incorrect usage.
                        // You can explicitly initialize to nullptr instead.
@@ -1270,9 +1428,9 @@ private:
 };
 
 #if !CAPNP_LITE
-class Inventory::Pipeline {
+class InventoryData::Pipeline {
 public:
-  typedef Inventory Pipelines;
+  typedef InventoryData Pipelines;
 
   inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
@@ -1443,9 +1601,9 @@ private:
 };
 #endif  // !CAPNP_LITE
 
-class ItemAttrTile::Reader {
+class ItemAttrTileComponent::Reader {
 public:
-  typedef ItemAttrTile Reads;
+  typedef ItemAttrTileComponent Reads;
 
   Reader() = default;
   inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
@@ -1474,9 +1632,9 @@ private:
   friend class ::capnp::Orphanage;
 };
 
-class ItemAttrTile::Builder {
+class ItemAttrTileComponent::Builder {
 public:
-  typedef ItemAttrTile Builds;
+  typedef ItemAttrTileComponent Builds;
 
   Builder() = delete;  // Deleted to discourage incorrect usage.
                        // You can explicitly initialize to nullptr instead.
@@ -1503,9 +1661,9 @@ private:
 };
 
 #if !CAPNP_LITE
-class ItemAttrTile::Pipeline {
+class ItemAttrTileComponent::Pipeline {
 public:
-  typedef ItemAttrTile Pipelines;
+  typedef ItemAttrTileComponent Pipelines;
 
   inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
@@ -1519,9 +1677,9 @@ private:
 };
 #endif  // !CAPNP_LITE
 
-class Player::Reader {
+class PlayerComponent::Reader {
 public:
-  typedef Player Reads;
+  typedef PlayerComponent Reads;
 
   Reader() = default;
   inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
@@ -1555,9 +1713,9 @@ private:
   friend class ::capnp::Orphanage;
 };
 
-class Player::Builder {
+class PlayerComponent::Builder {
 public:
-  typedef Player Builds;
+  typedef PlayerComponent Builds;
 
   Builder() = delete;  // Deleted to discourage incorrect usage.
                        // You can explicitly initialize to nullptr instead.
@@ -1594,9 +1752,9 @@ private:
 };
 
 #if !CAPNP_LITE
-class Player::Pipeline {
+class PlayerComponent::Pipeline {
 public:
-  typedef Player Pipelines;
+  typedef PlayerComponent Pipelines;
 
   inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
@@ -1611,9 +1769,9 @@ private:
 };
 #endif  // !CAPNP_LITE
 
-class CircleRender::Reader {
+class CircleRenderComponent::Reader {
 public:
-  typedef CircleRender Reads;
+  typedef CircleRenderComponent Reads;
 
   Reader() = default;
   inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
@@ -1650,9 +1808,9 @@ private:
   friend class ::capnp::Orphanage;
 };
 
-class CircleRender::Builder {
+class CircleRenderComponent::Builder {
 public:
-  typedef CircleRender Builds;
+  typedef CircleRenderComponent Builds;
 
   Builder() = delete;  // Deleted to discourage incorrect usage.
                        // You can explicitly initialize to nullptr instead.
@@ -1696,9 +1854,9 @@ private:
 };
 
 #if !CAPNP_LITE
-class CircleRender::Pipeline {
+class CircleRenderComponent::Pipeline {
 public:
-  typedef CircleRender Pipelines;
+  typedef CircleRenderComponent Pipelines;
 
   inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
@@ -1714,9 +1872,9 @@ private:
 };
 #endif  // !CAPNP_LITE
 
-class RectangleRender::Reader {
+class RectangleRenderComponent::Reader {
 public:
-  typedef RectangleRender Reads;
+  typedef RectangleRenderComponent Reads;
 
   Reader() = default;
   inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
@@ -1752,9 +1910,9 @@ private:
   friend class ::capnp::Orphanage;
 };
 
-class RectangleRender::Builder {
+class RectangleRenderComponent::Builder {
 public:
-  typedef RectangleRender Builds;
+  typedef RectangleRenderComponent Builds;
 
   Builder() = delete;  // Deleted to discourage incorrect usage.
                        // You can explicitly initialize to nullptr instead.
@@ -1794,9 +1952,9 @@ private:
 };
 
 #if !CAPNP_LITE
-class RectangleRender::Pipeline {
+class RectangleRenderComponent::Pipeline {
 public:
-  typedef RectangleRender Pipelines;
+  typedef RectangleRenderComponent Pipelines;
 
   inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
@@ -2465,9 +2623,9 @@ public:
   inline bool hasGridPos() const;
   inline  ::Schema::Vec2I16::Reader getGridPos() const;
 
-  inline  ::uint16_t getSizeX() const;
+  inline  ::int16_t getSizeOrPosX() const;
 
-  inline  ::uint16_t getSizeY() const;
+  inline  ::int16_t getSizeOrPosY() const;
 
 private:
   ::capnp::_::StructReader _reader;
@@ -2510,11 +2668,11 @@ public:
   inline void adoptGridPos(::capnp::Orphan< ::Schema::Vec2I16>&& value);
   inline ::capnp::Orphan< ::Schema::Vec2I16> disownGridPos();
 
-  inline  ::uint16_t getSizeX();
-  inline void setSizeX( ::uint16_t value);
+  inline  ::int16_t getSizeOrPosX();
+  inline void setSizeOrPosX( ::int16_t value);
 
-  inline  ::uint16_t getSizeY();
-  inline void setSizeY( ::uint16_t value);
+  inline  ::int16_t getSizeOrPosY();
+  inline void setSizeOrPosY( ::int16_t value);
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -2543,6 +2701,92 @@ private:
 };
 #endif  // !CAPNP_LITE
 
+class Tilemap::Reader {
+public:
+  typedef Tilemap Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getLayer() const;
+
+  inline bool hasTiles() const;
+  inline  ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Reader getTiles() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class Tilemap::Builder {
+public:
+  typedef Tilemap Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getLayer();
+  inline void setLayer( ::uint32_t value);
+
+  inline bool hasTiles();
+  inline  ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Builder getTiles();
+  inline void setTiles( ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Reader value);
+  inline  ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Builder initTiles(unsigned int size);
+  inline void adoptTiles(::capnp::Orphan< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>> disownTiles();
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class Tilemap::Pipeline {
+public:
+  typedef Tilemap Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
 class TilemapComponent::Reader {
 public:
   typedef TilemapComponent Reads;
@@ -2560,10 +2804,8 @@ public:
   }
 #endif  // !CAPNP_LITE
 
-  inline  ::uint32_t getLayerCount() const;
-
-  inline bool hasTiles() const;
-  inline  ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Reader getTiles() const;
+  inline bool hasTilemaps() const;
+  inline  ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>::Reader getTilemaps() const;
 
 private:
   ::capnp::_::StructReader _reader;
@@ -2593,15 +2835,12 @@ public:
   inline ::kj::StringTree toString() const { return asReader().toString(); }
 #endif  // !CAPNP_LITE
 
-  inline  ::uint32_t getLayerCount();
-  inline void setLayerCount( ::uint32_t value);
-
-  inline bool hasTiles();
-  inline  ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Builder getTiles();
-  inline void setTiles( ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Reader value);
-  inline  ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Builder initTiles(unsigned int size);
-  inline void adoptTiles(::capnp::Orphan< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>>&& value);
-  inline ::capnp::Orphan< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>> disownTiles();
+  inline bool hasTilemaps();
+  inline  ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>::Builder getTilemaps();
+  inline void setTilemaps( ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>::Reader value);
+  inline  ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>::Builder initTilemaps(unsigned int size);
+  inline void adoptTilemaps(::capnp::Orphan< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>> disownTilemaps();
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -2621,6 +2860,851 @@ public:
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
       : _typeless(kj::mv(typeless)) {}
 
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class SurfaceMaterial::Reader {
+public:
+  typedef SurfaceMaterial Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline float getFriction() const;
+
+  inline float getRestitution() const;
+
+  inline float getRollingResistance() const;
+
+  inline float getTangentSpeed() const;
+
+  inline  ::uint32_t getUserMaterialId() const;
+
+  inline  ::uint32_t getCustomColor() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class SurfaceMaterial::Builder {
+public:
+  typedef SurfaceMaterial Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline float getFriction();
+  inline void setFriction(float value);
+
+  inline float getRestitution();
+  inline void setRestitution(float value);
+
+  inline float getRollingResistance();
+  inline void setRollingResistance(float value);
+
+  inline float getTangentSpeed();
+  inline void setTangentSpeed(float value);
+
+  inline  ::uint32_t getUserMaterialId();
+  inline void setUserMaterialId( ::uint32_t value);
+
+  inline  ::uint32_t getCustomColor();
+  inline void setCustomColor( ::uint32_t value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class SurfaceMaterial::Pipeline {
+public:
+  typedef SurfaceMaterial Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class Filter::Reader {
+public:
+  typedef Filter Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint64_t getCategoryBits() const;
+
+  inline  ::uint64_t getMaskBits() const;
+
+  inline  ::int16_t getGroupIndex() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class Filter::Builder {
+public:
+  typedef Filter Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint64_t getCategoryBits();
+  inline void setCategoryBits( ::uint64_t value);
+
+  inline  ::uint64_t getMaskBits();
+  inline void setMaskBits( ::uint64_t value);
+
+  inline  ::int16_t getGroupIndex();
+  inline void setGroupIndex( ::int16_t value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class Filter::Pipeline {
+public:
+  typedef Filter Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class Circle::Reader {
+public:
+  typedef Circle Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline float getRadius() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class Circle::Builder {
+public:
+  typedef Circle Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline float getRadius();
+  inline void setRadius(float value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class Circle::Pipeline {
+public:
+  typedef Circle Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class Polygon::Reader {
+public:
+  typedef Polygon Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline bool hasVertices() const;
+  inline  ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>::Reader getVertices() const;
+
+  inline bool hasNormals() const;
+  inline  ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>::Reader getNormals() const;
+
+  inline bool hasCentroid() const;
+  inline  ::Schema::Vec2F32::Reader getCentroid() const;
+
+  inline float getRadius() const;
+
+  inline  ::uint16_t getCount() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class Polygon::Builder {
+public:
+  typedef Polygon Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline bool hasVertices();
+  inline  ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>::Builder getVertices();
+  inline void setVertices( ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>::Reader value);
+  inline  ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>::Builder initVertices(unsigned int size);
+  inline void adoptVertices(::capnp::Orphan< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>> disownVertices();
+
+  inline bool hasNormals();
+  inline  ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>::Builder getNormals();
+  inline void setNormals( ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>::Reader value);
+  inline  ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>::Builder initNormals(unsigned int size);
+  inline void adoptNormals(::capnp::Orphan< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>> disownNormals();
+
+  inline bool hasCentroid();
+  inline  ::Schema::Vec2F32::Builder getCentroid();
+  inline void setCentroid( ::Schema::Vec2F32::Reader value);
+  inline  ::Schema::Vec2F32::Builder initCentroid();
+  inline void adoptCentroid(::capnp::Orphan< ::Schema::Vec2F32>&& value);
+  inline ::capnp::Orphan< ::Schema::Vec2F32> disownCentroid();
+
+  inline float getRadius();
+  inline void setRadius(float value);
+
+  inline  ::uint16_t getCount();
+  inline void setCount( ::uint16_t value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class Polygon::Pipeline {
+public:
+  typedef Polygon Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+  inline  ::Schema::Vec2F32::Pipeline getCentroid();
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class Shape::Reader {
+public:
+  typedef Shape Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline Which which() const;
+  inline bool isCircle() const;
+  inline bool hasCircle() const;
+  inline  ::Schema::Circle::Reader getCircle() const;
+
+  inline bool isPolygon() const;
+  inline bool hasPolygon() const;
+  inline  ::Schema::Polygon::Reader getPolygon() const;
+
+  inline bool hasDef() const;
+  inline  ::Schema::ShapeDef::Reader getDef() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class Shape::Builder {
+public:
+  typedef Shape Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline Which which();
+  inline bool isCircle();
+  inline bool hasCircle();
+  inline  ::Schema::Circle::Builder getCircle();
+  inline void setCircle( ::Schema::Circle::Reader value);
+  inline  ::Schema::Circle::Builder initCircle();
+  inline void adoptCircle(::capnp::Orphan< ::Schema::Circle>&& value);
+  inline ::capnp::Orphan< ::Schema::Circle> disownCircle();
+
+  inline bool isPolygon();
+  inline bool hasPolygon();
+  inline  ::Schema::Polygon::Builder getPolygon();
+  inline void setPolygon( ::Schema::Polygon::Reader value);
+  inline  ::Schema::Polygon::Builder initPolygon();
+  inline void adoptPolygon(::capnp::Orphan< ::Schema::Polygon>&& value);
+  inline ::capnp::Orphan< ::Schema::Polygon> disownPolygon();
+
+  inline bool hasDef();
+  inline  ::Schema::ShapeDef::Builder getDef();
+  inline void setDef( ::Schema::ShapeDef::Reader value);
+  inline  ::Schema::ShapeDef::Builder initDef();
+  inline void adoptDef(::capnp::Orphan< ::Schema::ShapeDef>&& value);
+  inline ::capnp::Orphan< ::Schema::ShapeDef> disownDef();
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class Shape::Pipeline {
+public:
+  typedef Shape Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+  inline  ::Schema::ShapeDef::Pipeline getDef();
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class ShapeDef::Reader {
+public:
+  typedef ShapeDef Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline bool hasMaterial() const;
+  inline  ::Schema::SurfaceMaterial::Reader getMaterial() const;
+
+  inline float getDensity() const;
+
+  inline bool getIsSensor() const;
+
+  inline bool getEnableSensorEvents() const;
+
+  inline bool getEnableContactEvents() const;
+
+  inline bool getEnableHitEvents() const;
+
+  inline bool getEnablePreSolveEvents() const;
+
+  inline bool getInvokeContactCreation() const;
+
+  inline bool getUpdateBodyMass() const;
+
+  inline bool hasFilter() const;
+  inline  ::Schema::Filter::Reader getFilter() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class ShapeDef::Builder {
+public:
+  typedef ShapeDef Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline bool hasMaterial();
+  inline  ::Schema::SurfaceMaterial::Builder getMaterial();
+  inline void setMaterial( ::Schema::SurfaceMaterial::Reader value);
+  inline  ::Schema::SurfaceMaterial::Builder initMaterial();
+  inline void adoptMaterial(::capnp::Orphan< ::Schema::SurfaceMaterial>&& value);
+  inline ::capnp::Orphan< ::Schema::SurfaceMaterial> disownMaterial();
+
+  inline float getDensity();
+  inline void setDensity(float value);
+
+  inline bool getIsSensor();
+  inline void setIsSensor(bool value);
+
+  inline bool getEnableSensorEvents();
+  inline void setEnableSensorEvents(bool value);
+
+  inline bool getEnableContactEvents();
+  inline void setEnableContactEvents(bool value);
+
+  inline bool getEnableHitEvents();
+  inline void setEnableHitEvents(bool value);
+
+  inline bool getEnablePreSolveEvents();
+  inline void setEnablePreSolveEvents(bool value);
+
+  inline bool getInvokeContactCreation();
+  inline void setInvokeContactCreation(bool value);
+
+  inline bool getUpdateBodyMass();
+  inline void setUpdateBodyMass(bool value);
+
+  inline bool hasFilter();
+  inline  ::Schema::Filter::Builder getFilter();
+  inline void setFilter( ::Schema::Filter::Reader value);
+  inline  ::Schema::Filter::Builder initFilter();
+  inline void adoptFilter(::capnp::Orphan< ::Schema::Filter>&& value);
+  inline ::capnp::Orphan< ::Schema::Filter> disownFilter();
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class ShapeDef::Pipeline {
+public:
+  typedef ShapeDef Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+  inline  ::Schema::SurfaceMaterial::Pipeline getMaterial();
+  inline  ::Schema::Filter::Pipeline getFilter();
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class Body::Reader {
+public:
+  typedef Body Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::Schema::BodyType getBodyType() const;
+
+  inline bool hasLinearVelocity() const;
+  inline  ::Schema::Vec2F32::Reader getLinearVelocity() const;
+
+  inline float getAngularVelocity() const;
+
+  inline float getLinearDamping() const;
+
+  inline float getAngularDamping() const;
+
+  inline float getGravityScale() const;
+
+  inline float getSleepThreshold() const;
+
+  inline bool getEnableSleep() const;
+
+  inline bool getIsAwake() const;
+
+  inline bool getIsBullet() const;
+
+  inline bool getIsEnabled() const;
+
+  inline bool getAllowFastRotation() const;
+
+  inline bool hasShapes() const;
+  inline  ::capnp::List< ::Schema::Shape,  ::capnp::Kind::STRUCT>::Reader getShapes() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class Body::Builder {
+public:
+  typedef Body Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::Schema::BodyType getBodyType();
+  inline void setBodyType( ::Schema::BodyType value);
+
+  inline bool hasLinearVelocity();
+  inline  ::Schema::Vec2F32::Builder getLinearVelocity();
+  inline void setLinearVelocity( ::Schema::Vec2F32::Reader value);
+  inline  ::Schema::Vec2F32::Builder initLinearVelocity();
+  inline void adoptLinearVelocity(::capnp::Orphan< ::Schema::Vec2F32>&& value);
+  inline ::capnp::Orphan< ::Schema::Vec2F32> disownLinearVelocity();
+
+  inline float getAngularVelocity();
+  inline void setAngularVelocity(float value);
+
+  inline float getLinearDamping();
+  inline void setLinearDamping(float value);
+
+  inline float getAngularDamping();
+  inline void setAngularDamping(float value);
+
+  inline float getGravityScale();
+  inline void setGravityScale(float value);
+
+  inline float getSleepThreshold();
+  inline void setSleepThreshold(float value);
+
+  inline bool getEnableSleep();
+  inline void setEnableSleep(bool value);
+
+  inline bool getIsAwake();
+  inline void setIsAwake(bool value);
+
+  inline bool getIsBullet();
+  inline void setIsBullet(bool value);
+
+  inline bool getIsEnabled();
+  inline void setIsEnabled(bool value);
+
+  inline bool getAllowFastRotation();
+  inline void setAllowFastRotation(bool value);
+
+  inline bool hasShapes();
+  inline  ::capnp::List< ::Schema::Shape,  ::capnp::Kind::STRUCT>::Builder getShapes();
+  inline void setShapes( ::capnp::List< ::Schema::Shape,  ::capnp::Kind::STRUCT>::Reader value);
+  inline  ::capnp::List< ::Schema::Shape,  ::capnp::Kind::STRUCT>::Builder initShapes(unsigned int size);
+  inline void adoptShapes(::capnp::Orphan< ::capnp::List< ::Schema::Shape,  ::capnp::Kind::STRUCT>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::Schema::Shape,  ::capnp::Kind::STRUCT>> disownShapes();
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class Body::Pipeline {
+public:
+  typedef Body Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+  inline  ::Schema::Vec2F32::Pipeline getLinearVelocity();
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class BodyComponent::Reader {
+public:
+  typedef BodyComponent Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline bool hasBody() const;
+  inline  ::Schema::Body::Reader getBody() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class BodyComponent::Builder {
+public:
+  typedef BodyComponent Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline bool hasBody();
+  inline  ::Schema::Body::Builder getBody();
+  inline void setBody( ::Schema::Body::Reader value);
+  inline  ::Schema::Body::Builder initBody();
+  inline void adoptBody(::capnp::Orphan< ::Schema::Body>&& value);
+  inline ::capnp::Orphan< ::Schema::Body> disownBody();
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class BodyComponent::Pipeline {
+public:
+  typedef BodyComponent Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+  inline  ::Schema::Body::Pipeline getBody();
 private:
   ::capnp::AnyPointer::Pipeline _typeless;
   friend class ::capnp::PipelineHook;
@@ -3103,164 +4187,164 @@ inline void Vec2I16::Builder::setY( ::int16_t value) {
       ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
 }
 
-inline bool Transform::Reader::hasPos() const {
+inline bool TransformComponent::Reader::hasPos() const {
   return !_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline bool Transform::Builder::hasPos() {
+inline bool TransformComponent::Builder::hasPos() {
   return !_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline  ::Schema::Vec2F32::Reader Transform::Reader::getPos() const {
+inline  ::Schema::Vec2F32::Reader TransformComponent::Reader::getPos() const {
   return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::get(_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline  ::Schema::Vec2F32::Builder Transform::Builder::getPos() {
+inline  ::Schema::Vec2F32::Builder TransformComponent::Builder::getPos() {
   return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::get(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 #if !CAPNP_LITE
-inline  ::Schema::Vec2F32::Pipeline Transform::Pipeline::getPos() {
+inline  ::Schema::Vec2F32::Pipeline TransformComponent::Pipeline::getPos() {
   return  ::Schema::Vec2F32::Pipeline(_typeless.getPointerField(0));
 }
 #endif  // !CAPNP_LITE
-inline void Transform::Builder::setPos( ::Schema::Vec2F32::Reader value) {
+inline void TransformComponent::Builder::setPos( ::Schema::Vec2F32::Reader value) {
   ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::set(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), value);
 }
-inline  ::Schema::Vec2F32::Builder Transform::Builder::initPos() {
+inline  ::Schema::Vec2F32::Builder TransformComponent::Builder::initPos() {
   return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::init(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline void Transform::Builder::adoptPos(
+inline void TransformComponent::Builder::adoptPos(
     ::capnp::Orphan< ::Schema::Vec2F32>&& value) {
   ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::adopt(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
 }
-inline ::capnp::Orphan< ::Schema::Vec2F32> Transform::Builder::disownPos() {
+inline ::capnp::Orphan< ::Schema::Vec2F32> TransformComponent::Builder::disownPos() {
   return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
-inline float Transform::Reader::getRot() const {
+inline float TransformComponent::Reader::getRot() const {
   return _reader.getDataField<float>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
 
-inline float Transform::Builder::getRot() {
+inline float TransformComponent::Builder::getRot() {
   return _builder.getDataField<float>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
-inline void Transform::Builder::setRot(float value) {
+inline void TransformComponent::Builder::setRot(float value) {
   _builder.setDataField<float>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
 }
 
-inline float Camera::Reader::getZoom() const {
+inline float CameraComponent::Reader::getZoom() const {
   return _reader.getDataField<float>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
 
-inline float Camera::Builder::getZoom() {
+inline float CameraComponent::Builder::getZoom() {
   return _builder.getDataField<float>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
-inline void Camera::Builder::setZoom(float value) {
+inline void CameraComponent::Builder::setZoom(float value) {
   _builder.setDataField<float>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
 }
 
-inline float Camera::Reader::getRot() const {
+inline float CameraComponent::Reader::getRot() const {
   return _reader.getDataField<float>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS);
 }
 
-inline float Camera::Builder::getRot() {
+inline float CameraComponent::Builder::getRot() {
   return _builder.getDataField<float>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS);
 }
-inline void Camera::Builder::setRot(float value) {
+inline void CameraComponent::Builder::setRot(float value) {
   _builder.setDataField<float>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
 }
 
-inline bool Arrow::Reader::hasDir() const {
+inline bool ArrowComponent::Reader::hasDir() const {
   return !_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline bool Arrow::Builder::hasDir() {
+inline bool ArrowComponent::Builder::hasDir() {
   return !_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline  ::Schema::Vec2F32::Reader Arrow::Reader::getDir() const {
+inline  ::Schema::Vec2F32::Reader ArrowComponent::Reader::getDir() const {
   return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::get(_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline  ::Schema::Vec2F32::Builder Arrow::Builder::getDir() {
+inline  ::Schema::Vec2F32::Builder ArrowComponent::Builder::getDir() {
   return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::get(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 #if !CAPNP_LITE
-inline  ::Schema::Vec2F32::Pipeline Arrow::Pipeline::getDir() {
+inline  ::Schema::Vec2F32::Pipeline ArrowComponent::Pipeline::getDir() {
   return  ::Schema::Vec2F32::Pipeline(_typeless.getPointerField(0));
 }
 #endif  // !CAPNP_LITE
-inline void Arrow::Builder::setDir( ::Schema::Vec2F32::Reader value) {
+inline void ArrowComponent::Builder::setDir( ::Schema::Vec2F32::Reader value) {
   ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::set(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), value);
 }
-inline  ::Schema::Vec2F32::Builder Arrow::Builder::initDir() {
+inline  ::Schema::Vec2F32::Builder ArrowComponent::Builder::initDir() {
   return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::init(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline void Arrow::Builder::adoptDir(
+inline void ArrowComponent::Builder::adoptDir(
     ::capnp::Orphan< ::Schema::Vec2F32>&& value) {
   ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::adopt(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
 }
-inline ::capnp::Orphan< ::Schema::Vec2F32> Arrow::Builder::disownDir() {
+inline ::capnp::Orphan< ::Schema::Vec2F32> ArrowComponent::Builder::disownDir() {
   return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
-inline float Arrow::Reader::getCost() const {
+inline float ArrowComponent::Reader::getCost() const {
   return _reader.getDataField<float>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
 
-inline float Arrow::Builder::getCost() {
+inline float ArrowComponent::Builder::getCost() {
   return _builder.getDataField<float>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
-inline void Arrow::Builder::setCost(float value) {
+inline void ArrowComponent::Builder::setCost(float value) {
   _builder.setDataField<float>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
 }
 
-inline  ::uint32_t Arrow::Reader::getGeneration() const {
+inline  ::uint32_t ArrowComponent::Reader::getGeneration() const {
   return _reader.getDataField< ::uint32_t>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS);
 }
 
-inline  ::uint32_t Arrow::Builder::getGeneration() {
+inline  ::uint32_t ArrowComponent::Builder::getGeneration() {
   return _builder.getDataField< ::uint32_t>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS);
 }
-inline void Arrow::Builder::setGeneration( ::uint32_t value) {
+inline void ArrowComponent::Builder::setGeneration( ::uint32_t value) {
   _builder.setDataField< ::uint32_t>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
 }
 
-inline  ::uint32_t Arrow::Reader::getTileCost() const {
+inline  ::uint32_t ArrowComponent::Reader::getTileCost() const {
   return _reader.getDataField< ::uint32_t>(
       ::capnp::bounded<2>() * ::capnp::ELEMENTS);
 }
 
-inline  ::uint32_t Arrow::Builder::getTileCost() {
+inline  ::uint32_t ArrowComponent::Builder::getTileCost() {
   return _builder.getDataField< ::uint32_t>(
       ::capnp::bounded<2>() * ::capnp::ELEMENTS);
 }
-inline void Arrow::Builder::setTileCost( ::uint32_t value) {
+inline void ArrowComponent::Builder::setTileCost( ::uint32_t value) {
   _builder.setDataField< ::uint32_t>(
       ::capnp::bounded<2>() * ::capnp::ELEMENTS, value);
 }
@@ -3346,112 +4430,112 @@ inline void ItemStack::Builder::setItemEntityId( ::uint32_t value) {
       ::capnp::bounded<2>() * ::capnp::ELEMENTS, value);
 }
 
-inline bool Inventory::Reader::hasName() const {
+inline bool InventoryData::Reader::hasName() const {
   return !_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline bool Inventory::Builder::hasName() {
+inline bool InventoryData::Builder::hasName() {
   return !_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline  ::capnp::Text::Reader Inventory::Reader::getName() const {
+inline  ::capnp::Text::Reader InventoryData::Reader::getName() const {
   return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline  ::capnp::Text::Builder Inventory::Builder::getName() {
+inline  ::capnp::Text::Builder InventoryData::Builder::getName() {
   return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline void Inventory::Builder::setName( ::capnp::Text::Reader value) {
+inline void InventoryData::Builder::setName( ::capnp::Text::Reader value) {
   ::capnp::_::PointerHelpers< ::capnp::Text>::set(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), value);
 }
-inline  ::capnp::Text::Builder Inventory::Builder::initName(unsigned int size) {
+inline  ::capnp::Text::Builder InventoryData::Builder::initName(unsigned int size) {
   return ::capnp::_::PointerHelpers< ::capnp::Text>::init(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), size);
 }
-inline void Inventory::Builder::adoptName(
+inline void InventoryData::Builder::adoptName(
     ::capnp::Orphan< ::capnp::Text>&& value) {
   ::capnp::_::PointerHelpers< ::capnp::Text>::adopt(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
 }
-inline ::capnp::Orphan< ::capnp::Text> Inventory::Builder::disownName() {
+inline ::capnp::Orphan< ::capnp::Text> InventoryData::Builder::disownName() {
   return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
-inline  ::uint16_t Inventory::Reader::getRows() const {
+inline  ::uint16_t InventoryData::Reader::getRows() const {
   return _reader.getDataField< ::uint16_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
 
-inline  ::uint16_t Inventory::Builder::getRows() {
+inline  ::uint16_t InventoryData::Builder::getRows() {
   return _builder.getDataField< ::uint16_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
-inline void Inventory::Builder::setRows( ::uint16_t value) {
+inline void InventoryData::Builder::setRows( ::uint16_t value) {
   _builder.setDataField< ::uint16_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
 }
 
-inline  ::uint16_t Inventory::Reader::getCols() const {
+inline  ::uint16_t InventoryData::Reader::getCols() const {
   return _reader.getDataField< ::uint16_t>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS);
 }
 
-inline  ::uint16_t Inventory::Builder::getCols() {
+inline  ::uint16_t InventoryData::Builder::getCols() {
   return _builder.getDataField< ::uint16_t>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS);
 }
-inline void Inventory::Builder::setCols( ::uint16_t value) {
+inline void InventoryData::Builder::setCols( ::uint16_t value) {
   _builder.setDataField< ::uint16_t>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
 }
 
-inline bool Inventory::Reader::hasItems() const {
+inline bool InventoryData::Reader::hasItems() const {
   return !_reader.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
 }
-inline bool Inventory::Builder::hasItems() {
+inline bool InventoryData::Builder::hasItems() {
   return !_builder.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
 }
-inline  ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Reader Inventory::Reader::getItems() const {
+inline  ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Reader InventoryData::Reader::getItems() const {
   return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS));
 }
-inline  ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Builder Inventory::Builder::getItems() {
+inline  ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Builder InventoryData::Builder::getItems() {
   return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS));
 }
-inline void Inventory::Builder::setItems( ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Reader value) {
+inline void InventoryData::Builder::setItems( ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Reader value) {
   ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS), value);
 }
-inline  ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Builder Inventory::Builder::initItems(unsigned int size) {
+inline  ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Builder InventoryData::Builder::initItems(unsigned int size) {
   return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS), size);
 }
-inline void Inventory::Builder::adoptItems(
+inline void InventoryData::Builder::adoptItems(
     ::capnp::Orphan< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>>&& value) {
   ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
 }
-inline ::capnp::Orphan< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>> Inventory::Builder::disownItems() {
+inline ::capnp::Orphan< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>> InventoryData::Builder::disownItems() {
   return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS));
 }
 
-inline bool Inventory::Reader::getVisible() const {
+inline bool InventoryData::Reader::getVisible() const {
   return _reader.getDataField<bool>(
       ::capnp::bounded<32>() * ::capnp::ELEMENTS);
 }
 
-inline bool Inventory::Builder::getVisible() {
+inline bool InventoryData::Builder::getVisible() {
   return _builder.getDataField<bool>(
       ::capnp::bounded<32>() * ::capnp::ELEMENTS);
 }
-inline void Inventory::Builder::setVisible(bool value) {
+inline void InventoryData::Builder::setVisible(bool value) {
   _builder.setDataField<bool>(
       ::capnp::bounded<32>() * ::capnp::ELEMENTS, value);
 }
@@ -3504,270 +4588,270 @@ inline void ItemAttrStackCost::Builder::setStackCost( ::uint8_t value) {
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
 }
 
-inline  ::uint32_t ItemAttrTile::Reader::getAssetId() const {
+inline  ::uint32_t ItemAttrTileComponent::Reader::getAssetId() const {
   return _reader.getDataField< ::uint32_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
 
-inline  ::uint32_t ItemAttrTile::Builder::getAssetId() {
+inline  ::uint32_t ItemAttrTileComponent::Builder::getAssetId() {
   return _builder.getDataField< ::uint32_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
-inline void ItemAttrTile::Builder::setAssetId( ::uint32_t value) {
+inline void ItemAttrTileComponent::Builder::setAssetId( ::uint32_t value) {
   _builder.setDataField< ::uint32_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
 }
 
-inline bool Player::Reader::hasMouse() const {
+inline bool PlayerComponent::Reader::hasMouse() const {
   return !_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline bool Player::Builder::hasMouse() {
+inline bool PlayerComponent::Builder::hasMouse() {
   return !_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline  ::Schema::Vec2F32::Reader Player::Reader::getMouse() const {
+inline  ::Schema::Vec2F32::Reader PlayerComponent::Reader::getMouse() const {
   return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::get(_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline  ::Schema::Vec2F32::Builder Player::Builder::getMouse() {
+inline  ::Schema::Vec2F32::Builder PlayerComponent::Builder::getMouse() {
   return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::get(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 #if !CAPNP_LITE
-inline  ::Schema::Vec2F32::Pipeline Player::Pipeline::getMouse() {
+inline  ::Schema::Vec2F32::Pipeline PlayerComponent::Pipeline::getMouse() {
   return  ::Schema::Vec2F32::Pipeline(_typeless.getPointerField(0));
 }
 #endif  // !CAPNP_LITE
-inline void Player::Builder::setMouse( ::Schema::Vec2F32::Reader value) {
+inline void PlayerComponent::Builder::setMouse( ::Schema::Vec2F32::Reader value) {
   ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::set(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), value);
 }
-inline  ::Schema::Vec2F32::Builder Player::Builder::initMouse() {
+inline  ::Schema::Vec2F32::Builder PlayerComponent::Builder::initMouse() {
   return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::init(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline void Player::Builder::adoptMouse(
+inline void PlayerComponent::Builder::adoptMouse(
     ::capnp::Orphan< ::Schema::Vec2F32>&& value) {
   ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::adopt(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
 }
-inline ::capnp::Orphan< ::Schema::Vec2F32> Player::Builder::disownMouse() {
+inline ::capnp::Orphan< ::Schema::Vec2F32> PlayerComponent::Builder::disownMouse() {
   return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
-inline float Player::Reader::getAccel() const {
+inline float PlayerComponent::Reader::getAccel() const {
   return _reader.getDataField<float>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
 
-inline float Player::Builder::getAccel() {
+inline float PlayerComponent::Builder::getAccel() {
   return _builder.getDataField<float>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
-inline void Player::Builder::setAccel(float value) {
+inline void PlayerComponent::Builder::setAccel(float value) {
   _builder.setDataField<float>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
 }
 
-inline float Player::Reader::getMaxSpeed() const {
+inline float PlayerComponent::Reader::getMaxSpeed() const {
   return _reader.getDataField<float>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS);
 }
 
-inline float Player::Builder::getMaxSpeed() {
+inline float PlayerComponent::Builder::getMaxSpeed() {
   return _builder.getDataField<float>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS);
 }
-inline void Player::Builder::setMaxSpeed(float value) {
+inline void PlayerComponent::Builder::setMaxSpeed(float value) {
   _builder.setDataField<float>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
 }
 
-inline float CircleRender::Reader::getRadius() const {
+inline float CircleRenderComponent::Reader::getRadius() const {
   return _reader.getDataField<float>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
 
-inline float CircleRender::Builder::getRadius() {
+inline float CircleRenderComponent::Builder::getRadius() {
   return _builder.getDataField<float>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
-inline void CircleRender::Builder::setRadius(float value) {
+inline void CircleRenderComponent::Builder::setRadius(float value) {
   _builder.setDataField<float>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
 }
 
-inline bool CircleRender::Reader::hasOffset() const {
+inline bool CircleRenderComponent::Reader::hasOffset() const {
   return !_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline bool CircleRender::Builder::hasOffset() {
+inline bool CircleRenderComponent::Builder::hasOffset() {
   return !_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline  ::Schema::Vec2F32::Reader CircleRender::Reader::getOffset() const {
+inline  ::Schema::Vec2F32::Reader CircleRenderComponent::Reader::getOffset() const {
   return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::get(_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline  ::Schema::Vec2F32::Builder CircleRender::Builder::getOffset() {
+inline  ::Schema::Vec2F32::Builder CircleRenderComponent::Builder::getOffset() {
   return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::get(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 #if !CAPNP_LITE
-inline  ::Schema::Vec2F32::Pipeline CircleRender::Pipeline::getOffset() {
+inline  ::Schema::Vec2F32::Pipeline CircleRenderComponent::Pipeline::getOffset() {
   return  ::Schema::Vec2F32::Pipeline(_typeless.getPointerField(0));
 }
 #endif  // !CAPNP_LITE
-inline void CircleRender::Builder::setOffset( ::Schema::Vec2F32::Reader value) {
+inline void CircleRenderComponent::Builder::setOffset( ::Schema::Vec2F32::Reader value) {
   ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::set(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), value);
 }
-inline  ::Schema::Vec2F32::Builder CircleRender::Builder::initOffset() {
+inline  ::Schema::Vec2F32::Builder CircleRenderComponent::Builder::initOffset() {
   return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::init(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline void CircleRender::Builder::adoptOffset(
+inline void CircleRenderComponent::Builder::adoptOffset(
     ::capnp::Orphan< ::Schema::Vec2F32>&& value) {
   ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::adopt(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
 }
-inline ::capnp::Orphan< ::Schema::Vec2F32> CircleRender::Builder::disownOffset() {
+inline ::capnp::Orphan< ::Schema::Vec2F32> CircleRenderComponent::Builder::disownOffset() {
   return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
-inline float CircleRender::Reader::getZ() const {
+inline float CircleRenderComponent::Reader::getZ() const {
   return _reader.getDataField<float>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS, 1065353216u);
 }
 
-inline float CircleRender::Builder::getZ() {
+inline float CircleRenderComponent::Builder::getZ() {
   return _builder.getDataField<float>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS, 1065353216u);
 }
-inline void CircleRender::Builder::setZ(float value) {
+inline void CircleRenderComponent::Builder::setZ(float value) {
   _builder.setDataField<float>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS, value, 1065353216u);
 }
 
-inline bool CircleRender::Reader::hasColor() const {
+inline bool CircleRenderComponent::Reader::hasColor() const {
   return !_reader.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
 }
-inline bool CircleRender::Builder::hasColor() {
+inline bool CircleRenderComponent::Builder::hasColor() {
   return !_builder.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
 }
-inline  ::Schema::Vec3F32::Reader CircleRender::Reader::getColor() const {
+inline  ::Schema::Vec3F32::Reader CircleRenderComponent::Reader::getColor() const {
   return ::capnp::_::PointerHelpers< ::Schema::Vec3F32>::get(_reader.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS));
 }
-inline  ::Schema::Vec3F32::Builder CircleRender::Builder::getColor() {
+inline  ::Schema::Vec3F32::Builder CircleRenderComponent::Builder::getColor() {
   return ::capnp::_::PointerHelpers< ::Schema::Vec3F32>::get(_builder.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS));
 }
 #if !CAPNP_LITE
-inline  ::Schema::Vec3F32::Pipeline CircleRender::Pipeline::getColor() {
+inline  ::Schema::Vec3F32::Pipeline CircleRenderComponent::Pipeline::getColor() {
   return  ::Schema::Vec3F32::Pipeline(_typeless.getPointerField(1));
 }
 #endif  // !CAPNP_LITE
-inline void CircleRender::Builder::setColor( ::Schema::Vec3F32::Reader value) {
+inline void CircleRenderComponent::Builder::setColor( ::Schema::Vec3F32::Reader value) {
   ::capnp::_::PointerHelpers< ::Schema::Vec3F32>::set(_builder.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS), value);
 }
-inline  ::Schema::Vec3F32::Builder CircleRender::Builder::initColor() {
+inline  ::Schema::Vec3F32::Builder CircleRenderComponent::Builder::initColor() {
   return ::capnp::_::PointerHelpers< ::Schema::Vec3F32>::init(_builder.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS));
 }
-inline void CircleRender::Builder::adoptColor(
+inline void CircleRenderComponent::Builder::adoptColor(
     ::capnp::Orphan< ::Schema::Vec3F32>&& value) {
   ::capnp::_::PointerHelpers< ::Schema::Vec3F32>::adopt(_builder.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
 }
-inline ::capnp::Orphan< ::Schema::Vec3F32> CircleRender::Builder::disownColor() {
+inline ::capnp::Orphan< ::Schema::Vec3F32> CircleRenderComponent::Builder::disownColor() {
   return ::capnp::_::PointerHelpers< ::Schema::Vec3F32>::disown(_builder.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS));
 }
 
-inline float RectangleRender::Reader::getHw() const {
+inline float RectangleRenderComponent::Reader::getHw() const {
   return _reader.getDataField<float>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
 
-inline float RectangleRender::Builder::getHw() {
+inline float RectangleRenderComponent::Builder::getHw() {
   return _builder.getDataField<float>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
-inline void RectangleRender::Builder::setHw(float value) {
+inline void RectangleRenderComponent::Builder::setHw(float value) {
   _builder.setDataField<float>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
 }
 
-inline float RectangleRender::Reader::getHh() const {
+inline float RectangleRenderComponent::Reader::getHh() const {
   return _reader.getDataField<float>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS);
 }
 
-inline float RectangleRender::Builder::getHh() {
+inline float RectangleRenderComponent::Builder::getHh() {
   return _builder.getDataField<float>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS);
 }
-inline void RectangleRender::Builder::setHh(float value) {
+inline void RectangleRenderComponent::Builder::setHh(float value) {
   _builder.setDataField<float>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
 }
 
-inline float RectangleRender::Reader::getZ() const {
+inline float RectangleRenderComponent::Reader::getZ() const {
   return _reader.getDataField<float>(
       ::capnp::bounded<2>() * ::capnp::ELEMENTS, 1065353216u);
 }
 
-inline float RectangleRender::Builder::getZ() {
+inline float RectangleRenderComponent::Builder::getZ() {
   return _builder.getDataField<float>(
       ::capnp::bounded<2>() * ::capnp::ELEMENTS, 1065353216u);
 }
-inline void RectangleRender::Builder::setZ(float value) {
+inline void RectangleRenderComponent::Builder::setZ(float value) {
   _builder.setDataField<float>(
       ::capnp::bounded<2>() * ::capnp::ELEMENTS, value, 1065353216u);
 }
 
-inline bool RectangleRender::Reader::hasColor() const {
+inline bool RectangleRenderComponent::Reader::hasColor() const {
   return !_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline bool RectangleRender::Builder::hasColor() {
+inline bool RectangleRenderComponent::Builder::hasColor() {
   return !_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline  ::Schema::Vec3F32::Reader RectangleRender::Reader::getColor() const {
+inline  ::Schema::Vec3F32::Reader RectangleRenderComponent::Reader::getColor() const {
   return ::capnp::_::PointerHelpers< ::Schema::Vec3F32>::get(_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline  ::Schema::Vec3F32::Builder RectangleRender::Builder::getColor() {
+inline  ::Schema::Vec3F32::Builder RectangleRenderComponent::Builder::getColor() {
   return ::capnp::_::PointerHelpers< ::Schema::Vec3F32>::get(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 #if !CAPNP_LITE
-inline  ::Schema::Vec3F32::Pipeline RectangleRender::Pipeline::getColor() {
+inline  ::Schema::Vec3F32::Pipeline RectangleRenderComponent::Pipeline::getColor() {
   return  ::Schema::Vec3F32::Pipeline(_typeless.getPointerField(0));
 }
 #endif  // !CAPNP_LITE
-inline void RectangleRender::Builder::setColor( ::Schema::Vec3F32::Reader value) {
+inline void RectangleRenderComponent::Builder::setColor( ::Schema::Vec3F32::Reader value) {
   ::capnp::_::PointerHelpers< ::Schema::Vec3F32>::set(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), value);
 }
-inline  ::Schema::Vec3F32::Builder RectangleRender::Builder::initColor() {
+inline  ::Schema::Vec3F32::Builder RectangleRenderComponent::Builder::initColor() {
   return ::capnp::_::PointerHelpers< ::Schema::Vec3F32>::init(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline void RectangleRender::Builder::adoptColor(
+inline void RectangleRenderComponent::Builder::adoptColor(
     ::capnp::Orphan< ::Schema::Vec3F32>&& value) {
   ::capnp::_::PointerHelpers< ::Schema::Vec3F32>::adopt(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
 }
-inline ::capnp::Orphan< ::Schema::Vec3F32> RectangleRender::Builder::disownColor() {
+inline ::capnp::Orphan< ::Schema::Vec3F32> RectangleRenderComponent::Builder::disownColor() {
   return ::capnp::_::PointerHelpers< ::Schema::Vec3F32>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
@@ -4248,79 +5332,1000 @@ inline ::capnp::Orphan< ::Schema::Vec2I16> Tile::Builder::disownGridPos() {
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
-inline  ::uint16_t Tile::Reader::getSizeX() const {
-  return _reader.getDataField< ::uint16_t>(
-      ::capnp::bounded<3>() * ::capnp::ELEMENTS, 1u);
+inline  ::int16_t Tile::Reader::getSizeOrPosX() const {
+  return _reader.getDataField< ::int16_t>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS, 1);
 }
 
-inline  ::uint16_t Tile::Builder::getSizeX() {
-  return _builder.getDataField< ::uint16_t>(
-      ::capnp::bounded<3>() * ::capnp::ELEMENTS, 1u);
+inline  ::int16_t Tile::Builder::getSizeOrPosX() {
+  return _builder.getDataField< ::int16_t>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS, 1);
 }
-inline void Tile::Builder::setSizeX( ::uint16_t value) {
-  _builder.setDataField< ::uint16_t>(
-      ::capnp::bounded<3>() * ::capnp::ELEMENTS, value, 1u);
-}
-
-inline  ::uint16_t Tile::Reader::getSizeY() const {
-  return _reader.getDataField< ::uint16_t>(
-      ::capnp::bounded<4>() * ::capnp::ELEMENTS, 1u);
+inline void Tile::Builder::setSizeOrPosX( ::int16_t value) {
+  _builder.setDataField< ::int16_t>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS, value, 1);
 }
 
-inline  ::uint16_t Tile::Builder::getSizeY() {
-  return _builder.getDataField< ::uint16_t>(
-      ::capnp::bounded<4>() * ::capnp::ELEMENTS, 1u);
-}
-inline void Tile::Builder::setSizeY( ::uint16_t value) {
-  _builder.setDataField< ::uint16_t>(
-      ::capnp::bounded<4>() * ::capnp::ELEMENTS, value, 1u);
+inline  ::int16_t Tile::Reader::getSizeOrPosY() const {
+  return _reader.getDataField< ::int16_t>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS, 1);
 }
 
-inline  ::uint32_t TilemapComponent::Reader::getLayerCount() const {
+inline  ::int16_t Tile::Builder::getSizeOrPosY() {
+  return _builder.getDataField< ::int16_t>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS, 1);
+}
+inline void Tile::Builder::setSizeOrPosY( ::int16_t value) {
+  _builder.setDataField< ::int16_t>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS, value, 1);
+}
+
+inline  ::uint32_t Tilemap::Reader::getLayer() const {
   return _reader.getDataField< ::uint32_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, 2u);
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
 
-inline  ::uint32_t TilemapComponent::Builder::getLayerCount() {
+inline  ::uint32_t Tilemap::Builder::getLayer() {
   return _builder.getDataField< ::uint32_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, 2u);
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
-inline void TilemapComponent::Builder::setLayerCount( ::uint32_t value) {
+inline void Tilemap::Builder::setLayer( ::uint32_t value) {
   _builder.setDataField< ::uint32_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value, 2u);
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
 }
 
-inline bool TilemapComponent::Reader::hasTiles() const {
+inline bool Tilemap::Reader::hasTiles() const {
   return !_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline bool TilemapComponent::Builder::hasTiles() {
+inline bool Tilemap::Builder::hasTiles() {
   return !_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline  ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Reader TilemapComponent::Reader::getTiles() const {
+inline  ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Reader Tilemap::Reader::getTiles() const {
   return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline  ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Builder TilemapComponent::Builder::getTiles() {
+inline  ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Builder Tilemap::Builder::getTiles() {
   return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline void TilemapComponent::Builder::setTiles( ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Reader value) {
+inline void Tilemap::Builder::setTiles( ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Reader value) {
   ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), value);
 }
-inline  ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Builder TilemapComponent::Builder::initTiles(unsigned int size) {
+inline  ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Builder Tilemap::Builder::initTiles(unsigned int size) {
   return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), size);
 }
-inline void TilemapComponent::Builder::adoptTiles(
+inline void Tilemap::Builder::adoptTiles(
     ::capnp::Orphan< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>>&& value) {
   ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
 }
-inline ::capnp::Orphan< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>> TilemapComponent::Builder::disownTiles() {
+inline ::capnp::Orphan< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>> Tilemap::Builder::disownTiles() {
   return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool TilemapComponent::Reader::hasTilemaps() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool TilemapComponent::Builder::hasTilemaps() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>::Reader TilemapComponent::Reader::getTilemaps() const {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>::Builder TilemapComponent::Builder::getTilemaps() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void TilemapComponent::Builder::setTilemaps( ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>::Builder TilemapComponent::Builder::initTilemaps(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+}
+inline void TilemapComponent::Builder::adoptTilemaps(
+    ::capnp::Orphan< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>> TilemapComponent::Builder::disownTilemaps() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline float SurfaceMaterial::Reader::getFriction() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline float SurfaceMaterial::Builder::getFriction() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void SurfaceMaterial::Builder::setFriction(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline float SurfaceMaterial::Reader::getRestitution() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+
+inline float SurfaceMaterial::Builder::getRestitution() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+inline void SurfaceMaterial::Builder::setRestitution(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
+}
+
+inline float SurfaceMaterial::Reader::getRollingResistance() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+
+inline float SurfaceMaterial::Builder::getRollingResistance() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+inline void SurfaceMaterial::Builder::setRollingResistance(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS, value);
+}
+
+inline float SurfaceMaterial::Reader::getTangentSpeed() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS);
+}
+
+inline float SurfaceMaterial::Builder::getTangentSpeed() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS);
+}
+inline void SurfaceMaterial::Builder::setTangentSpeed(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t SurfaceMaterial::Reader::getUserMaterialId() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t SurfaceMaterial::Builder::getUserMaterialId() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS);
+}
+inline void SurfaceMaterial::Builder::setUserMaterialId( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t SurfaceMaterial::Reader::getCustomColor() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t SurfaceMaterial::Builder::getCustomColor() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS);
+}
+inline void SurfaceMaterial::Builder::setCustomColor( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint64_t Filter::Reader::getCategoryBits() const {
+  return _reader.getDataField< ::uint64_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint64_t Filter::Builder::getCategoryBits() {
+  return _builder.getDataField< ::uint64_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void Filter::Builder::setCategoryBits( ::uint64_t value) {
+  _builder.setDataField< ::uint64_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint64_t Filter::Reader::getMaskBits() const {
+  return _reader.getDataField< ::uint64_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint64_t Filter::Builder::getMaskBits() {
+  return _builder.getDataField< ::uint64_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+inline void Filter::Builder::setMaskBits( ::uint64_t value) {
+  _builder.setDataField< ::uint64_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::int16_t Filter::Reader::getGroupIndex() const {
+  return _reader.getDataField< ::int16_t>(
+      ::capnp::bounded<8>() * ::capnp::ELEMENTS);
+}
+
+inline  ::int16_t Filter::Builder::getGroupIndex() {
+  return _builder.getDataField< ::int16_t>(
+      ::capnp::bounded<8>() * ::capnp::ELEMENTS);
+}
+inline void Filter::Builder::setGroupIndex( ::int16_t value) {
+  _builder.setDataField< ::int16_t>(
+      ::capnp::bounded<8>() * ::capnp::ELEMENTS, value);
+}
+
+inline float Circle::Reader::getRadius() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline float Circle::Builder::getRadius() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void Circle::Builder::setRadius(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool Polygon::Reader::hasVertices() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Polygon::Builder::hasVertices() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>::Reader Polygon::Reader::getVertices() const {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>::Builder Polygon::Builder::getVertices() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Polygon::Builder::setVertices( ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>::Builder Polygon::Builder::initVertices(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+}
+inline void Polygon::Builder::adoptVertices(
+    ::capnp::Orphan< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>> Polygon::Builder::disownVertices() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool Polygon::Reader::hasNormals() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline bool Polygon::Builder::hasNormals() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>::Reader Polygon::Reader::getNormals() const {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline  ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>::Builder Polygon::Builder::getNormals() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline void Polygon::Builder::setNormals( ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>::Builder Polygon::Builder::initNormals(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), size);
+}
+inline void Polygon::Builder::adoptNormals(
+    ::capnp::Orphan< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>> Polygon::Builder::disownNormals() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Vec2F32,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline bool Polygon::Reader::hasCentroid() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS).isNull();
+}
+inline bool Polygon::Builder::hasCentroid() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS).isNull();
+}
+inline  ::Schema::Vec2F32::Reader Polygon::Reader::getCentroid() const {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::get(_reader.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS));
+}
+inline  ::Schema::Vec2F32::Builder Polygon::Builder::getCentroid() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::get(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::Schema::Vec2F32::Pipeline Polygon::Pipeline::getCentroid() {
+  return  ::Schema::Vec2F32::Pipeline(_typeless.getPointerField(2));
+}
+#endif  // !CAPNP_LITE
+inline void Polygon::Builder::setCentroid( ::Schema::Vec2F32::Reader value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::set(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS), value);
+}
+inline  ::Schema::Vec2F32::Builder Polygon::Builder::initCentroid() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::init(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS));
+}
+inline void Polygon::Builder::adoptCentroid(
+    ::capnp::Orphan< ::Schema::Vec2F32>&& value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::adopt(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::Schema::Vec2F32> Polygon::Builder::disownCentroid() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::disown(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS));
+}
+
+inline float Polygon::Reader::getRadius() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline float Polygon::Builder::getRadius() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void Polygon::Builder::setRadius(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint16_t Polygon::Reader::getCount() const {
+  return _reader.getDataField< ::uint16_t>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint16_t Polygon::Builder::getCount() {
+  return _builder.getDataField< ::uint16_t>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+inline void Polygon::Builder::setCount( ::uint16_t value) {
+  _builder.setDataField< ::uint16_t>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::Schema::Shape::Which Shape::Reader::which() const {
+  return _reader.getDataField<Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline  ::Schema::Shape::Which Shape::Builder::which() {
+  return _builder.getDataField<Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline bool Shape::Reader::isCircle() const {
+  return which() == Shape::CIRCLE;
+}
+inline bool Shape::Builder::isCircle() {
+  return which() == Shape::CIRCLE;
+}
+inline bool Shape::Reader::hasCircle() const {
+  if (which() != Shape::CIRCLE) return false;
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Shape::Builder::hasCircle() {
+  if (which() != Shape::CIRCLE) return false;
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::Schema::Circle::Reader Shape::Reader::getCircle() const {
+  KJ_IREQUIRE((which() == Shape::CIRCLE),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::Schema::Circle>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::Schema::Circle::Builder Shape::Builder::getCircle() {
+  KJ_IREQUIRE((which() == Shape::CIRCLE),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::Schema::Circle>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Shape::Builder::setCircle( ::Schema::Circle::Reader value) {
+  _builder.setDataField<Shape::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Shape::CIRCLE);
+  ::capnp::_::PointerHelpers< ::Schema::Circle>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::Schema::Circle::Builder Shape::Builder::initCircle() {
+  _builder.setDataField<Shape::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Shape::CIRCLE);
+  return ::capnp::_::PointerHelpers< ::Schema::Circle>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Shape::Builder::adoptCircle(
+    ::capnp::Orphan< ::Schema::Circle>&& value) {
+  _builder.setDataField<Shape::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Shape::CIRCLE);
+  ::capnp::_::PointerHelpers< ::Schema::Circle>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::Schema::Circle> Shape::Builder::disownCircle() {
+  KJ_IREQUIRE((which() == Shape::CIRCLE),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::Schema::Circle>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool Shape::Reader::isPolygon() const {
+  return which() == Shape::POLYGON;
+}
+inline bool Shape::Builder::isPolygon() {
+  return which() == Shape::POLYGON;
+}
+inline bool Shape::Reader::hasPolygon() const {
+  if (which() != Shape::POLYGON) return false;
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Shape::Builder::hasPolygon() {
+  if (which() != Shape::POLYGON) return false;
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::Schema::Polygon::Reader Shape::Reader::getPolygon() const {
+  KJ_IREQUIRE((which() == Shape::POLYGON),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::Schema::Polygon>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::Schema::Polygon::Builder Shape::Builder::getPolygon() {
+  KJ_IREQUIRE((which() == Shape::POLYGON),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::Schema::Polygon>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Shape::Builder::setPolygon( ::Schema::Polygon::Reader value) {
+  _builder.setDataField<Shape::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Shape::POLYGON);
+  ::capnp::_::PointerHelpers< ::Schema::Polygon>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::Schema::Polygon::Builder Shape::Builder::initPolygon() {
+  _builder.setDataField<Shape::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Shape::POLYGON);
+  return ::capnp::_::PointerHelpers< ::Schema::Polygon>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Shape::Builder::adoptPolygon(
+    ::capnp::Orphan< ::Schema::Polygon>&& value) {
+  _builder.setDataField<Shape::Which>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, Shape::POLYGON);
+  ::capnp::_::PointerHelpers< ::Schema::Polygon>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::Schema::Polygon> Shape::Builder::disownPolygon() {
+  KJ_IREQUIRE((which() == Shape::POLYGON),
+              "Must check which() before get()ing a union member.");
+  return ::capnp::_::PointerHelpers< ::Schema::Polygon>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool Shape::Reader::hasDef() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline bool Shape::Builder::hasDef() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline  ::Schema::ShapeDef::Reader Shape::Reader::getDef() const {
+  return ::capnp::_::PointerHelpers< ::Schema::ShapeDef>::get(_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline  ::Schema::ShapeDef::Builder Shape::Builder::getDef() {
+  return ::capnp::_::PointerHelpers< ::Schema::ShapeDef>::get(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::Schema::ShapeDef::Pipeline Shape::Pipeline::getDef() {
+  return  ::Schema::ShapeDef::Pipeline(_typeless.getPointerField(1));
+}
+#endif  // !CAPNP_LITE
+inline void Shape::Builder::setDef( ::Schema::ShapeDef::Reader value) {
+  ::capnp::_::PointerHelpers< ::Schema::ShapeDef>::set(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+}
+inline  ::Schema::ShapeDef::Builder Shape::Builder::initDef() {
+  return ::capnp::_::PointerHelpers< ::Schema::ShapeDef>::init(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline void Shape::Builder::adoptDef(
+    ::capnp::Orphan< ::Schema::ShapeDef>&& value) {
+  ::capnp::_::PointerHelpers< ::Schema::ShapeDef>::adopt(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::Schema::ShapeDef> Shape::Builder::disownDef() {
+  return ::capnp::_::PointerHelpers< ::Schema::ShapeDef>::disown(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline bool ShapeDef::Reader::hasMaterial() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool ShapeDef::Builder::hasMaterial() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::Schema::SurfaceMaterial::Reader ShapeDef::Reader::getMaterial() const {
+  return ::capnp::_::PointerHelpers< ::Schema::SurfaceMaterial>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::Schema::SurfaceMaterial::Builder ShapeDef::Builder::getMaterial() {
+  return ::capnp::_::PointerHelpers< ::Schema::SurfaceMaterial>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::Schema::SurfaceMaterial::Pipeline ShapeDef::Pipeline::getMaterial() {
+  return  ::Schema::SurfaceMaterial::Pipeline(_typeless.getPointerField(0));
+}
+#endif  // !CAPNP_LITE
+inline void ShapeDef::Builder::setMaterial( ::Schema::SurfaceMaterial::Reader value) {
+  ::capnp::_::PointerHelpers< ::Schema::SurfaceMaterial>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::Schema::SurfaceMaterial::Builder ShapeDef::Builder::initMaterial() {
+  return ::capnp::_::PointerHelpers< ::Schema::SurfaceMaterial>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void ShapeDef::Builder::adoptMaterial(
+    ::capnp::Orphan< ::Schema::SurfaceMaterial>&& value) {
+  ::capnp::_::PointerHelpers< ::Schema::SurfaceMaterial>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::Schema::SurfaceMaterial> ShapeDef::Builder::disownMaterial() {
+  return ::capnp::_::PointerHelpers< ::Schema::SurfaceMaterial>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline float ShapeDef::Reader::getDensity() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline float ShapeDef::Builder::getDensity() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void ShapeDef::Builder::setDensity(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool ShapeDef::Reader::getIsSensor() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<32>() * ::capnp::ELEMENTS);
+}
+
+inline bool ShapeDef::Builder::getIsSensor() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<32>() * ::capnp::ELEMENTS);
+}
+inline void ShapeDef::Builder::setIsSensor(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<32>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool ShapeDef::Reader::getEnableSensorEvents() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<33>() * ::capnp::ELEMENTS);
+}
+
+inline bool ShapeDef::Builder::getEnableSensorEvents() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<33>() * ::capnp::ELEMENTS);
+}
+inline void ShapeDef::Builder::setEnableSensorEvents(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<33>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool ShapeDef::Reader::getEnableContactEvents() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<34>() * ::capnp::ELEMENTS);
+}
+
+inline bool ShapeDef::Builder::getEnableContactEvents() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<34>() * ::capnp::ELEMENTS);
+}
+inline void ShapeDef::Builder::setEnableContactEvents(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<34>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool ShapeDef::Reader::getEnableHitEvents() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<35>() * ::capnp::ELEMENTS);
+}
+
+inline bool ShapeDef::Builder::getEnableHitEvents() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<35>() * ::capnp::ELEMENTS);
+}
+inline void ShapeDef::Builder::setEnableHitEvents(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<35>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool ShapeDef::Reader::getEnablePreSolveEvents() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<36>() * ::capnp::ELEMENTS);
+}
+
+inline bool ShapeDef::Builder::getEnablePreSolveEvents() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<36>() * ::capnp::ELEMENTS);
+}
+inline void ShapeDef::Builder::setEnablePreSolveEvents(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<36>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool ShapeDef::Reader::getInvokeContactCreation() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<37>() * ::capnp::ELEMENTS);
+}
+
+inline bool ShapeDef::Builder::getInvokeContactCreation() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<37>() * ::capnp::ELEMENTS);
+}
+inline void ShapeDef::Builder::setInvokeContactCreation(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<37>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool ShapeDef::Reader::getUpdateBodyMass() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<38>() * ::capnp::ELEMENTS);
+}
+
+inline bool ShapeDef::Builder::getUpdateBodyMass() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<38>() * ::capnp::ELEMENTS);
+}
+inline void ShapeDef::Builder::setUpdateBodyMass(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<38>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool ShapeDef::Reader::hasFilter() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline bool ShapeDef::Builder::hasFilter() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline  ::Schema::Filter::Reader ShapeDef::Reader::getFilter() const {
+  return ::capnp::_::PointerHelpers< ::Schema::Filter>::get(_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline  ::Schema::Filter::Builder ShapeDef::Builder::getFilter() {
+  return ::capnp::_::PointerHelpers< ::Schema::Filter>::get(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::Schema::Filter::Pipeline ShapeDef::Pipeline::getFilter() {
+  return  ::Schema::Filter::Pipeline(_typeless.getPointerField(1));
+}
+#endif  // !CAPNP_LITE
+inline void ShapeDef::Builder::setFilter( ::Schema::Filter::Reader value) {
+  ::capnp::_::PointerHelpers< ::Schema::Filter>::set(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+}
+inline  ::Schema::Filter::Builder ShapeDef::Builder::initFilter() {
+  return ::capnp::_::PointerHelpers< ::Schema::Filter>::init(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline void ShapeDef::Builder::adoptFilter(
+    ::capnp::Orphan< ::Schema::Filter>&& value) {
+  ::capnp::_::PointerHelpers< ::Schema::Filter>::adopt(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::Schema::Filter> ShapeDef::Builder::disownFilter() {
+  return ::capnp::_::PointerHelpers< ::Schema::Filter>::disown(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline  ::Schema::BodyType Body::Reader::getBodyType() const {
+  return _reader.getDataField< ::Schema::BodyType>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::Schema::BodyType Body::Builder::getBodyType() {
+  return _builder.getDataField< ::Schema::BodyType>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void Body::Builder::setBodyType( ::Schema::BodyType value) {
+  _builder.setDataField< ::Schema::BodyType>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool Body::Reader::hasLinearVelocity() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool Body::Builder::hasLinearVelocity() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::Schema::Vec2F32::Reader Body::Reader::getLinearVelocity() const {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::Schema::Vec2F32::Builder Body::Builder::getLinearVelocity() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::Schema::Vec2F32::Pipeline Body::Pipeline::getLinearVelocity() {
+  return  ::Schema::Vec2F32::Pipeline(_typeless.getPointerField(0));
+}
+#endif  // !CAPNP_LITE
+inline void Body::Builder::setLinearVelocity( ::Schema::Vec2F32::Reader value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::Schema::Vec2F32::Builder Body::Builder::initLinearVelocity() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void Body::Builder::adoptLinearVelocity(
+    ::capnp::Orphan< ::Schema::Vec2F32>&& value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::Schema::Vec2F32> Body::Builder::disownLinearVelocity() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline float Body::Reader::getAngularVelocity() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+
+inline float Body::Builder::getAngularVelocity() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+inline void Body::Builder::setAngularVelocity(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
+}
+
+inline float Body::Reader::getLinearDamping() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+
+inline float Body::Builder::getLinearDamping() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+inline void Body::Builder::setLinearDamping(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS, value);
+}
+
+inline float Body::Reader::getAngularDamping() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS);
+}
+
+inline float Body::Builder::getAngularDamping() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS);
+}
+inline void Body::Builder::setAngularDamping(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS, value);
+}
+
+inline float Body::Reader::getGravityScale() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS);
+}
+
+inline float Body::Builder::getGravityScale() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS);
+}
+inline void Body::Builder::setGravityScale(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS, value);
+}
+
+inline float Body::Reader::getSleepThreshold() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS);
+}
+
+inline float Body::Builder::getSleepThreshold() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS);
+}
+inline void Body::Builder::setSleepThreshold(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool Body::Reader::getEnableSleep() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<16>() * ::capnp::ELEMENTS);
+}
+
+inline bool Body::Builder::getEnableSleep() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<16>() * ::capnp::ELEMENTS);
+}
+inline void Body::Builder::setEnableSleep(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<16>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool Body::Reader::getIsAwake() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<17>() * ::capnp::ELEMENTS);
+}
+
+inline bool Body::Builder::getIsAwake() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<17>() * ::capnp::ELEMENTS);
+}
+inline void Body::Builder::setIsAwake(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<17>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool Body::Reader::getIsBullet() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<18>() * ::capnp::ELEMENTS);
+}
+
+inline bool Body::Builder::getIsBullet() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<18>() * ::capnp::ELEMENTS);
+}
+inline void Body::Builder::setIsBullet(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<18>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool Body::Reader::getIsEnabled() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<19>() * ::capnp::ELEMENTS);
+}
+
+inline bool Body::Builder::getIsEnabled() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<19>() * ::capnp::ELEMENTS);
+}
+inline void Body::Builder::setIsEnabled(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<19>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool Body::Reader::getAllowFastRotation() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<20>() * ::capnp::ELEMENTS);
+}
+
+inline bool Body::Builder::getAllowFastRotation() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<20>() * ::capnp::ELEMENTS);
+}
+inline void Body::Builder::setAllowFastRotation(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<20>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool Body::Reader::hasShapes() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline bool Body::Builder::hasShapes() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::List< ::Schema::Shape,  ::capnp::Kind::STRUCT>::Reader Body::Reader::getShapes() const {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Shape,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline  ::capnp::List< ::Schema::Shape,  ::capnp::Kind::STRUCT>::Builder Body::Builder::getShapes() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Shape,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline void Body::Builder::setShapes( ::capnp::List< ::Schema::Shape,  ::capnp::Kind::STRUCT>::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Shape,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::List< ::Schema::Shape,  ::capnp::Kind::STRUCT>::Builder Body::Builder::initShapes(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Shape,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), size);
+}
+inline void Body::Builder::adoptShapes(
+    ::capnp::Orphan< ::capnp::List< ::Schema::Shape,  ::capnp::Kind::STRUCT>>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Shape,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::List< ::Schema::Shape,  ::capnp::Kind::STRUCT>> Body::Builder::disownShapes() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Shape,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline bool BodyComponent::Reader::hasBody() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool BodyComponent::Builder::hasBody() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::Schema::Body::Reader BodyComponent::Reader::getBody() const {
+  return ::capnp::_::PointerHelpers< ::Schema::Body>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::Schema::Body::Builder BodyComponent::Builder::getBody() {
+  return ::capnp::_::PointerHelpers< ::Schema::Body>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::Schema::Body::Pipeline BodyComponent::Pipeline::getBody() {
+  return  ::Schema::Body::Pipeline(_typeless.getPointerField(0));
+}
+#endif  // !CAPNP_LITE
+inline void BodyComponent::Builder::setBody( ::Schema::Body::Reader value) {
+  ::capnp::_::PointerHelpers< ::Schema::Body>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::Schema::Body::Builder BodyComponent::Builder::initBody() {
+  return ::capnp::_::PointerHelpers< ::Schema::Body>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void BodyComponent::Builder::adoptBody(
+    ::capnp::Orphan< ::Schema::Body>&& value) {
+  ::capnp::_::PointerHelpers< ::Schema::Body>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::Schema::Body> BodyComponent::Builder::disownBody() {
+  return ::capnp::_::PointerHelpers< ::Schema::Body>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 

@@ -35,7 +35,7 @@ struct TileDef {
 };
 
 struct Tile {
-  b2ShapeId shapeDef = b2_nullShapeId;
+  b2ShapeId shapeId = b2_nullShapeId;
   u8 flags = 0;
   EntityId entity = 0;
 

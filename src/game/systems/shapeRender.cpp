@@ -7,7 +7,7 @@
 
 RAMPAGE_START
 
-struct ShapeRendererTag {};
+struct ShapeRendererTag : SerializableTag {};
 
 const char* triangleVertexShaderSource = R"###(
         #version 400 core
@@ -181,6 +181,12 @@ int renderShapes(EntityWorld& world, float dt) {
 Entity createShapeRender(IHost& host) {
   EntityWorld& world = host.getWorld();
   Entity shapeRender = world.create();
+
+  world.component<ShapeRendererTag>(false);
+  world.component<VertexArrayBuffer>(false);
+  world.component<Shader>(false);
+  world.component<ShapeMeshComponent>(false);
+  world.component<CircleMeshComponent>(false);
 
   shapeRender.add<ShapeRendererTag>();
   shapeRender.add<VertexArrayBuffer>();

@@ -77,10 +77,10 @@ EntityWorld::EntityWorld(IHost& host) : m_host(host) {
   m_sets.reserve(10000);
   m_sets.insert(std::make_pair(findOrCreateSet(ComponentSet()), EntityList()));
 
-  component<Destroy>();
-  component<Enabled>();
-  component<ComponentAddedEvent>();
-  component<ComponentRemovedEvent>();
+  component<Enabled>(false);
+  component<Destroy>(false);
+  component<ComponentAddedEvent>(false);
+  component<ComponentRemovedEvent>(false);
 }
 
 EntityWorld::~EntityWorld() {

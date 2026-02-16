@@ -23,17 +23,17 @@ struct Vec2I16 {
     y @1 :Int16;
 }
 
-struct Transform {
+struct TransformComponent {
     pos @0 :Vec2F32;
     rot @1 :Float32;
 }
 
-struct Camera {
+struct CameraComponent {
     zoom @0 :Float32;
     rot @1 :Float32;
 }
 
-struct Arrow {
+struct ArrowComponent {
     dir @0 :Vec2F32;
     cost @1 :Float32;
     generation @2 :UInt32;
@@ -47,7 +47,7 @@ struct ItemStack {
     itemEntityId @3 :UInt32;
 }
 
-struct Inventory {
+struct InventoryData {
     name @0 :Text;
     rows @1 :UInt16;
     cols @2 :UInt16;
@@ -63,24 +63,24 @@ struct ItemAttrStackCost {
     stackCost @0 :UInt8;
 }
 
-struct ItemAttrTile {
+struct ItemAttrTileComponent {
     assetId @0 :UInt32;
 }
 
-struct Player {
+struct PlayerComponent {
     mouse @0 :Vec2F32;
     accel @1 :Float32;
     maxSpeed @2 :Float32;
 }
 
-struct CircleRender {
+struct CircleRenderComponent {
     radius @0 :Float32 = 0.0;
     offset @1 :Vec2F32;              # defaults to (0,0) automatically
     z @2 :Float32 = 1.0;
     color @3 :Vec3F32;               # defaults to (0,0,0) unless set
 }
 
-struct RectangleRender {
+struct RectangleRenderComponent {
     hw @0 :Float32 = 0.0;
     hh @1 :Float32 = 0.0;
     z @2 :Float32 = 1.0;
@@ -149,13 +149,93 @@ struct Tile {
     gridPos @2 :Vec2I16;
 
     # Size (width, height) for multi-tile
-    sizeX @3 :UInt16 = 1;
-    sizeY @4 :UInt16 = 1;
+    sizeOrPosX @3 :Int16 = 1;
+    sizeOrPosY @4 :Int16 = 1;
+}
+
+struct Tilemap {
+    layer @0 :UInt32;
+    tiles @1 :List(Tile);         # flattened list of all tiles across layers
 }
 
 struct TilemapComponent {
-    layerCount @0 :UInt32 = 2;    # default layer count
-    tiles @1 :List(Tile);         # flattened list of all tiles across layers
+    tilemaps @0 :List(Tilemap);         # flattened list of all tiles across layers
+}
+
+struct SurfaceMaterial {
+  friction @0 :Float32;
+  restitution @1 :Float32;
+  rollingResistance @2 :Float32;
+  tangentSpeed @3 :Float32;
+  userMaterialId @4 :UInt32;
+  customColor @5 :UInt32; 
+}
+
+struct Filter {
+  categoryBits @0 :UInt64;
+  maskBits @1 :UInt64;
+  groupIndex @2 :Int16;
+}
+
+struct Circle {
+  radius @0 :Float32;
+}
+
+struct Polygon {
+  vertices @0 :List(Vec2F32);
+  normals @1 :List(Vec2F32);
+  centroid @2 :Vec2F32;
+  radius @3 :Float32;
+  count @4 :UInt16;
+}
+
+struct Shape {
+  union {
+    circle @0 :Circle;
+    polygon @1 :Polygon;
+  }
+  def @2 :ShapeDef;
+}
+
+struct ShapeDef {
+  material @0 :SurfaceMaterial;
+  density @1 :Float32;
+  isSensor @2 :Bool;
+  enableSensorEvents @3 :Bool;
+  enableContactEvents @4 :Bool;
+  enableHitEvents @5 :Bool;
+  enablePreSolveEvents @6 :Bool;
+  invokeContactCreation @7 :Bool;
+  updateBodyMass @8 :Bool;
+  filter @9 :Filter;
+}
+
+enum BodyType {
+  staticBody @0;
+  kinematicBody @1;
+  dynamicBody @2;
+  invalid @3;
+}
+
+struct Body {
+  bodyType @0 :BodyType;
+  linearVelocity @1 :Vec2F32;
+  angularVelocity @2 :Float32;
+  linearDamping @3 :Float32;
+  angularDamping @4 :Float32;
+  gravityScale @5 :Float32;
+  sleepThreshold @6 :Float32;
+  enableSleep @7 :Bool;
+  isAwake @8 :Bool;
+  isBullet @9 :Bool;
+  isEnabled @10 :Bool;
+  allowFastRotation @11 :Bool;
+
+  shapes @12 :List(Shape);
+}
+
+struct BodyComponent {
+  body @0 :Body;
 }
 
 # Meant for tags.

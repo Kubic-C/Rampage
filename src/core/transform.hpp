@@ -8,7 +8,7 @@ RAMPAGE_START
 
 struct TransformComponent : public Transform {
   static void serialize(capnp::MessageBuilder& builder, Ref component) {
-    auto transformBuilder = builder.initRoot<Schema::Transform>();
+    auto transformBuilder = builder.initRoot<Schema::TransformComponent>();
     auto transform = component.cast<TransformComponent>();
 
     transformBuilder.getPos().setX(transform->pos.x);
@@ -17,7 +17,7 @@ struct TransformComponent : public Transform {
   }
 
   static void deserialize(capnp::MessageReader& reader, Ref component) {
-    auto transformReader = reader.getRoot<Schema::Transform>();
+    auto transformReader = reader.getRoot<Schema::TransformComponent>();
     auto transform = component.cast<TransformComponent>();
 
     transform->rot = transformReader.getRot();

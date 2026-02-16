@@ -4,11 +4,11 @@
 
 RAMPAGE_START
 
-struct CameraInUseTag {};
+struct CameraInUseTag : SerializableTag {};
 
 struct CameraComponent {
   static void serialize(capnp::MessageBuilder& builder, Ref component) {
-    auto cameraBuilder = builder.initRoot<Schema::Camera>();
+    auto cameraBuilder = builder.initRoot<Schema::CameraComponent>();
     auto camera = component.cast<CameraComponent>();
 
     cameraBuilder.setZoom(camera->m_zoom);
@@ -16,7 +16,7 @@ struct CameraComponent {
   }
 
   static void deserialize(capnp::MessageReader& reader, Ref component) {
-    auto cameraReader = reader.getRoot<Schema::Camera>();
+    auto cameraReader = reader.getRoot<Schema::CameraComponent>();
     auto camera = component.cast<CameraComponent>();
 
     camera->m_zoom = cameraReader.getZoom();

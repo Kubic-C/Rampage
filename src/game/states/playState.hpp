@@ -20,7 +20,7 @@ class PlayState : public State {
 
 public:
   explicit PlayState(EntityWorld& world) : m_world(world) {
-    m_world.component<OwnedBy<PlayState>>();
+    m_world.component<OwnedBy<PlayState>>(false);
     m_addedPlayerComponents = m_world.set<PlayerComponent, PrimaryTargetTag, BodyComponent,
                                           RectangleRenderComponent, InventoryComponent>();
 

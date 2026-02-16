@@ -289,6 +289,7 @@ Entity createSpriteRenderEntity(IHost& host) {
   EntityWorld& world = host.getWorld();
   Entity spriteRender = world.create();
 
+  world.component<SpriteRendererTag>(false);
   spriteRender.add<SpriteRendererTag>();
   spriteRender.add<VertexArrayBufferComponent>();
   spriteRender.add<InstanceBufferComponent>();

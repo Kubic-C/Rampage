@@ -4,6 +4,8 @@
 
 RAMPAGE_START
 
+class Entity;
+
 template <typename T>
 class RefT;
 
@@ -17,6 +19,12 @@ public:
 
   template <typename T>
   RefT<T> cast();
+
+  EntityWorld& getWorld() {
+    return m_world;
+  }
+
+  Entity getEntity();
 
 private:
   EntityWorld& m_world;

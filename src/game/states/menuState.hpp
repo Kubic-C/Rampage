@@ -25,6 +25,17 @@ public:
       stateMgr.disableState("MenuState");
       stateMgr.enableState("PlayState");
     });
+    loadScene->onMousePress([&]() {
+      StateManager& stateMgr = world.getContext<StateManager>();
+      stateMgr.disableState("MenuState");
+
+      auto serWorld = dynamic_cast<EntityWorldSerializable*>(&world);
+      if (serWorld) {
+        bool appendEntities = false;
+        bool clearPreviousEntities = false;
+        serWorld->loadState("./dat/testSave.save", appendEntities, clearPreviousEntities);
+      }
+     });
   }
 
   void onEntry() override {

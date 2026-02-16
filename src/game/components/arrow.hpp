@@ -6,7 +6,7 @@ RAMPAGE_START
 
 struct ArrowComponent {
   static void serialize(capnp::MessageBuilder& builder, Ref component) {
-    auto arrowBuilder = builder.initRoot<Schema::Arrow>();
+    auto arrowBuilder = builder.initRoot<Schema::ArrowComponent>();
     auto arrow = component.cast<ArrowComponent>();
 
     arrowBuilder.getDir().setX(arrow->dir.x);
@@ -17,7 +17,7 @@ struct ArrowComponent {
   }
 
   static void deserialize(capnp::MessageReader& reader, Ref component) {
-    auto arrowReader = reader.getRoot<Schema::Arrow>();
+    auto arrowReader = reader.getRoot<Schema::ArrowComponent>();
     auto arrow = component.cast<ArrowComponent>();
 
     arrow->dir.x       = arrowReader.getDir().getX();
@@ -35,13 +35,13 @@ struct ArrowComponent {
   u32 tileCost = 0;
 };
 
-struct PrimaryTargetTag {
+struct PrimaryTargetTag : SerializableTag{
   PrimaryTargetTag() = default;
 
   PrimaryTargetTag(glz::make_reflectable) {}
 };
 
-struct SeekPrimaryTargetTag {
+struct SeekPrimaryTargetTag : SerializableTag {
   SeekPrimaryTargetTag() = default;
 
   SeekPrimaryTargetTag(glz::make_reflectable) {}

@@ -42,7 +42,13 @@ bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) 
   EntityIterator it = getWith(saveSet);
   while (it.hasNext()) {
     Entity e = it.next();
-    entityCount++;
+
+    for(auto compId : e.set().list()) {
+      if (compId < m_componentSerializeFuncs.size() && m_componentSerializeFuncs[compId]) {
+        entityCount++;
+        break;
+      }
+    }
   }
   root.initEntities(entityCount);
 
@@ -51,6 +57,16 @@ bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) 
   it = getWith(saveSet);
   while (it.hasNext()) {
     Entity e = it.next();
+
+    bool canSerialize = false;
+    for(auto compId : e.set().list()) {
+      if (compId < m_componentSerializeFuncs.size() && m_componentSerializeFuncs[compId]) {
+        canSerialize = true;
+      }
+    }
+    if(!canSerialize)
+      continue; // skip entities with no serializable components
+    
     auto entityBuilder = root.getEntities()[entityI++];
 
     entityBuilder.setId(e.id());
@@ -130,7 +146,9 @@ bool EntityWorldSerializable::loadState(const char* path, bool appendEntities, b
     } else {
       eid = NullEntityId;
     }
-    Entity e = ensure(eid); // it exists
+    Entity e = ensure(eid); // it exists 
+
+    std::cout << "Loading entity " << eid << " with " << compIds.size() << " components.\n";
 
     for (int i = 0; i < compIds.size(); ++i) {
       ComponentId realCompId = serCompRegistry[compIds[i]];
@@ -138,6 +156,8 @@ bool EntityWorldSerializable::loadState(const char* path, bool appendEntities, b
           m_componentDeserializeFuncs[realCompId] == nullptr)
         continue;
 
+      if(e.has(realCompId)) // if entity already has component, remove it before adding deserialized version
+        e.remove(realCompId); 
       e.add(realCompId);
       Ref compRef = e.get(realCompId);
 

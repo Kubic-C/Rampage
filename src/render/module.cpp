@@ -4,6 +4,7 @@
 #include "camera.hpp"
 #include "opengl/opengl.hpp"
 #include "stb_image.h"
+#include "render.hpp"
 
 RAMPAGE_START
 
@@ -110,6 +111,14 @@ int RenderModule::onLoad() {
   world.observe<SDL_Event>(world.component<SDL_Event>(), {}, observeResizeEvent);
 
   enableVsync(false);
+
+  world.component<CameraInUseTag>(false);
+  world.component<CameraComponent>(false);
+  world.component<TextureMap3DComponent>(false);
+  world.component<TextureMapInUseTag>(false);
+  world.component<VertexArrayBufferComponent>(false);
+  world.component<InstanceBufferComponent>(false);
+  world.component<ShaderComponent>(false);
 
   return 0;
 }

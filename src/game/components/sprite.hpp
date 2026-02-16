@@ -35,6 +35,76 @@ struct SpriteLayer {
 };
 
 struct SpriteComponent {
+  static void serialize(capnp::MessageBuilder& builder, Ref component) {
+    auto spriteBuilder = builder.initRoot<Schema::SpriteComponent>();
+    auto sprite = component.cast<SpriteComponent>();
+
+    spriteBuilder.setScaling(sprite->scaling);
+
+    // Flatten 2D subSprites into list
+    auto listBuilder = spriteBuilder.initSubSprites(
+        std::accumulate(sprite->subSprites.begin(), sprite->subSprites.end(), size_t(0),
+                        [](size_t sum, const auto& row){ return sum + row.size(); }));
+
+    u32 i = 0;
+    u16 y = 0, x = 0;
+    for (const auto& row : sprite->subSprites) {
+      for (const auto& sub : row) {
+        auto subBuilder = listBuilder[i++];
+        subBuilder.getGridPos().setX(x);
+        subBuilder.getGridPos().setY(y);
+
+        auto layersBuilder = subBuilder.initLayers(sub.layerCount);
+        for (u32 j = 0; j < sub.layerCount; j++) {
+          auto& layer = sub.layers[j];
+          auto layerBuilder = layersBuilder[j];
+          layerBuilder.setTexIndex(layer.texIndex);
+          layerBuilder.getOffset().setX(layer.offset.x);
+          layerBuilder.getOffset().setY(layer.offset.y);
+          layerBuilder.setRot(layer.rot);
+          layerBuilder.setLayer(static_cast<Schema::WorldLayer>(layer.layer));
+        }
+
+        x++;
+      }
+      y++;
+    }
+  }
+
+  // ---------------- Deserialization ----------------
+  static void deserialize(capnp::MessageReader& reader, Ref component) {
+    auto spriteReader = reader.getRoot<Schema::SpriteComponent>();
+    auto sprite = component.cast<SpriteComponent>();
+
+    sprite->scaling = spriteReader.getScaling();
+    sprite->subSprites.clear();
+
+    const auto subList = spriteReader.getSubSprites();
+    for (auto subReader : subList) {
+      u16 row = subReader.getGridPos().getY();
+      u16 col = subReader.getGridPos().getX();
+
+      // Make sure your 2D vector has enough rows
+      if (sprite->subSprites.size() <= row)
+          sprite->subSprites.resize(row + 1);
+
+      // Insert the SubSprite into the correct position
+      SubSprite& sub = sprite->subSprites[row].emplace_back();
+
+      const auto layersList = subReader.getLayers();
+      sub.layerCount = layersList.size();
+      for (u32 j = 0; j < layersList.size(); j++) {
+        auto layerReader = layersList[j];
+        auto& layer = sub.layers[j];
+        layer.texIndex = layerReader.getTexIndex();
+        layer.offset.x = layerReader.getOffset().getX();
+        layer.offset.y = layerReader.getOffset().getY();
+        layer.rot = layerReader.getRot();
+        layer.layer = static_cast<WorldLayer>(layerReader.getLayer());
+      }
+    }
+  }
+
   struct SubSprite {
     static constexpr size_t MaxSpriteLaters = maxNumberBits(3);
     SpriteLayer layers[MaxSpriteLaters];
@@ -77,7 +147,7 @@ struct SpriteComponent {
 };
 
 // The sprite is not part of a tilemap
-struct SpriteIndependentTag {
+struct SpriteIndependentTag : SerializableTag {
   SpriteIndependentTag() = default;
 
   SpriteIndependentTag(glz::make_reflectable) {}

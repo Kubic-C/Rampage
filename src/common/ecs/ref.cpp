@@ -8,6 +8,10 @@ Ref::Ref(EntityWorld& world, EntityId id, ComponentId comp) : m_world(world), m_
 
 Ref::Ref(Entity entity, ComponentId comp) : m_world(entity.world()), m_entity(entity), m_comp(comp) {}
 
+Entity Ref::getEntity() {
+  return m_world.get(m_entity);
+}
+
 void* Ref::get() {
   assert(Entity(m_world, m_entity).has(m_comp));
   IPool* pool = m_world.getPool(m_comp);

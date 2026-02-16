@@ -6,6 +6,14 @@
 
 RAMPAGE_START
 
+struct SerializableTag {
+  static void serialize(capnp::MessageBuilder& builder, Ref component) {
+    builder.initRoot<Schema::Void>();
+  }
+
+  static void deserialize(capnp::MessageReader& reader, Ref component) {}
+};
+
 /* An extension of entity world that defines a set of methods to serialize component data. */
 class EntityWorldSerializable : public EntityWorld {
   static constexpr size_t m_maxScratchWordSize = 512;
@@ -16,9 +24,7 @@ public:
     std::memset(m_scratchBuffer.begin(), 0, m_scratchBuffer.size() * sizeof(capnp::word));
 
     // issa' tag
-    registerSerializable<Enabled>(
-        [](capnp::MessageBuilder& builder, Ref component) { builder.initRoot<Schema::Void>(); },
-        [](capnp::MessageReader& reader, Ref component) {});
+    registerSerializable<Enabled>(SerializableTag::serialize, SerializableTag::deserialize);
   }
 
   ~EntityWorldSerializable() override = default;

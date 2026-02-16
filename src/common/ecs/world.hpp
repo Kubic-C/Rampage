@@ -126,8 +126,11 @@ public:
    * EventTypes are registered just like regular components.
    */
 
+  // If isRegistered is "True", this means the component is expected to already
+  // be past initialization and should return with the correlating ID. If isRegistered
+  // is false, the component will be initialized and then returned with a proper ID.
   template <typename T>
-  ComponentId component(const std::string_view& name = "");
+  ComponentId component(bool isRegistered = true) noexcept;
 
   template <typename EventType>
   void observe(ComponentId comp, const ComponentSet& with, ObserverCallback callback);
@@ -270,19 +273,19 @@ T& EntityWorld::getContext() {
 }
 
 template <typename T>
-ComponentId EntityWorld::component(const std::string_view& name) {
+ComponentId EntityWorld::component(bool isRegistered) noexcept {
   ComponentId compId = m_componentIdMgr.id<T>();
-  if (compId < m_componentPools.size())
+  if (compId < m_componentNames.size())
     return compId;
+  
+  if(isRegistered)
+    throw std::runtime_error("Component not initialized, despite being marked so");
 
   m_componentNames.resize(compId + 1, "");
   m_componentCopyCtor.resize(compId + 1, nullptr);
   m_componentPools.resize(compId + 1, nullptr);
 
-  if (name.empty())
-    m_componentNames[compId] = boost::typeindex::type_id<T>().pretty_name();
-  else
-    m_componentNames[compId] = name;
+  m_componentNames[compId] = boost::typeindex::type_id<T>().pretty_name();
 
   size_t size = sizeof(T);
   if constexpr (std::is_empty_v<T>)
