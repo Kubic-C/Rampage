@@ -181,8 +181,19 @@ void meshTilemap(Entity e, VertexArrayBuffer& va, InstanceBufferComponent& insta
             addSpriteInstance(instance, va, instances);
           }
         } else {
-          for (int x = 0; x < dim.x; x++) {
-            for (int y = 0; y < dim.y; y++) {
+#ifdef DEBUG
+          // Verify that sprite grid dimensions match tile dimensions
+          if (sprite->subSprites.size() != dim.y || 
+              (sprite->subSprites.size() > 0 && sprite->subSprites[0].size() != dim.x)) {
+            // Log mismatch for debugging
+            e.world().getHost().log(
+                "WARNING: Multitile sprite grid (%zu x %zu) doesn't match tile dimensions (%u x %u)\n",
+                sprite->subSprites[0].size(), sprite->subSprites.size(), dim.x, dim.y);
+          }
+#endif
+          
+          for (size_t y = 0; y < sprite->subSprites.size(); y++) {
+            for (size_t x = 0; x < sprite->subSprites[y].size(); x++) {
               SpriteComponent::SubSprite& subSprite = sprite->subSprites[y][x];
 
               for (int i = 0; i < subSprite.layerCount; i++) {

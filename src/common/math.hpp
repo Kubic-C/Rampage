@@ -55,6 +55,10 @@ struct Rot : b2Rot {
     c = glm::cos(angle);
   }
 
+  b2Rot b2() const {
+    return b2Rot(s, c);
+  }
+
   float radians() const {
     return b2Rot_GetAngle(*this);
   }
@@ -83,6 +87,10 @@ struct Rot : b2Rot {
     dif.s = s * other.c + c * other.s;
     dif.c = c * other.c - s * other.s;
     return dif;
+  }
+
+  operator b2Rot() const {
+    return b2();
   }
 };
 

@@ -56,6 +56,10 @@
 #undef min
 #endif
 
+#ifndef NDEBUG
+#define DEBUG
+#endif
+
 RAMPAGE_START
 
 typedef uint8_t u8;

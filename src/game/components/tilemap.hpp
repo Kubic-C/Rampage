@@ -239,8 +239,14 @@ struct TilemapComponent {
         tileBuilder.setFlags(tile.flags);
         tileBuilder.getGridPos().setX(pos.x);
         tileBuilder.getGridPos().setY(pos.y);
-        tileBuilder.setSizeOrPosX(tile.x.x);
-        tileBuilder.setSizeOrPosX(tile.y.y);
+        // For main tiles, serialize dimensions; for sub-tiles, serialize position
+        if (tile.flags & TileFlags::IS_MAIN_TILE) {
+          tileBuilder.setSizeOrPosX(tile.x.w);
+          tileBuilder.setSizeOrPosY(tile.y.h);
+        } else {
+          tileBuilder.setSizeOrPosX(tile.x.x);
+          tileBuilder.setSizeOrPosY(tile.y.y);
+        }
       }
     }
   }
@@ -285,15 +291,24 @@ struct TilemapComponent {
       const auto tilesList = tmReader.getTiles();
       for (auto tileReader : tilesList) {
         glm::i16vec2 pos(tileReader.getGridPos().getX(), tileReader.getGridPos().getY());
-        Tile t;
+        Tile& t = tm.m_tiles[pos];
         t.entity = tileReader.getEntity();
         t.flags = tileReader.getFlags();
-        t.x.x = tileReader.getSizeOrPosX();
-        t.y.y = tileReader.getSizeOrPosY();
+        
+        // For main tiles, store dimensions; for sub-tiles, store position
+        if (t.flags & TileFlags::IS_MAIN_TILE) {
+          t.x.w = tileReader.getSizeOrPosX();
+          t.y.h = tileReader.getSizeOrPosY();
+        } else {
+          t.x.x = tileReader.getSizeOrPosX();
+          t.y.y = tileReader.getSizeOrPosY();
+        }
 
         // Use spatial location of the tile to determine the corresponding shape
-        // on the parent physics body.
-        glm::i16vec2 localPos = Tilemap::getNearestTile(Tilemap::getLocalTileCenter(pos, {t.x.x, t.y.y}));
+        // on the parent physics body. For main tiles, use the main tile's position.
+        // For sub-tiles, use the position of the main tile they belong to.
+        glm::i16vec2 mainTilePos = (t.flags & TileFlags::IS_MAIN_TILE) ? pos : glm::i16vec2(t.x.x, t.y.y);
+        glm::i16vec2 localPos = Tilemap::getNearestTile(Tilemap::getLocalTileCenter(mainTilePos, {t.x.w, t.y.h}));
         auto shapeIt = shapeMap.find(localPos);
         if (shapeIt != shapeMap.end() && t.flags & TileFlags::IS_MAIN_TILE) {
           t.shapeId = shapeIt->second;
@@ -302,7 +317,6 @@ struct TilemapComponent {
           t.shapeId = b2_nullShapeId;
         }
 
-        tm.m_tiles[pos] = t;
         if(t.flags & TileFlags::IS_MAIN_TILE) {
           tm.m_mainTiles.insert(pos); 
         }

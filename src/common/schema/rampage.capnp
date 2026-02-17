@@ -95,23 +95,11 @@ struct SpawnerComponent {
     spawnCount @4 :UInt32 = 5;
 }
 
-enum WorldLayer {
-    top @0;
-    res2 @1;
-    res @2;
-    item @3;
-    turret @4;
-    wall @5;
-    floor @6;
-    bottom @7;
-    invalid @8;
-}
-
 struct SpriteLayer {
     texIndex @0 :UInt16 = 0;
     offset @1 :Vec2F32;
     rot @2 :Float32 = 0.0;
-    layer @3 :WorldLayer = invalid;
+    layer @3 :u8 = 255;
 }
 
 struct SubSprite {

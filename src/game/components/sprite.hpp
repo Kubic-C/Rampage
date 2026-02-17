@@ -47,8 +47,9 @@ struct SpriteComponent {
                         [](size_t sum, const auto& row){ return sum + row.size(); }));
 
     u32 i = 0;
-    u16 y = 0, x = 0;
+    u16 y = 0;
     for (const auto& row : sprite->subSprites) {
+      u16 x = 0;  // Reset x for each new row
       for (const auto& sub : row) {
         auto subBuilder = listBuilder[i++];
         subBuilder.getGridPos().setX(x);
@@ -71,7 +72,6 @@ struct SpriteComponent {
     }
   }
 
-  // ---------------- Deserialization ----------------
   static void deserialize(capnp::MessageReader& reader, Ref component) {
     auto spriteReader = reader.getRoot<Schema::SpriteComponent>();
     auto sprite = component.cast<SpriteComponent>();
@@ -87,15 +87,17 @@ struct SpriteComponent {
       // Make sure your 2D vector has enough rows
       if (sprite->subSprites.size() <= row)
           sprite->subSprites.resize(row + 1);
+      if (sprite->subSprites[row].size() <= col)
+          sprite->subSprites[row].resize(col + 1);
 
       // Insert the SubSprite into the correct position
-      SubSprite& sub = sprite->subSprites[row].emplace_back();
+      SubSprite& sub = sprite->subSprites[row][col];
 
       const auto layersList = subReader.getLayers();
       sub.layerCount = layersList.size();
       for (u32 j = 0; j < layersList.size(); j++) {
         auto layerReader = layersList[j];
-        auto& layer = sub.layers[j];
+        auto& layer = sub.layers[j];  // Use sequential index, not enum value
         layer.texIndex = layerReader.getTexIndex();
         layer.offset.x = layerReader.getOffset().getX();
         layer.offset.y = layerReader.getOffset().getY();

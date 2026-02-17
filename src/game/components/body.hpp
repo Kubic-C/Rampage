@@ -37,7 +37,7 @@ struct BodyComponent {
     bodyBuilder.setIsAwake(b2Body_IsAwake(self->id));
     bodyBuilder.setIsBullet(b2Body_IsBullet(self->id));
     bodyBuilder.setIsEnabled(b2Body_IsEnabled(self->id));
-    // bodyBuilder.setAllowFastRotation(false);
+    bodyBuilder.setAllowFastRotation(false);
 
     // Serialize shapes - using array-based access
     int shapeCount = b2Body_GetShapeCount(self->id);
@@ -113,16 +113,17 @@ struct BodyComponent {
     bodyDef.isEnabled = bodyReader.getIsEnabled();
     bodyDef.allowFastRotation = bodyReader.getAllowFastRotation();
 
-    // Create the body
-    self->id = b2CreateBody(world, &bodyDef);
-    
     // Try to set body position from Transform if available
     // This ensures the body is at the correct position before shapes are added
     auto entity = component.getEntity();
     if (entity.has<TransformComponent>()) {
       auto transform = entity.get<TransformComponent>();
-      b2Body_SetTransform(self->id, transform->pos, transform->rot);
+      bodyDef.position = transform->pos;
+      bodyDef.rotation = transform->rot;
     }
+
+    // Create the body
+    self->id = b2CreateBody(world, &bodyDef);
     
     // Recreate shapes
     auto shapesReader = bodyReader.getShapes();

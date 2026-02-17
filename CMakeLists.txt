@@ -11,7 +11,7 @@ endif ()
 
 project ("Rampage")
 
-set(ASAN_ON FALSE)
+set(ASAN_ON TRUE)
 if(ASAN_ON)
   if(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     message("USING ASAN FOR DEBUG BUILD ON THE MSVC PLATFORM")
