@@ -130,7 +130,7 @@ public:
       }
     }
 
-    if (copy.flags & TileFlags::IS_COLLIDABLE) {
+    if (copy.flags & TileFlags::IS_COLLIDABLE && b2Shape_IsValid(copy.shapeId)) {
       b2DestroyShape(copy.shapeId, true);
     }
 

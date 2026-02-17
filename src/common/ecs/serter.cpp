@@ -52,6 +52,8 @@ bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) 
   }
   root.initEntities(entityCount);
 
+  m_host.getHostMutex().lock();
+
   kj::VectorOutputStream scratchCompStream;
   uint32_t entityI = 0;
   it = getWith(saveSet);
@@ -95,6 +97,8 @@ bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) 
     }
   }
 
+  m_host.getHostMutex().unlock();
+  
   capnp::writePackedMessageToFd(_fileno(file), msg);
   fclose(file);
 
@@ -107,6 +111,8 @@ bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) 
 }
 
 bool EntityWorldSerializable::loadState(const char* path, bool appendEntities, bool clearPrevious) {
+  m_host.getHostMutex().lock();
+
   FILE* file;
   errno_t error = fopen_s(&file, path, "rb");
   if (error != 0)
@@ -140,15 +146,11 @@ bool EntityWorldSerializable::loadState(const char* path, bool appendEntities, b
     if (eid == NullEntityId)
       continue;
 
-    if (!appendEntities && exists(eid)) {
-      if (clearPrevious)
-        destroy(eid);
-    } else {
+    if (clearPrevious && exists(eid))
+      destroy(eid);
+    if(appendEntities)
       eid = NullEntityId;
-    }
     Entity e = ensure(eid); // it exists 
-
-    std::cout << "Loading entity " << eid << " with " << compIds.size() << " components.\n";
 
     for (int i = 0; i < compIds.size(); ++i) {
       ComponentId realCompId = serCompRegistry[compIds[i]];
@@ -168,6 +170,8 @@ bool EntityWorldSerializable::loadState(const char* path, bool appendEntities, b
       m_componentDeserializeFuncs[realCompId](compReader, compRef);
     }
   }
+
+  m_host.getHostMutex().unlock();
 
   fclose(file);
 

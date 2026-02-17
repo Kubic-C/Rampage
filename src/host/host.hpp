@@ -37,6 +37,10 @@ public:
     va_end(args);
   }
 
+  std::mutex& getHostMutex() override {
+    return m_mutex;
+  }
+
   void setLogFuncs(const TraceFunc trace, const TraceErrorFunc traceErr) override {
     std::lock_guard lock(m_mutex);
 

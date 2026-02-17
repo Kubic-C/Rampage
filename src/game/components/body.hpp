@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../common/common.hpp"
+#include "../../core/transform.hpp"
 
 RAMPAGE_START
 
@@ -115,6 +116,14 @@ struct BodyComponent {
     // Create the body
     self->id = b2CreateBody(world, &bodyDef);
     
+    // Try to set body position from Transform if available
+    // This ensures the body is at the correct position before shapes are added
+    auto entity = component.getEntity();
+    if (entity.has<TransformComponent>()) {
+      auto transform = entity.get<TransformComponent>();
+      b2Body_SetTransform(self->id, transform->pos, transform->rot);
+    }
+    
     // Recreate shapes
     auto shapesReader = bodyReader.getShapes();
     for (auto shapeReader : shapesReader) {
@@ -133,6 +142,7 @@ struct BodyComponent {
       // Recreate shape based on type
       if (shapeReader.which() == Schema::Shape::Which::CIRCLE) {
         b2Circle circle;
+        circle.center = Vec2(0);
         circle.radius = shapeReader.getCircle().getRadius();
         b2CreateCircleShape(self->id, &shapeDef, &circle);
       } else if (shapeReader.which() == Schema::Shape::Which::POLYGON) {
