@@ -208,7 +208,7 @@ void EntityWorld::destroy(EntityId id) {
   // We remove all other components first, to ensure
   // that observers may know that the entity they are processing is currently
   // being destroyed.
-  remove(id, setOf(id).remove(component<Destroy>()), false);
+  remove(id, setOf(id).remove(component<Destroy>()));
 
   EntityListIterator next = m_sets[findOrCreateSet({component<Destroy>()})].erase(data.pos);
   m_entities[id].reset();
@@ -330,6 +330,8 @@ Ref EntityWorld::get(EntityId entity, ComponentId compId) {
 }
 
 void EntityWorld::add(EntityId entity, const ComponentSet& addComps, bool emit) {
+  assert(exists(entity));
+
   const ComponentSet& oldSet = setOf(entity);
 
   ComponentSetBuilder tempSet(oldSet);
@@ -353,6 +355,8 @@ void EntityWorld::add(EntityId entity, const ComponentSet& addComps, bool emit) 
 }
 
 void EntityWorld::remove(EntityId entity, const ComponentSet& remComps, bool emit) {
+  assert(exists(entity));
+
 #ifndef NDEBUG
   {
     const ComponentSet& oldSet = setOf(entity);
@@ -381,10 +385,14 @@ void EntityWorld::remove(EntityId entity, const ComponentSet& remComps, bool emi
 }
 
 bool EntityWorld::has(EntityId entity, ComponentId comp) {
+  assert(exists(entity));
   return setOf(entity).has(comp);
 }
 
 void EntityWorld::copy(EntityId src, EntityId dst, const ComponentSet& copySet) {
+  assert(exists(src));
+  assert(exists(dst));
+
   const ComponentSet& entitySet = setOf(src);
   const ComponentSet& comps = copySet.list().empty() ? entitySet : copySet;
   add(dst, comps);
@@ -400,6 +408,9 @@ void EntityWorld::copy(EntityId src, EntityId dst, const ComponentSet& copySet) 
 }
 
 void EntityWorld::move(EntityId src, EntityId dst, const ComponentSet& moveSet) {
+  assert(exists(src));
+  assert(exists(dst));
+
   const ComponentSet& entitySet = setOf(src);
   const ComponentSet& comps = moveSet.list().empty() ? entitySet : moveSet;
   add(dst, comps);

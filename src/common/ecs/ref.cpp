@@ -12,6 +12,7 @@ EntityPtr Ref::getEntity() {
 }
 
 void* Ref::get() {
+  assert(m_world->exists(m_entity));
   assert(m_world->has(m_entity, m_comp));
   IPool* pool = m_world->getPool(m_comp);
   assert(pool);

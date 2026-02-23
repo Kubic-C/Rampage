@@ -11,6 +11,7 @@ class EntityWorld : public IWorld {
   friend class EntityIterator;
   friend class SetIterator;
 
+  EntityWorld() = delete;
   EntityWorld(const EntityWorld& other) = delete;
   EntityWorld(EntityWorld&& other) = delete;
   EntityWorld& operator=(const EntityWorld& other) = delete;

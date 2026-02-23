@@ -55,7 +55,7 @@ void updateTileBoundTransforms(EntityPtr e) {
                 transform->rot);
 }
 
-  int updateTileBoundTransformsForAll(IWorldPtr world, float dt) {
+int updateTileBoundTransformsForAll(IWorldPtr world, float dt) {
   auto it = world->getWith(world->set<TransformComponent, TileBoundComponent>());
   while (it->hasNext())
     updateTileBoundTransforms(it->next());

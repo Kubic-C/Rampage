@@ -28,21 +28,21 @@ public:
     m_menu = world->getContext<tgui::Gui>().get(menuName);
 
     tgui::Button::Ptr returnBtn = gui.get(returnBtnName)->cast<tgui::Button>();
-    returnBtn->onMousePress([&]() {
+    returnBtn->onMousePress([=]() {
       auto& stateMgr = world->getContext<StateManager>();
       stateMgr.disableState("PlayState");
       stateMgr.enableState("MenuState");
     });
 
     tgui::Button::Ptr saveStateBtn = gui.get(playSaveStateTextName)->cast<tgui::Button>();
-    saveStateBtn->onMousePress([&]() {
+    saveStateBtn->onMousePress([=]() {
       auto& stateMgr = world->getContext<StateManager>();
 
 
     });
 
     tgui::Button::Ptr loadStateBtn = gui.get(playLoadStateTextName)->cast<tgui::Button>();
-    loadStateBtn->onMousePress([&]() {
+    loadStateBtn->onMousePress([=]() {
       auto& stateMgr = world->getContext<StateManager>();
 
 

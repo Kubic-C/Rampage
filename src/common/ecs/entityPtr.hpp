@@ -45,6 +45,7 @@ public:
 
   template <typename T>
   RefT<T> get() {
+    m_world->exists(m_id);
     return RefT<T>(m_world, m_id);
   }
 
