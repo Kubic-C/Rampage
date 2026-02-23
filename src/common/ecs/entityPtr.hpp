@@ -28,10 +28,10 @@ public:
   bool has(ComponentId compId) const { return m_world->has(m_id, compId); }
   IWorldPtr world() { return m_world; }
   bool isEnabled() const { return has<IWorld::Enabled>(); }
-  void enable() { add<IWorld::Enabled>(); }
-  void disable() { remove<IWorld::Enabled>(); }
+  void enable() { m_world->enable(m_id); }
+  void disable() { m_world->disable(m_id); }
   EntityPtr clone() const { return m_world->clone(m_id); }
-  void copyInto(EntityId dstId) { /* TODO: implement if needed */ }
+  void copyInto(EntityId dstId) { m_world->copy(m_id, dstId); }
 
   template <typename ... Params>
   void add(bool emit = true) {

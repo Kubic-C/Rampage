@@ -508,8 +508,7 @@ bool AssetLoader::loadAssets(const std::string& path) {
   glz::error_ctx ec = glz::read<readOps>(readAssets, fileData);
   if (ec) {
     std::string msg = glz::format_error(ec, fileData);
-    // TODO: logGeneric("<bgRed, bold>Failed to load assets\n Ec: %i\n File:%s\n Msg: "%s\n<reset>", ec.ec,
-    // path.c_str(), msg.c_str());
+    m_world->getHost().log("<bgRed, bold>Failed to load assets\n Ec: %i\n File:%s\n Msg: %s\n<reset>", ec.ec, path.c_str(), msg.c_str());
     return false;
   }
 

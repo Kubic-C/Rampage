@@ -216,11 +216,11 @@ void EntityWorld::destroy(EntityId id) {
 }
 
 void EntityWorld::enable(EntityId entity) {
-  getEntity(entity).enable();
+  add<IWorld::Enabled>(entity);
 }
 
 void EntityWorld::disable(EntityId entity) {
-  getEntity(entity).disable();
+  remove<IWorld::Enabled>(entity);
 }
 
 EntityPtr EntityWorld::clone(EntityId entity) {
