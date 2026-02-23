@@ -273,9 +273,9 @@ struct glz::meta<AssetJson> {
 
 RAMPAGE_START
 
-AssetLoader::SpriteAsset loadSprite(EntityWorld& world, const std::string& path,
+AssetLoader::SpriteAsset loadSprite(IWorldPtr world, const std::string& path,
                                     const SpritePrototype& spriteProto) {
-  auto textureMap = world.getFirstWith(world.set<TextureMapInUseTag>()).get<TextureMap3DComponent>();
+  auto textureMap = world->getFirstWith(world->set<TextureMapInUseTag>()).get<TextureMap3DComponent>();
 
   SpriteComponent sprites;
   sprites.subSprites.resize(spriteProto.dimY);
@@ -302,9 +302,9 @@ AssetLoader::SpriteAsset loadSprite(EntityWorld& world, const std::string& path,
   return AssetLoader::SpriteAsset(sprites);
 }
 
-AssetLoader::PrefabAsset loadPrefabPrototype(AssetLoader& loader, EntityWorld& world, const std::string& path,
+AssetLoader::PrefabAsset loadPrefabPrototype(AssetLoader& loader, IWorldPtr world, const std::string& path,
                                              AssetId id, const PrefabPrototype& prototypeComponents) {
-  Entity e = world.create();
+  EntityPtr e = world->create();
   e.disable();
 
   for (const ComponentPrototype& proto : prototypeComponents.comps) {
@@ -357,7 +357,7 @@ AssetLoader::PrefabAsset loadPrefabPrototype(AssetLoader& loader, EntityWorld& w
       {
         e.add<TileItemComponent>();
         RefT<TileItemComponent> tileItem = e.get<TileItemComponent>();
-        Entity itemEntity = loader.getPrefab(std::get<ItemName>(proto).item);
+        EntityPtr itemEntity = loader.getPrefab(std::get<ItemName>(proto).item);
         tileItem->item = itemEntity;
         itemEntity.add<ItemAttrTile>();
         RefT<ItemAttrTile> tile = itemEntity.get<ItemAttrTile>();
@@ -433,12 +433,12 @@ AssetLoader::PrefabAsset loadPrefabPrototype(AssetLoader& loader, EntityWorld& w
   return AssetLoader::PrefabAsset(e);
 }
 
-TileDef loadTilePrototype(AssetLoader& loader, EntityWorld& world, const std::string& path, AssetId id,
+TileDef loadTilePrototype(AssetLoader& loader, IWorldPtr world, const std::string& path, AssetId id,
                           const TilePrototype& tilePrototype) {
   TileDef def = tilePrototype.tile;
   if (!tilePrototype.entityComponents.comps.empty()) {
     def.entity = loadPrefabPrototype(loader, world, path, id, tilePrototype.entityComponents).entity;
-    Entity e = world.get(def.entity);
+    EntityPtr e = world->getEntity(def.entity);
 
     e.add<TransformComponent>();
     e.add<TileBoundComponent>();
@@ -460,7 +460,7 @@ TileDef loadTilePrototype(AssetLoader& loader, EntityWorld& world, const std::st
   return def;
 }
 
-Scene loadScenePrototype(AssetLoader& loader, EntityWorld& world, const std::string& path,
+Scene loadScenePrototype(AssetLoader& loader, IWorldPtr world, const std::string& path,
                          const ScenePrototype& proto) {
   Scene scene(world, proto.name, proto.desc);
 

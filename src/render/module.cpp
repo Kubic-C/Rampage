@@ -19,21 +19,21 @@ static void setNecessaryGLAttributes() {
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, MinimumMinorGLVersion);
 }
 
-int clearWindow(EntityWorld& world, float dt) {
-  auto render = world.getContext<RenderModule>();
+int clearWindow(IWorldPtr world, float dt) {
+  auto render = world->getContext<RenderModule>();
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   return 0;
 }
 
-int swapBuffers(EntityWorld& world, float dt) {
-  auto window = world.getContext<SDL_Window*>();
+int swapBuffers(IWorldPtr world, float dt) {
+  auto window = world->getContext<SDL_Window*>();
 
   return SDL_GL_SwapWindow(window);
 }
 
-void observeResizeEvent(Entity sdlEventEntity) {
-  EntityWorld& world = sdlEventEntity.world();
+void observeResizeEvent(EntityPtr sdlEventEntity) {
+  IWorldPtr world = sdlEventEntity.world();
   auto sdlEvent = sdlEventEntity.get<SDL_Event>();
 
   switch (static_cast<Event>(sdlEvent->type)) {
@@ -46,7 +46,7 @@ void observeResizeEvent(Entity sdlEventEntity) {
 }
 
 int RenderModule::onLoad() {
-  EntityWorld& world = m_host->getWorld();
+  IWorldPtr world = m_host->getWorld();
 
   /* Window and render setup */
   SDL_Init(SDL_INIT_VIDEO);
@@ -64,11 +64,11 @@ int RenderModule::onLoad() {
       SDL_SetWindowIcon(window, SDL_CreateSurfaceFrom(x, y, SDL_PIXELFORMAT_RGBA32, data, x * 4));
     }
   }
-  world.addContext<SDL_Window*>(window);
+  world->addContext<SDL_Window*>(window);
 
   /* OpengGL Context */
-  world.addContext<SDL_GLContext>(SDL_GL_CreateContext(window));
-  if (!world.getContext<SDL_GLContext>()) {
+  world->addContext<SDL_GLContext>(SDL_GL_CreateContext(window));
+  if (!world->getContext<SDL_GLContext>()) {
     m_host->log(-2, "Failed to create context. SDL_GetError(): %s\n", SDL_GetError());
     return -2;
   }
@@ -108,17 +108,17 @@ int RenderModule::onLoad() {
   group.attachToStage<RenderGroup::ClearWindowStage>(clearWindow);
   group.attachToStage<RenderGroup::SwapBuffersStage>(swapBuffers);
 
-  world.observe<SDL_Event>(world.component<SDL_Event>(), {}, observeResizeEvent);
+  world->observe<SDL_Event>(world->component<SDL_Event>(), {}, observeResizeEvent);
 
   enableVsync(false);
 
-  world.component<CameraInUseTag>(false);
-  world.component<CameraComponent>(false);
-  world.component<TextureMap3DComponent>(false);
-  world.component<TextureMapInUseTag>(false);
-  world.component<VertexArrayBufferComponent>(false);
-  world.component<InstanceBufferComponent>(false);
-  world.component<ShaderComponent>(false);
+  world->component<CameraInUseTag>(false);
+  world->component<CameraComponent>(false);
+  world->component<TextureMap3DComponent>(false);
+  world->component<TextureMapInUseTag>(false);
+  world->component<VertexArrayBufferComponent>(false);
+  world->component<InstanceBufferComponent>(false);
+  world->component<ShaderComponent>(false);
 
   return 0;
 }
@@ -137,8 +137,8 @@ glm::mat4 RenderModule::getProj() const {
 }
 
 glm::mat4 RenderModule::getView() const {
-  EntityWorld& world = m_host->getWorld();
-  Entity cameraEntity = world.getFirstWith(world.set<CameraInUseTag>());
+  IWorldPtr world = m_host->getWorld();
+  EntityPtr cameraEntity = world->getFirstWith(world->set<CameraInUseTag>());
   glm::ivec2 screenDim = getWindowSize();
 
   auto camera = cameraEntity.get<CameraComponent>();
@@ -153,7 +153,7 @@ glm::mat4 RenderModule::getViewProj() const {
 
 glm::ivec2 RenderModule::getWindowSize() const {
   glm::ivec2 screenSize;
-  SDL_GetWindowSize(m_host->getWorld().getContext<SDL_Window*>(), &screenSize.x, &screenSize.y);
+  SDL_GetWindowSize(m_host->getWorld()->getContext<SDL_Window*>(), &screenSize.x, &screenSize.y);
 
   return screenSize;
 }

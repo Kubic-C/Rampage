@@ -6,7 +6,7 @@ RAMPAGE_START
 
 class Scene {
 public:
-  Scene(EntityWorld& world, std::string name, std::string desc) :
+  Scene(IWorldPtr world, std::string name, std::string desc) :
       m_world(world), m_name(std::move(name)), m_desc(std::move(desc)) {}
 
   Scene(Scene&& scene) noexcept :
@@ -22,21 +22,21 @@ public:
     m_sceneTag = sceneTag;
 
     for (int i = 0; i < m_prefabs.size(); i++) {
-      Entity clone = m_world.get(m_prefabs[i]).clone();
+      EntityPtr clone = m_world->getEntity(m_prefabs[i]).clone();
       clone.add(m_sceneTag);
       if (m_override[i] != NullEntityId)
-        m_world.get(m_override[i]).copyInto(clone);
+        m_world->getEntity(m_override[i]).copyInto(clone);
     }
   }
 
   void unload() {
-    m_world.destroyAllEntitiesWith({m_sceneTag});
+    m_world->destroyAllEntitiesWith({m_sceneTag});
 
     m_sceneTag = NullComponentId;
   }
 
 private:
-  EntityWorld& m_world;
+  IWorldPtr m_world;
   std::string m_name;
   std::string m_desc;
 

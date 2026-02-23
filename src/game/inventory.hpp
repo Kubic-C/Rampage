@@ -38,8 +38,8 @@ class InventoryManager {
   friend class Inventory;
 
 public:
-  InventoryManager(EntityWorld& world) : m_world(world) {
-    tgui::Gui& gui = m_world.getContext<tgui::Gui>();
+  InventoryManager(IWorldPtr world) : m_world(world) {
+    tgui::Gui& gui = m_world->getContext<tgui::Gui>();
     m_handPicture = tgui::Picture::create();
     m_handPicture->setEnabled(false);
     m_handPicture->setVisible(false); // added for emphasis
@@ -69,12 +69,12 @@ public:
     m_handInvId = invId;
     m_handInvPos = pos;
 
-    tgui::Gui& gui = m_world.getContext<tgui::Gui>();
+    tgui::Gui& gui = m_world->getContext<tgui::Gui>();
     gui.setOverrideMouseCursor(tgui::Cursor::Type::Hand);
 
     EntityId eId = m_inventories.find(invId)->second.items.find(pos)->second.item;
     if (eId) {
-      Entity e = getEntity(eId);
+      EntityPtr e = getEntity(eId);
       m_handPicture->getRenderer()->setTexture(e.get<ItemAttrIcon>()->icon);
       m_handPicture->setVisible(true);
     }
@@ -84,7 +84,7 @@ public:
     m_handInvId = 0;
     m_handInvPos = {0, 0};
 
-    tgui::Gui& gui = m_world.getContext<tgui::Gui>();
+    tgui::Gui& gui = m_world->getContext<tgui::Gui>();
     gui.setOverrideMouseCursor(tgui::Cursor::Type::Arrow);
 
     m_handPicture->setVisible(false);
@@ -105,12 +105,12 @@ protected:
     return m_inventories.find(id)->second;
   }
 
-  Entity getEntity(EntityId entity) {
-    return m_world.get(entity);
+  EntityPtr getEntity(EntityId entity) {
+    return m_world->getEntity(entity);
   }
 
 private:
-  EntityWorld& m_world;
+  IWorldPtr m_world;
 
   tgui::Texture m_defaultTexture;
 
@@ -129,7 +129,7 @@ public:
 
   bool addItem(EntityId entity, const glm::u16vec2& pos, u32 count = 1) {
     InventoryData& inv = getData();
-    Entity itemEntity = m_mgr.getEntity(entity);
+    EntityPtr itemEntity = m_mgr.getEntity(entity);
     u8 stackCost = itemEntity.get<ItemAttrStackCost>()->stackCost;
 
     if (!inv.items.contains(pos))
@@ -157,7 +157,7 @@ public:
 
   bool addItem(EntityId entity, u32 count = 1) {
     InventoryData& inv = getData();
-    Entity itemEntity = m_mgr.getEntity(entity);
+    EntityPtr itemEntity = m_mgr.getEntity(entity);
     u8 stackCost = itemEntity.get<ItemAttrStackCost>()->stackCost;
 
     // If the item is unique, it can only contain one slot.
@@ -233,7 +233,7 @@ public:
     tgui::Texture aIcon = m_mgr.m_defaultTexture;
     bool aItemUnique = false;
     if (a.item != 0) {
-      Entity aItem = m_mgr.getEntity(a.item);
+      EntityPtr aItem = m_mgr.getEntity(a.item);
       aCost = aItem.get<ItemAttrStackCost>()->stackCost;
       aItemUnique = aItem.has<ItemAttrUnique>();
       aIcon = aItem.get<ItemAttrIcon>()->icon;
@@ -242,7 +242,7 @@ public:
     tgui::Texture bIcon = m_mgr.m_defaultTexture;
     bool bItemUnique = false;
     if (b.item != 0) {
-      Entity bItem = m_mgr.getEntity(b.item);
+      EntityPtr bItem = m_mgr.getEntity(b.item);
       bCost = bItem.get<ItemAttrStackCost>()->stackCost;
       bItemUnique = bItem.has<ItemAttrUnique>();
       bIcon = bItem.get<ItemAttrIcon>()->icon;
@@ -280,7 +280,7 @@ public:
     if (aStack.item != bStack.item || m_mgr.getEntity(aStack.item).has<ItemAttrUnique>())
       return false;
 
-    Entity item = m_mgr.getEntity(aStack.item);
+    EntityPtr item = m_mgr.getEntity(aStack.item);
     u8 stackCost = item.get<ItemAttrStackCost>()->stackCost;
     i32 aCurrentStackCost = stackCost * aStack.stackCount;
     i32 bCurrentStackCost = stackCost * bStack.stackCount;
@@ -304,13 +304,13 @@ public:
     return false;
   }
 
-  Entity removeItem(const glm::u16vec2& pos, u32 count = 1) {
+  EntityPtr removeItem(const glm::u16vec2& pos, u32 count = 1) {
     InventoryData& inv = getData();
     ItemStack& stack = inv.items.find(pos)->second;
     if (!stack.item)
-      return Entity(m_mgr.m_world, 0);
+      return EntityPtr(m_mgr.m_world, 0);
 
-    Entity stackEntity = m_mgr.getEntity(stack.item);
+    EntityPtr stackEntity = m_mgr.getEntity(stack.item);
     if (stackEntity.has<ItemAttrUnique>()) {
       stack.reset(m_mgr.m_defaultTexture);
       return stackEntity;
@@ -330,7 +330,7 @@ public:
       return;
     inv.m_visible = visiblity;
 
-    tgui::Gui& gui = m_mgr.m_world.getContext<tgui::Gui>();
+    tgui::Gui& gui = m_mgr.m_world->getContext<tgui::Gui>();
     if (inv.m_visible)
       gui.add(inv.window);
     else
@@ -359,16 +359,16 @@ private:
   InventoryId m_id;
 };
 
-inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& stackPos,
+inline bool tryPlaceItem(EntityPtr worldMap, Inventory inv, const glm::u16vec2& stackPos,
                          const glm::vec2& coords) {
-  EntityWorld& world = worldMap.world();
-  AssetLoader& assetLoader = world.getContext<AssetLoader>();
+  IWorldPtr world = worldMap.world();
+  AssetLoader& assetLoader = world->getContext<AssetLoader>();
 
   const ItemStack stack = inv.getStack(stackPos);
-  if (stack.item == 0 || !world.get(stack.item).has<ItemAttrTile>())
+  if (stack.item == 0 || !world->getEntity(stack.item).has<ItemAttrTile>())
     return false;
 
-  Entity item = world.get(stack.item);
+  EntityPtr item = world->getEntity(stack.item);
   RefT<TilemapComponent> tmLayers = worldMap.get<TilemapComponent>();
   Tilemap& topTilemap = tmLayers->getToptilemap();
   Tilemap& bottomTilemap = tmLayers->getBottomtilemap();
@@ -395,10 +395,10 @@ inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& sta
       if (!topTilemap.contains(tilePos))
         continue;
 
-      Entity tile = world.get(topTilemap.erase(tilePos));
+      EntityPtr tile = world->getEntity(topTilemap.erase(tilePos));
       if (tile.has<TileItemComponent>())
         inv.addItem(tile.get<TileItemComponent>()->item);
-      world.destroy(tile);
+      world->destroy(tile);
     }
   }
 
@@ -407,7 +407,7 @@ inline bool tryPlaceItem(Entity worldMap, Inventory inv, const glm::u16vec2& sta
                                    assetLoader.cloneTilePrefab(item.get<ItemAttrTile>()->tileId));
 
   if (inv.isStackEmpty(stackPos))
-    world.getContext<InventoryManager>().clearHand();
+    world->getContext<InventoryManager>().clearHand();
 
   return true;
 }

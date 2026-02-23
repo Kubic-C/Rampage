@@ -28,7 +28,7 @@ struct OwnedBy : SerializableTag {};
 class StateManager {
 public:
   template <typename T, typename... Params>
-  void createState(const std::string& name, EntityWorld& world, Params&&... args) {
+  void createState(const std::string& name, IWorldPtr world, Params&&... args) {
     assert(!m_states.contains(name));
 
     m_states[name] = std::make_shared<T>(world, args...);

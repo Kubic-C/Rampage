@@ -8,6 +8,20 @@ using AssetId = u32;
 using InventoryId = u32;
 
 struct InventoryComponent {
+  static void serialize(capnp::MessageBuilder& builder, Ref component) {
+    auto builderRoot = builder.initRoot<Schema::InventoryData>();
+    auto inventory = component.cast<InventoryComponent>();
+
+    // builderRoot.set(inventory->id);
+  }
+
+  static void deserialize(capnp::MessageReader& reader, Ref component) {
+    auto readerRoot = reader.getRoot<Schema::InventoryData>();
+    auto inventory = component.cast<InventoryComponent>();
+
+    // inventory->id = readerRoot.getId();
+  }
+
   InventoryId id;
 };
 

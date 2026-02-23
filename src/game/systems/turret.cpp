@@ -48,16 +48,16 @@ static float signedAngleDiff(float a, float b) {
 const Vec2 right = {1.0f, 0.0f};
 
 struct TurretContext {
-  explicit TurretContext(EntityWorld& world) : collisionQueue(world.create()) {}
+  explicit TurretContext(IWorldPtr world) : collisionQueue(world->create()) {}
 
   TurretContext(TurretContext& ctx) = delete;
 
   std::vector<SummonBullet> summonBullets;
-  Entity collisionQueue;
+  EntityPtr collisionQueue;
 };
 
-void updateTurret(Entity e, float dt, TurretContext& context) {
-  b2WorldId physicsWorld = e.world().getContext<b2WorldId>();
+void updateTurret(EntityPtr e, float dt, TurretContext& context) {
+  b2WorldId physicsWorld = e.world()->getContext<b2WorldId>();
   auto transform = e.get<TransformComponent>();
   auto turret = e.get<TurretComponent>();
   auto sprite = e.get<SpriteComponent>();
@@ -75,7 +75,7 @@ void updateTurret(Entity e, float dt, TurretContext& context) {
   if (!b2Shape_IsValid(closestShape.shape))
     return;
 
-  // e.world().getHost().log("Found target\n");
+  // e.world()->getHost().log("Found target\n");
 
   b2BodyId targetBody = b2Shape_GetBody(closestShape.shape);
   Vec2 targetPos = b2Body_GetPosition(targetBody);
@@ -118,17 +118,17 @@ void updateTurret(Entity e, float dt, TurretContext& context) {
     }
 }
 
-int updateTurrets(EntityWorld& world, float deltaTime) {
-  auto& context = world.getContext<TurretContext>();
+int updateTurrets(IWorldPtr world, float deltaTime) {
+  auto& context = world->getContext<TurretContext>();
 
-  auto it = world.getWith(world.set<TransformComponent, TurretComponent>());
-  while (it.hasNext())
-    updateTurret(it.next(), deltaTime, context);
+  auto it = world->getWith(world->set<TransformComponent, TurretComponent>());
+  while (it->hasNext())
+    updateTurret(it->next(), deltaTime, context);
 
-  b2WorldId physicsWorld = world.getContext<b2WorldId>();
+  b2WorldId physicsWorld = world->getContext<b2WorldId>();
   for (SummonBullet& bullet : context.summonBullets) {
-    Entity bulletEntity = world.create();
-    bulletEntity.add(world.set<LifetimeComponent, HealthComponent, BulletDamageComponent, BodyComponent,
+    EntityPtr bulletEntity = world->create();
+    bulletEntity.add(world->set<LifetimeComponent, HealthComponent, BulletDamageComponent, BodyComponent,
                                CircleRenderComponent, TransformComponent>());
 
     bulletEntity.get<TransformComponent>()->pos = bullet.pos;
@@ -166,10 +166,10 @@ int updateTurrets(EntityWorld& world, float deltaTime) {
   return 0;
 }
 
-void observeBulletCollision(Entity bullet) {
-  auto& world = bullet.world();
+void observeBulletCollision(EntityPtr bullet) {
+  auto world = bullet.world();
   auto collisionData = bullet.get<LastCollisionData>();
-  Entity other = world.get(collisionData->other);
+  EntityPtr other = world->getEntity(collisionData->other);
 
   if(!other.has<HealthComponent>()) {
     printf("Cannot damage, target has no health component\n");
@@ -187,12 +187,12 @@ void observeBulletCollision(Entity bullet) {
 
 void loadTurretSystems(IHost& host) {
   Pipeline& pipeline = host.getPipeline();
-  EntityWorld& world = host.getWorld();
+  IWorldPtr world = host.getWorld();
 
-  world.addContext<TurretContext>(world);
-  auto& context = world.getContext<TurretContext>();
+  world->addContext<TurretContext>(world);
+  auto& context = world->getContext<TurretContext>();
 
-  world.observe<OnCollisionBeginEvent>(world.component<LastCollisionData>(), world.set<BulletDamageComponent>(), observeBulletCollision);
+  world->observe<OnCollisionBeginEvent>(world->component<LastCollisionData>(), world->set<BulletDamageComponent>(), observeBulletCollision);
 
   pipeline.getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(updateTurrets);
 }

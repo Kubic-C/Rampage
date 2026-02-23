@@ -1,10 +1,10 @@
 #pragma once
 
-#include "world.hpp"
+#include "iworld.hpp"
 
 RAMPAGE_START
 
-class Entity;
+class EntityPtr;
 
 template <typename T>
 class RefT;
@@ -12,22 +12,22 @@ class RefT;
 // A safe-access version for components
 class Ref {
 public:
-  Ref(EntityWorld& world, EntityId id, ComponentId comp);
-  Ref(Entity entity, ComponentId comp);
+  Ref(IWorldPtr world, EntityId id, ComponentId comp);
+  Ref(EntityPtr entity, ComponentId comp);
 
   void* get();
 
   template <typename T>
   RefT<T> cast();
 
-  EntityWorld& getWorld() {
+  IWorldPtr getWorld() {
     return m_world;
   }
 
-  Entity getEntity();
+  EntityPtr getEntity();
 
 private:
-  EntityWorld& m_world;
+  IWorldPtr m_world;
   EntityId m_entity;
   ComponentId m_comp;
 };
@@ -35,7 +35,7 @@ private:
 template <typename T>
 class RefT : protected Ref {
 public:
-  RefT(EntityWorld& world, EntityId id) : Ref(world, id, world.component<T>()) {}
+  RefT(IWorldPtr world, EntityId id) : Ref(world, id, world->component<T>()) {}
 
   T* operator->() {
     return reinterpret_cast<T*>(get());
@@ -52,7 +52,7 @@ public:
 
 template <typename T>
 RefT<T> Ref::cast() {
-  assert(m_world.component<T>() == m_comp);
+  assert(m_world->component<T>() == m_comp);
   return RefT<T>(m_world, m_entity);
 }
 

@@ -17,8 +17,8 @@ struct EventData {
 };
 
 int handleWindowEvents(IHost& host, float dt) {
-  EntityWorld& world = host.getWorld();
-  auto& eventData = host.getWorld().getContext<EventData>();
+  IWorldPtr world = host.getWorld();
+  auto& eventData = world->getContext<EventData>();
 
   eventData.signalResized = false;
 
@@ -29,9 +29,9 @@ int handleWindowEvents(IHost& host, float dt) {
 
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
-    Entity sdlEventEntity = world.get(eventData.sdlEventEntity);
+    EntityPtr sdlEventEntity = world->getEntity(eventData.sdlEventEntity);
     *sdlEventEntity.get<SDL_Event>() = event;
-    world.emit<SDL_Event>(sdlEventEntity, world.component<SDL_Event>());
+    world->emit<SDL_Event>(sdlEventEntity, world->component<SDL_Event>());
 
     switch (static_cast<Event>(event.type)) {
     case Event::Quit:
@@ -59,12 +59,12 @@ int handleWindowEvents(IHost& host, float dt) {
 }
 
 int EventModule::onLoad() {
-  EntityWorld& world = m_host->getWorld();
+  IWorldPtr world = m_host->getWorld();
 
-  world.addContext<EventData>();
-  auto& eventData = world.getContext<EventData>();
+  world->addContext<EventData>();
+  auto& eventData = world->getContext<EventData>();
 
-  Entity entity = world.create();
+  EntityPtr entity = world->create();
   entity.add<SDL_Event>();
   eventData.sdlEventEntity = entity;
 
@@ -78,25 +78,25 @@ int EventModule::onUpdate() {
 }
 
 bool EventModule::isKeyPressed(Key key) const {
-  auto& eventData = m_host->getWorld().getContext<EventData>();
+  auto& eventData = m_host->getWorld()->getContext<EventData>();
 
   return eventData.keys[(u32)key].pressed;
 }
 
 bool EventModule::isKeyHeld(Key key) const {
-  auto& eventData = m_host->getWorld().getContext<EventData>();
+  auto& eventData = m_host->getWorld()->getContext<EventData>();
 
   return eventData.keys[(u32)key].hold;
 }
 
 bool EventModule::hasWindowResized() const {
-  auto& eventData = m_host->getWorld().getContext<EventData>();
+  auto& eventData = m_host->getWorld()->getContext<EventData>();
 
   return eventData.signalResized;
 }
 
 glm::vec2 EventModule::getWindowSize() const {
-  auto& eventData = m_host->getWorld().getContext<EventData>();
+  auto& eventData = m_host->getWorld()->getContext<EventData>();
 
   return eventData.windowSize;
 }

@@ -26,13 +26,13 @@ Vec2 getUniformCircularPoint(float radius) {
   }
 }
 
-int updateSpawners(EntityWorld& world, float dt) {
-  EntityIterator it = world.getWith(world.set<TransformComponent, SpawnerComponent>());
+int updateSpawners(IWorldPtr world, float dt) {
+  IEntityIteratorPtr it = world->getWith(world->set<TransformComponent, SpawnerComponent>());
   std::vector<SpawnAt> spawned;
 
-  world.beginDefer();
-  while (it.hasNext()) {
-    Entity e = it.next();
+  world->beginDefer();
+  while (it->hasNext()) {
+    EntityPtr e = it->next();
 
     RefT<TransformComponent> transform = e.get<TransformComponent>();
     RefT<SpawnerComponent> spawner = e.get<SpawnerComponent>();
@@ -48,10 +48,10 @@ int updateSpawners(EntityWorld& world, float dt) {
       }
     }
   }
-  world.endDefer();
+  world->endDefer();
 
   for (SpawnAt& spawn : spawned) {
-    Entity e = world.clone(spawn.id);
+    EntityPtr e = world->clone(spawn.id);
     e.get<TransformComponent>()->pos = spawn.pos;
   }
 

@@ -134,16 +134,16 @@ void drawCircle(ShapeMeshComponent& mesh, const std::vector<Vertex>& circleMesh,
   }
 }
 
-int meshShapes(EntityWorld& world, float dt) {
-  Entity shapeRender = world.getFirstWith(world.set<ShapeRendererTag>());
+int meshShapes(IWorldPtr world, float dt) {
+  EntityPtr shapeRender = world->getFirstWith(world->set<ShapeRendererTag>());
   auto shapeMesh = shapeRender.get<ShapeMeshComponent>();
   auto circleMesh = shapeRender.get<CircleMeshComponent>();
 
   shapeMesh->reset();
 
-  auto itCircle = world.getWith(world.set<CircleRenderComponent, TransformComponent>());
-  while (itCircle.hasNext()) {
-    Entity e = itCircle.next();
+  auto itCircle = world->getWith(world->set<CircleRenderComponent, TransformComponent>());
+  while (itCircle->hasNext()) {
+    EntityPtr e = itCircle->next();
     auto circle = e.get<CircleRenderComponent>();
     auto transform = e.get<TransformComponent>();
 
@@ -152,9 +152,9 @@ int meshShapes(EntityWorld& world, float dt) {
                circle->radius, circle->z);
   }
 
-  auto it = world.getWith(world.set<RectangleRenderComponent, TransformComponent>());
-  while (it.hasNext()) {
-    Entity e = it.next();
+  auto itRectangle = world->getWith(world->set<RectangleRenderComponent, TransformComponent>());
+  while (itRectangle->hasNext()) {
+    EntityPtr e = itRectangle->next();
     auto rect = e.get<RectangleRenderComponent>();
     Transform transform = e.get<TransformComponent>().copy();
 
@@ -164,29 +164,29 @@ int meshShapes(EntityWorld& world, float dt) {
   return 0;
 }
 
-int renderShapes(EntityWorld& world, float dt) {
-  Entity shapeRender = world.getFirstWith(world.set<ShapeRendererTag>());
+int renderShapes(IWorldPtr world, float dt) {
+  EntityPtr shapeRender = world->getFirstWith(world->set<ShapeRendererTag>());
   auto va = shapeRender.get<VertexArrayBuffer>();
   auto shader = shapeRender.get<Shader>();
   auto mesh = shapeRender.get<ShapeMeshComponent>();
 
   shader->use();
-  shader->setMat4("u_vp", world.getContext<RenderModule>().getViewProj());
+  shader->setMat4("u_vp", world->getContext<RenderModule>().getViewProj());
   va->bind();
   glDrawArrays(GL_TRIANGLES, 0, mesh->verticesToRender);
 
   return 0;
 }
 
-Entity createShapeRender(IHost& host) {
-  EntityWorld& world = host.getWorld();
-  Entity shapeRender = world.create();
+EntityPtr createShapeRender(IHost& host) {
+  IWorldPtr world = host.getWorld();
+  EntityPtr shapeRender = world->create();
 
-  world.component<ShapeRendererTag>(false);
-  world.component<VertexArrayBuffer>(false);
-  world.component<Shader>(false);
-  world.component<ShapeMeshComponent>(false);
-  world.component<CircleMeshComponent>(false);
+  world->component<ShapeRendererTag>(false);
+  world->component<VertexArrayBuffer>(false);
+  world->component<Shader>(false);
+  world->component<ShapeMeshComponent>(false);
+  world->component<CircleMeshComponent>(false);
 
   shapeRender.add<ShapeRendererTag>();
   shapeRender.add<VertexArrayBuffer>();
@@ -205,8 +205,8 @@ Entity createShapeRender(IHost& host) {
   std::string resultStr;
   if (!shader->loadShaderStr(triangleVertexShaderSource, triangleFragShaderSource, resultStr)) {
     host.log("Shader Compilation Error:\n%s\n", resultStr.c_str());
-    world.destroy(shapeRender);
-    return Entity(world, 0);
+    world->destroy(shapeRender);
+    return EntityPtr(world, 0);
   }
 
   circleMesh->vertices = generateCircleVertices(12);
@@ -217,7 +217,7 @@ Entity createShapeRender(IHost& host) {
 bool loadShapeRender(IHost& host) {
   Pipeline& pipeline = host.getPipeline();
 
-  Entity shapeRender = createShapeRender(host);
+  EntityPtr shapeRender = createShapeRender(host);
   if (shapeRender.isNull())
     return false;
 

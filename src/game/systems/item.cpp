@@ -6,8 +6,8 @@
 
 RAMPAGE_START
 
-int updateItemHands(EntityWorld& world, float deltaTime) {
-  InventoryManager& itemMgr = world.getContext<InventoryManager>();
+int updateItemHands(IWorldPtr world, float deltaTime) {
+  InventoryManager& itemMgr = world->getContext<InventoryManager>();
 
   itemMgr.updateHandPos();
   if (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_RMASK) { // TODO: Switch out to EventModule
@@ -17,17 +17,17 @@ int updateItemHands(EntityWorld& world, float deltaTime) {
   return 0;
 }
 
-void destroyInventoryOnEntityDestruction(Entity e) {
-  InventoryManager& mgr = e.world().getContext<InventoryManager>();
+void destroyInventoryOnEntityDestruction(EntityPtr e) {
+  InventoryManager& mgr = e.world()->getContext<InventoryManager>();
   if (mgr.hasInventory(e.get<InventoryComponent>()->id))
     mgr.destroyInventory(e.get<InventoryComponent>()->id);
 }
 
 void loadItemSystems(IHost& host) {
   Pipeline& pipeline = host.getPipeline();
-  EntityWorld& world = host.getWorld();
+  IWorldPtr world = host.getWorld();
 
-  world.observe<ComponentRemovedEvent>(world.component<InventoryComponent>(), {},
+  world->observe<ComponentRemovedEvent>(world->component<InventoryComponent>(), {},
                 destroyInventoryOnEntityDestruction);
 
   pipeline.getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(updateItemHands);

@@ -39,7 +39,7 @@ class Tilemap {
 
 public:
   // Ignores shapeId
-  bool insert(EntityWorld& world, b2BodyId body, const glm::i16vec2& pos, EntityId parent,
+  bool insert(IWorldPtr world, b2BodyId body, const glm::i16vec2& pos, EntityId parent,
               const TileDef& clone) {
     u8 flags = 0;
     if (clone.enableCollision)
@@ -48,7 +48,7 @@ public:
     return insert(world, body, pos, parent, clone.entity, flags, clone.size, clone.shapeDef);
   }
 
-  bool insert(EntityWorld& world, b2BodyId body, const glm::i16vec2& pos, EntityId parent = 0,
+  bool insert(IWorldPtr world, b2BodyId body, const glm::i16vec2& pos, EntityId parent = 0,
               EntityId entity = 0, u8 tileFlags = TileFlags::IS_COLLIDABLE, const glm::u16vec2& dim = {1, 1},
               const b2ShapeDef& shapeDef = b2DefaultShapeDef()) {
     if (contains(pos))
@@ -64,7 +64,7 @@ public:
     tile.y.h = dim.y;
 
     if (entity) {
-      Entity e = world.get(entity);
+      EntityPtr e = world->getEntity(entity);
       e.add<TileBoundComponent>();
       auto tileBound = e.get<TileBoundComponent>();
       tileBound->parent = parent;

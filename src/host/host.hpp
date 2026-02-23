@@ -48,8 +48,8 @@ public:
     m_funcs.traceError = traceErr;
   }
 
-  EntityWorld& getWorld() override {
-    return *m_world;
+  IWorldPtr getWorld() override {
+    return m_world;
   }
 
   std::string getTitle() override {
@@ -83,7 +83,7 @@ private:
   Status m_status;
   volatile bool m_exit = false;
 
-  std::unique_ptr<EntityWorldSerializable> m_world;
+  IWorldPtr m_world;
   HostFuncs m_funcs;
   Pipeline m_pipeline;
 

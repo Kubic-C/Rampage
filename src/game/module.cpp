@@ -25,9 +25,9 @@
 
 RAMPAGE_START
 
-int tickState(EntityWorld& world, float dt) {
-  auto& stats = world.getContext<AppStats>();
-  auto& stateMgr = world.getContext<StateManager>();
+int tickState(IWorldPtr world, float dt) {
+  auto& stats = world->getContext<AppStats>();
+  auto& stateMgr = world->getContext<StateManager>();
 
   stateMgr.onTick(stats.tick, dt);
 
@@ -35,30 +35,30 @@ int tickState(EntityWorld& world, float dt) {
 }
 
 int GameModule::onLoad() {
-  auto& world = m_host->getWorld();
+  auto world = m_host->getWorld();
 
   registerGameComponents(world);
 
-  Entity camera = world.create();
+  EntityPtr camera = world->create();
   camera.add<TransformComponent>();
   camera.add<CameraComponent>();
   camera.add<CameraInUseTag>();
-  Entity textureMap = world.create();
+  EntityPtr textureMap = world->create();
   textureMap.add<TextureMap3DComponent>();
   textureMap.add<TextureMapInUseTag>();
   loadSpriteRender(*m_host);
 
-  world.addContext<tgui::Gui>(world.getContext<SDL_Window*>());
-  auto& gui = world.getContext<tgui::Gui>();
+  world->addContext<tgui::Gui>(world->getContext<SDL_Window*>());
+  auto& gui = world->getContext<tgui::Gui>();
   gui.loadWidgetsFromFile("./res/form.txt");
   loadGuiSystems(*m_host);
 
-  world.addContext<InventoryManager>(world);
-  auto& invMgr = world.getContext<InventoryManager>();
+  world->addContext<InventoryManager>(world);
+  auto& invMgr = world->getContext<InventoryManager>();
   invMgr.setDefaultItemIcon("./res/clear.png");
 
-  world.addContext<AssetLoader>(world);
-  auto& loader = world.getContext<AssetLoader>();
+  world->addContext<AssetLoader>(world);
+  auto& loader = world->getContext<AssetLoader>();
   loader.loadAssets("./res/root.json");
 
   loadTilemapSystems(*m_host);
@@ -71,8 +71,8 @@ int GameModule::onLoad() {
   loadShapeRender(*m_host);
   loadTurretSystems(*m_host);
 
-  world.addContext<StateManager>();
-  auto& stateMgr = world.getContext<StateManager>();
+  world->addContext<StateManager>();
+  auto& stateMgr = world->getContext<StateManager>();
   stateMgr.createState<PlayState>("PlayState", world);
   stateMgr.createState<MenuState>("MenuState", world);
   stateMgr.enableState("MenuState");
@@ -83,8 +83,8 @@ int GameModule::onLoad() {
 }
 
 int GameModule::onUpdate() {
-  auto& world = m_host->getWorld();
-  auto& stateMgr = world.getContext<StateManager>();
+  auto world = m_host->getWorld();
+  auto& stateMgr = world->getContext<StateManager>();
 
   stateMgr.onUpdate();
 

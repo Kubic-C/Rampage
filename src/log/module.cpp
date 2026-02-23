@@ -11,7 +11,7 @@ int LogModule::onLoad() {
 }
 
 int LogModule::onUpdate() {
-  EntityWorld& world = m_host->getWorld();
+  IWorldPtr world = m_host->getWorld();
 
   return 0;
 }

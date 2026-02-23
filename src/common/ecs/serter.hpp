@@ -1,8 +1,7 @@
 #pragma once
 
 #include "../schema/rampage.capnp.h"
-#include "entity.hpp"
-#include "ref.hpp"
+#include "entityPtr.hpp"
 
 RAMPAGE_START
 
@@ -14,7 +13,8 @@ struct SerializableTag {
   static void deserialize(capnp::MessageReader& reader, Ref component) {}
 };
 
-/* An extension of entity world that defines a set of methods to serialize component data. */
+/*
+ /* An extension of entity world that defines a set of methods to serialize component data.
 class EntityWorldSerializable : public EntityWorld {
   static constexpr size_t m_maxScratchWordSize = 512;
 
@@ -59,6 +59,6 @@ private:
   kj::ArrayPtr<capnp::word> m_scratchBuffer;
   std::vector<SerializeFunc> m_componentSerializeFuncs;
   std::vector<DeserializeFunc> m_componentDeserializeFuncs;
-};
+}; */
 
 RAMPAGE_END

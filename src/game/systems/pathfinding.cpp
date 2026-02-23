@@ -27,7 +27,7 @@ const std::array<glm::vec2, 8> normalizedDirs = {
 
 const std::array<float, 8> costs = {1, 1, 1, 1, sqrtf(2), sqrtf(2), sqrtf(2), sqrtf(2)};
 
-ArrowComponent* getTopArrow(EntityWorld& world, RefT<TilemapComponent> tilemapLayers,
+ArrowComponent* getTopArrow(IWorldPtr world, RefT<TilemapComponent> tilemapLayers,
                             const glm::i16vec2& pos) {
   for (int i = tilemapLayers->getTilemapCount(); i != 0; i--) {
     Tilemap& tilemap = tilemapLayers->getTilemap(i - 1);
@@ -35,19 +35,19 @@ ArrowComponent* getTopArrow(EntityWorld& world, RefT<TilemapComponent> tilemapLa
       continue;
 
     Tile& tile = tilemap.find(pos);
-    if (tile.entity == 0 || !world.get(tile.entity).has<ArrowComponent>())
+    if (tile.entity == 0 || !world->getEntity(tile.entity).has<ArrowComponent>())
       return nullptr;
 
-    return &*world.get(tile.entity).get<ArrowComponent>();
+    return &*world->getEntity(tile.entity).get<ArrowComponent>();
   }
 
   return nullptr;
 }
 
-void updateFlowField(EntityWorld& world, Entity map, PathfindingContext& context) {
+void updateFlowField(IWorldPtr world, EntityPtr map, PathfindingContext& context) {
   auto mapTransform = map.get<TransformComponent>();
   auto tilemapLayers = map.get<TilemapComponent>();
-  Entity player = world.getFirstWith(world.set<TransformComponent, PrimaryTargetTag>());
+  EntityPtr player = world->getFirstWith(world->set<TransformComponent, PrimaryTargetTag>());
   if (player.isNull())
     return;
 
@@ -102,10 +102,10 @@ void updateFlowField(EntityWorld& world, Entity map, PathfindingContext& context
   }
 }
 
-int updatePathfinding(EntityWorld& world, float deltaTime) {
-  auto& context = world.getContext<PathfindingContext>();
+int updatePathfinding(IWorldPtr world, float deltaTime) {
+  auto& context = world->getContext<PathfindingContext>();
 
-  Entity map = world.getFirstWith(world.set<TransformComponent, TilemapComponent, WorldMapTag>());
+  EntityPtr map = world->getFirstWith(world->set<TransformComponent, TilemapComponent, WorldMapTag>());
   if (map.isNull())
     return 0;
 
@@ -113,9 +113,9 @@ int updatePathfinding(EntityWorld& world, float deltaTime) {
 
   RefT<TransformComponent> mapTransform = map.get<TransformComponent>();
   RefT<TilemapComponent> tilemapLayers = map.get<TilemapComponent>();
-  EntityIterator it = world.getWith(world.set<TransformComponent, BodyComponent, SeekPrimaryTargetTag>());
-  while (it.hasNext()) {
-    Entity seeker = it.next();
+  IEntityIteratorPtr it = world->getWith(world->set<TransformComponent, BodyComponent, SeekPrimaryTargetTag>());
+  while (it->hasNext()) {
+    EntityPtr seeker = it->next();
     RefT<TransformComponent> seekerTransform = seeker.get<TransformComponent>();
     RefT<BodyComponent> seekerBody = seeker.get<BodyComponent>();
 
@@ -133,11 +133,11 @@ int updatePathfinding(EntityWorld& world, float deltaTime) {
   return 0;
 }
 
-void observeContactDamageCollision(Entity enemy) {
-  auto& world = enemy.world();
+void observeContactDamageCollision(EntityPtr enemy) {
+  auto world = enemy.world();
   auto collisionData = enemy.get<LastCollisionData>();
 
-  Entity other = world.get(collisionData->other);
+  EntityPtr other = world->getEntity(collisionData->other);
   if (!other.has<HealthComponent>() || other.has<ContactDamageComponent>())
     return;
 
@@ -148,13 +148,13 @@ void observeContactDamageCollision(Entity enemy) {
 
 void loadPathfindingSystems(IHost& host) {
   Pipeline& pipeline = host.getPipeline();
-  EntityWorld& world = host.getWorld();
+  IWorldPtr world = host.getWorld();
 
-  world.addContext<PathfindingContext>();
-  auto& context = world.getContext<PathfindingContext>();
+  world->addContext<PathfindingContext>();
+  auto& context = world->getContext<PathfindingContext>();
 
-  world.observe<OnCollisionBeginEvent>(world.component<LastCollisionData>(),
-                world.set<ContactDamageComponent>(), observeContactDamageCollision);
+  world->observe<OnCollisionBeginEvent>(world->component<LastCollisionData>(),
+                world->set<ContactDamageComponent>(), observeContactDamageCollision);
 
   pipeline.getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(updatePathfinding);
 }

@@ -25,7 +25,7 @@ private:
   using Asset = std::variant<SpriteAsset, PrefabAsset, TileDef, SceneAsset>;
 
 public:
-  explicit AssetLoader(EntityWorld& world) : m_world(world) {}
+  explicit AssetLoader(IWorldPtr world) : m_world(world) {}
 
   AssetLoader(AssetLoader&&) = delete;
 
@@ -58,7 +58,7 @@ public:
     TileDef& prefab = getTilePrefab(assetId);
     TileDef clone = prefab;
 
-    clone.entity = m_world.get(prefab.entity).clone();
+    clone.entity = m_world->getEntity(prefab.entity).clone();
 
     return clone;
   }
@@ -76,12 +76,12 @@ public:
     return std::get<PrefabAsset>(m_assets.find(getAssetId(assetName))->second).entity;
   }
 
-  Entity getPrefab(AssetId assetId) {
-    return m_world.get(getPrefabRawId(assetId));
+  EntityPtr getPrefab(AssetId assetId) {
+    return m_world->getEntity(getPrefabRawId(assetId));
   }
 
-  Entity getPrefab(const std::string& assetName) {
-    return m_world.get(getPrefabRawId(assetName));
+  EntityPtr getPrefab(const std::string& assetName) {
+    return m_world->getEntity(getPrefabRawId(assetName));
   }
 
 public:
@@ -111,7 +111,7 @@ private:
   }
 
 private:
-  EntityWorld& m_world;
+  IWorldPtr m_world;
   IdManager<AssetId> m_idMgr;
   Map<AssetId, Asset> m_assets;
   Map<std::string, AssetId> m_assetsByName;

@@ -1,79 +1,117 @@
+#include "world.hpp"
 #include "ecs.hpp"
-#include "entity.hpp"
+#include "entityPtr.hpp"
 
 RAMPAGE_START
 
-EntityWorld::SetIterator::SetIterator(EntityWorld& world, const ComponentSet* match) :
-    m_world(&world), m_base(match), m_next(Set<const ComponentSet*>::const_iterator()) {}
+class SetIterator {
+public:
+  SetIterator& operator=(const SetIterator& other) {
+    m_base = other.m_base;
+    m_next = other.m_next;
+    m_world = other.m_world;
 
-void EntityWorld::SetIterator::reset() {
-  m_next = Set<const ComponentSet*>::const_iterator();
-}
-
-bool EntityWorld::SetIterator::hasNext() const {
-  Set<const ComponentSet*>::const_iterator next = m_next;
-  if (next == Set<const ComponentSet*>::const_iterator())
-    next = m_world->m_superSets[m_base].begin();
-  else
-    next++;
-
-  while (next != m_world->m_superSets[m_base].end() && (m_world->m_sets[*next].empty())) {
-    next++;
+    return *this;
   }
 
-  return next != m_world->m_superSets[m_base].end();
-}
+  SetIterator(EntityWorld& world, const ComponentSet* match) :
+      m_world(&world), m_base(match), m_next(Set<const ComponentSet*>::const_iterator()) {}
 
-EntityWorld::EntityList& EntityWorld::SetIterator::next() {
-  if (m_next == Set<const ComponentSet*>::const_iterator())
-    m_next = m_world->m_superSets[m_base].begin();
-  else
-    m_next++;
-
-  while ((m_world->m_sets[*m_next].empty())) {
-    m_next++;
+  void reset() {
+    m_next = Set<const ComponentSet*>::const_iterator();
   }
 
-  return m_world->m_sets.find(*m_next)->second;
-}
+  bool hasNext() const {
+    Set<const ComponentSet*>::const_iterator next = m_next;
+    if (next == Set<const ComponentSet*>::const_iterator())
+      next = m_world->m_superSets[m_base].begin();
+    else
+      next++;
 
-EntityWorld& EntityWorld::SetIterator::getWorld() {
-  return *m_world;
-}
+    while (next != m_world->m_superSets[m_base].end() && (m_world->m_sets[*next].empty())) {
+      next++;
+    }
 
-EntityWorld::EntityIterator::EntityIterator(EntityWorld::SetIterator setIt) : m_setIt(setIt) {
-  reset();
-}
-
-void EntityWorld::EntityIterator::reset() {
-  m_setIt.reset();
-  m_next = EntityListIterator();
-  m_list = nullptr;
-}
-
-bool EntityWorld::EntityIterator::hasNext() const {
-  EntityListIterator next = m_next;
-
-  // If you are getting an error from here, make sure beginDefer() and
-  // endDefer() are being used.
-  return (m_list != nullptr && ++next != m_list->end()) || m_setIt.hasNext();
-}
-
-Entity EntityWorld::EntityIterator::next() {
-  if (m_list == nullptr || ++m_next == m_list->end()) {
-    m_list = &m_setIt.next();
-    m_next = m_list->begin();
-    return m_setIt.getWorld().get(*m_next);
+    return next != m_world->m_superSets[m_base].end();
   }
 
-  return m_setIt.getWorld().get(*m_next);
-}
+  EntityWorld::EntityList& next() {
+    if (m_next == Set<const ComponentSet*>::const_iterator())
+      m_next = m_world->m_superSets[m_base].begin();
+    else
+      m_next++;
 
-EntityWorld& EntityWorld::EntityIterator::getWorld() {
-  return m_setIt.getWorld();
-}
+    while ((m_world->m_sets[*m_next].empty())) {
+      m_next++;
+    }
 
-EntityWorld::EntityWorld(IHost& host) : m_host(host) {
+    return m_world->m_sets.find(*m_next)->second;
+  }
+
+  EntityWorld& getWorld() {
+    return *m_world;
+  }
+
+private:
+  EntityWorld* m_world;
+  const ComponentSet* m_base;
+  Set<const ComponentSet*>::const_iterator m_next;
+};
+
+class EntityIterator : public IEntityIterator {
+public:
+  using iterator_category = std::forward_iterator_tag;
+  using value_type = EntityPtr;
+  using difference_type = std::ptrdiff_t;
+  using pointer = EntityPtr*;
+  using reference = EntityPtr&;
+
+  EntityIterator& operator=(const EntityIterator& other) {
+    m_setIt = other.m_setIt;
+    m_next = other.m_next;
+    m_list = other.m_list;
+    return *this;
+  }
+
+  EntityIterator(SetIterator setIt) : m_setIt(setIt) {
+    reset();
+  }
+
+  void reset() {
+    m_setIt.reset();
+    m_next = EntityWorld::EntityListIterator();
+    m_list = nullptr;
+  }
+
+  bool hasNext() const {
+    EntityWorld::EntityListIterator next = m_next;
+
+    // If you are getting an error from here, make sure beginDefer() and
+    // endDefer() are being used.
+    return (m_list != nullptr && ++next != m_list->end()) || m_setIt.hasNext();
+  }
+
+  EntityPtr next() {
+    if (m_list == nullptr || ++m_next == m_list->end()) {
+      m_list = &m_setIt.next();
+      m_next = m_list->begin();
+      return m_setIt.getWorld().getEntity(*m_next);
+    }
+
+    return m_setIt.getWorld().getEntity(*m_next);
+  }
+
+  IWorld& getWorld() {
+    return m_setIt.getWorld();
+  }
+
+private:
+  EntityWorld::EntityList* m_list;
+  EntityWorld::EntityListIterator m_next;
+  SetIterator m_setIt;
+};
+
+EntityWorld::EntityWorld(IHost& host, PrivateConstructorTag) : m_host(host) {
   m_sets.reserve(10000);
   m_sets.insert(std::make_pair(findOrCreateSet(ComponentSet()), EntityList()));
 
@@ -99,13 +137,27 @@ IHost& EntityWorld::getHost() {
   return m_host;
 }
 
-Entity EntityWorld::create(EntityId explicitId) {
+void EntityWorld::addContext(ContextId id, u8* bytes, std::function<void(u8*)> destroy) noexcept {
+  if(m_contexts.contains(id))
+    throw std::runtime_error("Context already exists");
+
+  m_contexts[id].bytes = bytes;
+  m_contexts[id].destroy = destroy;
+  m_contextsLifo.push_back(id);
+}
+
+u8* EntityWorld::getContext(ContextId id) {
+  assert(m_contexts.contains(id));
+  return m_contexts[id].bytes;
+}
+
+EntityPtr EntityWorld::create(EntityId explicitId) {
   EntityId id;
   if (explicitId == NullEntityId) {
     id = m_idMgr.generate();
   } else {
     if (exists(explicitId))
-      return Entity(*this, explicitId);
+      return getEntity(explicitId);
 
     id = explicitId;
     m_idMgr.ensure(id);
@@ -120,17 +172,16 @@ Entity EntityWorld::create(EntityId explicitId) {
     m_entities.resize(id + 1);
   m_entities[id].emplace(data);
 
-  return Entity(*this, id);
+  return getEntity(id);
 }
 
-Entity EntityWorld::get(EntityId id) {
-  assert(exists(id));
-  return Entity(*this, id);
+EntityPtr EntityWorld::getEntity(EntityId id) {
+  return EntityPtr(m_self, id);
 }
 
-Entity EntityWorld::ensure(EntityId id) {
+EntityPtr EntityWorld::ensure(EntityId id) {
   if (exists(id))
-    return get(id);
+    return getEntity(id);
 
   return create(id);
 }
@@ -140,91 +191,88 @@ bool EntityWorld::exists(EntityId id) {
 }
 
 bool EntityWorld::isAlive(EntityId id) {
-  return exists(id) && !Entity(*this, id).has<Destroy>();
+  return exists(id) && !getEntity(id).has<Destroy>();
 }
 
-EntityWorld::EntityListIterator EntityWorld::destroy(EntityId id) {
+void EntityWorld::destroy(EntityId id) {
   assert(exists(id));
 
-  Entity entity = get(id);
   EntityData& data = m_entities[id].value();
-  entity.add(set<Destroy>());
+  add<Destroy>(id);
 
   if (m_isDefer) {
     m_deferredDestroy.push_back(id);
-    return EntityWorld::EntityListIterator();
+    return;
   }
 
   // We remove all other components first, to ensure
   // that observers may know that the entity they are processing is currently
   // being destroyed.
-  entity.remove(entity.set().remove(component<Destroy>()));
+  remove(id, setOf(id).remove(component<Destroy>()), false);
 
   EntityListIterator next = m_sets[findOrCreateSet({component<Destroy>()})].erase(data.pos);
   m_entities[id].reset();
   m_idMgr.destroy(id);
-
-  return next;
 }
 
 void EntityWorld::enable(EntityId entity) {
-  Entity(*this, entity).enable();
+  getEntity(entity).enable();
 }
 
 void EntityWorld::disable(EntityId entity) {
-  Entity(*this, entity).disable();
+  getEntity(entity).disable();
 }
 
-Entity EntityWorld::clone(EntityId entity) {
-  const ComponentSet& compSet = *getEntitySet(entity);
+EntityPtr EntityWorld::clone(EntityId entity) {
+  EntityPtr cloned = create();
 
-  Entity cloned = create();
-  cloned.add(compSet);
-
-  for (ComponentId cid : compSet.list()) {
-    auto copyCtor = m_componentCopyCtor[cid];
-
-    if (copyCtor)
-      copyCtor(static_cast<u8*>(cloned.get(cid).get()), static_cast<u8*>(get(entity).get(cid).get()));
-  }
+  copy(entity, cloned);
 
   return cloned;
 }
 
-void EntityWorld::removeAll(const ComponentSet& components, bool notify) {
-  EntityIterator it = getWithDisabled(components);
+size_t EntityWorld::getEntityCount() const {
+  return m_idMgr.count();
+}
 
+size_t EntityWorld::getSetCount() const {
+  return m_sets.size();
+}
+
+void EntityWorld::removeAll(const ComponentSet& components, bool notify) {
+  auto it = getWithDisabled(components);
+  
   beginDefer();
-  while (it.hasNext()) {
-    it.next().remove(components, notify);
+  while (it->hasNext()) {
+    it->next().remove(components, notify);
   }
   endDefer();
 }
 
 void EntityWorld::destroyAllEntitiesWith(const ComponentSet& components, bool notify) {
-  EntityIterator it = getWithDisabled(components);
-
+  auto it = getWithDisabled(components);
+  
   beginDefer();
-  while (it.hasNext()) {
-    destroy(it.next());
+  while (it->hasNext()) {
+    destroy(it->next());
   }
   endDefer();
 }
 
-EntityWorld::EntityIterator EntityWorld::getWith(const ComponentSet& components) {
+IEntityIteratorPtr EntityWorld::getWith(const ComponentSet& components) {
   return getWithDisabled(components.add(component<Enabled>()));
 }
 
-EntityWorld::EntityIterator EntityWorld::getWithDisabled(const ComponentSet& components) {
-  return EntityIterator(SetIterator(*this, findOrCreateSet(components)));
+IEntityIteratorPtr EntityWorld::getWithDisabled(const ComponentSet& components) {
+  return std::make_unique<EntityIterator>(SetIterator(*this, findOrCreateSet(components)));
 }
 
-Entity EntityWorld::getFirstWith(const ComponentSet& components) {
-  EntityIterator it = getWith(components);
-  while (it.hasNext())
-    return it.next();
+EntityPtr EntityWorld::getFirstWith(const ComponentSet& components) {
+  auto it = getWith(components);
+  while (it->hasNext())
+    return it->next();
 
-  return Entity(*this, 0);
+  return getEntity(0);
 }
 
 struct EntityChanged {
@@ -277,6 +325,142 @@ bool EntityWorld::isDefer() {
   return m_isDefer;
 }
 
+Ref EntityWorld::get(EntityId entity, ComponentId compId) {
+  return Ref(getEntity(entity), compId);
+}
+
+void EntityWorld::add(EntityId entity, const ComponentSet& addComps, bool emit) {
+  const ComponentSet& oldSet = setOf(entity);
+
+  ComponentSetBuilder tempSet(oldSet);
+  for (ComponentId compId : addComps.list()) {
+    if (oldSet.has(compId))
+      continue;
+
+    IPool* pool = getPool(compId);
+    tempSet.add(compId);
+    if (pool)
+      pool->create(entity);
+  }
+  tryMoveSets(entity, findOrCreateSet(tempSet.build()));
+
+  if (emit && &oldSet != findOrCreateSet(tempSet.build()))
+    for (ComponentId compId : addComps.list()) {
+      if (oldSet.has(compId))
+        continue;
+      this->emit(component<ComponentAddedEvent>(), entity, compId);
+    }
+}
+
+void EntityWorld::remove(EntityId entity, const ComponentSet& remComps, bool emit) {
+#ifndef NDEBUG
+  {
+    const ComponentSet& oldSet = setOf(entity);
+    for (ComponentId compId : remComps.list())
+      assert(oldSet.has(compId));
+  }
+#endif
+
+  if (emit)
+    for (ComponentId compId : remComps.list())
+      this->emit(component<ComponentRemovedEvent>(), entity, compId);
+
+  const ComponentSet& oldSet = setOf(entity);
+  ComponentSetBuilder tempSet(oldSet);
+  for (ComponentId compId : remComps.list()) {
+    if (!oldSet.has(compId))
+      throw std::runtime_error("Set does not contain compId: " + std::to_string(compId));
+
+    IPool* pool = getPool(compId);
+    tempSet.remove(compId);
+    if (pool)
+      pool->destroy(entity);
+  }
+
+  tryMoveSets(entity, findOrCreateSet(tempSet.build()));
+}
+
+bool EntityWorld::has(EntityId entity, ComponentId comp) {
+  return setOf(entity).has(comp);
+}
+
+void EntityWorld::copy(EntityId src, EntityId dst, const ComponentSet& copySet) {
+  const ComponentSet& entitySet = setOf(src);
+  const ComponentSet& comps = copySet.list().empty() ? entitySet : copySet;
+  add(dst, comps);
+
+  for (ComponentId cid : comps.list()) {
+    auto copyCtor = m_componentCopyCtor[cid];
+
+    // TODO This is not really a full copy, components use
+    // their default ctor and then get move assigned, which may not be what you want.
+    if (copyCtor)
+      copyCtor(static_cast<u8*>(get(dst, cid).get()), static_cast<u8*>(get(src, cid).get()));
+  }
+}
+
+void EntityWorld::move(EntityId src, EntityId dst, const ComponentSet& moveSet) {
+  const ComponentSet& entitySet = setOf(src);
+  const ComponentSet& comps = moveSet.list().empty() ? entitySet : moveSet;
+  add(dst, comps);
+
+  for (ComponentId cid : comps.list()) {
+    auto moveCtor = m_componentMoveCtor[cid];
+
+    // TODO This is not really a full move, components use
+    // their default ctor and then get move assigned, which may not be what you want.
+    if (moveCtor)
+      moveCtor(static_cast<u8*>(get(dst, cid).get()), static_cast<u8*>(get(src, cid).get()));
+  }
+}
+
+const ComponentSet& EntityWorld::setOf(EntityId entity) {
+  return *getEntitySet(entity);
+}
+
+ComponentId EntityWorld::component(ComponentId compId, bool isRegistered, const std::string& name, 
+  size_t size, NewPoolFunc newPoolFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
+  SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) noexcept {
+  if (compId < m_componentNames.size())
+    return compId;
+  
+  if(isRegistered)
+    throw std::runtime_error("Component not initialized, despite being marked so");
+
+  m_componentNames.resize(compId + 1, "");
+  m_componentCopyCtor.resize(compId + 1, nullptr);
+  m_componentMoveCtor.resize(compId + 1, nullptr);
+  m_componentPools.resize(compId + 1, nullptr);
+
+  m_componentNames[compId] = name;
+  if (size != 0) {
+    m_componentPools[compId] = newPoolFunc();
+    m_componentCopyCtor[compId] = copyCtor;
+    m_componentMoveCtor[compId] = moveCtor;
+  }
+
+  // Necessary for modules.
+  findOrCreateSet({component<Enabled>(), compId});
+
+  if (serializeFunc != nullptr && deserializeFunc != nullptr) {
+    registerSerializable(compId, serializeFunc, deserializeFunc);
+  }
+
+  return compId;
+}
+
+void EntityWorld::observe(ComponentId eventType, ComponentId comp, const ComponentSet& with, ObserverCallback callback) {
+  m_observers[eventType][comp].emplace_back(ObserverData(findOrCreateSet(with), callback));
+}
+
+void EntityWorld::emit(ComponentId eventType, EntityId id, ComponentId comp) {
+  for (ObserverData& observer : m_observers[eventType][comp]) {
+    if (getEntitySet(id)->superset(*observer.with)) {
+      observer.callback(getEntity(id));
+    }
+  }
+}
+
 void EntityWorld::moveSets(EntityId id, const ComponentSet* to) {
   EntityData& entity = m_entities[id].value();
 
@@ -319,10 +503,6 @@ const ComponentSet* EntityWorld::findOrCreateSet(const ComponentSet& base) {
   } else {
     return m_componentSets.find(base)->second;
   }
-}
-
-bool EntityWorld::hasComponent(EntityId id, ComponentId comp) {
-  return getEntitySet(id)->has(comp);
 }
 
 const ComponentSet* EntityWorld::getEntitySet(EntityId id) {

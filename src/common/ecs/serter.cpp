@@ -7,6 +7,7 @@
 
 RAMPAGE_START
 
+/*
 void EntityWorldSerializable::registerSerializable(ComponentId compId, SerializeFunc serializeFunc,
                                                    DeserializeFunc deserializeFunc) {
   if (m_componentSerializeFuncs.size() <= compId)
@@ -39,9 +40,9 @@ bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) 
   }
 
   size_t entityCount = 0;
-  EntityIterator it = getWith(saveSet);
-  while (it.hasNext()) {
-    Entity e = it.next();
+  IEntityIterator it = getWith(saveSet);
+  while (it->hasNext()) {
+    Entity e = it->next();
 
     for(auto compId : e.set().list()) {
       if (compId < m_componentSerializeFuncs.size() && m_componentSerializeFuncs[compId]) {
@@ -57,8 +58,8 @@ bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) 
   kj::VectorOutputStream scratchCompStream;
   uint32_t entityI = 0;
   it = getWith(saveSet);
-  while (it.hasNext()) {
-    Entity e = it.next();
+  while (it->hasNext()) {
+    Entity e = it->next();
 
     bool canSerialize = false;
     for(auto compId : e.set().list()) {
@@ -159,7 +160,7 @@ bool EntityWorldSerializable::loadState(const char* path, bool appendEntities, b
         continue;
 
       if(e.has(realCompId)) // if entity already has component, remove it before adding deserialized version
-        e.remove(realCompId); 
+        e.remove(realCompId, false); 
       e.add(realCompId);
       Ref compRef = e.get(realCompId);
 
@@ -177,5 +178,5 @@ bool EntityWorldSerializable::loadState(const char* path, bool appendEntities, b
 
   return true;
 }
-
+*/
 RAMPAGE_END

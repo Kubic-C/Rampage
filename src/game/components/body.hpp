@@ -88,7 +88,7 @@ struct BodyComponent {
     auto bodyComponentReader = reader.getRoot<Schema::BodyComponent>();
     auto bodyReader = bodyComponentReader.getBody();
     auto self = component.cast<BodyComponent>();
-    b2WorldId world = component.getWorld().getContext<b2WorldId>();
+    b2WorldId world = component.getWorld()->getContext<b2WorldId>();
 
     if(bodyReader.getBodyType() == Schema::BodyType::INVALID) {
       self->id = b2_nullBodyId;

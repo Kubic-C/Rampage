@@ -18,7 +18,7 @@ public:
   virtual void setLogFuncs(const TraceFunc trace, const TraceErrorFunc traceErr) = 0;
 
   virtual std::mutex& getHostMutex() = 0;
-  virtual EntityWorld& getWorld() = 0;
+  virtual IWorldPtr getWorld() = 0;
   virtual std::string getTitle() = 0;
   virtual Pipeline& getPipeline() = 0;
   virtual bool shouldExit() const = 0;

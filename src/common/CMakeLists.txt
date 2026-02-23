@@ -27,17 +27,18 @@ target_sources(
   "ecs/componentSet.cpp"
   "ecs/componentSet.hpp"
   "ecs/ecs.hpp"
-  "ecs/entity.cpp"
-  "ecs/entity.hpp"
+  "ecs/entityPtr.hpp"
   "ecs/id.hpp"
-  "ecs/staticId.hpp"
-  "ecs/pool.hpp"
+  "ecs/ipool.hpp"
   "ecs/ref.cpp"
   "ecs/ref.hpp"
   "ecs/serter.cpp"
   "ecs/serter.hpp"
   "ecs/world.hpp"
-  "ecs/world.cpp")
+  "ecs/world.cpp"
+  "ecs/iworld.hpp"
+  "ecs/gameWorld.hpp"
+  "ecs/gameWorld.cpp")
 
 target_sources(
   RCommon PUBLIC

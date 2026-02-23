@@ -12,10 +12,10 @@ struct PhysicsContext {
   int steps = 0;
 };
 
-int copyTransformsIntoBodies(EntityWorld& world, float dt) {
-  auto it = world.getWith(world.set<TransformComponent, BodyComponent>());
-  while (it.hasNext()) {
-    Entity e = it.next();
+int copyTransformsIntoBodies(IWorldPtr world, float dt) {
+  auto it = world->getWith(world->set<TransformComponent, BodyComponent>());
+  while (it->hasNext()) {
+    EntityPtr e = it->next();
     auto transform = e.get<TransformComponent>();
     auto body = e.get<BodyComponent>();
 
@@ -32,10 +32,10 @@ int copyTransformsIntoBodies(EntityWorld& world, float dt) {
   return 0;
 }
 
-int copyBodiesIntoTransforms(EntityWorld& world, float dt) {
-  auto it = world.getWith(world.set<TransformComponent, BodyComponent>());
-  while (it.hasNext()) {
-    Entity e = it.next();
+int copyBodiesIntoTransforms(IWorldPtr world, float dt) {
+  auto it = world->getWith(world->set<TransformComponent, BodyComponent>());
+  while (it->hasNext()) {
+    EntityPtr e = it->next();
     auto transform = e.get<TransformComponent>();
     auto body = e.get<BodyComponent>();
     if (!b2Body_IsValid(body->id))
@@ -51,10 +51,10 @@ int copyBodiesIntoTransforms(EntityWorld& world, float dt) {
   return 0;
 }
 
-int physicsStep(EntityWorld& world, float dt) {
-  EntityIterator iter = world.getWith(world.set<TransformComponent, BodyComponent>());
-  b2WorldId physicsWorldId = world.getContext<b2WorldId>();
-  PhysicsContext& context = world.getContext<PhysicsContext>();
+int physicsStep(IWorldPtr world, float dt) {
+  IEntityIteratorPtr iter = world->getWith(world->set<TransformComponent, BodyComponent>());
+  b2WorldId physicsWorldId = world->getContext<b2WorldId>();
+  PhysicsContext& context = world->getContext<PhysicsContext>();
 
   b2World_Step(physicsWorldId, dt, context.steps);
 
@@ -66,16 +66,16 @@ int physicsStep(EntityWorld& world, float dt) {
     void* Bb2Data = b2Shape_GetUserData(touch.shapeIdB);
     if (!Ab2Data || !Bb2Data)
       continue;
-    Entity eA = b2DataToEntity(world, Ab2Data);
-    Entity eB = b2DataToEntity(world, Bb2Data);
+    EntityPtr eA = b2DataToEntity(world, Ab2Data);
+    EntityPtr eB = b2DataToEntity(world, Bb2Data);
 
     eA.add<LastCollisionData>();
     eB.add<LastCollisionData>();
     eA.get<LastCollisionData>()->other = eB;
     eB.get<LastCollisionData>()->other = eA;
 
-    world.emit<OnCollisionBeginEvent>(eA, world.component<LastCollisionData>());
-    world.emit<OnCollisionBeginEvent>(eB, world.component<LastCollisionData>());
+    world->emit<OnCollisionBeginEvent>(eA, world->component<LastCollisionData>());
+    world->emit<OnCollisionBeginEvent>(eB, world->component<LastCollisionData>());
   }
   for (int i = 0; i < events.endCount; i++) {
     const b2ContactEndTouchEvent& touch = events.endEvents[i];
@@ -88,22 +88,22 @@ int physicsStep(EntityWorld& world, float dt) {
     void* Bb2Data = b2Shape_GetUserData(touch.shapeIdB);
     if (!Ab2Data || !Bb2Data)
       continue;
-    Entity eA = b2DataToEntity(world, Ab2Data);
-    Entity eB = b2DataToEntity(world, Bb2Data);
+    EntityPtr eA = b2DataToEntity(world, Ab2Data);
+    EntityPtr eB = b2DataToEntity(world, Bb2Data);
 
     eA.add<LastCollisionData>();
     eB.add<LastCollisionData>();
     eA.get<LastCollisionData>()->other = eB;
     eB.get<LastCollisionData>()->other = eA;
 
-    world.emit<OnCollisionEndEvent>(eA, world.component<LastCollisionData>());
-    world.emit<OnCollisionEndEvent>(eB, world.component<LastCollisionData>());
+    world->emit<OnCollisionEndEvent>(eA, world->component<LastCollisionData>());
+    world->emit<OnCollisionEndEvent>(eB, world->component<LastCollisionData>());
   }
 
-  world.beginDefer();
-  auto it = world.getWith(world.set<AddBodyComponent>());
-  while (it.hasNext()) {
-    Entity e = it.next();
+  world->beginDefer();
+  auto it = world->getWith(world->set<AddBodyComponent>());
+  while (it->hasNext()) {
+    EntityPtr e = it->next();
 
     e.add<BodyComponent>();
     RefT<BodyComponent> bodyId = e.get<BodyComponent>();
@@ -118,14 +118,14 @@ int physicsStep(EntityWorld& world, float dt) {
       bodyDef->rotation = transform->rot;
     }
 
-    bodyId->id = b2CreateBody(world.getContext<b2WorldId>(), &*bodyDef);
+    bodyId->id = b2CreateBody(world->getContext<b2WorldId>(), &*bodyDef);
 
     e.remove<AddBodyComponent>();
   }
 
-  it = world.getWith(world.set<AddShapeComponent>());
-  while (it.hasNext()) {
-    Entity e = it.next();
+  it = world->getWith(world->set<AddShapeComponent>());
+  while (it->hasNext()) {
+    EntityPtr e = it->next();
 
     if (!e.has<BodyComponent>())
       throw std::runtime_error("Error: cannot add shape, body not created");
@@ -142,7 +142,7 @@ int physicsStep(EntityWorld& world, float dt) {
 
     e.remove<AddShapeComponent>();
   }
-  world.endDefer();
+  world->endDefer();
 
   return 0;
 }
@@ -151,8 +151,8 @@ struct PrePhysicsStepStage {};
 struct PhysicsStepStage {};
 struct PostPhysicsStepStage {};
 
-void observeDestroyedBody(Entity entity) {
-  EntityWorld& world = entity.world();
+void observeDestroyedBody(EntityPtr entity) {
+  IWorldPtr world = entity.world();
   auto bodyId = entity.get<BodyComponent>()->id;
   auto lastCollisionData = entity.get<LastCollisionData>();
 
@@ -168,16 +168,16 @@ void observeDestroyedBody(Entity entity) {
       continue;
 
     lastCollisionData->other = other;
-    world.emit<OnCollisionEndEvent>(entity, world.component<LastCollisionData>());
+    world->emit<OnCollisionEndEvent>(entity, world->component<LastCollisionData>());
   }
 }
 
 void loadPhysicsSystems(IHost& host, int steps) {
   Pipeline& pipeline = host.getPipeline();
-  EntityWorld& world = host.getWorld();
+  IWorldPtr world = host.getWorld();
 
-  world.addContext<PhysicsContext>();
-  auto& context = world.getContext<PhysicsContext>();
+  world->addContext<PhysicsContext>();
+  auto& context = world->getContext<PhysicsContext>();
   context.steps = steps;
 
   pipeline.getGroup<GameGroup>()
@@ -188,7 +188,7 @@ void loadPhysicsSystems(IHost& host, int steps) {
       .attachToStage<PhysicsStepStage>(physicsStep)
       .attachToStage<PostPhysicsStepStage>(copyBodiesIntoTransforms);
 
-  world.observe<ComponentRemovedEvent>(world.component<BodyComponent>(), {}, observeDestroyedBody);
+  world->observe<ComponentRemovedEvent>(world->component<BodyComponent>(), {}, observeDestroyedBody);
 }
 
 RAMPAGE_END

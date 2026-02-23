@@ -5,10 +5,10 @@
 RAMPAGE_START
 
 int CoreModule::onLoad() {
-  auto& world = m_host->getWorld();
+  IWorldPtr world = m_host->getWorld();
 
-  world.addContext<enki::TaskScheduler>();
-  enki::TaskScheduler& scheduler = world.getContext<enki::TaskScheduler>();
+  world->addContext<enki::TaskScheduler>();
+  enki::TaskScheduler& scheduler = world->getContext<enki::TaskScheduler>();
   scheduler.Initialize();
 
   b2WorldDef physicsWorldDef = b2DefaultWorldDef();
@@ -17,13 +17,13 @@ int CoreModule::onLoad() {
   physicsWorldDef.userTaskContext = &scheduler;
   physicsWorldDef.enqueueTask = enki_b2EnqueueTaskCallback;
   physicsWorldDef.finishTask = enki_b2FinishTaskCallback;
-  world.addContext<b2WorldId>(b2CreateWorld(&physicsWorldDef));
+  world->addContext<b2WorldId>(b2CreateWorld(&physicsWorldDef));
 
-  world.addContext<AppStats>();
-  world.addContext<DoExit>();
+  world->addContext<AppStats>();
+  world->addContext<DoExit>();
 
-  world.component<TransformComponent>(false);
-  world.component<SDL_Event>(false);
+  world->component<TransformComponent>(false);
+  world->component<SDL_Event>(false);
 
   auto& pipeline = m_host->getPipeline();
   pipeline.createGroup<GameGroup>(60)
@@ -35,9 +35,9 @@ int CoreModule::onLoad() {
 }
 
 int CoreModule::onUpdate() {
-  auto& world = m_host->getWorld();
+  auto world = m_host->getWorld();
 
-  if (world.getContext<DoExit>().exit)
+  if (world->getContext<DoExit>().exit)
     m_host->exit();
 
   return 0;

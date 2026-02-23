@@ -12,29 +12,23 @@ class MenuState : public State {
   const std::string& playSceneBtnName = "MainPlayScene";
 
 public:
-  MenuState(EntityWorld& world) : m_world(world) {
-    tgui::Gui& gui = m_world.getContext<tgui::Gui>();
+  MenuState(IWorldPtr world) : m_world(world) {
+    tgui::Gui& gui = m_world->getContext<tgui::Gui>();
     m_menu = gui.get(menuName);
     tgui::Button::Ptr exitBtn = gui.get(exitBtnName)->cast<tgui::Button>();
     tgui::Button::Ptr loadScene = gui.get(loadSceneBtnName)->cast<tgui::Button>();
     tgui::Button::Ptr playScene = gui.get(playSceneBtnName)->cast<tgui::Button>();
 
-    exitBtn->onMousePress([&]() { world.getContext<DoExit>().exit = true; });
-    playScene->onMousePress([&]() {
-      StateManager& stateMgr = world.getContext<StateManager>();
+    exitBtn->onMousePress([=]() { world->getContext<DoExit>().exit = true; });
+    playScene->onMousePress([=]() {
+      StateManager& stateMgr = world->getContext<StateManager>();
       stateMgr.disableState("MenuState");
       stateMgr.enableState("PlayState");
     });
-    loadScene->onMousePress([&]() {
-      StateManager& stateMgr = world.getContext<StateManager>();
+    loadScene->onMousePress([=]() {
+      StateManager& stateMgr = world->getContext<StateManager>();
       stateMgr.disableState("MenuState");
 
-      auto serWorld = dynamic_cast<EntityWorldSerializable*>(&world);
-      if (serWorld) {
-        bool appendEntities = false;
-        bool clearPreviousEntities = false;
-        serWorld->loadState("./dat/testSave.save", appendEntities, clearPreviousEntities);
-      }
      });
   }
 
@@ -50,7 +44,7 @@ public:
 
 private:
   tgui::Widget::Ptr m_menu;
-  EntityWorld& m_world;
+  IWorldPtr m_world;
 };
 
 RAMPAGE_END

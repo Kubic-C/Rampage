@@ -70,9 +70,9 @@ void InventoryManager::destroyInventory(InventoryId id) {
     if (stack.item == 0)
       continue;
 
-    Entity e = m_world.get(stack.item);
+    EntityPtr e = m_world->getEntity(stack.item);
     if (e.has<ItemAttrUnique>())
-      m_world.destroy(e);
+      m_world->destroy(e);
   }
 
   InventoryData& inv = getInventoryData(id);

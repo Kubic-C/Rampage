@@ -138,7 +138,7 @@ void addSpriteInstance(Instance& newInstance, VertexArrayBuffer& va, InstanceBuf
   instances.count++;
 }
 
-void meshTilemap(Entity e, VertexArrayBuffer& va, InstanceBufferComponent& instances) {
+void meshTilemap(EntityPtr e, VertexArrayBuffer& va, InstanceBufferComponent& instances) {
   auto tmLayers = e.get<TilemapComponent>();
   auto transform = e.get<TransformComponent>();
   for (int i = 0; i < tmLayers->getTilemapCount(); i++) {
@@ -160,7 +160,7 @@ void meshTilemap(Entity e, VertexArrayBuffer& va, InstanceBufferComponent& insta
         instance.setDim(1, 1);
         addSpriteInstance(instance, va, instances);
       } else {
-        auto sprite = e.world().get(tile.entity).get<SpriteComponent>();
+        auto sprite = e.world()->getEntity(tile.entity).get<SpriteComponent>();
 
         // if the tile is a single tile, or a multi tile whose sprite component contains only one sprite,
         // draw in repeat tile mode
@@ -186,7 +186,7 @@ void meshTilemap(Entity e, VertexArrayBuffer& va, InstanceBufferComponent& insta
           if (sprite->subSprites.size() != dim.y || 
               (sprite->subSprites.size() > 0 && sprite->subSprites[0].size() != dim.x)) {
             // Log mismatch for debugging
-            e.world().getHost().log(
+            e.world()->getHost().log(
                 "WARNING: Multitile sprite grid (%zu x %zu) doesn't match tile dimensions (%u x %u)\n",
                 sprite->subSprites[0].size(), sprite->subSprites.size(), dim.x, dim.y);
           }
@@ -215,20 +215,20 @@ void meshTilemap(Entity e, VertexArrayBuffer& va, InstanceBufferComponent& insta
   }
 }
 
-int meshTilemaps(EntityWorld& world, float dt) {
-  Entity spriteRender = world.getFirstWith(world.set<SpriteRendererTag>());
+int meshTilemaps(IWorldPtr world, float dt) {
+  EntityPtr spriteRender = world->getFirstWith(world->set<SpriteRendererTag>());
   auto va = spriteRender.get<VertexArrayBufferComponent>();
   auto instances = spriteRender.get<InstanceBufferComponent>();
 
-  auto it = world.getWith(world.set<TransformComponent, TilemapComponent>());
-  while (it.hasNext()) {
-    meshTilemap(it.next(), *va, *instances);
+  auto it = world->getWith(world->set<TransformComponent, TilemapComponent>());
+  while (it->hasNext()) {
+    meshTilemap(it->next(), *va, *instances);
   }
 
   return 0;
 }
 
-void meshSprite(Entity e, VertexArrayBuffer& va, InstanceBufferComponent& instances) {
+void meshSprite(EntityPtr e, VertexArrayBuffer& va, InstanceBufferComponent& instances) {
   auto sprite = e.get<SpriteComponent>();
   auto transform = e.get<TransformComponent>();
   if (e.has<TileBoundComponent>())
@@ -248,22 +248,22 @@ void meshSprite(Entity e, VertexArrayBuffer& va, InstanceBufferComponent& instan
   }
 }
 
-int meshSprites(EntityWorld& world, float dt) {
-  Entity spriteRender = world.getFirstWith(world.set<SpriteRendererTag>());
+int meshSprites(IWorldPtr world, float dt) {
+  EntityPtr spriteRender = world->getFirstWith(world->set<SpriteRendererTag>());
   auto va = spriteRender.get<VertexArrayBufferComponent>();
   auto instances = spriteRender.get<InstanceBufferComponent>();
 
-  auto it = world.getWith(world.set<TransformComponent, SpriteComponent, SpriteIndependentTag>());
-  while (it.hasNext()) {
-    meshSprite(it.next(), *va, *instances);
+  auto it = world->getWith(world->set<TransformComponent, SpriteComponent, SpriteIndependentTag>());
+  while (it->hasNext()) {
+    meshSprite(it->next(), *va, *instances);
   }
 
   return 0;
 }
 
-int renderSprites(EntityWorld& world, float dt) {
-  Entity spriteRender = world.getFirstWith(world.set<SpriteRendererTag>());
-  auto activeTextureMap = world.getFirstWith(world.set<TextureMapInUseTag>()).get<TextureMap3DComponent>();
+int renderSprites(IWorldPtr world, float dt) {
+  EntityPtr spriteRender = world->getFirstWith(world->set<SpriteRendererTag>());
+  auto activeTextureMap = world->getFirstWith(world->set<TextureMapInUseTag>()).get<TextureMap3DComponent>();
   auto va = spriteRender.get<VertexArrayBufferComponent>();
   auto instances = spriteRender.get<InstanceBufferComponent>();
   auto shader = spriteRender.get<ShaderComponent>();
@@ -274,7 +274,7 @@ int renderSprites(EntityWorld& world, float dt) {
   glActiveTexture(GL_TEXTURE0);
   activeTextureMap->texArray.bind();
   activeTextureMap->sampler.bind(0);
-  shader->setMat4("uVP", world.getContext<RenderModule>().getViewProj());
+  shader->setMat4("uVP", world->getContext<RenderModule>().getViewProj());
   va->bind();
   instances->indexBuffer.bind(GL_ELEMENT_ARRAY_BUFFER);
   glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, instances->count);
@@ -296,11 +296,11 @@ static std::array<MeshVertex, 4> generateDefaultMesh() {
           MeshVertex(tileRect[2], texCoords[2]), MeshVertex(tileRect[3], texCoords[3])};
 }
 
-Entity createSpriteRenderEntity(IHost& host) {
-  EntityWorld& world = host.getWorld();
-  Entity spriteRender = world.create();
+EntityPtr createSpriteRenderEntity(IHost& host) {
+  IWorldPtr world = host.getWorld();
+  EntityPtr spriteRender = world->create();
 
-  world.component<SpriteRendererTag>(false);
+  world->component<SpriteRendererTag>(false);
   spriteRender.add<SpriteRendererTag>();
   spriteRender.add<VertexArrayBufferComponent>();
   spriteRender.add<InstanceBufferComponent>();
@@ -331,8 +331,8 @@ Entity createSpriteRenderEntity(IHost& host) {
   std::string resultStr;
   if (!shader->loadShaderStr(tileVertexShaderSource, tileFragShaderSource, resultStr)) {
     host.log("Shader Compilation Error:\n%s\n", resultStr.c_str());
-    world.destroy(spriteRender);
-    return Entity(world, NullEntityId);
+    world->destroy(spriteRender);
+    return EntityPtr(world, NullEntityId);
   }
   shader->use();
   shader->setInt("uSampler", 0);
@@ -343,9 +343,9 @@ Entity createSpriteRenderEntity(IHost& host) {
 
 bool loadSpriteRender(IHost& host) {
   Pipeline& pipeline = host.getPipeline();
-  EntityWorld& world = host.getWorld();
+  IWorldPtr world = host.getWorld();
 
-  Entity spriteRender = createSpriteRenderEntity(host);
+  EntityPtr spriteRender = createSpriteRenderEntity(host);
   if (spriteRender.isNull())
     return false;
 

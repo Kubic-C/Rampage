@@ -1,36 +1,15 @@
 #pragma once
 
-#include <utility>
-
-#include "componentSet.hpp"
-#include "pool.hpp"
-#include "staticId.hpp"
-#include "capnp/message.h"
+#include "iworld.hpp"
 
 RAMPAGE_START
 
-class Ref;
-class Entity;
-class System;
-class IHost;
-class EntityWorldSerializable;
-
-struct ComponentAddedEvent {};
-struct ComponentRemovedEvent {};
-
-template<typename T>
-concept SerializableComponent =
-    requires(T t, capnp::MessageBuilder& builder, capnp::MessageReader& reader, Ref component) {
-        T::serialize(builder, component);
-        T::deserialize(reader, component);
-    };
-using SerializeFunc = void (*)(capnp::MessageBuilder& builder, Ref component);
-using DeserializeFunc = void (*)(capnp::MessageReader& reader, Ref component);
-
-class EntityWorld {
-  friend class Entity;
+class EntityWorld : public IWorld {
+  friend class EntityPtr;
   friend class System;
   friend class Ref;
+  friend class EntityIterator;
+  friend class SetIterator;
 
   EntityWorld(const EntityWorld& other) = delete;
   EntityWorld(EntityWorld&& other) = delete;
@@ -39,139 +18,74 @@ class EntityWorld {
   EntityWorld& operator=(EntityWorld& other) = delete;
   EntityWorld& operator=(EntityWorld other) = delete;
 
-public:
+  struct PrivateConstructorTag {};
+
+protected:
   using EntityList = std::list<EntityId, boost::fast_pool_allocator<EntityId>>;
   using EntityListIterator = EntityList::const_iterator;
 
-  struct Destroy {};
-  struct Enabled {};
-
 public:
-  using SystemFunc = std::function<void(Entity entity, float deltaTime)>;
-  using ObserverCallback = std::function<void(Entity)>;
+  using IWorld::component;
+  using IWorld::set;
+  using IWorld::observe;
+  using IWorld::emit;
+  using IWorld::add;
+  using IWorld::remove;
 
-  class SetIterator {
-  public:
-    SetIterator& operator=(const SetIterator& other) {
-      m_base = other.m_base;
-      m_next = other.m_next;
-      m_world = other.m_world;
+  static IWorldPtr createWorld(IHost& host) {
+    IWorldPtr world = std::make_shared<EntityWorld>(host, PrivateConstructorTag{});
+    std::static_pointer_cast<EntityWorld>(world)->m_self = world;
+    return world;
+  }
 
-      return *this;
-    }
-
-    SetIterator(EntityWorld& world, const ComponentSet* match);
-
-    void reset();
-    bool hasNext() const;
-    EntityList& next();
-    EntityWorld& getWorld();
-
-  private:
-    EntityWorld* m_world;
-    const ComponentSet* m_base;
-    Set<const ComponentSet*>::const_iterator m_next;
-  };
-
-  class EntityIterator {
-  public:
-    using iterator_category = std::forward_iterator_tag;
-    using value_type = Entity;
-    using difference_type = std::ptrdiff_t;
-    using pointer = Entity*;
-    using reference = Entity&;
-
-    EntityIterator& operator=(const EntityIterator& other) {
-      m_setIt = other.m_setIt;
-      m_next = other.m_next;
-      m_list = other.m_list;
-      return *this;
-    }
-
-    EntityIterator(SetIterator setIt);
-
-    void reset();
-    bool hasNext() const;
-    Entity next();
-    EntityWorld& getWorld();
-
-  private:
-    EntityList* m_list;
-    EntityListIterator m_next;
-    SetIterator m_setIt;
-  };
-
-public:
-  explicit EntityWorld(IHost& host);
+  explicit EntityWorld(IHost& host, PrivateConstructorTag);
   virtual ~EntityWorld();
 
-  IHost& getHost();
+  virtual IHost& getHost() override;
 
-  template <typename T, typename... Params>
-  void addContext(Params&&... args);
+  virtual void addContext(ContextId id, u8* bytes, std::function<void(u8*)> destroy) noexcept override;
+  virtual u8* getContext(ContextId id) override;
 
-  template <typename T>
-  T& getContext();
+  virtual EntityPtr create(EntityId explicitId = NullEntityId) override;
+  virtual EntityPtr getEntity(EntityId id) override;
+  virtual EntityPtr ensure(EntityId id) override;
+  virtual bool exists(EntityId id) override;
+  virtual bool isAlive(EntityId id) override;
+  virtual void destroy(EntityId id) override;
+  virtual void enable(EntityId entity) override;
+  virtual void disable(EntityId entity) override;
+  virtual EntityPtr clone(EntityId entity) override;
+  virtual size_t getEntityCount() const override;
+  virtual size_t getSetCount() const override;
 
-  /** Events
-   * There are event types, an event type represents one possible event that can happen.
-   *
-   * When an event is "emitted" by an entity, all observers watching that specific event will trigger.
-   * Additionally, observers trigger on an entity and a component. I.e. entity-component pairs.
-   *
-   * When an event is emitted:
-   *  - Watching observers will trigger.
-   *  - Additional context data will be passed down. This can be manipulated before calling emit.
-   *
-   * EventTypes are registered just like regular components.
-   */
+  virtual void removeAll(const ComponentSet& components, bool notify = true) override;
+  virtual void destroyAllEntitiesWith(const ComponentSet& components, bool notify = true) override;
+  virtual IEntityIteratorPtr getWith(const ComponentSet& components) override;
+  virtual IEntityIteratorPtr getWithDisabled(const ComponentSet& components) override;
+  virtual EntityPtr getFirstWith(const ComponentSet& components) override;
 
-  // If isRegistered is "True", this means the component is expected to already
-  // be past initialization and should return with the correlating ID. If isRegistered
-  // is false, the component will be initialized and then returned with a proper ID.
-  template <typename T>
-  ComponentId component(bool isRegistered = true) noexcept;
+  virtual void setLocalRange(EntityId startingId) override;
+  virtual void enableRangeCheck(bool enable) override;
+  virtual bool validRange(EntityId id) override;
 
-  template <typename EventType>
-  void observe(ComponentId comp, const ComponentSet& with, ObserverCallback callback);
+  virtual void beginDefer() override;
+  virtual void endDefer() override;
+  virtual bool isDefer() override;
 
-  template <typename EventType>
-  void emit(EntityId entity, ComponentId comp);
+  virtual Ref get(EntityId entity, ComponentId compId) override;
+  virtual void add(EntityId entity, const ComponentSet& addComps, bool emit = true) override;
+  virtual void remove(EntityId entity, const ComponentSet& remComps, bool emit = true) override;
+  virtual bool has(EntityId entity, ComponentId comp) override;
+  virtual void copy(EntityId src, EntityId dst, const ComponentSet& comps = {}) override;
+  virtual void move(EntityId src, EntityId dst, const ComponentSet& comps = {}) override;
+  virtual const ComponentSet& setOf(EntityId entity) override;
 
-  Entity create(EntityId explicitId = NullEntityId);
-  Entity get(EntityId id);
-  Entity ensure(EntityId id);
-  bool exists(EntityId id);
-  bool isAlive(EntityId id);
-  EntityListIterator destroy(EntityId id);
-  void enable(EntityId entity);
-  void disable(EntityId entity);
-  Entity clone(EntityId entity);
-  size_t getEntityCount() const {
-    return m_idMgr.count();
-  }
-  size_t getSetCount() const {
-    return m_sets.size();
-  }
+  virtual ComponentId component(ComponentId compid, bool isRegistered, const std::string& name, 
+    size_t size, NewPoolFunc newPoolFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
+    SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) noexcept override;
 
-  void removeAll(const ComponentSet& components, bool notify = true);
-  void destroyAllEntitiesWith(const ComponentSet& components, bool notify = true);
-  EntityIterator getWith(const ComponentSet& components);
-  EntityIterator getWithDisabled(const ComponentSet& components);
-  Entity getFirstWith(const ComponentSet& components);
-
-  void setLocalRange(EntityId startingId);
-  void enableRangeCheck(bool enable);
-  bool validRange(EntityId id);
-
-  void beginDefer();
-  void endDefer();
-  bool isDefer();
-
-  template <typename... Params>
-  ComponentSet set() {
-    return ComponentSet({component<Params>()...});
-  }
+  virtual void observe(ComponentId eventType, ComponentId comp, const ComponentSet& with, ObserverCallback callback) override;
+  virtual void emit(ComponentId eventType, EntityId entity, ComponentId comp) override;
 
 protected:
   struct ContextData {
@@ -213,13 +127,13 @@ protected:
   void moveSets(EntityId id, const ComponentSet* to);
   void tryMoveSets(EntityId id, const ComponentSet* to);
   const ComponentSet* findOrCreateSet(const ComponentSet& base);
-  bool hasComponent(EntityId entity, ComponentId comp);
   const ComponentSet* getEntitySet(EntityId id);
   void addToSuperSets(const ComponentSet* baseSet);
 
   virtual void registerSerializable(ComponentId compId, SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) {}
 
 protected:
+  IWorldPtr m_self;
   IHost& m_host;
 
   /* Deferred operations */
@@ -229,7 +143,6 @@ protected:
   std::vector<EntityId> m_deferredDestroy;
 
   /* Contexts */
-  StaticIdManager<u32> m_contextIdMgr;
   std::vector<u32> m_contextsLifo;
   Map<u32, ContextData> m_contexts;
 
@@ -238,11 +151,11 @@ protected:
   IdManager<EntityId> m_idMgr;
 
   /* Components */
-  StaticIdManager<ComponentId> m_componentIdMgr;
   Map<ComponentId, Map<ComponentId, std::vector<ObserverData>>> m_observers;
 
   std::vector<std::string> m_componentNames;
   std::vector<void (*)(u8* dst, u8* src)> m_componentCopyCtor;
+  std::vector<void (*)(u8* dst, u8* src)> m_componentMoveCtor;
   std::vector<IPool*> m_componentPools;
 
   // A map that keeps track of super sets, meaning sets that contain the same or
@@ -251,60 +164,5 @@ protected:
   Map<const ComponentSet*, Set<const ComponentSet*>> m_superSets;
   Map<const ComponentSet*, EntityList> m_sets;
 };
-
-using EntityIterator = EntityWorld::EntityIterator;
-
-template <typename T, typename... Params>
-void EntityWorld::addContext(Params&&... args) {
-  const u32 id = m_contextIdMgr.id<T>();
-
-  assert(!m_contexts.contains(id));
-
-  m_contexts[id].bytes = reinterpret_cast<u8*>(new T(args...));
-  m_contexts[id].destroy = [](u8* bytes) { delete reinterpret_cast<T*>(bytes); };
-  m_contextsLifo.push_back(id);
-}
-
-template <typename T>
-T& EntityWorld::getContext() {
-  const u32 id = m_contextIdMgr.id<T>();
-  assert(m_contexts.contains(id));
-  return *reinterpret_cast<T*>(m_contexts[id].bytes);
-}
-
-template <typename T>
-ComponentId EntityWorld::component(bool isRegistered) noexcept {
-  ComponentId compId = m_componentIdMgr.id<T>();
-  if (compId < m_componentNames.size())
-    return compId;
-  
-  if(isRegistered)
-    throw std::runtime_error("Component not initialized, despite being marked so");
-
-  m_componentNames.resize(compId + 1, "");
-  m_componentCopyCtor.resize(compId + 1, nullptr);
-  m_componentPools.resize(compId + 1, nullptr);
-
-  m_componentNames[compId] = boost::typeindex::type_id<T>().pretty_name();
-
-  size_t size = sizeof(T);
-  if constexpr (std::is_empty_v<T>)
-    size = 0;
-  if (size != 0) {
-    m_componentPools[compId] = SparsePool<T>::createPool();
-
-    if constexpr (std::is_copy_constructible_v<T>)
-      m_componentCopyCtor[compId] = [](u8* dst, u8* src) { new ((T*)dst) T(*(T*)src); };
-  }
-
-  // Necessary for modules.
-  findOrCreateSet(set<Enabled, T>());
-
-  if constexpr (SerializableComponent<T>) {
-    registerSerializable(compId,  T::serialize, T::deserialize);
-  }
-
-  return compId;
-}
 
 RAMPAGE_END

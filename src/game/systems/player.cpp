@@ -13,12 +13,12 @@
 
 RAMPAGE_START
 
-void updatePlayer(Entity e, float dt) {
-  EntityWorld& world = e.world();
-  auto& render = world.getContext<RenderModule>();
-  auto& invMgr = world.getContext<InventoryManager>();
-  auto& eventMgr = world.getContext<EventModule>();
-  auto& assetLoader = world.getContext<AssetLoader>();
+void updatePlayer(EntityPtr e, float dt) {
+  IWorldPtr world = e.world();
+  auto& render = world->getContext<RenderModule>();
+  auto& invMgr = world->getContext<InventoryManager>();
+  auto& eventMgr = world->getContext<EventModule>();
+  auto& assetLoader = world->getContext<AssetLoader>();
 
   auto body = e.get<BodyComponent>();
   auto transform = e.get<TransformComponent>();
@@ -74,16 +74,16 @@ void updatePlayer(Entity e, float dt) {
   if (eventMgr.isKeyHeld(Key::F4))
     inv.addItem(assetLoader.getPrefab("WoodItem"), 4);
   if (eventMgr.isKeyHeld(Key::F) && !invMgr.isHandEmpty() &&
-      !world.getContext<tgui::Gui>().getWidgetAtPos(mouseScreen, false).get())
-    tryPlaceItem(world.getFirstWith(world.set<WorldMapTag>()), invMgr.getHandInventory(),
+      !world->getContext<tgui::Gui>().getWidgetAtPos(mouseScreen, false).get())
+    tryPlaceItem(world->getFirstWith(world->set<WorldMapTag>()), invMgr.getHandInventory(),
                  invMgr.getHandInventoryPos(), player->mouse);
 }
 
-int updatePlayers(EntityWorld& world, float dt) {
-  auto it = world.getWith(
-      world.set<BodyComponent, TransformComponent, PlayerComponent, CameraComponent, InventoryComponent>());
-  while (it.hasNext())
-    updatePlayer(it.next(), dt);
+int updatePlayers(IWorldPtr world, float dt) {
+  auto it = world->getWith(
+      world->set<BodyComponent, TransformComponent, PlayerComponent, CameraComponent, InventoryComponent>());
+  while (it->hasNext())
+    updatePlayer(it->next(), dt);
 
   return 0;
 }

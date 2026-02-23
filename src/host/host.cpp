@@ -6,6 +6,8 @@
 #include "../log/module.hpp"
 #include "../render/module.hpp"
 
+#include "../common/ecs/world.hpp"
+
 RAMPAGE_START
 
 void Host::sortModulesByDependencies() {
@@ -56,8 +58,8 @@ struct StatsCounterGroup {
 
 void registerStatsSystems(Pipeline& pipeline) {
   auto& renderGroup = pipeline.getGroup<RenderGroup>();
-  renderGroup.attachToStage<RenderGroup::PreRenderStage>([](EntityWorld& world, float dt) {
-    auto& stats = world.getContext<AppStats>();
+  renderGroup.attachToStage<RenderGroup::PreRenderStage>([](IWorldPtr world, float dt) {
+    auto& stats = world->getContext<AppStats>();
 
     stats.cumFrames++;
 
@@ -65,8 +67,8 @@ void registerStatsSystems(Pipeline& pipeline) {
   });
 
   auto& gameGroup = pipeline.getGroup<GameGroup>();
-  gameGroup.attachToStage<GameGroup::TickStage>([](EntityWorld& world, float dt) {
-    auto& stats = world.getContext<AppStats>();
+  gameGroup.attachToStage<GameGroup::TickStage>([](IWorldPtr world, float dt) {
+    auto& stats = world->getContext<AppStats>();
 
     stats.cumTicks++;
     stats.tick++;
@@ -76,21 +78,21 @@ void registerStatsSystems(Pipeline& pipeline) {
 
   auto& statsCounterGroup =
       pipeline.createGroup<StatsCounterGroup>(1.0f).createStage<StatsCounterGroup::StatsCounterStage>();
-  statsCounterGroup.attachToStage<StatsCounterGroup::StatsCounterStage>([](EntityWorld& world, float dt) {
-    auto& stats = world.getContext<AppStats>();
+  statsCounterGroup.attachToStage<StatsCounterGroup::StatsCounterStage>([](IWorldPtr world, float dt) {
+    auto& stats = world->getContext<AppStats>();
 
     stats.tps = stats.cumTicks;
     stats.fps = stats.cumFrames;
     stats.cumTicks = stats.cumFrames = 0;
 
-    auto& host = world.getHost();
+    auto& host = world->getHost();
     host.log("FPS/TPS: %4.1f/%4.1f\n", stats.fps, stats.tps);
 
     return 0;
   });
 }
 
-Host::Host() : m_status(Status::Ok), m_world(std::make_unique<EntityWorldSerializable>(*this)) {
+Host::Host() : m_status(Status::Ok), m_world(EntityWorld::createWorld(*this)) {
   addModule<CoreModule>();
   addModule<LogModule>();
   addModule<RenderModule>();
@@ -120,8 +122,6 @@ int Host::run() {
 
     m_pipeline.run(*this);
   }
-
-  m_world.reset();
 
   return 0;
 }

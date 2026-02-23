@@ -52,7 +52,7 @@ private:
   boost::object_pool<T> m_pool;
 };
 
-/* Component pointers and references may be invalidated*/
+// TODO Make pool implementations private. Only expose the IPool interface and factory functions in IWorld.
 template <typename T>
 class SparsePool : public IPool {
   static constexpr std::size_t npos = static_cast<std::size_t>(-1);

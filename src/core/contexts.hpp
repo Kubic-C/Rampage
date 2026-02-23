@@ -5,7 +5,7 @@
 RAMPAGE_START
 
 // Purpose of the file is to hold various global contexts that may be held
-// within an EntityWorld
+// within an IWorldPtr
 
 struct AppStats {
   float cumTicks;

@@ -10,7 +10,7 @@ RAMPAGE_START
  */
 class Pipeline {
   typedef int (*StageTask)(IHost& host, float dt);
-  typedef int (*WorldStageTask)(EntityWorld& world, float dt);
+  typedef int (*WorldStageTask)(IWorldPtr world, float dt);
 
   struct Stage {
     size_t name = 0;
