@@ -137,6 +137,10 @@ IHost& EntityWorld::getHost() {
   return m_host;
 }
 
+IWorld& EntityWorld::getTopWorld() {
+  return *this;
+}
+
 void EntityWorld::addContext(ContextId id, u8* bytes, std::function<void(u8*)> destroy) noexcept {
   if(m_contexts.contains(id))
     throw std::runtime_error("Context already exists");
@@ -452,10 +456,6 @@ ComponentId EntityWorld::component(ComponentId compId, bool isRegistered, const 
 
   // Necessary for modules.
   findOrCreateSet({component<Enabled>(), compId});
-
-  if (serializeFunc != nullptr && deserializeFunc != nullptr) {
-    registerSerializable(compId, serializeFunc, deserializeFunc);
-  }
 
   return compId;
 }

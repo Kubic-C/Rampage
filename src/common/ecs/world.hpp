@@ -18,13 +18,11 @@ class EntityWorld : public IWorld {
   EntityWorld& operator=(EntityWorld&& other) = delete;
   EntityWorld& operator=(EntityWorld& other) = delete;
   EntityWorld& operator=(EntityWorld other) = delete;
-
-  struct PrivateConstructorTag {};
-
+  
 protected:
   using EntityList = std::list<EntityId, boost::fast_pool_allocator<EntityId>>;
   using EntityListIterator = EntityList::const_iterator;
-
+  
 public:
   using IWorld::component;
   using IWorld::set;
@@ -43,6 +41,7 @@ public:
   virtual ~EntityWorld();
 
   virtual IHost& getHost() override;
+  virtual IWorld& getTopWorld() override;
 
   virtual void addContext(ContextId id, u8* bytes, std::function<void(u8*)> destroy) noexcept override;
   virtual u8* getContext(ContextId id) override;
@@ -130,8 +129,6 @@ protected:
   const ComponentSet* findOrCreateSet(const ComponentSet& base);
   const ComponentSet* getEntitySet(EntityId id);
   void addToSuperSets(const ComponentSet* baseSet);
-
-  virtual void registerSerializable(ComponentId compId, SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) {}
 
 protected:
   IWorldPtr m_self;

@@ -32,11 +32,12 @@ target_sources(
   "ecs/ipool.hpp"
   "ecs/ref.cpp"
   "ecs/ref.hpp"
-  "ecs/serter.cpp"
-  "ecs/serter.hpp"
+  "ecs/serializableWorld.cpp"
+  "ecs/serializableWorld.hpp"
   "ecs/world.hpp"
   "ecs/world.cpp"
   "ecs/iworld.hpp"
+  "ecs/iworld.cpp"
   "ecs/taggedWorld.hpp"
   "ecs/taggedWorld.cpp")
 

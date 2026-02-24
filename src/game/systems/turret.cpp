@@ -75,8 +75,6 @@ void updateTurret(EntityPtr e, float dt, TurretContext& context) {
   if (!b2Shape_IsValid(closestShape.shape))
     return;
 
-  // e.world()->getHost().log("Found target\n");
-
   b2BodyId targetBody = b2Shape_GetBody(closestShape.shape);
   Vec2 targetPos = b2Body_GetPosition(targetBody);
   Vec2 targetDir = glm::normalize(targetPos - transform->pos);

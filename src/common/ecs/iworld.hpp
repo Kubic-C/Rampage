@@ -4,6 +4,7 @@
 #include "ipool.hpp"
 #include "id.hpp"
 #include "capnp/message.h"
+#include "../schema/rampage.capnp.h"
 
 RAMPAGE_START
 
@@ -26,6 +27,11 @@ concept SerializableComponent =
 using SerializeFunc = void (*)(capnp::MessageBuilder& builder, Ref component);
 using DeserializeFunc = void (*)(capnp::MessageReader& reader, Ref component);
 
+struct SerializableTag {
+  static void serialize(capnp::MessageBuilder& builder, Ref component);
+  static void deserialize(capnp::MessageReader& reader, Ref component);
+};
+
 class IEntityIterator {
 public:
   virtual ~IEntityIterator() = default;
@@ -39,9 +45,12 @@ public:
 using IEntityIteratorPtr = std::unique_ptr<IEntityIterator>;
 
 class IWorld {
+protected:
+  struct PrivateConstructorTag {};
+
 public:
   struct Destroy {};
-  struct Enabled {};
+  struct Enabled : SerializableTag {};
 
   using NewPoolFunc = IPool* (*)();
   using ComponentCopyCtor = void (*)(u8* dst, u8* src);
@@ -53,6 +62,7 @@ public:
   virtual ~IWorld() = default;
 
   virtual IHost& getHost() = 0;
+  virtual IWorld& getTopWorld() = 0;
 
   virtual void addContext(ContextId id, u8* bytes, std::function<void(u8*)> destroy) noexcept = 0;
   virtual u8* getContext(ContextId id) = 0;

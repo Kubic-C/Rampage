@@ -5,6 +5,7 @@
 #include "../components/components.hpp"
 #include "state.hpp"
 #include "../../common/ecs/taggedWorld.hpp"
+#include "../../common/ecs/serializableWorld.hpp"
 
 RAMPAGE_START
 
@@ -40,11 +41,21 @@ public:
     tgui::Button::Ptr saveStateBtn = gui.get(playSaveStateTextName)->cast<tgui::Button>();
     saveStateBtn->onMousePress([=]() {
       auto& stateMgr = m_world->getContext<StateManager>();
+
+      SerializableEntityWorld* serializableWorld = dynamic_cast<SerializableEntityWorld*>(&m_world->getTopWorld());
+      if(serializableWorld) {
+        serializableWorld->saveState("savefile.dat", ComponentSet{m_world->component<OwnedBy<PlayState>>()});
+      } 
     });
 
     tgui::Button::Ptr loadStateBtn = gui.get(playLoadStateTextName)->cast<tgui::Button>();
     loadStateBtn->onMousePress([=]() {
       auto& stateMgr = m_world->getContext<StateManager>();
+
+      SerializableEntityWorld* serializableWorld = dynamic_cast<SerializableEntityWorld*>(&m_world->getTopWorld());
+      if(serializableWorld) {
+        serializableWorld->loadState("savefile.dat", false, false);
+      }
     });
 
     m_tickText = gui.get(tickTextName)->cast<tgui::Label>();

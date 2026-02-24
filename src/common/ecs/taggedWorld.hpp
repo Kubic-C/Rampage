@@ -12,8 +12,6 @@ RAMPAGE_START
  * of the underlying EntityWorld.
  */
 class TaggedEntityWorld : public IWorld {
-  struct PrivateConstructorTag {};
-  
 public:
   TaggedEntityWorld(IWorldPtr realWorld, ComponentId worldTagComponentId, PrivateConstructorTag);
   virtual ~TaggedEntityWorld() = default;
@@ -26,6 +24,7 @@ public:
 
   // Passthrough methods
   virtual IHost& getHost() override;
+  virtual IWorld& getTopWorld() override;
   virtual void addContext(ContextId id, u8* bytes, std::function<void(u8*)> destroy) noexcept override;
   virtual u8* getContext(ContextId id) override;
 

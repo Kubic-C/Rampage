@@ -14,7 +14,6 @@ class Host final : public IHost {
 
 public:
   void log(int ec, const char* format, ...) override {
-    std::lock_guard lock(m_mutex);
     va_list args;
 
     va_start(args, format);
@@ -26,7 +25,6 @@ public:
   }
 
   void log(const char* format, ...) override {
-    std::lock_guard lock(m_mutex);
     va_list args;
 
     va_start(args, format);

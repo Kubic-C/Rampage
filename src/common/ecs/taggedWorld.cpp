@@ -10,6 +10,10 @@ IHost& TaggedEntityWorld::getHost() {
   return m_realWorld->getHost();
 }
 
+IWorld& TaggedEntityWorld::getTopWorld() {
+  return m_realWorld->getTopWorld();
+}
+
 void TaggedEntityWorld::addContext(ContextId id, u8* bytes, std::function<void(u8*)> destroy) noexcept {
   m_realWorld->addContext(id, bytes, destroy);
 }
@@ -25,6 +29,10 @@ EntityPtr TaggedEntityWorld::create(EntityId explicitId) {
 }
 
 EntityPtr TaggedEntityWorld::getEntity(EntityId id) {
+  if(!has(id, m_worldTagComponentId)) {
+    add(id, ComponentSet{m_worldTagComponentId});
+  }
+
   return EntityPtr(m_self, id);
 }
 

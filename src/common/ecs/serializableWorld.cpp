@@ -1,4 +1,4 @@
-#include "serter.hpp"
+#include "serializableWorld.hpp"
 
 #include "capnp/pretty-print.h"
 #include "capnp/serialize-packed.h"
@@ -7,9 +7,20 @@
 
 RAMPAGE_START
 
-/*
-void EntityWorldSerializable::registerSerializable(ComponentId compId, SerializeFunc serializeFunc,
-                                                   DeserializeFunc deserializeFunc) {
+SerializableEntityWorld::SerializableEntityWorld(IHost& host, PrivateConstructorTag)
+  : EntityWorld(host, PrivateConstructorTag{}),  m_scratchBuffer(new capnp::word[m_maxScratchWordSize], m_maxScratchWordSize) {
+    std::memset(m_scratchBuffer.begin(), 0, m_scratchBuffer.size() * sizeof(capnp::word));
+}
+
+ComponentId SerializableEntityWorld::component(ComponentId compid, bool isRegistered, const std::string& name, 
+  size_t size, NewPoolFunc newPoolFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
+  SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) noexcept {
+  ComponentId id = EntityWorld::component(compid, isRegistered, name, size, newPoolFunc, copyCtor, moveCtor, serializeFunc, deserializeFunc);
+  registerSerializable(id, serializeFunc, deserializeFunc);
+  return id;
+}
+
+void SerializableEntityWorld::registerSerializable(ComponentId compId, SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) {
   if (m_componentSerializeFuncs.size() <= compId)
     m_componentSerializeFuncs.resize(compId + 1, nullptr);
   if (m_componentDeserializeFuncs.size() <= compId)
@@ -19,7 +30,7 @@ void EntityWorldSerializable::registerSerializable(ComponentId compId, Serialize
   m_componentDeserializeFuncs[compId] = deserializeFunc;
 }
 
-bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) {
+bool SerializableEntityWorld::saveState(const char* path, ComponentSet saveSet) {
   std::set<std::string> nameOfComponentsNotSerializable;
 
   FILE* file;
@@ -40,9 +51,9 @@ bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) 
   }
 
   size_t entityCount = 0;
-  IEntityIterator it = getWith(saveSet);
+  IEntityIteratorPtr it = getWith(saveSet);
   while (it->hasNext()) {
-    Entity e = it->next();
+    EntityPtr e = it->next();
 
     for(auto compId : e.set().list()) {
       if (compId < m_componentSerializeFuncs.size() && m_componentSerializeFuncs[compId]) {
@@ -59,7 +70,7 @@ bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) 
   uint32_t entityI = 0;
   it = getWith(saveSet);
   while (it->hasNext()) {
-    Entity e = it->next();
+    EntityPtr e = it->next();
 
     bool canSerialize = false;
     for(auto compId : e.set().list()) {
@@ -111,7 +122,7 @@ bool EntityWorldSerializable::saveState(const char* path, ComponentSet saveSet) 
   return true;
 }
 
-bool EntityWorldSerializable::loadState(const char* path, bool appendEntities, bool clearPrevious) {
+bool SerializableEntityWorld::loadState(const char* path, bool appendEntities, bool clearPrevious) {
   m_host.getHostMutex().lock();
 
   FILE* file;
@@ -146,12 +157,13 @@ bool EntityWorldSerializable::loadState(const char* path, bool appendEntities, b
 
     if (eid == NullEntityId)
       continue;
-
     if (clearPrevious && exists(eid))
       destroy(eid);
     if(appendEntities)
       eid = NullEntityId;
-    Entity e = ensure(eid); // it exists 
+    EntityPtr e = ensure(eid); // it exists 
+
+    m_host.log("Loading entity %u\n", e.id());
 
     for (int i = 0; i < compIds.size(); ++i) {
       ComponentId realCompId = serCompRegistry[compIds[i]];
@@ -178,5 +190,5 @@ bool EntityWorldSerializable::loadState(const char* path, bool appendEntities, b
 
   return true;
 }
-*/
+
 RAMPAGE_END

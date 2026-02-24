@@ -6,7 +6,7 @@
 #include "../log/module.hpp"
 #include "../render/module.hpp"
 
-#include "../common/ecs/world.hpp"
+#include "../common/ecs/serializableWorld.hpp"
 
 RAMPAGE_START
 
@@ -92,7 +92,7 @@ void registerStatsSystems(Pipeline& pipeline) {
   });
 }
 
-Host::Host() : m_status(Status::Ok), m_world(EntityWorld::createWorld(*this)) {
+Host::Host() : m_status(Status::Ok), m_world(SerializableEntityWorld::createWorld(*this)) {
   addModule<CoreModule>();
   addModule<LogModule>();
   addModule<RenderModule>();
