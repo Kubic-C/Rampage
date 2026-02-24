@@ -37,8 +37,8 @@ target_sources(
   "ecs/world.hpp"
   "ecs/world.cpp"
   "ecs/iworld.hpp"
-  "ecs/gameWorld.hpp"
-  "ecs/gameWorld.cpp")
+  "ecs/taggedWorld.hpp"
+  "ecs/taggedWorld.cpp")
 
 target_sources(
   RCommon PUBLIC

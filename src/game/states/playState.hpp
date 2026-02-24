@@ -4,6 +4,7 @@
 #include "../../render/module.hpp"
 #include "../components/components.hpp"
 #include "state.hpp"
+#include "../../common/ecs/taggedWorld.hpp"
 
 RAMPAGE_START
 
@@ -19,33 +20,31 @@ class PlayState : public State {
   const std::string playEntityCountTextName = "PlayEntityCount";
 
 public:
-  explicit PlayState(IWorldPtr world) : m_world(world) {
-    m_world->component<OwnedBy<PlayState>>(false);
+  explicit PlayState(IWorldPtr _world) {  
+    _world->component<OwnedBy<PlayState>>(false);
+    m_world = TaggedEntityWorld::create(_world, _world->component<OwnedBy<PlayState>>());
+
     m_addedPlayerComponents = m_world->set<PlayerComponent, PrimaryTargetTag, BodyComponent,
                                           RectangleRenderComponent, InventoryComponent>();
 
     auto& gui = m_world->getContext<tgui::Gui>();
-    m_menu = world->getContext<tgui::Gui>().get(menuName);
+    m_menu = m_world->getContext<tgui::Gui>().get(menuName);
 
     tgui::Button::Ptr returnBtn = gui.get(returnBtnName)->cast<tgui::Button>();
     returnBtn->onMousePress([=]() {
-      auto& stateMgr = world->getContext<StateManager>();
+      auto& stateMgr = m_world->getContext<StateManager>();
       stateMgr.disableState("PlayState");
       stateMgr.enableState("MenuState");
     });
 
     tgui::Button::Ptr saveStateBtn = gui.get(playSaveStateTextName)->cast<tgui::Button>();
     saveStateBtn->onMousePress([=]() {
-      auto& stateMgr = world->getContext<StateManager>();
-
-
+      auto& stateMgr = m_world->getContext<StateManager>();
     });
 
     tgui::Button::Ptr loadStateBtn = gui.get(playLoadStateTextName)->cast<tgui::Button>();
     loadStateBtn->onMousePress([=]() {
-      auto& stateMgr = world->getContext<StateManager>();
-
-
+      auto& stateMgr = m_world->getContext<StateManager>();
     });
 
     m_tickText = gui.get(tickTextName)->cast<tgui::Label>();
@@ -56,7 +55,6 @@ public:
 
     EntityPtr base = m_world->create();
     base.disable();
-    base.add<OwnedBy<PlayState>>();
 
     m_bodyCallback = [this, baseId = base.id()](int x, int y) {
       Vec2 mousePos = m_world->getContext<RenderModule>().getWorldCoords(
@@ -68,7 +66,7 @@ public:
       if (rand() % 20 < 1)
         enemyType = "BigAssZombie";
 
-      EntityPtr seeker = loader.getPrefab(enemyType).clone();
+      EntityPtr seeker = m_world->clone(loader.getPrefabId(enemyType));
       m_world->getEntity(baseId).copyInto(seeker);
       seeker.get<TransformComponent>()->pos = mousePos + Vec2(x * 0.3f, y * 0.3f) - Vec2(2 * 0.3f, 2 * 0.3f);
     };
@@ -122,7 +120,6 @@ public:
     tm.add<BodyComponent>();
     tm.add<TilemapComponent>();
     tm.add<WorldMapTag>();
-    tm.add<OwnedBy<PlayState>>();
 
     RefT<TransformComponent> transform = tm.get<TransformComponent>();
     transform->pos = Vec2(0, 0);
@@ -204,7 +201,6 @@ public:
 }
 
     EntityPtr e = m_world->create();
-    e.add<OwnedBy<PlayState>>();
     e.add<TransformComponent>();
     e.add<SpawnerComponent>();
 

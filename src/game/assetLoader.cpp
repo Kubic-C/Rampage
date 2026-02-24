@@ -535,7 +535,7 @@ AssetId AssetLoader::loadAsset(const std::string& parentDir, const AssetJson& as
   case IndexInVariant<AssetPrototype, PrefabPrototype>:
     {
       AssetId assetId = createAsset<PrefabAsset>(asset.name);
-      getPrefabRawId(assetId) =
+      getPrefabId(assetId) =
           loadPrefabPrototype(*this, m_world, parentDir, assetId, std::get<PrefabPrototype>(asset.prototype))
               .entity;
       return assetId;

@@ -7,7 +7,7 @@ RAMPAGE_START
 class IPool {
 public:
   virtual ~IPool() = default;
-
+  
   virtual u8* create(EntityId id) = 0;
   virtual void destroy(EntityId id) = 0;
   virtual bool exists(EntityId id) = 0;

@@ -162,8 +162,8 @@ public:
   }
 
 protected: 
-  StaticIdManager<u32> m_contextIdMgr;
-  StaticIdManager<u32> m_componentIdMgr;
+  static inline StaticIdManager<u32> m_contextIdMgr;
+  static inline StaticIdManager<u32> m_componentIdMgr;
 };
 
 using IWorldPtr = std::shared_ptr<IWorld>;

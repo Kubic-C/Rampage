@@ -68,20 +68,20 @@ public:
   }
 
 public:
-  EntityId& getPrefabRawId(AssetId assetId) {
+  EntityId& getPrefabId(AssetId assetId) {
     return std::get<PrefabAsset>(m_assets.find(assetId)->second).entity;
   }
 
-  EntityId& getPrefabRawId(const std::string& assetName) {
+  EntityId& getPrefabId(const std::string& assetName) {
     return std::get<PrefabAsset>(m_assets.find(getAssetId(assetName))->second).entity;
   }
 
   EntityPtr getPrefab(AssetId assetId) {
-    return m_world->getEntity(getPrefabRawId(assetId));
+    return m_world->getEntity(getPrefabId(assetId));
   }
 
   EntityPtr getPrefab(const std::string& assetName) {
-    return m_world->getEntity(getPrefabRawId(assetName));
+    return m_world->getEntity(getPrefabId(assetName));
   }
 
 public:
