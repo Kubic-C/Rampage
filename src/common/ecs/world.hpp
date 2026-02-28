@@ -1,6 +1,7 @@
 #pragma once
 
 #include "iworld.hpp"
+#include "iassetLoader.hpp"
 
 RAMPAGE_START
 
@@ -38,7 +39,7 @@ public:
   }
 
   explicit EntityWorld(IHost& host, PrivateConstructorTag);
-  virtual ~EntityWorld();
+  virtual ~EntityWorld() override;
 
   virtual IHost& getHost() override;
   virtual IWorld& getTopWorld() override;
@@ -73,6 +74,7 @@ public:
   virtual bool isDefer() override;
 
   virtual Ref get(EntityId entity, ComponentId compId) override;
+  virtual std::string nameOf(ComponentId compId) override;
   virtual void add(EntityId entity, const ComponentSet& addComps, bool emit = true) override;
   virtual void remove(EntityId entity, const ComponentSet& remComps, bool emit = true) override;
   virtual bool has(EntityId entity, ComponentId comp) override;
@@ -86,6 +88,8 @@ public:
 
   virtual void observe(ComponentId eventType, ComponentId comp, const ComponentSet& with, ObserverCallback callback) override;
   virtual void emit(ComponentId eventType, EntityId entity, ComponentId comp) override;
+
+  virtual AssetLoader getAssetLoader() override;
 
 protected:
   struct ContextData {
@@ -132,6 +136,7 @@ protected:
 
 protected:
   IWorldPtr m_self;
+  IAssetLoaderImplPtr m_assetLoader;
   IHost& m_host;
 
   /* Deferred operations */

@@ -15,7 +15,7 @@ struct BodyComponent {
 
     // Only serialize if body is valid
     if (!b2Body_IsValid(self->id)) {
-      bodyBuilder.setBodyType(Schema::BodyType::INVALID);
+      bodyBuilder.setBodyType(Schema::BodyType::INVALID_BODY);
       bodyBuilder.getLinearVelocity().setX(0);
       bodyBuilder.getLinearVelocity().setY(0);
       return;
@@ -90,7 +90,7 @@ struct BodyComponent {
     auto self = component.cast<BodyComponent>();
     b2WorldId world = component.getWorld()->getContext<b2WorldId>();
 
-    if(bodyReader.getBodyType() == Schema::BodyType::INVALID) {
+    if(bodyReader.getBodyType() == Schema::BodyType::INVALID_BODY) {
       self->id = b2_nullBodyId;
       return;
     }

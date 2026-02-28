@@ -15,6 +15,7 @@ target_link_libraries(RCommon PUBLIC
   ${NeededBoostLibs}
   glm::glm
   CapnProto::capnp
+  CapnProto::capnp-json
   box2d::box2d
   SDL3::SDL3
   TGUI::TGUI
@@ -34,12 +35,15 @@ target_sources(
   "ecs/ref.hpp"
   "ecs/serializableWorld.cpp"
   "ecs/serializableWorld.hpp"
+  "ecs/serializer.hpp"
+  "ecs/serializer.cpp"
   "ecs/world.hpp"
   "ecs/world.cpp"
   "ecs/iworld.hpp"
   "ecs/iworld.cpp"
   "ecs/taggedWorld.hpp"
-  "ecs/taggedWorld.cpp")
+  "ecs/taggedWorld.cpp"
+  "ecs/iassetLoader.hpp")
 
 target_sources(
   RCommon PUBLIC

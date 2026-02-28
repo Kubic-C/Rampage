@@ -4,7 +4,6 @@
 
 RAMPAGE_START
 
-using AssetId = u32;
 using InventoryId = u32;
 
 struct InventoryComponent {
@@ -71,13 +70,13 @@ struct ItemAttrTile {
   static void serialize(capnp::MessageBuilder& builder, Ref component) {
     auto tileBuilder = builder.initRoot<Schema::ItemAttrTileComponent>();
     auto tile = component.cast<ItemAttrTile>();
-    tileBuilder.setAssetId(tile->tileId);
+    tileBuilder.setAssetId(tile->tileId.value());
   }
 
   static void deserialize(capnp::MessageReader& reader, Ref component) {
     auto tileReader = reader.getRoot<Schema::ItemAttrTileComponent>();
     auto tile = component.cast<ItemAttrTile>();
-    tile->tileId = tileReader.getAssetId();
+    tile->tileId = AssetId(tileReader.getAssetId());
   }
 
   AssetId tileId;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "iworld.hpp"
+#include "iassetLoader.hpp"
 
 RAMPAGE_START
 
@@ -56,6 +57,7 @@ public:
   virtual bool isDefer() override;
 
   virtual Ref get(EntityId entity, ComponentId compId) override;
+  virtual std::string nameOf(ComponentId compId) override;
   virtual void add(EntityId entity, const ComponentSet& addComps, bool emit = true) override;
   virtual void remove(EntityId entity, const ComponentSet& remComps, bool emit = true) override;
   virtual bool has(EntityId entity, ComponentId compId) override;
@@ -70,6 +72,8 @@ public:
 
   virtual void observe(ComponentId eventType, ComponentId comp, const ComponentSet& with, ObserverCallback callback) override;
   virtual void emit(ComponentId eventType, EntityId entity, ComponentId comp) override;
+
+  virtual AssetLoader getAssetLoader() override;
 
 private:
   IWorldPtr m_self;

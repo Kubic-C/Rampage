@@ -1,6 +1,5 @@
 #pragma once
 
-#include "assetLoader.hpp"
 #include "components/components.hpp"
 
 RAMPAGE_START

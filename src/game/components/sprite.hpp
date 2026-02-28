@@ -63,7 +63,7 @@ struct SpriteComponent {
           layerBuilder.getOffset().setX(layer.offset.x);
           layerBuilder.getOffset().setY(layer.offset.y);
           layerBuilder.setRot(layer.rot);
-          layerBuilder.setLayer(static_cast<Schema::WorldLayer>(layer.layer));
+          layerBuilder.setLayer(static_cast<u8>(layer.layer));
         }
 
         x++;

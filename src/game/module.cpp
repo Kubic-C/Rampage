@@ -3,7 +3,6 @@
 #include "../render/camera.hpp"
 #include "../render/render.hpp"
 
-#include "assetLoader.hpp"
 #include "inventory.hpp"
 
 #include "components/components.hpp"
@@ -57,9 +56,9 @@ int GameModule::onLoad() {
   auto& invMgr = world->getContext<InventoryManager>();
   invMgr.setDefaultItemIcon("./res/clear.png");
 
-  world->addContext<AssetLoader>(world);
-  auto& loader = world->getContext<AssetLoader>();
-  loader.loadAssets("./res/root.json");
+  // world->addContext<AssetLoader>(world);
+  // auto& loader = world->getContext<AssetLoader>();
+  // loader.loadAssets("./res/root.json");
 
   loadTilemapSystems(*m_host);
   loadSpawnerSystems(*m_host);

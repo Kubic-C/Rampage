@@ -99,7 +99,7 @@ struct SpriteLayer {
     texIndex @0 :UInt16 = 0;
     offset @1 :Vec2F32;
     rot @2 :Float32 = 0.0;
-    layer @3 :u8 = 255;
+    layer @3 :UInt8 = 255;
 }
 
 struct SubSprite {
@@ -156,7 +156,6 @@ struct SurfaceMaterial {
   rollingResistance @2 :Float32;
   tangentSpeed @3 :Float32;
   userMaterialId @4 :UInt32;
-  // Optional: color as RGBA
   customColor @5 :UInt32; 
 }
 
@@ -203,6 +202,7 @@ enum BodyType {
   staticBody @0;
   kinematicBody @1;
   dynamicBody @2;
+  invalidBody @3;
 }
 
 struct Body {
@@ -226,6 +226,37 @@ struct BodyComponent {
   body @0 :Body;
 }
 
+struct HealthComponent {
+  health @0 :Float32 = 5.0;
+}
+
+struct LifetimeComponent {
+  timeLeft @0 :Float32 = 1.0;
+}
+
+struct ContactDamageComponent {
+  damage @0 :Float32 = 10.0;
+}
+
+struct BulletDamageComponent {
+  damage @0 :Float32 = 10.0;
+}
+
+struct TurretComponent {
+  summon @0 :UInt32 = 0;
+  fireRate @1 :Float32 = 1.0;
+  timeSinceLastShot @2 :Float32 = 0.0;
+  radius @3 :Float32 = 2.0;
+  rot @4 :Float32 = 0.0;
+  turnSpeed @5 :Float32 = 0.1;
+  shootRange @6 :Float32 = 0.04;
+  stopRange @7 :Float32 = 0.02;
+  muzzleVelocity @8 :Float32 = 10.0;
+  bulletRadius @9 :Float32 = 0.25;
+  bulletDamage @10 :Float32 = 10.0;
+  bulletHealth @11 :Float32 = 1.0;
+}
+
 # Meant for tags.
 struct Void {}
 
@@ -238,6 +269,13 @@ struct Entity {
     compData @2 :List(Data);
 }
 
+struct AssetEntity {
+    name @0 :Text;
+    id @1 :UInt32;
+    compIds @2 :List(UInt16);
+    compData @3 :List(Data);
+}
+
 struct ComponentIdName {
     name @0 :Text;
     compId @1 :UInt16;
@@ -247,3 +285,10 @@ struct State {
     registeredComponents @0 :List(ComponentIdName);
     entities @1 :List(Entity);
 }
+
+struct AssetState {
+    stateName @0: Text;
+    registeredComponents @1 :List(ComponentIdName);
+    entities @2 :List(AssetEntity);
+}
+

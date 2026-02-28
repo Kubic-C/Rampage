@@ -5,6 +5,42 @@
 RAMPAGE_START
 
 struct TurretComponent {
+  static void serialize(capnp::MessageBuilder& builder, Ref component) {
+    auto turretBuilder = builder.initRoot<Schema::TurretComponent>();
+    auto self = component.cast<TurretComponent>();
+
+    turretBuilder.setSummon(self->summon);
+    turretBuilder.setFireRate(self->fireRate);
+    turretBuilder.setTimeSinceLastShot(self->timeSinceLastShot);
+    turretBuilder.setRadius(self->radius);
+    turretBuilder.setRot(self->rot);
+    turretBuilder.setTurnSpeed(self->turnSpeed);
+    turretBuilder.setShootRange(self->shootRange);
+    turretBuilder.setStopRange(self->stopRange);
+    turretBuilder.setMuzzleVelocity(self->muzzleVelocity);
+    turretBuilder.setBulletRadius(self->bulletRadius);
+    turretBuilder.setBulletDamage(self->bulletDamage);
+    turretBuilder.setBulletHealth(self->bulletHealth);
+  }
+
+  static void deserialize(capnp::MessageReader& reader, Ref component) {
+    auto turretReader = reader.getRoot<Schema::TurretComponent>();
+    auto self = component.cast<TurretComponent>();
+
+    self->summon = turretReader.getSummon();
+    self->fireRate = turretReader.getFireRate();
+    self->timeSinceLastShot = turretReader.getTimeSinceLastShot();
+    self->radius = turretReader.getRadius();
+    self->rot = turretReader.getRot();
+    self->turnSpeed = turretReader.getTurnSpeed();
+    self->shootRange = turretReader.getShootRange();
+    self->stopRange = turretReader.getStopRange();
+    self->muzzleVelocity = turretReader.getMuzzleVelocity();
+    self->bulletRadius = turretReader.getBulletRadius();
+    self->bulletDamage = turretReader.getBulletDamage();
+    self->bulletHealth = turretReader.getBulletHealth();
+  }
+
   EntityId summon = 0; /* Currently unused, will be used later. */
   float fireRate = 1; // Per second
   float timeSinceLastShot = 0;

@@ -59,6 +59,7 @@ public:
   bool subset(const ComponentSet& set) const;
   ComponentSetId getSetId() const;
   const std::vector<ComponentId>& list() const;
+  std::vector<ComponentId>& list();
   ComponentSet build() const;
 
 protected:

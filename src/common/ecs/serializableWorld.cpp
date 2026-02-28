@@ -3,14 +3,15 @@
 #include "capnp/pretty-print.h"
 #include "capnp/serialize-packed.h"
 
+#include "capnp/dynamic.h"
+#include "capnp/compat/json.h"
+
 #include "../ihost.hpp"
 
 RAMPAGE_START
 
 SerializableEntityWorld::SerializableEntityWorld(IHost& host, PrivateConstructorTag)
-  : EntityWorld(host, PrivateConstructorTag{}),  m_scratchBuffer(new capnp::word[m_maxScratchWordSize], m_maxScratchWordSize) {
-    std::memset(m_scratchBuffer.begin(), 0, m_scratchBuffer.size() * sizeof(capnp::word));
-}
+  : EntityWorld(host, PrivateConstructorTag{}) {}
 
 ComponentId SerializableEntityWorld::component(ComponentId compid, bool isRegistered, const std::string& name, 
   size_t size, NewPoolFunc newPoolFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
@@ -21,174 +22,29 @@ ComponentId SerializableEntityWorld::component(ComponentId compid, bool isRegist
 }
 
 void SerializableEntityWorld::registerSerializable(ComponentId compId, SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) {
-  if (m_componentSerializeFuncs.size() <= compId)
-    m_componentSerializeFuncs.resize(compId + 1, nullptr);
-  if (m_componentDeserializeFuncs.size() <= compId)
-    m_componentDeserializeFuncs.resize(compId + 1, nullptr);
-
-  m_componentSerializeFuncs[compId] = serializeFunc;
-  m_componentDeserializeFuncs[compId] = deserializeFunc;
+  m_serializer.registerComponent(compId, serializeFunc);
+  m_deserializer.registerComponent(compId, deserializeFunc);
 }
 
 bool SerializableEntityWorld::saveState(const char* path, ComponentSet saveSet) {
-  std::set<std::string> nameOfComponentsNotSerializable;
-
-  FILE* file;
-  errno_t error = fopen_s(&file, path, "wb");
-  if (error != 0)
-    return false;
+  std::vector<std::pair<EntityId, ComponentSet>> entitiesToSerialize;
+  auto iter = getWith(saveSet);
+  while(iter->hasNext()) {
+    auto entity = iter->next();
+    entitiesToSerialize.emplace_back(entity.id(), setOf(entity.id()));
+  }
 
   capnp::MallocMessageBuilder msg;
-  auto root = msg.initRoot<Schema::State>();
-
-  // The first component is a special type of component, known as a NullComponent.
-  // This should not be serialized.
-  root.initRegisteredComponents(m_componentNames.size() - 1);
-  for (ComponentId i = 1; i < m_componentNames.size(); ++i) {
-    auto compBuilder = root.getRegisteredComponents()[i - 1];
-    compBuilder.setName(m_componentNames[i]);
-    compBuilder.setCompId(i);
-  }
-
-  size_t entityCount = 0;
-  IEntityIteratorPtr it = getWith(saveSet);
-  while (it->hasNext()) {
-    EntityPtr e = it->next();
-
-    for(auto compId : e.set().list()) {
-      if (compId < m_componentSerializeFuncs.size() && m_componentSerializeFuncs[compId]) {
-        entityCount++;
-        break;
-      }
-    }
-  }
-  root.initEntities(entityCount);
-
+  auto rootBuilder = msg.initRoot<Schema::State>();
   m_host.getHostMutex().lock();
-
-  kj::VectorOutputStream scratchCompStream;
-  uint32_t entityI = 0;
-  it = getWith(saveSet);
-  while (it->hasNext()) {
-    EntityPtr e = it->next();
-
-    bool canSerialize = false;
-    for(auto compId : e.set().list()) {
-      if (compId < m_componentSerializeFuncs.size() && m_componentSerializeFuncs[compId]) {
-        canSerialize = true;
-      }
-    }
-    if(!canSerialize)
-      continue; // skip entities with no serializable components
-    
-    auto entityBuilder = root.getEntities()[entityI++];
-
-    entityBuilder.setId(e.id());
-
-    auto compIds = e.set().list(); // yes, copy
-    const kj::ArrayPtr<ComponentId> kjCompIds(compIds.data(), compIds.size());
-    entityBuilder.setCompIds(kjCompIds);
-    auto compListBuilder = entityBuilder.initCompData(compIds.size());
-
-    for (int i = 0; i < compIds.size(); ++i) {
-      ComponentId compId = compIds[i];
-      capnp::MallocMessageBuilder compBuilderMsg(m_scratchBuffer);
-
-      if (compId >= m_componentSerializeFuncs.size() || !m_componentSerializeFuncs[compId]) {
-        nameOfComponentsNotSerializable.insert(m_componentNames[compId]);
-        continue;
-      }
-
-      m_componentSerializeFuncs[compId](compBuilderMsg, e.get(compId));
-
-      scratchCompStream.clear();
-      capnp::writePackedMessage(scratchCompStream, compBuilderMsg);
-      size_t outputSize = scratchCompStream.getArray().size();
-      auto dataBuilder = compListBuilder.init(i, outputSize);
-      std::memcpy(dataBuilder.asBytes().begin(), scratchCompStream.getArray().begin(), outputSize);
-    }
-  }
-
+  m_serializer.serialize(*m_self, entitiesToSerialize, rootBuilder);
   m_host.getHostMutex().unlock();
-  
-  capnp::writePackedMessageToFd(_fileno(file), msg);
-  fclose(file);
 
-  m_host.log("List of components wo/ serializable\n");
-  for(auto& name : nameOfComponentsNotSerializable) {
-    m_host.log("\t%s\n", name.c_str());
-  }
-
-  return true;
+  return m_serializer.serialize(msg, path);
 }
 
-bool SerializableEntityWorld::loadState(const char* path, bool appendEntities, bool clearPrevious) {
-  m_host.getHostMutex().lock();
-
-  FILE* file;
-  errno_t error = fopen_s(&file, path, "rb");
-  if (error != 0)
-    return false;
-
-  // sparse mapping of serialized comp ids to this worlds comp ids.
-  // [SerCompId] -> Matching current World Id.
-  // This is found by names
-  std::vector<ComponentId> serCompRegistry;
-
-  capnp::PackedFdMessageReader reader(_fileno(file));
-
-  auto state = reader.getRoot<Schema::State>();
-
-  for (auto comp : state.getRegisteredComponents()) {
-    // o(n) search to find components names, too lazy to find something faster.
-    for (int i = 0; i < m_componentNames.size(); ++i) {
-      if (comp.getName() == m_componentNames[i]) {
-        if (serCompRegistry.size() <= comp.getCompId())
-          serCompRegistry.resize(comp.getCompId() + 1, 0);
-        serCompRegistry[comp.getCompId()] = i;
-      }
-    }
-  }
-
-  for (auto entity : state.getEntities()) {
-    EntityId eid = entity.getId();
-    auto serCompsData = entity.getCompData();
-    auto compIds = entity.getCompIds();
-
-    if (eid == NullEntityId)
-      continue;
-    if (clearPrevious && exists(eid))
-      destroy(eid);
-    if(appendEntities)
-      eid = NullEntityId;
-    EntityPtr e = ensure(eid); // it exists 
-
-    m_host.log("Loading entity %u\n", e.id());
-
-    for (int i = 0; i < compIds.size(); ++i) {
-      ComponentId realCompId = serCompRegistry[compIds[i]];
-      if (realCompId >= m_componentDeserializeFuncs.size() ||
-          m_componentDeserializeFuncs[realCompId] == nullptr)
-        continue;
-
-      if(e.has(realCompId)) // if entity already has component, remove it before adding deserialized version
-        e.remove(realCompId, false); 
-      e.add(realCompId);
-      Ref compRef = e.get(realCompId);
-
-      auto compData = serCompsData[i].asBytes();
-      kj::ArrayInputStream stream(compData);
-      capnp::PackedMessageReader compReader(stream);
-
-      m_componentDeserializeFuncs[realCompId](compReader, compRef);
-    }
-  }
-
-  m_host.getHostMutex().unlock();
-
-  fclose(file);
-
-  return true;
+bool SerializableEntityWorld::loadState(const char* path) {
+  return m_deserializer.deserialize(*m_self, path);
 }
 
 RAMPAGE_END

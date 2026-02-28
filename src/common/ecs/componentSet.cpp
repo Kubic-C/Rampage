@@ -137,6 +137,10 @@ const std::vector<ComponentId>& ComponentSetBuilder::list() const {
   return m_comps;
 }
 
+std::vector<ComponentId>& ComponentSetBuilder::list() {
+  return m_comps;
+}
+
 ComponentSet ComponentSetBuilder::build() const {
   return ComponentSet(m_comps);
 }

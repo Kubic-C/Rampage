@@ -26,8 +26,6 @@ target_sources(
 
 target_sources(
   RGame PUBLIC
-  "assetLoader.cpp"
-  "assetLoader.hpp"
   "inventory.cpp"
   "inventory.hpp"
   "scene.hpp")

@@ -180,4 +180,21 @@ public:
   Map<size_t, IntT> m_registry;
 };
 
+template<typename Tag, typename IntT = u32>
+class StrongId {
+  IntT m_value;
+public:
+  using IntegerType = IntT;
+
+  explicit constexpr StrongId(IntT v = 0) : m_value(v) {}
+  constexpr IntT value() const { return m_value; }
+
+  bool operator==(const StrongId& other) const { return m_value == other.m_value; }
+  bool operator!=(const StrongId& other) const { return m_value != other.m_value; }
+  bool operator<(const StrongId& other) const { return m_value < other.m_value; }
+  bool operator>(const StrongId& other) const { return m_value > other.m_value; }
+  bool operator<=(const StrongId& other) const { return m_value <= other.m_value; }
+  bool operator>=(const StrongId& other) const { return m_value >= other.m_value; } 
+};
+
 RAMPAGE_END

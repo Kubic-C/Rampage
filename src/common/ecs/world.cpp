@@ -1,8 +1,75 @@
 #include "world.hpp"
 #include "ecs.hpp"
 #include "entityPtr.hpp"
+#include "../ihost.hpp"
+
+#include <capnp/serialize-packed.h>
+#include <capnp/compat/json.h>
+#include <fstream>
 
 RAMPAGE_START
+
+class AssetLoaderImpl : public IAssetLoaderImpl {
+public:
+  virtual ~AssetLoaderImpl() = default;
+
+  bool loadAssetsFromMemory(IWorld& world, size_t size, const u8* data) override;
+  bool loadAssetsFromFile(IWorld& world, const char* path) override;
+  AssetId getAssetIdByName(const std::string& name) override;
+  EntityId getEntityIdByAssetId(AssetId assetId) override;
+
+private:
+  OpenMap<AssetId, EntityId> m_assetToEntity;
+  OpenMap<std::string, AssetId> m_assetsByName;
+};
+
+bool AssetLoaderImpl::loadAssetsFromFile(IWorld& world, const char* path) {
+  std::ifstream file(path);
+  if (!file.is_open()) {
+    world.getHost().log("<bgRed>Failed to open asset file: %s<reset>", path);
+    return false;
+  }
+  std::string jsonStr = std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  kj::String jsonStrReader(jsonStr.data(), jsonStr.size(), kj::NullArrayDisposer());
+  file.close();
+
+  // 1. Load JSON, convert to builder struct.
+  capnp::MallocMessageBuilder m_messageBuilder;
+  Schema::AssetState::Builder assetState = m_messageBuilder.initRoot<Schema::AssetState>();
+  capnp::JsonCodec jsonCodec;
+  jsonCodec.decode(jsonStrReader, assetState);
+
+  // 2. Convert MessageBuilder to packed binary format in memory.
+  kj::VectorOutputStream outputStream;
+  capnp::writePackedMessage(outputStream, m_messageBuilder);
+
+  // 3. Read assets from memory.
+  return loadAssetsFromMemory(world, outputStream.getArray().size(), outputStream.getArray().begin());
+}
+
+bool AssetLoaderImpl::loadAssetsFromMemory(IWorld& world, size_t size, const u8* data) {
+  IHost& m_host = world.getHost();
+
+  return true;
+}
+
+AssetId AssetLoaderImpl::getAssetIdByName(const std::string& name) {
+  auto it = m_assetsByName.find(name);
+  if (it == m_assetsByName.end()) {
+    // TODO: Handle not found - throw or return invalid?
+    return AssetId(0);  // Invalid
+  }
+  return it->second;
+}
+
+EntityId AssetLoaderImpl::getEntityIdByAssetId(AssetId assetId) {
+  auto it = m_assetToEntity.find(assetId);
+  if (it == m_assetToEntity.end()) {
+    // TODO: Handle not found
+    return NullEntityId;
+  }
+  return it->second;
+}
 
 class SetIterator {
 public:
@@ -111,7 +178,7 @@ private:
   SetIterator m_setIt;
 };
 
-EntityWorld::EntityWorld(IHost& host, PrivateConstructorTag) : m_host(host) {
+EntityWorld::EntityWorld(IHost& host, PrivateConstructorTag) : m_host(host), m_assetLoader(std::make_unique<AssetLoaderImpl>()) {
   m_sets.reserve(10000);
   m_sets.insert(std::make_pair(findOrCreateSet(ComponentSet()), EntityList()));
 
@@ -333,6 +400,12 @@ Ref EntityWorld::get(EntityId entity, ComponentId compId) {
   return Ref(getEntity(entity), compId);
 }
 
+std::string EntityWorld::nameOf(ComponentId compId) {
+  if (compId < m_componentNames.size())
+    return m_componentNames[compId];
+  return "";
+}
+
 void EntityWorld::add(EntityId entity, const ComponentSet& addComps, bool emit) {
   assert(exists(entity));
 
@@ -470,6 +543,10 @@ void EntityWorld::emit(ComponentId eventType, EntityId id, ComponentId comp) {
       observer.callback(getEntity(id));
     }
   }
+}
+
+AssetLoader EntityWorld::getAssetLoader() {
+  return AssetLoader(m_self, *m_assetLoader);
 }
 
 void EntityWorld::moveSets(EntityId id, const ComponentSet* to) {

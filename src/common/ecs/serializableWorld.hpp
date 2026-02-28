@@ -2,6 +2,7 @@
 
 #include "ref.hpp"
 #include "world.hpp"
+#include "serializer.hpp"
 
 RAMPAGE_START
 
@@ -11,7 +12,7 @@ class SerializableEntityWorld: public EntityWorld {
 
 public:
   SerializableEntityWorld(IHost& host, PrivateConstructorTag);
-  ~SerializableEntityWorld() override = default;
+  ~SerializableEntityWorld() noexcept override = default;
   
   static IWorldPtr createWorld(IHost& host) {
     IWorldPtr world = std::make_shared<SerializableEntityWorld>(host, PrivateConstructorTag{});
@@ -23,21 +24,14 @@ public:
     size_t size, NewPoolFunc newPoolFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
     SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) noexcept override;
 
-  // Saves the current state of serializable data with a particular set to a file.
   bool saveState(const char* path, ComponentSet saveSet);
-
-  // if (clearPrevious && exists(eid))
-  //   destroy(eid);
-  // if(appendEntities)
-  //   eid = NullEntityId;
-  bool loadState(const char* path, bool appendEntities, bool clearPrevious = false);
+  bool loadState(const char* path);
 
 private:
   void registerSerializable(ComponentId compId, SerializeFunc serializeFunc, DeserializeFunc deserializeFunc);
 
-  kj::ArrayPtr<capnp::word> m_scratchBuffer;
-  std::vector<SerializeFunc> m_componentSerializeFuncs;
-  std::vector<DeserializeFunc> m_componentDeserializeFuncs;
+  Serializer m_serializer;
+  Deserializer m_deserializer;
 }; 
 
 RAMPAGE_END

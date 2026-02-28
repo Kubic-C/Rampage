@@ -133,6 +133,10 @@ Ref TaggedEntityWorld::get(EntityId entity, ComponentId compId) {
   return m_realWorld->get(entity, compId);
 }
 
+std::string TaggedEntityWorld::nameOf(ComponentId compId) {
+  return m_realWorld->nameOf(compId);
+}
+
 void TaggedEntityWorld::add(EntityId entity, const ComponentSet& addComps, bool emit) {
   m_realWorld->add(entity, addComps, emit);
 }
@@ -175,6 +179,10 @@ void TaggedEntityWorld::observe(ComponentId eventType, ComponentId comp, const C
 
 void TaggedEntityWorld::emit(ComponentId eventType, EntityId entity, ComponentId comp) {
   m_realWorld->emit(eventType, entity, comp);
+}
+
+AssetLoader TaggedEntityWorld::getAssetLoader() {
+  return AssetLoader(m_self, m_realWorld->getAssetLoader());
 }
 
 RAMPAGE_END

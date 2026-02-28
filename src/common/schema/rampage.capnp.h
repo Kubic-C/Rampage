@@ -34,19 +34,6 @@ CAPNP_DECLARE_SCHEMA(a1f425f276ceb783);
 CAPNP_DECLARE_SCHEMA(9a0373c1c07c8a36);
 CAPNP_DECLARE_SCHEMA(c7ba077f3a6b39a4);
 CAPNP_DECLARE_SCHEMA(e4467db5109b421d);
-CAPNP_DECLARE_SCHEMA(bb270f698d8ef5ea);
-enum class WorldLayer_bb270f698d8ef5ea: uint16_t {
-  TOP,
-  RES2,
-  RES,
-  ITEM,
-  TURRET,
-  WALL,
-  FLOOR,
-  BOTTOM,
-  INVALID,
-};
-CAPNP_DECLARE_ENUM(WorldLayer, bb270f698d8ef5ea);
 CAPNP_DECLARE_SCHEMA(9beb5a9391dd8f69);
 CAPNP_DECLARE_SCHEMA(dd2050bbe6c1c0db);
 CAPNP_DECLARE_SCHEMA(e6da72db6380a96f);
@@ -67,15 +54,22 @@ enum class BodyType_bffa95aa01269f58: uint16_t {
   STATIC_BODY,
   KINEMATIC_BODY,
   DYNAMIC_BODY,
-  INVALID,
+  INVALID_BODY,
 };
 CAPNP_DECLARE_ENUM(BodyType, bffa95aa01269f58);
 CAPNP_DECLARE_SCHEMA(fbbdb9955f4ced70);
 CAPNP_DECLARE_SCHEMA(d818c0a9c8e5cea6);
+CAPNP_DECLARE_SCHEMA(85405c5deecd5bab);
+CAPNP_DECLARE_SCHEMA(87e6b6a9f05e0bb9);
+CAPNP_DECLARE_SCHEMA(fa1f8c54fe78e560);
+CAPNP_DECLARE_SCHEMA(b433e9be32e79c94);
+CAPNP_DECLARE_SCHEMA(fc1c3f8f378390eb);
 CAPNP_DECLARE_SCHEMA(eed9d9743adb7221);
 CAPNP_DECLARE_SCHEMA(c8d41821c1f3f50a);
+CAPNP_DECLARE_SCHEMA(9707a9a138c3d8f1);
 CAPNP_DECLARE_SCHEMA(e9a986a1c0f08f71);
 CAPNP_DECLARE_SCHEMA(d49e55acd79e9157);
+CAPNP_DECLARE_SCHEMA(de61ec457e943252);
 
 }  // namespace schemas
 }  // namespace capnp
@@ -321,8 +315,6 @@ struct SpawnerComponent {
     #endif  // !CAPNP_LITE
   };
 };
-
-typedef ::capnp::schemas::WorldLayer_bb270f698d8ef5ea WorldLayer;
 
 struct SpriteLayer {
   SpriteLayer() = delete;
@@ -585,6 +577,81 @@ struct BodyComponent {
   };
 };
 
+struct HealthComponent {
+  HealthComponent() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(85405c5deecd5bab, 1, 0)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct LifetimeComponent {
+  LifetimeComponent() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(87e6b6a9f05e0bb9, 1, 0)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct ContactDamageComponent {
+  ContactDamageComponent() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(fa1f8c54fe78e560, 1, 0)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct BulletDamageComponent {
+  BulletDamageComponent() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(b433e9be32e79c94, 1, 0)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct TurretComponent {
+  TurretComponent() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(fc1c3f8f378390eb, 6, 0)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
 struct Void {
   Void() = delete;
 
@@ -615,6 +682,21 @@ struct Entity {
   };
 };
 
+struct AssetEntity {
+  AssetEntity() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(9707a9a138c3d8f1, 1, 3)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
 struct ComponentIdName {
   ComponentIdName() = delete;
 
@@ -639,6 +721,21 @@ struct State {
 
   struct _capnpPrivate {
     CAPNP_DECLARE_STRUCT_HEADER(d49e55acd79e9157, 0, 2)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct AssetState {
+  AssetState() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(de61ec457e943252, 0, 3)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -2089,7 +2186,7 @@ public:
 
   inline float getRot() const;
 
-  inline  ::Schema::WorldLayer getLayer() const;
+  inline  ::uint8_t getLayer() const;
 
 private:
   ::capnp::_::StructReader _reader;
@@ -2132,8 +2229,8 @@ public:
   inline float getRot();
   inline void setRot(float value);
 
-  inline  ::Schema::WorldLayer getLayer();
-  inline void setLayer( ::Schema::WorldLayer value);
+  inline  ::uint8_t getLayer();
+  inline void setLayer( ::uint8_t value);
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -3713,6 +3810,441 @@ private:
 };
 #endif  // !CAPNP_LITE
 
+class HealthComponent::Reader {
+public:
+  typedef HealthComponent Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline float getHealth() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class HealthComponent::Builder {
+public:
+  typedef HealthComponent Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline float getHealth();
+  inline void setHealth(float value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class HealthComponent::Pipeline {
+public:
+  typedef HealthComponent Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class LifetimeComponent::Reader {
+public:
+  typedef LifetimeComponent Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline float getTimeLeft() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class LifetimeComponent::Builder {
+public:
+  typedef LifetimeComponent Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline float getTimeLeft();
+  inline void setTimeLeft(float value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class LifetimeComponent::Pipeline {
+public:
+  typedef LifetimeComponent Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class ContactDamageComponent::Reader {
+public:
+  typedef ContactDamageComponent Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline float getDamage() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class ContactDamageComponent::Builder {
+public:
+  typedef ContactDamageComponent Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline float getDamage();
+  inline void setDamage(float value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class ContactDamageComponent::Pipeline {
+public:
+  typedef ContactDamageComponent Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class BulletDamageComponent::Reader {
+public:
+  typedef BulletDamageComponent Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline float getDamage() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class BulletDamageComponent::Builder {
+public:
+  typedef BulletDamageComponent Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline float getDamage();
+  inline void setDamage(float value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class BulletDamageComponent::Pipeline {
+public:
+  typedef BulletDamageComponent Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class TurretComponent::Reader {
+public:
+  typedef TurretComponent Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getSummon() const;
+
+  inline float getFireRate() const;
+
+  inline float getTimeSinceLastShot() const;
+
+  inline float getRadius() const;
+
+  inline float getRot() const;
+
+  inline float getTurnSpeed() const;
+
+  inline float getShootRange() const;
+
+  inline float getStopRange() const;
+
+  inline float getMuzzleVelocity() const;
+
+  inline float getBulletRadius() const;
+
+  inline float getBulletDamage() const;
+
+  inline float getBulletHealth() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class TurretComponent::Builder {
+public:
+  typedef TurretComponent Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getSummon();
+  inline void setSummon( ::uint32_t value);
+
+  inline float getFireRate();
+  inline void setFireRate(float value);
+
+  inline float getTimeSinceLastShot();
+  inline void setTimeSinceLastShot(float value);
+
+  inline float getRadius();
+  inline void setRadius(float value);
+
+  inline float getRot();
+  inline void setRot(float value);
+
+  inline float getTurnSpeed();
+  inline void setTurnSpeed(float value);
+
+  inline float getShootRange();
+  inline void setShootRange(float value);
+
+  inline float getStopRange();
+  inline void setStopRange(float value);
+
+  inline float getMuzzleVelocity();
+  inline void setMuzzleVelocity(float value);
+
+  inline float getBulletRadius();
+  inline void setBulletRadius(float value);
+
+  inline float getBulletDamage();
+  inline void setBulletDamage(float value);
+
+  inline float getBulletHealth();
+  inline void setBulletHealth(float value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class TurretComponent::Pipeline {
+public:
+  typedef TurretComponent Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
 class Void::Reader {
 public:
   typedef Void Reads;
@@ -3869,6 +4401,114 @@ private:
 class Entity::Pipeline {
 public:
   typedef Entity Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class AssetEntity::Reader {
+public:
+  typedef AssetEntity Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline bool hasName() const;
+  inline  ::capnp::Text::Reader getName() const;
+
+  inline  ::uint32_t getId() const;
+
+  inline bool hasCompIds() const;
+  inline  ::capnp::List< ::uint16_t,  ::capnp::Kind::PRIMITIVE>::Reader getCompIds() const;
+
+  inline bool hasCompData() const;
+  inline  ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>::Reader getCompData() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class AssetEntity::Builder {
+public:
+  typedef AssetEntity Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline bool hasName();
+  inline  ::capnp::Text::Builder getName();
+  inline void setName( ::capnp::Text::Reader value);
+  inline  ::capnp::Text::Builder initName(unsigned int size);
+  inline void adoptName(::capnp::Orphan< ::capnp::Text>&& value);
+  inline ::capnp::Orphan< ::capnp::Text> disownName();
+
+  inline  ::uint32_t getId();
+  inline void setId( ::uint32_t value);
+
+  inline bool hasCompIds();
+  inline  ::capnp::List< ::uint16_t,  ::capnp::Kind::PRIMITIVE>::Builder getCompIds();
+  inline void setCompIds( ::capnp::List< ::uint16_t,  ::capnp::Kind::PRIMITIVE>::Reader value);
+  inline void setCompIds(::kj::ArrayPtr<const  ::uint16_t> value);
+  inline  ::capnp::List< ::uint16_t,  ::capnp::Kind::PRIMITIVE>::Builder initCompIds(unsigned int size);
+  inline void adoptCompIds(::capnp::Orphan< ::capnp::List< ::uint16_t,  ::capnp::Kind::PRIMITIVE>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::uint16_t,  ::capnp::Kind::PRIMITIVE>> disownCompIds();
+
+  inline bool hasCompData();
+  inline  ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>::Builder getCompData();
+  inline void setCompData( ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>::Reader value);
+  inline void setCompData(::kj::ArrayPtr<const  ::capnp::Data::Reader> value);
+  inline  ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>::Builder initCompData(unsigned int size);
+  inline void adoptCompData(::capnp::Orphan< ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>> disownCompData();
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class AssetEntity::Pipeline {
+public:
+  typedef AssetEntity Pipelines;
 
   inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
@@ -4046,6 +4686,107 @@ private:
 class State::Pipeline {
 public:
   typedef State Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class AssetState::Reader {
+public:
+  typedef AssetState Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline bool hasStateName() const;
+  inline  ::capnp::Text::Reader getStateName() const;
+
+  inline bool hasRegisteredComponents() const;
+  inline  ::capnp::List< ::Schema::ComponentIdName,  ::capnp::Kind::STRUCT>::Reader getRegisteredComponents() const;
+
+  inline bool hasEntities() const;
+  inline  ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>::Reader getEntities() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class AssetState::Builder {
+public:
+  typedef AssetState Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline bool hasStateName();
+  inline  ::capnp::Text::Builder getStateName();
+  inline void setStateName( ::capnp::Text::Reader value);
+  inline  ::capnp::Text::Builder initStateName(unsigned int size);
+  inline void adoptStateName(::capnp::Orphan< ::capnp::Text>&& value);
+  inline ::capnp::Orphan< ::capnp::Text> disownStateName();
+
+  inline bool hasRegisteredComponents();
+  inline  ::capnp::List< ::Schema::ComponentIdName,  ::capnp::Kind::STRUCT>::Builder getRegisteredComponents();
+  inline void setRegisteredComponents( ::capnp::List< ::Schema::ComponentIdName,  ::capnp::Kind::STRUCT>::Reader value);
+  inline  ::capnp::List< ::Schema::ComponentIdName,  ::capnp::Kind::STRUCT>::Builder initRegisteredComponents(unsigned int size);
+  inline void adoptRegisteredComponents(::capnp::Orphan< ::capnp::List< ::Schema::ComponentIdName,  ::capnp::Kind::STRUCT>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::Schema::ComponentIdName,  ::capnp::Kind::STRUCT>> disownRegisteredComponents();
+
+  inline bool hasEntities();
+  inline  ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>::Builder getEntities();
+  inline void setEntities( ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>::Reader value);
+  inline  ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>::Builder initEntities(unsigned int size);
+  inline void adoptEntities(::capnp::Orphan< ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>> disownEntities();
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class AssetState::Pipeline {
+public:
+  typedef AssetState Pipelines;
 
   inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
@@ -4993,18 +5734,18 @@ inline void SpriteLayer::Builder::setRot(float value) {
       ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
 }
 
-inline  ::Schema::WorldLayer SpriteLayer::Reader::getLayer() const {
-  return _reader.getDataField< ::Schema::WorldLayer>(
-      ::capnp::bounded<1>() * ::capnp::ELEMENTS, 8u);
+inline  ::uint8_t SpriteLayer::Reader::getLayer() const {
+  return _reader.getDataField< ::uint8_t>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS, 255u);
 }
 
-inline  ::Schema::WorldLayer SpriteLayer::Builder::getLayer() {
-  return _builder.getDataField< ::Schema::WorldLayer>(
-      ::capnp::bounded<1>() * ::capnp::ELEMENTS, 8u);
+inline  ::uint8_t SpriteLayer::Builder::getLayer() {
+  return _builder.getDataField< ::uint8_t>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS, 255u);
 }
-inline void SpriteLayer::Builder::setLayer( ::Schema::WorldLayer value) {
-  _builder.setDataField< ::Schema::WorldLayer>(
-      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value, 8u);
+inline void SpriteLayer::Builder::setLayer( ::uint8_t value) {
+  _builder.setDataField< ::uint8_t>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS, value, 255u);
 }
 
 inline bool SubSprite::Reader::hasGridPos() const {
@@ -6329,6 +7070,230 @@ inline ::capnp::Orphan< ::Schema::Body> BodyComponent::Builder::disownBody() {
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
+inline float HealthComponent::Reader::getHealth() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, 1084227584u);
+}
+
+inline float HealthComponent::Builder::getHealth() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, 1084227584u);
+}
+inline void HealthComponent::Builder::setHealth(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value, 1084227584u);
+}
+
+inline float LifetimeComponent::Reader::getTimeLeft() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, 1065353216u);
+}
+
+inline float LifetimeComponent::Builder::getTimeLeft() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, 1065353216u);
+}
+inline void LifetimeComponent::Builder::setTimeLeft(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value, 1065353216u);
+}
+
+inline float ContactDamageComponent::Reader::getDamage() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, 1092616192u);
+}
+
+inline float ContactDamageComponent::Builder::getDamage() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, 1092616192u);
+}
+inline void ContactDamageComponent::Builder::setDamage(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value, 1092616192u);
+}
+
+inline float BulletDamageComponent::Reader::getDamage() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, 1092616192u);
+}
+
+inline float BulletDamageComponent::Builder::getDamage() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, 1092616192u);
+}
+inline void BulletDamageComponent::Builder::setDamage(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value, 1092616192u);
+}
+
+inline  ::uint32_t TurretComponent::Reader::getSummon() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t TurretComponent::Builder::getSummon() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void TurretComponent::Builder::setSummon( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline float TurretComponent::Reader::getFireRate() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, 1065353216u);
+}
+
+inline float TurretComponent::Builder::getFireRate() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, 1065353216u);
+}
+inline void TurretComponent::Builder::setFireRate(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value, 1065353216u);
+}
+
+inline float TurretComponent::Reader::getTimeSinceLastShot() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+
+inline float TurretComponent::Builder::getTimeSinceLastShot() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+inline void TurretComponent::Builder::setTimeSinceLastShot(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS, value);
+}
+
+inline float TurretComponent::Reader::getRadius() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS, 1073741824u);
+}
+
+inline float TurretComponent::Builder::getRadius() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS, 1073741824u);
+}
+inline void TurretComponent::Builder::setRadius(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS, value, 1073741824u);
+}
+
+inline float TurretComponent::Reader::getRot() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS);
+}
+
+inline float TurretComponent::Builder::getRot() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS);
+}
+inline void TurretComponent::Builder::setRot(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS, value);
+}
+
+inline float TurretComponent::Reader::getTurnSpeed() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS, 1036831949u);
+}
+
+inline float TurretComponent::Builder::getTurnSpeed() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS, 1036831949u);
+}
+inline void TurretComponent::Builder::setTurnSpeed(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS, value, 1036831949u);
+}
+
+inline float TurretComponent::Reader::getShootRange() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<6>() * ::capnp::ELEMENTS, 1025758986u);
+}
+
+inline float TurretComponent::Builder::getShootRange() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<6>() * ::capnp::ELEMENTS, 1025758986u);
+}
+inline void TurretComponent::Builder::setShootRange(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<6>() * ::capnp::ELEMENTS, value, 1025758986u);
+}
+
+inline float TurretComponent::Reader::getStopRange() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<7>() * ::capnp::ELEMENTS, 1017370378u);
+}
+
+inline float TurretComponent::Builder::getStopRange() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<7>() * ::capnp::ELEMENTS, 1017370378u);
+}
+inline void TurretComponent::Builder::setStopRange(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<7>() * ::capnp::ELEMENTS, value, 1017370378u);
+}
+
+inline float TurretComponent::Reader::getMuzzleVelocity() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<8>() * ::capnp::ELEMENTS, 1092616192u);
+}
+
+inline float TurretComponent::Builder::getMuzzleVelocity() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<8>() * ::capnp::ELEMENTS, 1092616192u);
+}
+inline void TurretComponent::Builder::setMuzzleVelocity(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<8>() * ::capnp::ELEMENTS, value, 1092616192u);
+}
+
+inline float TurretComponent::Reader::getBulletRadius() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<9>() * ::capnp::ELEMENTS, 1048576000u);
+}
+
+inline float TurretComponent::Builder::getBulletRadius() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<9>() * ::capnp::ELEMENTS, 1048576000u);
+}
+inline void TurretComponent::Builder::setBulletRadius(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<9>() * ::capnp::ELEMENTS, value, 1048576000u);
+}
+
+inline float TurretComponent::Reader::getBulletDamage() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<10>() * ::capnp::ELEMENTS, 1092616192u);
+}
+
+inline float TurretComponent::Builder::getBulletDamage() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<10>() * ::capnp::ELEMENTS, 1092616192u);
+}
+inline void TurretComponent::Builder::setBulletDamage(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<10>() * ::capnp::ELEMENTS, value, 1092616192u);
+}
+
+inline float TurretComponent::Reader::getBulletHealth() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<11>() * ::capnp::ELEMENTS, 1065353216u);
+}
+
+inline float TurretComponent::Builder::getBulletHealth() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<11>() * ::capnp::ELEMENTS, 1065353216u);
+}
+inline void TurretComponent::Builder::setBulletHealth(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<11>() * ::capnp::ELEMENTS, value, 1065353216u);
+}
+
 inline  ::uint32_t Entity::Reader::getId() const {
   return _reader.getDataField< ::uint32_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
@@ -6417,6 +7382,130 @@ inline void Entity::Builder::adoptCompData(
 inline ::capnp::Orphan< ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>> Entity::Builder::disownCompData() {
   return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>>::disown(_builder.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline bool AssetEntity::Reader::hasName() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool AssetEntity::Builder::hasName() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::Text::Reader AssetEntity::Reader::getName() const {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::capnp::Text::Builder AssetEntity::Builder::getName() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void AssetEntity::Builder::setName( ::capnp::Text::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::Text::Builder AssetEntity::Builder::initName(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+}
+inline void AssetEntity::Builder::adoptName(
+    ::capnp::Orphan< ::capnp::Text>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::Text> AssetEntity::Builder::disownName() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline  ::uint32_t AssetEntity::Reader::getId() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t AssetEntity::Builder::getId() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void AssetEntity::Builder::setId( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool AssetEntity::Reader::hasCompIds() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline bool AssetEntity::Builder::hasCompIds() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::List< ::uint16_t,  ::capnp::Kind::PRIMITIVE>::Reader AssetEntity::Reader::getCompIds() const {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint16_t,  ::capnp::Kind::PRIMITIVE>>::get(_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline  ::capnp::List< ::uint16_t,  ::capnp::Kind::PRIMITIVE>::Builder AssetEntity::Builder::getCompIds() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint16_t,  ::capnp::Kind::PRIMITIVE>>::get(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline void AssetEntity::Builder::setCompIds( ::capnp::List< ::uint16_t,  ::capnp::Kind::PRIMITIVE>::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::uint16_t,  ::capnp::Kind::PRIMITIVE>>::set(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+}
+inline void AssetEntity::Builder::setCompIds(::kj::ArrayPtr<const  ::uint16_t> value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::uint16_t,  ::capnp::Kind::PRIMITIVE>>::set(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::List< ::uint16_t,  ::capnp::Kind::PRIMITIVE>::Builder AssetEntity::Builder::initCompIds(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint16_t,  ::capnp::Kind::PRIMITIVE>>::init(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), size);
+}
+inline void AssetEntity::Builder::adoptCompIds(
+    ::capnp::Orphan< ::capnp::List< ::uint16_t,  ::capnp::Kind::PRIMITIVE>>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::uint16_t,  ::capnp::Kind::PRIMITIVE>>::adopt(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::List< ::uint16_t,  ::capnp::Kind::PRIMITIVE>> AssetEntity::Builder::disownCompIds() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint16_t,  ::capnp::Kind::PRIMITIVE>>::disown(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline bool AssetEntity::Reader::hasCompData() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS).isNull();
+}
+inline bool AssetEntity::Builder::hasCompData() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>::Reader AssetEntity::Reader::getCompData() const {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>>::get(_reader.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS));
+}
+inline  ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>::Builder AssetEntity::Builder::getCompData() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>>::get(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS));
+}
+inline void AssetEntity::Builder::setCompData( ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>>::set(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS), value);
+}
+inline void AssetEntity::Builder::setCompData(::kj::ArrayPtr<const  ::capnp::Data::Reader> value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>>::set(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>::Builder AssetEntity::Builder::initCompData(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>>::init(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS), size);
+}
+inline void AssetEntity::Builder::adoptCompData(
+    ::capnp::Orphan< ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>>::adopt(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>> AssetEntity::Builder::disownCompData() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::capnp::Data,  ::capnp::Kind::BLOB>>::disown(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS));
 }
 
 inline bool ComponentIdName::Reader::hasName() const {
@@ -6533,6 +7622,108 @@ inline void State::Builder::adoptEntities(
 inline ::capnp::Orphan< ::capnp::List< ::Schema::Entity,  ::capnp::Kind::STRUCT>> State::Builder::disownEntities() {
   return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Entity,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline bool AssetState::Reader::hasStateName() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool AssetState::Builder::hasStateName() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::Text::Reader AssetState::Reader::getStateName() const {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::capnp::Text::Builder AssetState::Builder::getStateName() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void AssetState::Builder::setStateName( ::capnp::Text::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::Text::Builder AssetState::Builder::initStateName(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+}
+inline void AssetState::Builder::adoptStateName(
+    ::capnp::Orphan< ::capnp::Text>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::Text> AssetState::Builder::disownStateName() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool AssetState::Reader::hasRegisteredComponents() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline bool AssetState::Builder::hasRegisteredComponents() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::List< ::Schema::ComponentIdName,  ::capnp::Kind::STRUCT>::Reader AssetState::Reader::getRegisteredComponents() const {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ComponentIdName,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline  ::capnp::List< ::Schema::ComponentIdName,  ::capnp::Kind::STRUCT>::Builder AssetState::Builder::getRegisteredComponents() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ComponentIdName,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline void AssetState::Builder::setRegisteredComponents( ::capnp::List< ::Schema::ComponentIdName,  ::capnp::Kind::STRUCT>::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ComponentIdName,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::List< ::Schema::ComponentIdName,  ::capnp::Kind::STRUCT>::Builder AssetState::Builder::initRegisteredComponents(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ComponentIdName,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), size);
+}
+inline void AssetState::Builder::adoptRegisteredComponents(
+    ::capnp::Orphan< ::capnp::List< ::Schema::ComponentIdName,  ::capnp::Kind::STRUCT>>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ComponentIdName,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::List< ::Schema::ComponentIdName,  ::capnp::Kind::STRUCT>> AssetState::Builder::disownRegisteredComponents() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ComponentIdName,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline bool AssetState::Reader::hasEntities() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS).isNull();
+}
+inline bool AssetState::Builder::hasEntities() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>::Reader AssetState::Reader::getEntities() const {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS));
+}
+inline  ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>::Builder AssetState::Builder::getEntities() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS));
+}
+inline void AssetState::Builder::setEntities( ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>::Builder AssetState::Builder::initEntities(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS), size);
+}
+inline void AssetState::Builder::adoptEntities(
+    ::capnp::Orphan< ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>> AssetState::Builder::disownEntities() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS));
 }
 
 }  // namespace

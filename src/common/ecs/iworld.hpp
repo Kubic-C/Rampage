@@ -3,7 +3,9 @@
 #include "componentSet.hpp"
 #include "ipool.hpp"
 #include "id.hpp"
-#include "capnp/message.h"
+#include <capnp/message.h>
+#include <capnp/serialize-packed.h>
+#include <capnp/pretty-print.h>
 #include "../schema/rampage.capnp.h"
 
 RAMPAGE_START
@@ -14,6 +16,8 @@ class System;
 class IHost;
 class IWorld;
 class EntityIterator;
+class AssetLoader;
+class IAssetLoaderImpl;
 
 struct ComponentAddedEvent {};
 struct ComponentRemovedEvent {};
@@ -94,6 +98,7 @@ public:
   virtual bool isDefer() = 0;
 
   virtual Ref get(EntityId entity, ComponentId compId) = 0;
+  virtual std::string nameOf(ComponentId compId) = 0;
   virtual void add(EntityId entity, const ComponentSet& addComps, bool emit = true) = 0;
   virtual void remove(EntityId entity, const ComponentSet& remComps, bool emit = true) = 0;
   virtual bool has(EntityId entity, ComponentId compId) = 0;
@@ -108,6 +113,8 @@ public:
 
   virtual void observe(ComponentId eventType, ComponentId comp, const ComponentSet& with, ObserverCallback callback) = 0;
   virtual void emit(ComponentId eventType, EntityId entity, ComponentId comp) = 0;
+
+  virtual AssetLoader getAssetLoader() = 0;
 
   template <typename T>
   ComponentId component(bool isRegistered = true) noexcept {
