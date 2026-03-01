@@ -145,7 +145,7 @@ void meshTilemap(EntityPtr e, VertexArrayBuffer& va, InstanceBufferComponent& in
     Tilemap& tm = tmLayers->getTilemap(i);
 
     for (glm::i16vec2 tilePos : tm) {
-      Tile& tile = tm.find(tilePos);
+      TileComponent& tile = tm.find(tilePos);
 
       glm::u16vec2 dim = tile.size();
       glm::vec2 tileWorldPos = transform->getWorldPoint(tm.getLocalTileCenter(tilePos, dim));

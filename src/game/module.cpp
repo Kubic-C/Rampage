@@ -56,9 +56,7 @@ int GameModule::onLoad() {
   auto& invMgr = world->getContext<InventoryManager>();
   invMgr.setDefaultItemIcon("./res/clear.png");
 
-  // world->addContext<AssetLoader>(world);
-  // auto& loader = world->getContext<AssetLoader>();
-  // loader.loadAssets("./res/root.json");
+  world->getAssetLoader().loadAssetsFromFile("./res/root.json");
 
   loadTilemapSystems(*m_host);
   loadSpawnerSystems(*m_host);

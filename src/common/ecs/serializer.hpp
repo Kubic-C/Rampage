@@ -21,25 +21,41 @@ public:
   void queue(EntityId eid, const ComponentSet& set);
   void queueAllWith(const ComponentSet& set);
 
-  void serialize(IWorld& world, EntityId eid, const ComponentSet& set, Schema::Entity::Builder entityBuilder);
-  void serialize(IWorld& world, EntityId eid, const std::string& name, const ComponentSet& set, Schema::AssetEntity::Builder entityBuilder);
-  void serialize(IWorld& world, ComponentId compId, Schema::ComponentIdName::Builder compIdNameBuilder);
-  bool serialize(capnp::MessageBuilder& builder, const char* path);
+  void serializeEntity(IWorld& world, EntityId eid, const ComponentSet& set, Schema::Entity::Builder entityBuilder);
+  void serializeAssetEntity(IWorld& world, EntityId eid, const std::string& name, const ComponentSet& set, Schema::AssetEntity::Builder entityBuilder);
+  void serializeComponentIdName(IWorld& world, ComponentId compId, Schema::ComponentIdName::Builder compIdNameBuilder);
+  bool serializeToFile(capnp::MessageBuilder& builder, const char* path);
 
   template<IntegerIndexedContainer<ComponentId> Container>
-  void serialize(IWorld& world, Container entitiesToSerialize, Schema::State::Builder stateBuilder) {
-    auto regCompsBuilder = stateBuilder.initRegisteredComponents(m_componentSerializeFuncs.size());
-    auto entitiesBuilder = stateBuilder.initEntities(entitiesToSerialize.size());
+  void serializeState(IWorld& world, Container entitiesToSerialize, Schema::State::Builder stateBuilder) {
+    auto regCompsBuilder = stateBuilder.initRegisteredComponents((u32)m_componentSerializeFuncs.size());
+    auto entitiesBuilder = stateBuilder.initEntities((u32)entitiesToSerialize.size());
 
     ComponentSetBuilder compSetBuilder;
     size_t i = 0;
-    for (const auto& pair : entitiesToSerialize) {
-      serialize(world, pair.first, pair.second, entitiesBuilder[i++]);
-      compSetBuilder.add(pair.second);
+    for (const auto&[entityId, compSet] : entitiesToSerialize) {
+      serializeEntity(world, entityId, compSet, entitiesBuilder[i++]);
+      compSetBuilder.add(compSet);
+    }
+    
+    for (size_t i = 0; i < compSetBuilder.list().size(); ++i)
+      serializeComponentIdName(world, compSetBuilder.list()[(u32)i], regCompsBuilder[(u32)i]);
+  }
+
+  template<IntegerIndexedContainer<ComponentId> Container>
+  void serializeStateWithNames(IWorld& world, Container entitiesToSerialize, Schema::State::Builder stateBuilder) {
+    auto regCompsBuilder = stateBuilder.initRegisteredComponents((u32)m_componentSerializeFuncs.size());
+    auto entitiesBuilder = stateBuilder.initEntities((u32)entitiesToSerialize.size());
+
+    ComponentSetBuilder compSetBuilder;
+    size_t i = 0;
+    for (const auto&[entityId, compSet, name] : entitiesToSerialize) {
+      serializeAssetEntity(world, entityId, name, compSet, entitiesBuilder[i++]);
+      compSetBuilder.add(compSet);
     }
 
     for (size_t i = 0; i < compSetBuilder.list().size(); ++i)
-      serialize(world, compSetBuilder.list()[i], regCompsBuilder[i]);
+      serializeComponentIdName(world, compSetBuilder.list()[(u32)i], regCompsBuilder[(u32)i]);
   }
 
   void registerComponent(ComponentId compId, SerializeFunc serializeFunc);
@@ -62,10 +78,15 @@ private:
 
 class Deserializer {
 public:
-  bool deserialize(IWorld& world, const char* path);
-  bool deserialize(IWorld& world, const std::vector<u8>& data);
-  bool deserialize(IWorld& world, Schema::State::Reader stateReader);
-  void deserialize(IWorld& world, Schema::Entity::Reader reader);
+  struct AssetEntityData {
+    EntityId id;
+    std::string name;
+  };
+
+  bool deserializeFromFile(IWorld& world, const char* path);
+  bool deserializeStateFromData(IWorld& world, const std::vector<u8>& data);
+  bool deserializeState(IWorld& world, Schema::State::Reader stateReader);
+  void deserializeComponentList(IWorld& world, const IdMapper& idMapper, EntityId eid, capnp::List<u16>::Reader compIds, capnp::List<capnp::Data>::Reader compData);
   bool isRegistryValid(IWorld& world, capnp::List<Schema::ComponentIdName>::Reader regCompsReader);
 
   void registerComponent(ComponentId compId, DeserializeFunc deserializeFunc);

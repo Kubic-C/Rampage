@@ -7,6 +7,6 @@ void SerializableTag::serialize(capnp::MessageBuilder& builder, Ref component) {
   builder.initRoot<Schema::Void>();
 }
 
-void SerializableTag::deserialize(capnp::MessageReader& reader, Ref component) {}
+void SerializableTag::deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component) {}
 
 RAMPAGE_END

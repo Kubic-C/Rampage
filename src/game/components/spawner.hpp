@@ -5,27 +5,9 @@
 RAMPAGE_START
 
 struct SpawnerComponent {
-  static void serialize(capnp::MessageBuilder& builder, Ref component) {
-    auto spawnerBuilder = builder.initRoot<Schema::SpawnerComponent>();
-    auto spawner = component.cast<SpawnerComponent>();
-
-    spawnerBuilder.setSpawn(spawner->spawn);
-    spawnerBuilder.setSpawnRate(spawner->spawnRate);
-    spawnerBuilder.setTimeSinceLastSpawn(spawner->timeSinceLastSpawn);
-    spawnerBuilder.setSpawnableRadius(spawner->spawnableRadius);
-    spawnerBuilder.setSpawnCount(spawner->spawnCount);
-  }
-
-  static void deserialize(capnp::MessageReader& reader, Ref component) {
-    auto spawnerReader = reader.getRoot<Schema::SpawnerComponent>();
-    auto spawner = component.cast<SpawnerComponent>();
-
-    spawner->spawn = spawnerReader.getSpawn();
-    spawner->spawnRate = spawnerReader.getSpawnRate();
-    spawner->timeSinceLastSpawn = spawnerReader.getTimeSinceLastSpawn();
-    spawner->spawnableRadius = spawnerReader.getSpawnableRadius();
-    spawner->spawnCount = spawnerReader.getSpawnCount();
-  }
+  static void serialize(capnp::MessageBuilder& builder, Ref component);
+  static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
+  static void fromJson(Ref component, AssetLoader loader, const json& compJson);
 
   // The entity to summon
   EntityId spawn;

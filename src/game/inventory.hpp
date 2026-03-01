@@ -361,7 +361,7 @@ private:
 inline bool tryPlaceItem(EntityPtr worldMap, Inventory inv, const glm::u16vec2& stackPos,
                          const glm::vec2& coords) {
   IWorldPtr world = worldMap.world();
-  AssetLoader& assetLoader = world->getContext<AssetLoader>();
+  auto assetLoader = world->getAssetLoader();
 
   const ItemStack stack = inv.getStack(stackPos);
   if (stack.item == 0 || !world->getEntity(stack.item).has<ItemAttrTile>())
@@ -374,7 +374,7 @@ inline bool tryPlaceItem(EntityPtr worldMap, Inventory inv, const glm::u16vec2& 
 
   RefT<BodyComponent> body = worldMap.get<BodyComponent>();
   glm::i16vec2 tilePos = Tilemap::getNearestTile(worldMap.get<TransformComponent>()->getLocalPoint(coords));
-  const TileDef& tileItemPrefab = assetLoader.getTilePrefab(item.get<ItemAttrTile>()->tileId);
+  const TileComponent& tileItemPrefab = *assetLoader.getAsset(item.get<ItemAttrTile>()->tileId).get<TileComponent>();
   for (int x = tilePos.x; x < tilePos.x + tileItemPrefab.width(); x++) {
     for (int y = tilePos.y; y < tilePos.y + tileItemPrefab.height(); y++) {
       glm::i16vec2 tilePos = {x, y};
@@ -402,8 +402,7 @@ inline bool tryPlaceItem(EntityPtr worldMap, Inventory inv, const glm::u16vec2& 
   }
 
   inv.removeItem(stackPos);
-  tmLayers->getToptilemap().insert(world, body->id, tilePos, worldMap,
-                                   assetLoader.cloneTilePrefab(item.get<ItemAttrTile>()->tileId));
+  tmLayers->getToptilemap().insert(world, body->id, tilePos, worldMap, assetLoader.cloneAsset(item.get<ItemAttrTile>()->tileId));
 
   if (inv.isStackEmpty(stackPos))
     world->getContext<InventoryManager>().clearHand();

@@ -2,6 +2,7 @@
 
 #include "iworld.hpp"
 #include "iassetLoader.hpp"
+#include "serializer.hpp"
 
 RAMPAGE_START
 
@@ -39,7 +40,7 @@ public:
   }
 
   explicit EntityWorld(IHost& host, PrivateConstructorTag);
-  virtual ~EntityWorld() override;
+  virtual ~EntityWorld() noexcept override;
 
   virtual IHost& getHost() override;
   virtual IWorld& getTopWorld() override;
@@ -74,7 +75,7 @@ public:
   virtual bool isDefer() override;
 
   virtual Ref get(EntityId entity, ComponentId compId) override;
-  virtual std::string nameOf(ComponentId compId) override;
+  virtual std::string_view nameOf(ComponentId compId) override;
   virtual void add(EntityId entity, const ComponentSet& addComps, bool emit = true) override;
   virtual void remove(EntityId entity, const ComponentSet& remComps, bool emit = true) override;
   virtual bool has(EntityId entity, ComponentId comp) override;
@@ -82,14 +83,16 @@ public:
   virtual void move(EntityId src, EntityId dst, const ComponentSet& comps = {}) override;
   virtual const ComponentSet& setOf(EntityId entity) override;
 
-  virtual ComponentId component(ComponentId compid, bool isRegistered, const std::string& name, 
-    size_t size, NewPoolFunc newPoolFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
+  virtual ComponentId component(ComponentId compid, bool isRegistered, const std::string_view& name, 
+    size_t size, NewPoolFunc newPoolFunc, FromJsonFunc fromJsonFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
     SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) noexcept override;
 
   virtual void observe(ComponentId eventType, ComponentId comp, const ComponentSet& with, ObserverCallback callback) override;
   virtual void emit(ComponentId eventType, EntityId entity, ComponentId comp) override;
 
   virtual AssetLoader getAssetLoader() override;
+  virtual Serializer& getSerializer() override;
+  virtual Deserializer& getDeserializer() override;
 
 protected:
   struct ContextData {
@@ -139,6 +142,9 @@ protected:
   IAssetLoaderImplPtr m_assetLoader;
   IHost& m_host;
 
+  Serializer m_serializer;
+  Deserializer m_deserializer;
+
   /* Deferred operations */
   bool m_isDefer = false;
   std::vector<const ComponentSet*> m_deferredSuperSetCalc;
@@ -156,9 +162,9 @@ protected:
   /* Components */
   Map<ComponentId, Map<ComponentId, std::vector<ObserverData>>> m_observers;
 
-  std::vector<std::string> m_componentNames;
-  std::vector<void (*)(u8* dst, u8* src)> m_componentCopyCtor;
-  std::vector<void (*)(u8* dst, u8* src)> m_componentMoveCtor;
+  std::vector<std::string_view> m_componentNames;
+  std::vector<ComponentCopyCtor> m_componentCopyCtor;
+  std::vector<ComponentMoveCtor> m_componentMoveCtor;
   std::vector<IPool*> m_componentPools;
 
   // A map that keeps track of super sets, meaning sets that contain the same or

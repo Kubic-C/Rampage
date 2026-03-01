@@ -48,7 +48,7 @@ void updateTileBoundTransforms(EntityPtr e) {
   auto parentTransform = parent.get<TransformComponent>();
   auto parentTilemapLayers = parent.get<TilemapComponent>();
   Tilemap& tilemap = parentTilemapLayers->getTilemap(tileBound->layer);
-  Tile& tile = tilemap.find(tileBound->pos);
+  TileComponent& tile = tilemap.find(tileBound->pos);
 
   *transform =
       Transform(parentTransform->getWorldPoint(tilemap.getLocalTileCenter(tileBound->pos, tile.size())),

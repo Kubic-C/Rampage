@@ -189,21 +189,3 @@ constexpr size_t maxNumberBits(size_t numBits) {
 
   return num + 1;
 }
-
-template <>
-struct glz::meta<glm::i16vec2> {
-  using T = glm::i16vec2;
-  static constexpr auto value = object("x", &T::x, "y", &T::y);
-};
-
-template <>
-struct glz::meta<glm::u16vec2> {
-  using T = glm::u16vec2;
-  static constexpr auto value = object("x", &T::x, "y", &T::y);
-};
-
-template <>
-struct glz::meta<Vec2> {
-  using T = Vec2;
-  static constexpr auto value = object("x", &T::x, "y", &T::y);
-};

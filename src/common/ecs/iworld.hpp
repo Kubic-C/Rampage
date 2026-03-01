@@ -3,6 +3,7 @@
 #include "componentSet.hpp"
 #include "ipool.hpp"
 #include "id.hpp"
+
 #include <capnp/message.h>
 #include <capnp/serialize-packed.h>
 #include <capnp/pretty-print.h>
@@ -18,22 +19,43 @@ class IWorld;
 class EntityIterator;
 class AssetLoader;
 class IAssetLoaderImpl;
+class Serializer;
+class Deserializer;
 
 struct ComponentAddedEvent {};
 struct ComponentRemovedEvent {};
 
 template<typename T>
 concept SerializableComponent =
-    requires(T t, capnp::MessageBuilder& builder, capnp::MessageReader& reader, Ref component) {
-        T::serialize(builder, component);
-        T::deserialize(reader, component);
-    };
+  requires(T t, capnp::MessageBuilder& builder, capnp::MessageReader& reader, const IdMapper& id, Ref component) {
+    T::serialize(builder, component);
+    T::deserialize(reader, id, component);
+  };
 using SerializeFunc = void (*)(capnp::MessageBuilder& builder, Ref component);
-using DeserializeFunc = void (*)(capnp::MessageReader& reader, Ref component);
+using DeserializeFunc = void (*)(capnp::MessageReader& reader, const IdMapper& id, Ref component);
+
+template<typename T>
+concept CopyableComponent =
+  requires(T t, Ref src, Ref dst) {
+    T::copy(src, dst);
+  };
+
+template<typename T>
+concept MovableComponent =
+  requires(T t, Ref src, Ref dst) {
+    T::move(src, dst);
+  };
+
+template<typename T>
+concept FromJsonComponent =
+  requires(T t, Ref component, const json& json) {
+    T::fromJson(component, json);
+  };
+using FromJsonFunc = void(*)(Ref component, AssetLoader loader, const json& json);
 
 struct SerializableTag {
   static void serialize(capnp::MessageBuilder& builder, Ref component);
-  static void deserialize(capnp::MessageReader& reader, Ref component);
+  static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
 };
 
 class IEntityIterator {
@@ -57,10 +79,16 @@ public:
   struct Enabled : SerializableTag {};
 
   using NewPoolFunc = IPool* (*)();
-  using ComponentCopyCtor = void (*)(u8* dst, u8* src);
-  using ComponentMoveCtor = void (*)(u8* dst, u8* src);
+  using ComponentCopyCtor = void (*)(Ref src, Ref dst);
+  using ComponentMoveCtor = void (*)(Ref src, Ref dst);
   using SystemFunc = std::function<void(EntityPtr entity, float deltaTime)>;
   using ObserverCallback = std::function<void(EntityPtr)>;
+
+  template<typename T>
+  ComponentCopyCtor getCopyCtor();
+
+  template<typename T>
+  ComponentMoveCtor getMoveCtor();
 
 public:  
   virtual ~IWorld() = default;
@@ -98,7 +126,7 @@ public:
   virtual bool isDefer() = 0;
 
   virtual Ref get(EntityId entity, ComponentId compId) = 0;
-  virtual std::string nameOf(ComponentId compId) = 0;
+  virtual std::string_view nameOf(ComponentId compId) = 0;
   virtual void add(EntityId entity, const ComponentSet& addComps, bool emit = true) = 0;
   virtual void remove(EntityId entity, const ComponentSet& remComps, bool emit = true) = 0;
   virtual bool has(EntityId entity, ComponentId compId) = 0;
@@ -107,37 +135,38 @@ public:
   virtual const ComponentSet& setOf(EntityId entity) = 0;
 
   virtual IPool* getPool(ComponentId id) = 0;
-  virtual ComponentId component(ComponentId compId, bool isRegistered, const std::string& name, 
-    size_t size, NewPoolFunc newPoolFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
+  virtual ComponentId component(ComponentId compId, bool isRegistered, const std::string_view& name, 
+    size_t size, NewPoolFunc newPoolFunc, FromJsonFunc fromJsonFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
     SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) noexcept = 0;
 
   virtual void observe(ComponentId eventType, ComponentId comp, const ComponentSet& with, ObserverCallback callback) = 0;
   virtual void emit(ComponentId eventType, EntityId entity, ComponentId comp) = 0;
 
   virtual AssetLoader getAssetLoader() = 0;
+  virtual Serializer& getSerializer() = 0;
+  virtual Deserializer& getDeserializer() = 0;
 
   template <typename T>
   ComponentId component(bool isRegistered = true) noexcept {
     size_t size = sizeof(T);
     if constexpr (std::is_empty_v<T>)
-      size = 0;
+      size = 0; 
 
-    ComponentCopyCtor copyCtor = nullptr;
-    if constexpr (std::is_copy_constructible_v<T>)
-      copyCtor = [](u8* dst, u8* src) { new ((T*)dst) T(*(T*)src); };
+    FromJsonFunc fromJsonFunc = nullptr;
+    if constexpr (FromJsonComponent<T>) 
+      fromJsonFunc = &T::fromJson;
 
-    ComponentMoveCtor moveCtor = nullptr;
-    if constexpr (std::is_move_constructible_v<T>)
-      moveCtor = [](u8* dst, u8* src) { new ((T*)dst) T(std::move(*(T*)src)); };
+    ComponentCopyCtor copyCtor = getCopyCtor<T>();
+    ComponentMoveCtor moveCtor = getMoveCtor<T>();
 
     SerializeFunc serializeFunc = nullptr;
     DeserializeFunc deserializeFunc = nullptr;
     if constexpr (SerializableComponent<T>) {
-      serializeFunc = T::serialize;
-      deserializeFunc = T::deserialize;
+      serializeFunc = &T::serialize;
+      deserializeFunc = &T::deserialize; 
     }
 
-    return component(m_componentIdMgr.id<T>(), isRegistered, boost::typeindex::type_id<T>().pretty_name(), size, &SparsePool<T>::createPool, copyCtor, moveCtor, serializeFunc, deserializeFunc);
+    return component(m_componentIdMgr.id<T>(), isRegistered, getTypeName<T>(), size, &SparsePool<T>::createPool, fromJsonFunc, copyCtor, moveCtor, serializeFunc, deserializeFunc);
   }
 
   template <typename... Params>

@@ -19,7 +19,7 @@ struct TileBoundComponent {
     boundBuilder.setParent(bound->parent);
   }
 
-  static void deserialize(capnp::MessageReader& reader, Ref component) {
+  static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component) {
     auto boundReader = reader.getRoot<Schema::TileBoundComponent>();
     auto bound = component.cast<TileBoundComponent>();
 
@@ -38,16 +38,6 @@ class Tilemap {
   friend class TilemapComponent;
 
 public:
-  // Ignores shapeId
-  bool insert(IWorldPtr world, b2BodyId body, const glm::i16vec2& pos, EntityId parent,
-              const TileDef& clone) {
-    u8 flags = 0;
-    if (clone.enableCollision)
-      flags |= TileFlags::IS_COLLIDABLE;
-
-    return insert(world, body, pos, parent, clone.entity, flags, clone.size, clone.shapeDef);
-  }
-
   bool insert(IWorldPtr world, b2BodyId body, const glm::i16vec2& pos, EntityId parent = 0,
               EntityId entity = 0, u8 tileFlags = TileFlags::IS_COLLIDABLE, const glm::u16vec2& dim = {1, 1},
               const b2ShapeDef& shapeDef = b2DefaultShapeDef()) {
@@ -57,7 +47,7 @@ public:
     if (dim.x != 1 || dim.y != 1)
       tileFlags |= TileFlags::IS_MULTI_TILE;
 
-    Tile tile;
+    TileComponent tile;
     tile.entity = entity;
     tile.flags = tileFlags | TileFlags::IS_MAIN_TILE;
     tile.x.w = dim.x;
@@ -76,7 +66,7 @@ public:
       const glm::i16vec2 startPos = pos;
       const glm::i16vec2 endPos = pos + static_cast<glm::i16vec2>(dim);
 
-      Tile subTile;
+      TileComponent subTile;
       subTile.entity = NullEntityId;
       subTile.flags = tileFlags & ~TileFlags::IS_MAIN_TILE;
       subTile.x.x = pos.x;
@@ -121,7 +111,7 @@ public:
 
   // !ATTENTION! this does not destroy the entity located with the tile
   EntityId erase(const glm::i16vec2& pos) {
-    Tile copy = find(pos);
+    TileComponent copy = find(pos);
     EntityId entity = 0;
 
     if (copy.flags & TileFlags::IS_MULTI_TILE) {
@@ -138,7 +128,7 @@ public:
 
     for (i16 x = pos.x; x < pos.x + copy.x.w; x++) {
       for (i16 y = pos.y; y < pos.y + copy.y.y; y++) {
-        Tile& subtile = find({x, y});
+        TileComponent& subtile = find({x, y});
 
         if (subtile.entity) {
           entity = subtile.entity;
@@ -151,11 +141,11 @@ public:
     return entity;
   }
 
-  Tile& find(const glm::i16vec2& pos) {
+  TileComponent& find(const glm::i16vec2& pos) {
     return m_tiles.find(pos)->second;
   }
 
-  const Tile& find(const glm::i16vec2& pos) const {
+  const TileComponent& find(const glm::i16vec2& pos) const {
     return m_tiles.find(pos)->second;
   }
 
@@ -214,7 +204,7 @@ public:
 
 protected:
   u32 m_layer = 0;
-  OpenMap<glm::i16vec2, Tile> m_tiles;
+  OpenMap<glm::i16vec2, TileComponent> m_tiles;
   Set<glm::i16vec2> m_mainTiles;
 };
 
@@ -225,16 +215,16 @@ struct TilemapComponent {
     auto compBuilder = builder.initRoot<Schema::TilemapComponent>();
     auto comp = component.cast<TilemapComponent>();
 
-    auto listBuilder = compBuilder.initTilemaps(comp->m_tilemaps.size());
+    auto listBuilder = compBuilder.initTilemaps((u32)comp->m_tilemaps.size());
     for (size_t i = 0; i < comp->m_tilemaps.size(); i++) {
       auto& tm = comp->m_tilemaps[i];
-      auto tmBuilder = listBuilder[i];
+      auto tmBuilder = listBuilder[(u32)i];
       tmBuilder.setLayer(tm.m_layer);
 
-      auto tileListBuilder = tmBuilder.initTiles(tm.m_tiles.size());
+      auto tileListBuilder = tmBuilder.initTiles((u32)tm.m_tiles.size());
       size_t j = 0;
       for (auto& [pos, tile] : tm.m_tiles) {
-        auto tileBuilder = tileListBuilder[j++];
+        auto tileBuilder = tileListBuilder[(u32)j++];
         tileBuilder.setEntity(tile.entity);
         tileBuilder.setFlags(tile.flags);
         tileBuilder.getGridPos().setX(pos.x);
@@ -267,7 +257,7 @@ struct TilemapComponent {
     }
   }
 
-  static void deserialize(capnp::MessageReader& reader, Ref component) {
+  static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component) {
     auto compReader = reader.getRoot<Schema::TilemapComponent>();
     auto comp = component.cast<TilemapComponent>();
 
@@ -291,7 +281,7 @@ struct TilemapComponent {
       const auto tilesList = tmReader.getTiles();
       for (auto tileReader : tilesList) {
         glm::i16vec2 pos(tileReader.getGridPos().getX(), tileReader.getGridPos().getY());
-        Tile& t = tm.m_tiles[pos];
+        TileComponent& t = tm.m_tiles[pos];
         t.entity = tileReader.getEntity();
         t.flags = tileReader.getFlags();
         

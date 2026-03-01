@@ -7,6 +7,13 @@
 #include <queue>
 #include <string>
 #include <vector>
+#include <fstream>
+#include <algorithm>
+#include <mutex>
+#include <memory>
+#include <functional>
+#include <numeric>
+#include <ranges>
 
 /* BOOST */
 #include <boost/container/flat_map.hpp>
@@ -19,9 +26,6 @@
 #include <boost/unordered/unordered_flat_set.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
-
-/* Glaze */
-#include <glaze/glaze.hpp>
 
 /* SDL/OpenGL */
 #include <SDL3/SDL.h>
@@ -42,6 +46,9 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/vector_angle.hpp>
 
+/* JSON */
+#include <nlohmann/json.hpp>
+
 #define RAMPAGE_START namespace rmp {
 #define RAMPAGE_END }
 
@@ -61,6 +68,8 @@
 #endif
 
 RAMPAGE_START
+
+using json = nlohmann::json;
 
 typedef uint8_t u8;
 typedef uint16_t u16;
@@ -101,6 +110,42 @@ inline std::string getPath(const std::string& path) {
   }
 
   return path.substr(0, lastOfSlash);
+}
+
+// Compile-time: strip "struct " or "class " prefix from type name
+consteval std::string_view stripTypePrefix(std::string_view typeName) {
+  if (typeName.starts_with("struct "))
+    return typeName.substr(7);
+  if (typeName.starts_with("class "))
+    return typeName.substr(6);
+  return typeName;
+}
+
+// Compile-time type name extraction using __PRETTY_FUNCTION__
+template <typename T>
+consteval std::string_view getTypeName() {
+  #ifdef _MSC_VER
+    constexpr std::string_view func = __FUNCSIG__;
+    // MSVC: "std::string_view getTypeNameCompileTime<struct TurretComponent>(void)"
+    // Find the template parameter start
+    size_t start = func.find('<');
+    size_t end = func.find_last_of('>');
+    if (start != std::string_view::npos && end != std::string_view::npos) {
+      return stripTypePrefix(func.substr(start + 1, end - start - 1));
+    }
+  #else
+    constexpr std::string_view func = __PRETTY_FUNCTION__;
+    // GCC/Clang: "constexpr std::string_view getTypeNameCompileTime() [with T = TurretComponent]"
+    size_t start = func.find('=');
+    if (start != std::string_view::npos) {
+      start += 2; // Skip "= "
+      size_t end = func.find_first_of(";]", start);
+      if (end != std::string_view::npos) {
+        return stripTypePrefix(func.substr(start, end - start));
+      }
+    }
+  #endif
+  return "Unknown";
 }
 
 template <typename K, typename T>

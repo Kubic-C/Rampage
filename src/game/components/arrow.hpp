@@ -16,7 +16,7 @@ struct ArrowComponent {
     arrowBuilder.setTileCost(arrow->tileCost);
   }
 
-  static void deserialize(capnp::MessageReader& reader, Ref component) {
+  static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component) {
     auto arrowReader = reader.getRoot<Schema::ArrowComponent>();
     auto arrow = component.cast<ArrowComponent>();
 
@@ -25,6 +25,24 @@ struct ArrowComponent {
     arrow->cost        = arrowReader.getCost();
     arrow->generation  = arrowReader.getGeneration();
     arrow->tileCost    = arrowReader.getTileCost();
+  }
+
+  static void fromJson(Ref component, AssetLoader loader, const json& compJson) {
+    auto arrow = component.cast<ArrowComponent>();
+
+    if(compJson.contains("dir") && compJson["dir"].is_object()) {
+      json dirJson = compJson["dir"];
+      if(dirJson.contains("x") && dirJson["x"].is_number())
+        arrow->dir.x = dirJson["x"];
+      if(dirJson.contains("y") && dirJson["y"].is_number())
+        arrow->dir.y = dirJson["y"];
+    }
+    if(compJson.contains("cost") && compJson["cost"].is_number())
+      arrow->cost = compJson["cost"];
+    if(compJson.contains("generation") && compJson["generation"].is_number_unsigned())
+      arrow->generation = compJson["generation"];
+    if(compJson.contains("tileCost") && compJson["tileCost"].is_number_unsigned())
+      arrow->tileCost = compJson["tileCost"];
   }
 
   // Normalized vector
@@ -37,28 +55,11 @@ struct ArrowComponent {
 
 struct PrimaryTargetTag : SerializableTag{
   PrimaryTargetTag() = default;
-
-  PrimaryTargetTag(glz::make_reflectable) {}
 };
 
 struct SeekPrimaryTargetTag : SerializableTag {
   SeekPrimaryTargetTag() = default;
-
-  SeekPrimaryTargetTag(glz::make_reflectable) {}
 };
 
 RAMPAGE_END
 
-// Specialization of glz::meta for PrimaryTargetTag
-template <>
-struct glz::meta<rmp::PrimaryTargetTag> {
-  using T = rmp::PrimaryTargetTag;
-  static constexpr std::string_view tag = "primaryTarget";
-};
-
-// Specialization of glz::meta for SeekPrimaryTargetTag
-template <>
-struct glz::meta<rmp::SeekPrimaryTargetTag> {
-  using T = rmp::SeekPrimaryTargetTag;
-  static constexpr auto value = object();
-};

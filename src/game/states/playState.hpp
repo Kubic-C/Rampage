@@ -5,7 +5,6 @@
 #include "../components/components.hpp"
 #include "state.hpp"
 #include "../../common/ecs/taggedWorld.hpp"
-#include "../../common/ecs/serializableWorld.hpp"
 
 RAMPAGE_START
 
@@ -42,20 +41,14 @@ public:
     saveStateBtn->onMousePress([=]() {
       auto& stateMgr = m_world->getContext<StateManager>();
 
-      SerializableEntityWorld* serializableWorld = dynamic_cast<SerializableEntityWorld*>(&m_world->getTopWorld());
-      if(serializableWorld) {
-        serializableWorld->saveState("savefile.dat", ComponentSet{m_world->component<OwnedBy<PlayState>>()});
-      } 
+
     });
 
     tgui::Button::Ptr loadStateBtn = gui.get(playLoadStateTextName)->cast<tgui::Button>();
     loadStateBtn->onMousePress([=]() {
       auto& stateMgr = m_world->getContext<StateManager>();
 
-      SerializableEntityWorld* serializableWorld = dynamic_cast<SerializableEntityWorld*>(&m_world->getTopWorld());
-      if(serializableWorld) {
-        serializableWorld->loadState("savefile.dat", false, false);
-      }
+
     });
 
     m_tickText = gui.get(tickTextName)->cast<tgui::Label>();
@@ -77,7 +70,7 @@ public:
       if (rand() % 20 < 1)
         enemyType = "BigAssZombie";
 
-      EntityPtr seeker = m_world->clone(loader.getPrefabId(enemyType));
+      EntityPtr seeker = m_world->getAssetLoader().cloneAsset(enemyType);
       m_world->getEntity(baseId).copyInto(seeker);
       seeker.get<TransformComponent>()->pos = mousePos + Vec2(x * 0.3f, y * 0.3f) - Vec2(2 * 0.3f, 2 * 0.3f);
     };
@@ -87,7 +80,7 @@ public:
     const b2WorldId physicsWorld = m_world->getContext<b2WorldId>();
     auto& stateMgr = m_world->getContext<StateManager>();
     auto& invMgr = m_world->getContext<InventoryManager>();
-    auto& assetLoader = m_world->getContext<AssetLoader>();
+    auto assetLoader = m_world->getAssetLoader();
     EntityPtr player = m_world->getFirstWith(m_world->set<CameraInUseTag>());
 
     m_menu->setEnabled(true);
@@ -97,11 +90,11 @@ public:
     player.add(m_addedPlayerComponents);
     Inventory playerInvetory = invMgr.createInventory("Player Inventory", 3, 5);
     player.get<InventoryComponent>()->id = playerInvetory;
-    playerInvetory.addItem(assetLoader.getPrefab("BasicTurretItem"), 20);
-    playerInvetory.addItem(assetLoader.getPrefab("PlaceableHighStoneItem"), 2);
-    playerInvetory.addItem(assetLoader.getPrefab("WoodItem"), 32);
-    playerInvetory.addItem(assetLoader.getPrefab("BigGunItem"), 4);
-    playerInvetory.addItem(assetLoader.getPrefab("BigGunItem"), 2);
+    playerInvetory.addItem(assetLoader.getAsset("BasicTurretItem"), 20);
+    playerInvetory.addItem(assetLoader.getAsset("PlaceableHighStoneItem"), 2);
+    playerInvetory.addItem(assetLoader.getAsset("WoodItem"), 32);
+    playerInvetory.addItem(assetLoader.getAsset("BigGunItem"), 4);
+    playerInvetory.addItem(assetLoader.getAsset("BigGunItem"), 2);
 
     // Render
     auto renderRect = player.get<RectangleRenderComponent>();
@@ -194,15 +187,12 @@ public:
     auto tileCallback = [&](int x, int y) {
         if (isInsideRoom(x, y) || isInCorridor(x, y)) {
             if (rand() % 100 < 5) {
-                TileDef unknown = assetLoader.cloneTilePrefab("UnknownTile");
-                worldLayer.insert(m_world, bodyId, {x, y}, tm, unknown);
+                worldLayer.insert(m_world, bodyId, {x, y}, tm, assetLoader.cloneAsset("UnknownTile"));
             } else {
-                TileDef stone = assetLoader.cloneTilePrefab("StoneFloorTile");
-                worldLayer.insert(m_world, bodyId, {x, y}, tm, stone);
+                worldLayer.insert(m_world, bodyId, {x, y}, tm, assetLoader.cloneAsset("StoneFloorTile"));
             }
         } else {
-          TileDef stone = assetLoader.cloneTilePrefab("PermaHighStoneTile");
-          worldLayer.insert(m_world, bodyId, {x, y}, tm, stone);
+          worldLayer.insert(m_world, bodyId, {x, y}, tm, assetLoader.cloneAsset("PermaHighStoneTile"));
         }
     };
 
@@ -216,7 +206,7 @@ public:
     e.add<SpawnerComponent>();
 
     auto spawner = e.get<SpawnerComponent>();
-    spawner->spawn = assetLoader.getPrefab("BasicZombie");
+    spawner->spawn = assetLoader.getAsset("BasicZombie");
     spawner->spawnableRadius = 2.5f;
     spawner->spawnCount = 100;
     spawner->spawnRate = 0.5f;

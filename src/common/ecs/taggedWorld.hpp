@@ -57,7 +57,7 @@ public:
   virtual bool isDefer() override;
 
   virtual Ref get(EntityId entity, ComponentId compId) override;
-  virtual std::string nameOf(ComponentId compId) override;
+  virtual std::string_view nameOf(ComponentId compId) override;
   virtual void add(EntityId entity, const ComponentSet& addComps, bool emit = true) override;
   virtual void remove(EntityId entity, const ComponentSet& remComps, bool emit = true) override;
   virtual bool has(EntityId entity, ComponentId compId) override;
@@ -66,14 +66,16 @@ public:
   virtual const ComponentSet& setOf(EntityId entity) override;
 
   virtual IPool* getPool(ComponentId id) override;
-  virtual ComponentId component(ComponentId compId, bool isRegistered, const std::string& name,
-    size_t size, NewPoolFunc newPoolFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
+  virtual ComponentId component(ComponentId compId, bool isRegistered, const std::string_view& name,
+    size_t size, NewPoolFunc newPoolFunc, FromJsonFunc fromJsonFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
     SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) noexcept override;
 
   virtual void observe(ComponentId eventType, ComponentId comp, const ComponentSet& with, ObserverCallback callback) override;
   virtual void emit(ComponentId eventType, EntityId entity, ComponentId comp) override;
 
   virtual AssetLoader getAssetLoader() override;
+  virtual Serializer& getSerializer() override;
+  virtual Deserializer& getDeserializer() override;
 
 private:
   IWorldPtr m_self;

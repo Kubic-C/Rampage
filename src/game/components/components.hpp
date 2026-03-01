@@ -18,8 +18,6 @@ RAMPAGE_START
 inline void registerGameComponents(IWorldPtr world) {
   world->component<BodyComponent>(false); // <- loaded first.
   world->component<ArrowComponent>(false);
-  world->component<AddBodyComponent>(false);
-  world->component<AddShapeComponent>(false);
   world->component<OnCollisionBeginEvent>(false);
   world->component<OnCollisionEndEvent>(false);
   world->component<HealthComponent>(false);

@@ -7,7 +7,7 @@ TaggedEntityWorld::TaggedEntityWorld(IWorldPtr realWorld, ComponentId worldTagCo
   : m_realWorld(realWorld), m_worldTagComponentId(worldTagComponentId) {}
 
 IHost& TaggedEntityWorld::getHost() {
-  return m_realWorld->getHost();
+  return m_realWorld->getHost(); 
 }
 
 IWorld& TaggedEntityWorld::getTopWorld() {
@@ -133,7 +133,7 @@ Ref TaggedEntityWorld::get(EntityId entity, ComponentId compId) {
   return m_realWorld->get(entity, compId);
 }
 
-std::string TaggedEntityWorld::nameOf(ComponentId compId) {
+std::string_view TaggedEntityWorld::nameOf(ComponentId compId) {
   return m_realWorld->nameOf(compId);
 }
 
@@ -167,10 +167,10 @@ IPool* TaggedEntityWorld::getPool(ComponentId id) {
   return m_realWorld->getPool(id);
 }
 
-ComponentId TaggedEntityWorld::component(ComponentId compId, bool isRegistered, const std::string& name,
-  size_t size, NewPoolFunc newPoolFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
+ComponentId TaggedEntityWorld::component(ComponentId compId, bool isRegistered, const std::string_view& name,
+  size_t size, NewPoolFunc newPoolFunc, FromJsonFunc fromJsonFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
   SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) noexcept {
-  return m_realWorld->component(compId, isRegistered, name, size, newPoolFunc, copyCtor, moveCtor, serializeFunc, deserializeFunc);
+  return m_realWorld->component(compId, isRegistered, name, size, newPoolFunc, fromJsonFunc, copyCtor, moveCtor, serializeFunc, deserializeFunc);
 }
 
 void TaggedEntityWorld::observe(ComponentId eventType, ComponentId comp, const ComponentSet& with, ObserverCallback callback) {
@@ -183,6 +183,14 @@ void TaggedEntityWorld::emit(ComponentId eventType, EntityId entity, ComponentId
 
 AssetLoader TaggedEntityWorld::getAssetLoader() {
   return AssetLoader(m_self, m_realWorld->getAssetLoader());
+}
+
+Serializer& TaggedEntityWorld::getSerializer() {
+  return m_realWorld->getSerializer();
+}
+
+Deserializer& TaggedEntityWorld::getDeserializer() {
+  return m_realWorld->getDeserializer();
 }
 
 RAMPAGE_END

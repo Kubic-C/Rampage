@@ -16,9 +16,6 @@
 [submodule "deps/SDL_image"]
 	path = deps/SDL_image
 	url = https://github.com/libsdl-org/SDL_image
-[submodule "deps/glaze"]
-	path = deps/glaze
-	url = https://github.com/stephenberry/glaze
 [submodule "deps/SDL_ttf"]
 	path = deps/SDL_ttf
 	url = https://github.com/libsdl-org/SDL_ttf
@@ -82,3 +79,6 @@
 [submodule "deps/cr"]
 	path = deps/cr
 	url = https://github.com/fungos/cr
+[submodule "deps/json"]
+	path = deps/json
+	url = https://github.com/nlohmann/json

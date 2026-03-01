@@ -11,11 +11,10 @@ set(NeededBoostLibs
   "boost_unordered"
   "boost_pool")
 target_link_libraries(RCommon PUBLIC
-  glaze::glaze
+  nlohmann_json
   ${NeededBoostLibs}
   glm::glm
   CapnProto::capnp
-  CapnProto::capnp-json
   box2d::box2d
   SDL3::SDL3
   TGUI::TGUI
@@ -33,8 +32,6 @@ target_sources(
   "ecs/ipool.hpp"
   "ecs/ref.cpp"
   "ecs/ref.hpp"
-  "ecs/serializableWorld.cpp"
-  "ecs/serializableWorld.hpp"
   "ecs/serializer.hpp"
   "ecs/serializer.cpp"
   "ecs/world.hpp"

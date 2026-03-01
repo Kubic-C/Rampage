@@ -6,7 +6,7 @@ RAMPAGE_START
 
 Serializer::Serializer()
   : m_scratchBuffer(new capnp::word[m_defaultScratchBufferSize], m_defaultScratchBufferSize) {
-  std::fill(m_scratchBuffer.begin(), m_scratchBuffer.end(), 0);
+  std::memset(m_scratchBuffer.begin(), 0, m_defaultScratchBufferSize * sizeof(capnp::word));
 }
 
 void Serializer::begin(IWorldPtr interfaceToUse) {
@@ -18,7 +18,7 @@ std::vector<u8> Serializer::end() {
   std::vector<u8> output;
   kj::VectorOutputStream kjOutput;
 
-  serialize(*m_input->interfaceToUse, m_input->entitiesToSerialize, m_input->messageBuilder.initRoot<Schema::State>());
+  serializeState(*m_input->interfaceToUse, m_input->entitiesToSerialize, m_input->messageBuilder.initRoot<Schema::State>());
   capnp::writePackedMessage(kjOutput, m_input->messageBuilder);
   output.insert(output.end(), kjOutput.getArray().begin(), kjOutput.getArray().end());
 
@@ -45,7 +45,7 @@ void Serializer::queueAllWith(const ComponentSet& set) {
   }
 }
 
-void Serializer::serialize(IWorld& world, EntityId eid, const ComponentSet& set, Schema::Entity::Builder entityBuilder) {
+void Serializer::serializeEntity(IWorld& world, EntityId eid, const ComponentSet& set, Schema::Entity::Builder entityBuilder) {
   entityBuilder.setId(eid);
   auto compIdsBuilder = entityBuilder.initCompIds(set.list().size());
   auto compBytesBuilder = entityBuilder.initCompData(set.list().size());
@@ -61,13 +61,13 @@ void Serializer::serialize(IWorld& world, EntityId eid, const ComponentSet& set,
   }
 }
 
-void Serializer::serialize(IWorld& world, EntityId eid, const std::string& name, const ComponentSet& set, Schema::AssetEntity::Builder entityBuilder) {
+void Serializer::serializeAssetEntity(IWorld& world, EntityId eid, const std::string& name, const ComponentSet& set, Schema::AssetEntity::Builder entityBuilder) {
   entityBuilder.setId(eid);
   entityBuilder.setName(name);
 
-  auto compIdsBuilder = entityBuilder.initCompIds(set.list().size());
-  auto compBytesBuilder = entityBuilder.initCompData(set.list().size());
-  for(int j = 0; j < set.list().size(); ++j) {
+  auto compIdsBuilder = entityBuilder.initCompIds((u32)set.list().size());
+  auto compBytesBuilder = entityBuilder.initCompData((u32)set.list().size());
+  for(int j = 0; j < (u32)set.list().size(); ++j) {
     ComponentId compId = set.list()[j];
     capnp::MallocMessageBuilder compMsgBuilder(m_scratchBuffer);
 
@@ -79,12 +79,12 @@ void Serializer::serialize(IWorld& world, EntityId eid, const std::string& name,
   }
 }
 
-void Serializer::serialize(IWorld& world, ComponentId compId, Schema::ComponentIdName::Builder compIdNameBuilder) {
+void Serializer::serializeComponentIdName(IWorld& world, ComponentId compId, Schema::ComponentIdName::Builder compIdNameBuilder) {
   compIdNameBuilder.setCompId(compId);
-  compIdNameBuilder.setName(world.nameOf(compId));
+  compIdNameBuilder.setName(std::string(world.nameOf(compId)));
 }
 
-bool serialize(capnp::MessageBuilder& builder, const char* path) {
+bool Serializer::serializeToFile(capnp::MessageBuilder& builder, const char* path) {
   FILE* file;
   errno_t error = fopen_s(&file, path, "wb");
   if (error != 0)
@@ -100,7 +100,7 @@ void Serializer::registerComponent(ComponentId compId, SerializeFunc serializeFu
   m_componentSerializeFuncs[compId] = serializeFunc;
 }
 
-bool Deserializer::deserialize(IWorld& world, const char* path) {
+bool Deserializer::deserializeFromFile(IWorld& world, const char* path) {
   IHost& host = world.getHost();
 
   FILE* file;
@@ -111,7 +111,7 @@ bool Deserializer::deserialize(IWorld& world, const char* path) {
 
   auto state = reader.getRoot<Schema::State>();
   host.getHostMutex().lock();
-  bool result = deserialize(world, state);
+  bool result = deserializeState(world, state);
   host.getHostMutex().unlock();
 
   fclose(file);
@@ -119,46 +119,55 @@ bool Deserializer::deserialize(IWorld& world, const char* path) {
   return result;
 }
 
-bool Deserializer::deserialize(IWorld& world, const std::vector<u8>& data) {
+bool Deserializer::deserializeStateFromData(IWorld& world, const std::vector<u8>& data) {
   kj::ArrayPtr<const capnp::byte> inputWords(reinterpret_cast<const capnp::byte*>(data.data()), data.size());
   kj::ArrayInputStream kjInput(inputWords);
   capnp::PackedMessageReader reader(kjInput);
 
-  return deserialize(world, reader.getRoot<Schema::State>());
+  return deserializeState(world, reader.getRoot<Schema::State>());
 }
 
-bool Deserializer::deserialize(IWorld& world, Schema::State::Reader stateReader) {
+bool Deserializer::deserializeState(IWorld& world, Schema::State::Reader stateReader) {
   auto regCompsReader = stateReader.getRegisteredComponents();
   auto entitiesReader = stateReader.getEntities();
 
   if(!isRegistryValid(world, regCompsReader))
     return false;
 
-  for (auto entityReader : entitiesReader)
-    deserialize(world, entityReader);
+  IdMapper idMapper;
+  for(auto entityReader : entitiesReader) {
+    EntityId serId = entityReader.getId();
+    EntityId newId;
+    // Id Conflcit resolution: If the world already has an entity with the same Id as the serialized entity, we generate a new Id for the deserialized entity and keep track of the mapping. Otherwise, we can just use the serialized Id.
+    if(world.exists(serId))
+      newId = world.create();
+    else
+      newId = serId;
+
+    idMapper.add(serId, newId);
+  }
+
+  for (auto entityReader : entitiesReader) {
+    EntityId serId = entityReader.getId();
+    auto compIds = entityReader.getCompIds();
+    auto compData = entityReader.getCompData();
+    deserializeComponentList(world, idMapper, idMapper.resolve(serId), compIds, compData);
+  }
 
   return true;
 }
 
-void Deserializer::deserialize(IWorld& world, Schema::Entity::Reader entityReader) {
-  EntityId eid = entityReader.getId();
-  auto compIds = entityReader.getCompIds();
-  auto compData = entityReader.getCompData();
-
+void Deserializer::deserializeComponentList(IWorld& world, const IdMapper& idMapper, EntityId eid, capnp::List<u16>::Reader compIds, capnp::List<capnp::Data>::Reader compData) {
   ComponentSetBuilder setBuilder;
   setBuilder.list().insert(setBuilder.list().end(), compIds.begin(), compIds.end());
-
-  if(world.exists(eid))
-    world.destroy(eid);
-  world.create(eid);
   world.add(eid, setBuilder.build());
 
-  for (int i = 0; i < compIds.size(); ++i) {
+  for (int i = 0; i < (u32)compIds.size(); ++i) {
     ComponentId compId = compIds[i];
     kj::ArrayInputStream kjCompStream(compData[i].asBytes());
     capnp::PackedMessageReader compReader(kjCompStream);
 
-    m_componentDeserializeFuncs[compId](compReader, world.get(eid, compId));
+    m_componentDeserializeFuncs[compId](compReader, idMapper, world.get(eid, compId));
   }
 }
 
@@ -169,7 +178,7 @@ bool Deserializer::isRegistryValid(IWorld& world, capnp::List<Schema::ComponentI
     auto compName = comp.getName();
 
     if(world.nameOf(compId) != compName.cStr()) {
-      world.getHost().log("Component with id %u in memory has name %s, but in current world has name %s\n", compId, compName.cStr(), world.nameOf(compId).c_str());
+      world.getHost().log("Component with id %u in memory has name %s, but in current world has name %s\n", compId, compName.cStr(), world.nameOf(compId).data());
       failedMatch = true;
     } else if(m_componentDeserializeFuncs.size() <= compId || m_componentDeserializeFuncs[compId] == nullptr) {
       world.getHost().log("Component with id %u and name %s does not have a registered deserialization function\n", compId, compName.cStr());

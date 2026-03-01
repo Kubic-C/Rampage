@@ -18,23 +18,9 @@ inline TileFlags getTileFlagFromString(const std::string& str) {
 
 static constexpr glm::u8vec2 maxDim = {15, 15};
 
-struct TileDef {
-  b2ShapeDef shapeDef = b2DefaultShapeDef();
-  bool enableCollision = false;
-  EntityId entity = 0;
+struct TileComponent {
+  static void fromJson(IWorldPtr world, AssetLoader loader, const json& compData);
 
-  glm::u16vec2 size = glm::u16vec2(1, 1);
-
-  u16 width() const {
-    return size.x;
-  }
-
-  u16 height() const {
-    return size.y;
-  }
-};
-
-struct Tile {
   b2ShapeId shapeId = b2_nullShapeId;
   u8 flags = 0;
   EntityId entity = 0;
@@ -67,10 +53,3 @@ struct Tile {
 };
 
 RAMPAGE_END
-
-template <>
-struct glz::meta<rmp::TileDef> {
-  using T = rmp::TileDef;
-  static constexpr auto value =
-      object("shapeDef", &T::shapeDef, "enableCollision", &T::enableCollision, "size", &T::size);
-};

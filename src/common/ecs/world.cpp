@@ -2,74 +2,147 @@
 #include "ecs.hpp"
 #include "entityPtr.hpp"
 #include "../ihost.hpp"
+#include "taggedWorld.hpp"
 
+#include <fstream>
 #include <capnp/serialize-packed.h>
 #include <capnp/compat/json.h>
-#include <fstream>
 
 RAMPAGE_START
 
 class AssetLoaderImpl : public IAssetLoaderImpl {
+  using JSONTypeHandlerFunc = std::function<bool(IWorldPtr world, const std::string_view& name, const json& json)>;
 public:
+  AssetLoaderImpl() {
+    m_jsonHandlers["Entity"] = 
+    [&](IWorldPtr world, const std::string_view& name, const json& entityJson) {
+      EntityPtr entity = world->getAssetLoader().createAsset(std::string(name));
+
+      if(!entityJson.contains("components"))
+        return false;
+      json componentList = entityJson["components"];
+      if(!componentList.is_array())
+        return false;
+
+      for(json componentJson : componentList) {
+        if(!componentJson.is_object())
+          return false;
+        if(!componentJson.contains("type") || !componentJson["type"].is_string())
+          return false;
+        std::string type = componentJson["type"];
+        if(!m_componentJsonHandlers.contains(type))
+          return false;
+        ComponentId compId = m_componentJsonHandlers[type].compId;
+
+        entity.add(compId);
+        m_componentJsonHandlers[type].fromJsonFunc(entity.get(compId), AssetLoader(world, *this), componentJson);
+      }
+
+      return true;
+    };
+  }
+
   virtual ~AssetLoaderImpl() = default;
 
-  bool loadAssetsFromMemory(IWorld& world, size_t size, const u8* data) override;
-  bool loadAssetsFromFile(IWorld& world, const char* path) override;
-  AssetId getAssetIdByName(const std::string& name) override;
-  EntityId getEntityIdByAssetId(AssetId assetId) override;
+  virtual EntityPtr createAsset(IWorldPtr world, const std::string& name) override {
+    EntityPtr entity = world->create();
+    AssetId assetId = m_assetIdManager.generate();
+    m_assetToEntity[assetId] = entity.id();
+    m_assetsByName[name] = assetId;
+    entity.disable();
+    return entity;
+  }
+
+  bool loadAssetsFromFile(IWorldPtr world, const char* path) override {
+    std::ifstream file(path);
+    if (!file.is_open()) {
+      world->getHost().log("<bgRed>Failed to open asset file: %s<reset>", path);
+      return false;
+    }
+    std::string jsonStr = std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    file.close();
+
+    return loadAssetsFromString(world, jsonStr);
+  }
+
+  bool loadAssetsFromString(IWorldPtr _world, const std::string& string) override {
+    IWorldPtr world = TaggedEntityWorld::create(_world, _world->component<AssetTag>());    
+
+    json assetList = json::parse(string, nullptr, false, true);
+    if (assetList.is_discarded()) {
+      world->getHost().log("<bgRed>Failed to parse JSON from asset string: %s<reset>", string.c_str());
+      return false;
+    }
+    if(!assetList.is_array()) {
+      world->getHost().log("<bgRed>Expected JSON array in asset string: %s<reset>", string.c_str());
+      return false;
+    }
+
+    for(json object : assetList) {
+      if(!object.is_object()) {
+        world->getHost().log("<bgRed>Expected JSON object in asset array: %s<reset>", string.c_str());
+        continue;
+      }
+      if(!object.contains("name") || !object["name"].is_string()) {
+        world->getHost().log("<bgRed>Asset missing 'name' field or 'name' is not a string: %s<reset>", string.c_str());
+        continue;
+      }
+      std::string name = object["name"];
+      if(m_assetsByName.contains(name)) {
+        world->getHost().log("<bgRed>Duplicate asset name '%s' in asset string: %s<reset>", name.c_str(), string.c_str());
+        continue;
+      }
+      json data = object["data"];
+      std::string type = data["type"];
+      if(!m_jsonHandlers.contains(type)) {
+        world->getHost().log("<bgRed>No JSON handler registered for type '%s' in asset string: %s<reset>", type.c_str(), string.c_str());
+        continue;
+      }
+
+      if(!m_jsonHandlers[type](world, std::string(name), data)) {
+        world->getHost().log("<bgRed>JSON handler for type '%s' failed to load asset '%s' in asset string: %s<reset>", type.c_str(), name.c_str(), string.c_str());
+        continue;
+      }
+    }
+
+    return true;
+  }
+
+  AssetId getAssetIdByName(const std::string& name) override {
+    auto it = m_assetsByName.find(name);
+    if (it == m_assetsByName.end()) {
+      // TODO: Handle not found - throw or return invalid?
+      return AssetId(0);  // Invalid
+    }
+    return it->second;
+  }
+
+  EntityId getEntityIdByAssetId(AssetId assetId) override {
+    auto it = m_assetToEntity.find(assetId);
+    if (it == m_assetToEntity.end()) {
+      // TODO: Handle not found
+      return NullEntityId;
+    }
+    return it->second;
+  }
+  
+  void registerComponent(IWorldPtr world, ComponentId compId, FromJsonFunc fromJsonFunc) override {
+    m_componentJsonHandlers[std::string(world->nameOf(compId))] = { compId, fromJsonFunc };
+  }
 
 private:
   OpenMap<AssetId, EntityId> m_assetToEntity;
   OpenMap<std::string, AssetId> m_assetsByName;
+  IdManager<AssetId> m_assetIdManager;
+
+  struct ComponentJsonHandler {
+    ComponentId compId;
+    FromJsonFunc fromJsonFunc;
+  };
+
+  OpenMap<std::string, ComponentJsonHandler> m_componentJsonHandlers;
+  OpenMap<std::string, JSONTypeHandlerFunc> m_jsonHandlers;
 };
-
-bool AssetLoaderImpl::loadAssetsFromFile(IWorld& world, const char* path) {
-  std::ifstream file(path);
-  if (!file.is_open()) {
-    world.getHost().log("<bgRed>Failed to open asset file: %s<reset>", path);
-    return false;
-  }
-  std::string jsonStr = std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-  kj::String jsonStrReader(jsonStr.data(), jsonStr.size(), kj::NullArrayDisposer());
-  file.close();
-
-  // 1. Load JSON, convert to builder struct.
-  capnp::MallocMessageBuilder m_messageBuilder;
-  Schema::AssetState::Builder assetState = m_messageBuilder.initRoot<Schema::AssetState>();
-  capnp::JsonCodec jsonCodec;
-  jsonCodec.decode(jsonStrReader, assetState);
-
-  // 2. Convert MessageBuilder to packed binary format in memory.
-  kj::VectorOutputStream outputStream;
-  capnp::writePackedMessage(outputStream, m_messageBuilder);
-
-  // 3. Read assets from memory.
-  return loadAssetsFromMemory(world, outputStream.getArray().size(), outputStream.getArray().begin());
-}
-
-bool AssetLoaderImpl::loadAssetsFromMemory(IWorld& world, size_t size, const u8* data) {
-  IHost& m_host = world.getHost();
-
-  return true;
-}
-
-AssetId AssetLoaderImpl::getAssetIdByName(const std::string& name) {
-  auto it = m_assetsByName.find(name);
-  if (it == m_assetsByName.end()) {
-    // TODO: Handle not found - throw or return invalid?
-    return AssetId(0);  // Invalid
-  }
-  return it->second;
-}
-
-EntityId AssetLoaderImpl::getEntityIdByAssetId(AssetId assetId) {
-  auto it = m_assetToEntity.find(assetId);
-  if (it == m_assetToEntity.end()) {
-    // TODO: Handle not found
-    return NullEntityId;
-  }
-  return it->second;
-}
 
 class SetIterator {
 public:
@@ -188,12 +261,12 @@ EntityWorld::EntityWorld(IHost& host, PrivateConstructorTag) : m_host(host), m_a
   component<ComponentRemovedEvent>(false);
 }
 
-EntityWorld::~EntityWorld() {
+EntityWorld::~EntityWorld() noexcept {
   for (int i = 1; i < m_componentPools.size(); i++) {
     delete m_componentPools[i];
   }
 
-  for (int i = m_contextsLifo.size() - 1; i >= 0; i--) {
+  for (size_t i = m_contextsLifo.size() - 1; i >= 0; i--) {
     ContextData& data = m_contexts[m_contextsLifo[i]];
 
     data.destroy(data.bytes);
@@ -400,7 +473,7 @@ Ref EntityWorld::get(EntityId entity, ComponentId compId) {
   return Ref(getEntity(entity), compId);
 }
 
-std::string EntityWorld::nameOf(ComponentId compId) {
+std::string_view EntityWorld::nameOf(ComponentId compId) {
   if (compId < m_componentNames.size())
     return m_componentNames[compId];
   return "";
@@ -478,9 +551,9 @@ void EntityWorld::copy(EntityId src, EntityId dst, const ComponentSet& copySet) 
     auto copyCtor = m_componentCopyCtor[cid];
 
     // TODO This is not really a full copy, components use
-    // their default ctor and then get move assigned, which may not be what you want.
+    // their default ctor and then get copy assigned, which may not be what you want.
     if (copyCtor)
-      copyCtor(static_cast<u8*>(get(dst, cid).get()), static_cast<u8*>(get(src, cid).get()));
+      copyCtor(get(src, cid), get(dst, cid));
   }
 }
 
@@ -498,7 +571,7 @@ void EntityWorld::move(EntityId src, EntityId dst, const ComponentSet& moveSet) 
     // TODO This is not really a full move, components use
     // their default ctor and then get move assigned, which may not be what you want.
     if (moveCtor)
-      moveCtor(static_cast<u8*>(get(dst, cid).get()), static_cast<u8*>(get(src, cid).get()));
+      moveCtor(get(src, cid), get(dst, cid));
   }
 }
 
@@ -506,8 +579,8 @@ const ComponentSet& EntityWorld::setOf(EntityId entity) {
   return *getEntitySet(entity);
 }
 
-ComponentId EntityWorld::component(ComponentId compId, bool isRegistered, const std::string& name, 
-  size_t size, NewPoolFunc newPoolFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
+ComponentId EntityWorld::component(ComponentId compId, bool isRegistered, const std::string_view& name, 
+  size_t size, NewPoolFunc newPoolFunc, FromJsonFunc fromJsonFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
   SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) noexcept {
   if (compId < m_componentNames.size())
     return compId;
@@ -530,6 +603,14 @@ ComponentId EntityWorld::component(ComponentId compId, bool isRegistered, const 
   // Necessary for modules.
   findOrCreateSet({component<Enabled>(), compId});
 
+  if(serializeFunc && deserializeFunc) {  
+    m_serializer.registerComponent(compId, serializeFunc);
+    m_deserializer.registerComponent(compId, deserializeFunc);
+  }
+
+  if(fromJsonFunc)
+    m_assetLoader->registerComponent(m_self, compId, fromJsonFunc);
+
   return compId;
 }
 
@@ -547,6 +628,14 @@ void EntityWorld::emit(ComponentId eventType, EntityId id, ComponentId comp) {
 
 AssetLoader EntityWorld::getAssetLoader() {
   return AssetLoader(m_self, *m_assetLoader);
+}
+
+Serializer& EntityWorld::getSerializer() {
+  return m_serializer;
+}
+
+Deserializer& EntityWorld::getDeserializer() {
+  return m_deserializer;
 }
 
 void EntityWorld::moveSets(EntityId id, const ComponentSet* to) {

@@ -8,7 +8,7 @@ template <typename IdType>
 class IdManager {
 public:
   static constexpr IdType maxValidId = std::numeric_limits<IdType>::max();
-  static constexpr IdType invalidId = 0;
+  static constexpr IdType invalidId = IdType(0);
 
   // set the last biggest id
   void setLastId(u32 lastId) {
@@ -29,7 +29,7 @@ public:
   }
 
   IdType generate() {
-    IdType newId = 0;
+    IdType newId = IdType(0);
 
     if (m_enableRangeCheck) {
       if (!m_oldLocalIds.empty()) {
@@ -118,8 +118,8 @@ private:
   bool m_enableRangeCheck = false;
   IdType m_startingLocalRange = maxValidId;
 
-  IdType m_lastLocalId = 0;
-  IdType m_lastId = 0;
+  IdType m_lastLocalId = IdType(0);
+  IdType m_lastId = IdType(0);
 
   Set<IdType> m_ids;
 
@@ -195,6 +195,26 @@ public:
   bool operator>(const StrongId& other) const { return m_value > other.m_value; }
   bool operator<=(const StrongId& other) const { return m_value <= other.m_value; }
   bool operator>=(const StrongId& other) const { return m_value >= other.m_value; } 
+
+  StrongId operator++() { return StrongId(++m_value); }
+  StrongId operator++(int) { StrongId temp(*this); ++m_value; return temp; }
+};
+
+class IdMapper {
+public:
+  EntityId resolve(EntityId originalId) {
+    auto it = m_idMap.find(originalId);
+    if (it != m_idMap.end())
+      return it->second;
+    return originalId;
+  }
+
+  void add(EntityId originalId, EntityId mappedId) {
+    m_idMap[originalId] = mappedId;
+  }
+
+private:
+  OpenMap<EntityId, EntityId> m_idMap;
 };
 
 RAMPAGE_END

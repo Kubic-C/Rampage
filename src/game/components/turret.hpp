@@ -23,7 +23,7 @@ struct TurretComponent {
     turretBuilder.setBulletHealth(self->bulletHealth);
   }
 
-  static void deserialize(capnp::MessageReader& reader, Ref component) {
+  static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component) {
     auto turretReader = reader.getRoot<Schema::TurretComponent>();
     auto self = component.cast<TurretComponent>();
 
@@ -58,13 +58,3 @@ struct TurretComponent {
 };
 
 RAMPAGE_END
-
-template <>
-struct glz::meta<rmp::TurretComponent> {
-  using T = rmp::TurretComponent;
-  static constexpr auto value =
-      object("summon", &T::summon, "fireRate", &T::fireRate, "timeSinceLastShot", &T::timeSinceLastShot,
-             "radius", &T::radius, "rot", &T::rot, "turnSpeed", &T::turnSpeed, "shootRange", &T::shootRange,
-             "stopRange", &T::stopRange, "muzzleVelocity", &T::muzzleVelocity, "bulletRadius",
-             &T::bulletRadius, "bulletDamage", &T::bulletDamage, "bulletHealth", &T::bulletHealth);
-};

@@ -34,7 +34,7 @@ ArrowComponent* getTopArrow(IWorldPtr world, RefT<TilemapComponent> tilemapLayer
     if (!tilemap.contains(pos))
       continue;
 
-    Tile& tile = tilemap.find(pos);
+    TileComponent& tile = tilemap.find(pos);
     if (tile.entity == 0 || !world->getEntity(tile.entity).has<ArrowComponent>())
       return nullptr;
 
