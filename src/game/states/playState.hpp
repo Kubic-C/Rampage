@@ -109,18 +109,35 @@ public:
       b2BodyDef bodyDef = b2DefaultBodyDef();
       bodyDef.type = b2_dynamicBody;
       bodyDef.rotation = Rot(45.0f);
+      bodyDef.allowFastRotation = true;
       bodyComp->id = b2CreateBody(physicsWorld, &bodyDef);
 
-      size_t testX = 9;
-      size_t testY = 3;
+      // Create 5 separate islands connected by single bridge tiles
+      // Destroy the bridges to break into 5 pieces
+      
+      // Center island (3x3)
+      for(int x = 3; x <= 5; x++)
+        for(int y = 3; y <= 5; y++)
+          tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0), assetLoader.cloneAsset("TestBlock"));
+      // Top island
+      for(int x = 3; x <= 5; x++)
+        for(int y = 0; y <= 1; y++)
+          tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0), assetLoader.cloneAsset("TestBlock"));
+      // Bottom island
+      for(int x = 3; x <= 5; x++)
+        for(int y = 7; y <= 8; y++)
+          tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0), assetLoader.cloneAsset("TestBlock"));
+      // Left island
+      for(int x = 0; x <= 1; x++)
+        for(int y = 3; y <= 5; y++)
+          tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0), assetLoader.cloneAsset("TestBlock"));
+      // Right island
+      for(int x = 7; x <= 8; x++)
+        for(int y = 3; y <= 5; y++)
+          tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0), assetLoader.cloneAsset("TestBlock"));
 
-      for(int y = 0; y < testY; y++)
-        for(int x = 0; x < testX; x++)
-          tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0),  assetLoader.cloneAsset("TestBlock"));
+      b2Body_ApplyAngularImpulse(bodyComp->id, 200.0f, true);
 
-      for(int y = 0; y < testY; y++)
-        for(int x = 0; x < testX; x++)
-          tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x + 16, y, 0),  assetLoader.cloneAsset("TestBlock"));
       m_tm = tm;  
     }
   }

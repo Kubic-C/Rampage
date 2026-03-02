@@ -242,13 +242,21 @@ std::vector<EntityPtr> TilemapManager::checkAndHandleBreakage(IWorldPtr world, E
     Rot bodyRot = b2Body_GetRotation(bodyComp->id);
     Vec2 localIslandShift = bodyRot.rotate(island.localBreakoffPos / tileSize - glm::floor(island.localBreakoffPos / tileSize)) * 0.5f;
 
+    // Calculate velocity for the fragment based on parent's motion
+    Vec2 parentCenter = b2Body_GetWorldCenterOfMass(bodyComp->id);
+    Vec2 fragmentCenter = island.worldBreakoffPos;
+    Vec2 r = fragmentCenter - parentCenter; // Vector from parent center to fragment
+    
+    float parentAngularVel = b2Body_GetAngularVelocity(bodyComp->id);
+    Vec2 velocityFromRotation = Vec2(-parentAngularVel * r.y, parentAngularVel * r.x);
+    
     // Create physics body for new tilemap
     b2BodyDef bodyDef = b2DefaultBodyDef();
     bodyDef.type = b2Body_GetType(bodyComp->id);
     bodyDef.rotation = bodyRot;
     bodyDef.position = Vec2(island.worldBreakoffPos - localIslandShift); // Position the new body at the centroid of the island for stability
-    bodyDef.linearVelocity = b2Body_GetLinearVelocity(bodyComp->id);
-    bodyDef.angularVelocity = b2Body_GetAngularVelocity(bodyComp->id);
+    bodyDef.linearVelocity = b2Body_GetLinearVelocity(bodyComp->id) + velocityFromRotation;
+    bodyDef.angularVelocity = parentAngularVel; // Set initial angular velocity before creating body
     newBodyComp->id = b2CreateBody(physicsWorld, &bodyDef);
     newTransform->pos = bodyDef.position;
     newTransform->rot = bodyDef.rotation;
