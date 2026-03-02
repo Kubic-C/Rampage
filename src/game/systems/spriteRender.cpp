@@ -175,10 +175,8 @@ int meshSprites(IWorldPtr world, float dt) {
     EntityPtr entity = it->next();
     auto tile = entity.get<TileComponent>();
     auto sprite = entity.get<SpriteComponent>();
-    if(!b2Shape_IsValid(tile->shapeId))
-      continue;
 
-    b2BodyId bodyId = b2Shape_GetBody(tile->shapeId);
+    b2BodyId bodyId = world->getEntity(tile->parent).get<BodyComponent>()->id;
     Transform transform(
       b2Body_GetWorldPoint(bodyId, TilemapComponent::getLocalTileCenter(glm::ivec2(tile->pos))),
       b2Body_GetRotation(bodyId));

@@ -6,7 +6,7 @@ RAMPAGE_START
 template<typename T>
 struct PreviousComponent : T {};
 
-bool TilemapManager::insertTile(IWorldPtr world, EntityId tilemapEntityId, glm::ivec3 gridPos, EntityId tileEntityId, bool collidable) {
+bool TilemapManager::insertTile(IWorldPtr world, EntityId tilemapEntityId, glm::ivec3 gridPos, EntityId tileEntityId) {
   EntityPtr tilemapEntity = world->getEntity(tilemapEntityId);
   EntityPtr tileEntity = world->getEntity(tileEntityId);
   auto tilemap = tilemapEntity.get<TilemapComponent>();
@@ -75,7 +75,7 @@ bool TilemapManager::insertTile(IWorldPtr world, EntityId tilemapEntityId, glm::
   }
     
   // 4) Create Box2D shapes for each tile and subtile
-  if(collidable) {
+  if(tile->collidable) {
     for(const auto& [pos, entity] : occupiedPositions) {
       auto tileComp = world->getEntity(entity).get<TileComponent>();
 

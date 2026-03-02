@@ -157,10 +157,17 @@ void BodyComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id
   }
 }
 
-void BodyComponent::fromJson(EntityPtr entity, const std::string& parentDir, const json& jsonData) {
-  auto world = entity.world()->getContext<b2WorldId>();
-  entity.add<BodyComponent>();
-  auto body = entity.get<BodyComponent>();
+b2BodyType convertJSONToBodyType(const json& maskJson) {
+  static const std::unordered_map<std::string, b2BodyType> bodyTypeMapping = {
+      {"dynamic", b2_dynamicBody}, {"static", b2_staticBody}, {"kinematic", b2_kinematicBody}};
+
+  return bodyTypeMapping.at(maskJson.get<std::string>());
+}
+  
+void BodyComponent::fromJson(Ref component, AssetLoader loader, const json& jsonData) {
+  EntityPtr entity = component.getEntity();
+  b2WorldId world = component.getWorld()->getContext<b2WorldId>();
+  auto body = component.cast<BodyComponent>();
 
   // Create body definition
   b2BodyDef bodyDef = b2DefaultBodyDef();
@@ -172,7 +179,7 @@ void BodyComponent::fromJson(EntityPtr entity, const std::string& parentDir, con
   
   // Set body type (dynamic=1, kinematic=2, static=0)
   if (jsonData.contains("bodyType")) {
-    bodyDef.type = static_cast<b2BodyType>(jsonData["bodyType"].get<int>());
+    bodyDef.type = convertJSONToBodyType(jsonData["bodyType"]);
   } else {
     bodyDef.type = b2_dynamicBody;
   }
@@ -211,21 +218,18 @@ void BodyComponent::addShapeFromJson(b2BodyId bodyId, const json& shapeJson) {
   b2ShapeDef shapeDef = b2DefaultShapeDef();
 
   // Parse shape definition
-  if (shapeJson.contains("def")) {
-    const auto& defJson = shapeJson["def"];
-    if (defJson.contains("enableContactEvents"))
-      shapeDef.enableContactEvents = defJson["enableContactEvents"].get<bool>();
-    if (defJson.contains("enableSensorEvents"))
-      shapeDef.enableSensorEvents = defJson["enableSensorEvents"].get<bool>();
-    if (defJson.contains("density"))
-      shapeDef.density = defJson["density"].get<float>();
-    if (defJson.contains("friction"))
-      shapeDef.material.friction = defJson["friction"].get<float>();
-    if (defJson.contains("restitution"))
-      shapeDef.material.restitution = defJson["restitution"].get<float>();
-    if (defJson.contains("isSensor"))
-      shapeDef.isSensor = defJson["isSensor"].get<bool>();
-  }
+  if (shapeJson.contains("enableContactEvents"))
+    shapeDef.enableContactEvents = shapeJson["enableContactEvents"].get<bool>();
+  if (shapeJson.contains("enableSensorEvents"))
+    shapeDef.enableSensorEvents = shapeJson["enableSensorEvents"].get<bool>();
+  if (shapeJson.contains("density"))
+    shapeDef.density = shapeJson["density"].get<float>();
+  if (shapeJson.contains("friction"))
+    shapeDef.material.friction = shapeJson["friction"].get<float>();
+  if (shapeJson.contains("restitution"))
+    shapeDef.material.restitution = shapeJson["restitution"].get<float>();
+  if (shapeJson.contains("isSensor"))
+    shapeDef.isSensor = shapeJson["isSensor"].get<bool>();
 
   // Convert and apply category/collision masks
   if (shapeJson.contains("categoryMask")) {
@@ -240,12 +244,12 @@ void BodyComponent::addShapeFromJson(b2BodyId bodyId, const json& shapeJson) {
     const auto& shapeDefJson = shapeJson["shape"];
     std::string shapeType = shapeDefJson.value("shapeType", "unknown");
 
-    if (shapeType == "circle") {
+    if (shapeType == "Circle") {
       b2Circle circle{0};
       if (shapeDefJson.contains("radius"))
         circle.radius = shapeDefJson["radius"].get<float>();
       b2CreateCircleShape(bodyId, &shapeDef, &circle);
-    } else if (shapeType == "polygon") {
+    } else if (shapeType == "Polygon") {
       b2Polygon polygon;
       if (shapeDefJson.contains("vertices")) {
         const auto& vertices = shapeDefJson["vertices"];
@@ -264,6 +268,72 @@ void BodyComponent::addShapeFromJson(b2BodyId bodyId, const json& shapeJson) {
         }
       }
       b2CreatePolygonShape(bodyId, &shapeDef, &polygon);
+    }
+  }
+}
+
+void BodyComponent::copy(Ref src, Ref dst) {
+  const b2BodyId& srcId = src.cast<BodyComponent>()->id;  
+  b2BodyId& dstId = dst.cast<BodyComponent>()->id;
+
+  if (!b2Body_IsValid(srcId)) {
+    dstId = b2_nullBodyId;
+    return;
+  }
+
+  // Get world from the destination component
+  auto dstComponent = dst.cast<BodyComponent>();
+  b2WorldId world = dst.getWorld()->getContext<b2WorldId>();
+
+  // Destroy existing destination body if valid
+  if (b2Body_IsValid(dstId)) {
+    b2DestroyBody(dstId);
+  }
+
+  // Create body definition from source - copy all properties
+  b2BodyDef bodyDef = b2DefaultBodyDef();
+  bodyDef.type = b2Body_GetType(srcId);
+  bodyDef.position = b2Body_GetPosition(srcId);
+  bodyDef.rotation = b2Body_GetRotation(srcId);
+  bodyDef.linearVelocity = b2Body_GetLinearVelocity(srcId);
+  bodyDef.angularVelocity = b2Body_GetAngularVelocity(srcId);
+  bodyDef.linearDamping = b2Body_GetLinearDamping(srcId);
+  bodyDef.angularDamping = b2Body_GetAngularDamping(srcId);
+  bodyDef.gravityScale = b2Body_GetGravityScale(srcId);
+  bodyDef.sleepThreshold = b2Body_GetSleepThreshold(srcId);
+  bodyDef.enableSleep = b2Body_IsSleepEnabled(srcId);
+  // bodyDef.isAwake = b2Body_IsAwake(srcId);
+  bodyDef.isBullet = b2Body_IsBullet(srcId);
+  // bodyDef.isEnabled = b2Body_IsEnabled(srcId);
+  bodyDef.allowFastRotation = false;
+
+  // Create the new body
+  dstId = b2CreateBody(world, &bodyDef);
+
+  // Clone all shapes from source to destination
+  int shapeCount = b2Body_GetShapeCount(srcId);
+  std::vector<b2ShapeId> shapeIds(shapeCount);
+  b2Body_GetShapes(srcId, shapeIds.data(), shapeCount);
+
+  for (int i = 0; i < shapeCount; ++i) {
+    b2ShapeId srcShapeId = shapeIds[i];
+    b2ShapeDef shapeDef = b2DefaultShapeDef();
+
+    // Copy shape properties
+    b2Filter filter = b2Shape_GetFilter(srcShapeId);
+    shapeDef.filter = filter;
+    shapeDef.density = b2Shape_GetDensity(srcShapeId);
+    shapeDef.isSensor = b2Shape_IsSensor(srcShapeId);
+    shapeDef.enableContactEvents = true;
+
+    // Clone shape based on type
+    b2ShapeType shapeType = b2Shape_GetType(srcShapeId);
+    if (shapeType == b2_circleShape) {
+      b2Circle circle = b2Shape_GetCircle(srcShapeId);
+      b2CreateCircleShape(dstId, &shapeDef, &circle);
+    } else if (shapeType == b2_polygonShape) {
+      b2Polygon poly = b2Shape_GetPolygon(srcShapeId);
+      b2CreatePolygonShape(dstId, &shapeDef, &poly);
     }
   }
 }

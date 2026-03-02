@@ -202,7 +202,7 @@ public:
 
 class IdMapper {
 public:
-  EntityId resolve(EntityId originalId) {
+  EntityId resolve(EntityId originalId) const {
     auto it = m_idMap.find(originalId);
     if (it != m_idMap.end())
       return it->second;

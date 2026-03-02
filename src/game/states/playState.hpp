@@ -41,9 +41,6 @@ public:
     saveStateBtn->onMousePress([=]() {
       auto& stateMgr = m_world->getContext<StateManager>();
       auto& tmMgr = m_world->getContext<TilemapManager>();
-
-      if(!tmMgr.checkAndHandleBreakage(m_world, m_tm).empty())
-        std::cout << "Breakage detected on world map creation!" << std::endl;
     });
 
     tgui::Button::Ptr loadStateBtn = gui.get(playLoadStateTextName)->cast<tgui::Button>();
@@ -95,48 +92,35 @@ public:
     RefT<TransformComponent> playerTransform = player.get<TransformComponent>();
     playerTransform->pos = Vec2(0.0f, 8.0f);
 
+    assetLoader.cloneAsset("BasicZombie");
+
     /* WorldMap & Tilemap Component */
     {
       // World Map
-      AssetLoader assetLoader = m_world->getAssetLoader();
       TilemapManager& tmMgr = m_world->getContext<TilemapManager>();
       EntityPtr tm = m_world->create();
+      tm.add<TransformComponent>();
       tm.add<BodyComponent>();
       tm.add<TilemapComponent>();
       tm.add<WorldMapTag>();
       tm.add<BodyComponent>();
       auto bodyComp = tm.get<BodyComponent>();
       b2BodyDef bodyDef = b2DefaultBodyDef();
-      bodyDef.type = b2_dynamicBody;
-      bodyDef.rotation = Rot(45.0f);
-      bodyDef.allowFastRotation = true;
+      bodyDef.type = b2_staticBody;
       bodyComp->id = b2CreateBody(physicsWorld, &bodyDef);
 
-      // Create 5 separate islands connected by single bridge tiles
-      // Destroy the bridges to break into 5 pieces
-      
-      // Center island (3x3)
-      for(int x = 3; x <= 5; x++)
-        for(int y = 3; y <= 5; y++)
-          tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0), assetLoader.cloneAsset("TestBlock"));
-      // Top island
-      for(int x = 3; x <= 5; x++)
-        for(int y = 0; y <= 1; y++)
-          tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0), assetLoader.cloneAsset("TestBlock"));
-      // Bottom island
-      for(int x = 3; x <= 5; x++)
-        for(int y = 7; y <= 8; y++)
-          tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0), assetLoader.cloneAsset("TestBlock"));
-      // Left island
-      for(int x = 0; x <= 1; x++)
-        for(int y = 3; y <= 5; y++)
-          tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0), assetLoader.cloneAsset("TestBlock"));
-      // Right island
-      for(int x = 7; x <= 8; x++)
-        for(int y = 3; y <= 5; y++)
-          tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0), assetLoader.cloneAsset("TestBlock"));
-
-      b2Body_ApplyAngularImpulse(bodyComp->id, 200.0f, true);
+      int length = 52;
+      int radius = length / 2;
+      int center = length / 2;
+      for(int x = -center; x < center; x++) {
+        for(int y = -center; y < center; y++) {
+          if(glm::distance(glm::vec2(x, y), glm::vec2(0, 0)) <= radius) {
+            tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0), assetLoader.cloneAsset("StoneFloorTile"));
+          } else {
+            tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0), assetLoader.cloneAsset("PermaHighStoneTile"));
+          }
+        }
+      }
 
       m_tm = tm;  
     }

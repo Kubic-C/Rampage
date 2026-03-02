@@ -131,6 +131,7 @@ struct TileComponent {
     pos @0 :Vec3I32;
     parent @1 :UInt32 = 0;
     material @2 :SurfaceMaterial;
+    collidable @3 :Bool = true;
 }
 
 struct TileEntry {

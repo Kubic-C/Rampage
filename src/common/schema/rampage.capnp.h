@@ -2716,6 +2716,8 @@ public:
   inline bool hasMaterial() const;
   inline  ::Schema::SurfaceMaterial::Reader getMaterial() const;
 
+  inline bool getCollidable() const;
+
 private:
   ::capnp::_::StructReader _reader;
   template <typename, ::capnp::Kind>
@@ -2760,6 +2762,9 @@ public:
   inline  ::Schema::SurfaceMaterial::Builder initMaterial();
   inline void adoptMaterial(::capnp::Orphan< ::Schema::SurfaceMaterial>&& value);
   inline ::capnp::Orphan< ::Schema::SurfaceMaterial> disownMaterial();
+
+  inline bool getCollidable();
+  inline void setCollidable(bool value);
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -6080,6 +6085,20 @@ inline void TileComponent::Builder::adoptMaterial(
 inline ::capnp::Orphan< ::Schema::SurfaceMaterial> TileComponent::Builder::disownMaterial() {
   return ::capnp::_::PointerHelpers< ::Schema::SurfaceMaterial>::disown(_builder.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline bool TileComponent::Reader::getCollidable() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<32>() * ::capnp::ELEMENTS, true);
+}
+
+inline bool TileComponent::Builder::getCollidable() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<32>() * ::capnp::ELEMENTS, true);
+}
+inline void TileComponent::Builder::setCollidable(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<32>() * ::capnp::ELEMENTS, value, true);
 }
 
 inline bool TileEntry::Reader::hasPos() const {

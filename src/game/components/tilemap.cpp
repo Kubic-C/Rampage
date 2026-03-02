@@ -75,6 +75,9 @@ void TileComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
   auto tileBuilder = builder.initRoot<Schema::TileComponent>();
   auto self = component.cast<TileComponent>();
   
+  // Serialize collidable
+  tileBuilder.setCollidable(self->collidable);
+
   // Serialize pos
   auto posBuilder = tileBuilder.getPos();
   posBuilder.setX((i32)self->pos.x);
@@ -93,16 +96,19 @@ void TileComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
   matBuilder.setCustomColor(self->material.customColor);
 }
 
-void TileComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component) {
+void TileComponent::deserialize(capnp::MessageReader& reader, const IdMapper& idMapper, Ref component) {
   auto tileReader = reader.getRoot<Schema::TileComponent>();
   auto self = component.cast<TileComponent>();
   
+  // Deserialize collidable
+  self->collidable = tileReader.getCollidable();
+
   // Deserialize pos
   const auto posReader = tileReader.getPos();
   self->pos = glm::ivec3(posReader.getX(), posReader.getY(), posReader.getZ());
   
   // Deserialize parent
-  self->parent = tileReader.getParent();
+  self->parent = idMapper.resolve(tileReader.getParent());
   
   // Deserialize material
   const auto matReader = tileReader.getMaterial();
@@ -117,6 +123,11 @@ void TileComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id
 void TileComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
   auto self = component.cast<TileComponent>();
   
+  // Parse collidable if provided
+  if (compJson.contains("collidable") && compJson["collidable"].is_boolean()) {
+    self->collidable = compJson["collidable"];
+  }
+
   // Parse pos if provided
   if (compJson.contains("pos") && compJson["pos"].is_object()) {
     const auto& posJson = compJson["pos"];
@@ -156,7 +167,7 @@ void TilemapComponent::serialize(capnp::MessageBuilder& builder, Ref component) 
   }
 }
 
-void TilemapComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component) {
+void TilemapComponent::deserialize(capnp::MessageReader& reader, const IdMapper& idMapper, Ref component) {
   auto tilemapReader = reader.getRoot<Schema::TilemapComponent>();
   auto self = component.cast<TilemapComponent>();
   
@@ -167,7 +178,7 @@ void TilemapComponent::deserialize(capnp::MessageReader& reader, const IdMapper&
     const auto posReader = tileEntryReader.getPos();
     glm::ivec3 pos(posReader.getX(), posReader.getY(), posReader.getZ());
     EntityId entityId = tileEntryReader.getEntityId();
-    self->tiles[pos] = entityId;
+    self->tiles[pos] = idMapper.resolve(entityId);
   }
 }
 

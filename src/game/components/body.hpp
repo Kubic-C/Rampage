@@ -10,7 +10,8 @@ enum PhysicsCategories { Friendly = 0x01, Enemy = 0x02, Static = 0x04, All = 0xF
 struct BodyComponent {
   static void serialize(capnp::MessageBuilder& builder, Ref component);
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
-  static void fromJson(EntityPtr entity, const std::string& parentDir, const json& jsonData);
+  static void fromJson(Ref component, AssetLoader loader, const json& compJson);
+  static void copy(Ref src, Ref dst);
 
 private:
   static void addShapeFromJson(b2BodyId bodyId, const json& shapeJson);

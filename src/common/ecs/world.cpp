@@ -18,20 +18,30 @@ public:
     [&](IWorldPtr world, const std::string_view& name, const json& entityJson) {
       EntityPtr entity = world->getAssetLoader().createAsset(std::string(name));
 
-      if(!entityJson.contains("components"))
+      if(!entityJson.contains("components")) {
+        world->getHost().log("<bgRed>Asset '%s' is missing 'components' field or 'components' is not an array in asset string<reset>\n", name.data());
         return false;
+      }
       json componentList = entityJson["components"];
-      if(!componentList.is_array())
+      if(!componentList.is_array()) {
+        world->getHost().log("<bgRed>Asset '%s' has 'components' field that is not an array in asset string<reset>\n", name.data());
         return false;
+      }
 
       for(json componentJson : componentList) {
-        if(!componentJson.is_object())
+        if(!componentJson.is_object()) {
+          world->getHost().log("<bgRed>Asset '%s' has non-object entry in 'components' array in asset string<reset>\n", name.data());
           return false;
-        if(!componentJson.contains("type") || !componentJson["type"].is_string())
+        }
+        if(!componentJson.contains("type") || !componentJson["type"].is_string()) {
+          world->getHost().log("<bgRed>Asset '%s' has component with missing 'type' field or 'type' is not a string in asset string<reset>\n", name.data());
           return false;
+        }
         std::string type = componentJson["type"];
-        if(!m_componentJsonHandlers.contains(type))
+        if(!m_componentJsonHandlers.contains(type)) {
+          world->getHost().log("<bgRed>Asset '%s' has component with unregistered type '%s' in asset string<reset>\n", name.data(), type.c_str());
           return false;
+        }
         ComponentId compId = m_componentJsonHandlers[type].compId;
 
         entity.add(compId);

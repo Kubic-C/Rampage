@@ -8,7 +8,7 @@ RAMPAGE_START
 class TilemapManager {
 public:
   // Insert a tile entity into a tilemap at grid position
-  bool insertTile(IWorldPtr world, EntityId tilemapId, glm::ivec3 gridPos, EntityId tileEntity, bool collidable = true);
+  bool insertTile(IWorldPtr world, EntityId tilemapId, glm::ivec3 gridPos, EntityId tileEntity);
   
   // Remove a tile and break its joints
   EntityPtr removeTile(IWorldPtr world, EntityId tilemapId, glm::ivec3 gridPos);

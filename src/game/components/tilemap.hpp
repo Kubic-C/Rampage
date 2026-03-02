@@ -52,6 +52,7 @@ struct TileComponent {
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
   static void fromJson(Ref component, AssetLoader loader, const json& compJson);
 
+  bool collidable = true;
   b2ShapeId shapeId;
   glm::ivec3 pos = {0, 0, 0};
   EntityId parent = 0;
