@@ -112,6 +112,9 @@ void observeDestroyedBody(EntityPtr entity) {
   auto bodyId = entity.get<BodyComponent>()->id;
   auto lastCollisionData = entity.get<LastCollisionData>();
 
+  if(!b2Body_IsValid(bodyId))
+    return;
+
   std::vector<b2ContactData> contacts(b2Body_GetContactCapacity(bodyId));
   int actualSize = b2Body_GetContactData(bodyId, contacts.data(), contacts.size());
   contacts.resize(actualSize);

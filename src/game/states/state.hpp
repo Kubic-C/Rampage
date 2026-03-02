@@ -23,7 +23,7 @@ class UnknownState : public State {};
 class PlayState;
 
 template <typename T>
-struct OwnedBy : SerializableTag {};
+struct OwnedBy : SerializableTag, JsonableTag {};
 
 class StateManager {
 public:

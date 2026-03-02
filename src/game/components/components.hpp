@@ -34,11 +34,9 @@ inline void registerGameComponents(IWorldPtr world) {
   world->component<RectangleRenderComponent>(false);
   world->component<SpawnerComponent>(false);
   world->component<SpriteComponent>(false);
-  world->component<SpriteIndependentTag>(false);
+  world->component<MultiTileComponent>(false);
+  world->component<TileComponent>(false);
   world->component<TilemapComponent>(false);
-  world->component<DestroyTileOnEntityRemovalTag>(false);
-  world->component<TileBoundComponent>(false);
-  world->component<TilePosComponent>(false);
   world->component<TurretComponent>(false);
   world->component<WorldMapTag>(false);
   world->component<SeekPrimaryTargetTag>(false);

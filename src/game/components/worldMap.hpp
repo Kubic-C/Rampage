@@ -4,6 +4,6 @@
 
 RAMPAGE_START
 
-struct WorldMapTag : SerializableTag {};
+struct WorldMapTag : SerializableTag, JsonableTag {};
 
 RAMPAGE_END

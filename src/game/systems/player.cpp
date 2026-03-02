@@ -18,7 +18,7 @@ void updatePlayer(EntityPtr e, float dt) {
   auto& render = world->getContext<RenderModule>();
   auto& invMgr = world->getContext<InventoryManager>();
   auto& eventMgr = world->getContext<EventModule>();
-  auto& assetLoader = world->getContext<AssetLoader>();
+  auto assetLoader = world->getAssetLoader();
 
   auto body = e.get<BodyComponent>();
   auto transform = e.get<TransformComponent>();

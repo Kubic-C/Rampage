@@ -1,4 +1,5 @@
 #include "sprite.hpp"
+#include "../../render/render.hpp"
 
 RAMPAGE_START
 
@@ -77,6 +78,7 @@ void SpriteComponent::deserialize(capnp::MessageReader& reader, const IdMapper& 
 
 void SpriteComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
   auto self = component.cast<SpriteComponent>();
+  IWorldPtr world = self.getWorld();
   
   // Parse scaling if provided
   if (compJson.contains("scaling") && compJson["scaling"].is_number()) {
@@ -119,8 +121,9 @@ void SpriteComponent::fromJson(Ref component, AssetLoader loader, const json& co
           // Load texture by path (get index from TextureMapInUse)
           if (layerJson.contains("path") && layerJson["path"].is_string()) {
             std::string texturePath = layerJson["path"];
-            // TODO: Get texture index from TextureMapInUse component
-            // For now using 0 as placeholder - will be resolved by renderer
+            EntityPtr texMapEntity = world->getFirstWith({world->component<TextureMapInUseTag>()});
+            auto texMap = texMapEntity.get<TextureMap3DComponent>();
+            texIndex = texMap->getSprite(texturePath);
           }
           
           // Parse offset if provided

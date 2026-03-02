@@ -121,17 +121,31 @@ consteval std::string_view stripTypePrefix(std::string_view typeName) {
   return typeName;
 }
 
+// Compile-time: strip namespace prefix (e.g., "rmp::") from type name
+consteval std::string_view stripNamespace(std::string_view typeName) {
+  size_t colonPos = typeName.find_last_of(':');
+  if (colonPos != std::string_view::npos && colonPos + 1 < typeName.size()) {
+    return typeName.substr(colonPos + 1);
+  }
+  return typeName;
+}
+
 // Compile-time type name extraction using __PRETTY_FUNCTION__
 template <typename T>
 consteval std::string_view getTypeName() {
   #ifdef _MSC_VER
     constexpr std::string_view func = __FUNCSIG__;
-    // MSVC: "std::string_view getTypeNameCompileTime<struct TurretComponent>(void)"
-    // Find the template parameter start
-    size_t start = func.find('<');
+    // MSVC: "std::string_view __cdecl rmp::getTypeName<struct TurretComponent>(void)"
+    // Find "getTypeName" function name first to avoid matching angle brackets in return type
+    size_t funcNamePos = func.find("getTypeName");
+    if (funcNamePos == std::string_view::npos)
+      return "Unknown";
+    
+    // Find the template parameter start after the function name
+    size_t start = func.find('<', funcNamePos);
     size_t end = func.find_last_of('>');
     if (start != std::string_view::npos && end != std::string_view::npos) {
-      return stripTypePrefix(func.substr(start + 1, end - start - 1));
+      return stripNamespace(stripTypePrefix(func.substr(start + 1, end - start - 1)));
     }
   #else
     constexpr std::string_view func = __PRETTY_FUNCTION__;
@@ -141,7 +155,7 @@ consteval std::string_view getTypeName() {
       start += 2; // Skip "= "
       size_t end = func.find_first_of(";]", start);
       if (end != std::string_view::npos) {
-        return stripTypePrefix(func.substr(start, end - start));
+        return stripNamespace(stripTypePrefix(func.substr(start, end - start)));
       }
     }
   #endif

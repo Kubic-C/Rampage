@@ -45,6 +45,22 @@ int GameModule::onLoad() {
   EntityPtr textureMap = world->create();
   textureMap.add<TextureMap3DComponent>();
   textureMap.add<TextureMapInUseTag>();
+  auto texMap = textureMap.get<TextureMap3DComponent>();
+  std::filesystem::recursive_directory_iterator dirIt("./");
+  for (const auto& entry : dirIt) {
+    if (!entry.is_regular_file())
+      continue;
+    
+    std::string path = entry.path().string();
+    if (texMap->isValidImageFile(path)) {
+      bool loaded = texMap->loadSprite(path);
+      if(!loaded) {
+        m_host->log("<bgRed>Failed to load sprite: %s<reset>\n", path.c_str());
+      } else {
+        m_host->log("Loaded sprite: %s with name <fgYellow>%s<reset>\n", path.c_str(), getFilename(path).c_str());
+      }
+    }
+  }
   loadSpriteRender(*m_host);
 
   world->addContext<tgui::Gui>(world->getContext<SDL_Window*>());

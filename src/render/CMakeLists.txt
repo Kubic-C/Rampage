@@ -3,6 +3,7 @@ set_property(TARGET RRender PROPERTY CXX_STANDARD 20)
 
 target_sources(RRender PUBLIC
   "camera.hpp"
+  "camera.cpp"
   "stb_image.h"
   "stb_image.c"
   "opengl/util.cpp"

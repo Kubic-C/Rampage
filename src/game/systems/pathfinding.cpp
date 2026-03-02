@@ -13,11 +13,11 @@ RAMPAGE_START
 
 struct PathfindingContext {
   u32 currentGeneration = 1;
-  glm::i16vec2 oldTarget = {0, 0};
+  glm::ivec3 oldTarget = {0, 0, 0};
 };
 
-constexpr std::array<glm::i16vec2, 8> directions = {
-    {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}}};
+constexpr std::array<glm::ivec3, 8> directions = {
+    {{1, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, -1, 0}, {1, 1, 0}, {-1, 1, 0}, {-1, -1, 0}, {1, -1, 0}}};
 
 const std::array<glm::vec2, 8> normalizedDirs = {
     glm::normalize(glm::vec2(directions[0])), glm::normalize(glm::vec2(directions[1])),
@@ -27,18 +27,19 @@ const std::array<glm::vec2, 8> normalizedDirs = {
 
 const std::array<float, 8> costs = {1, 1, 1, 1, sqrtf(2), sqrtf(2), sqrtf(2), sqrtf(2)};
 
-ArrowComponent* getTopArrow(IWorldPtr world, RefT<TilemapComponent> tilemapLayers,
-                            const glm::i16vec2& pos) {
-  for (int i = tilemapLayers->getTilemapCount(); i != 0; i--) {
-    Tilemap& tilemap = tilemapLayers->getTilemap(i - 1);
-    if (!tilemap.contains(pos))
+ArrowComponent* getTopArrow(IWorldPtr world, RefT<TilemapComponent> tilemap, const glm::ivec3& gridPos) {
+  // Check from highest Z layer downward to find top arrow
+  for (int z = TilemapComponent::maxTopLayer; z >= TilemapComponent::minTopLayer; z--) {
+    glm::ivec3 pos = {gridPos.x, gridPos.y, z};
+    
+    if (!tilemap->tiles.contains(pos))
       continue;
 
-    TileComponent& tile = tilemap.find(pos);
-    if (tile.entity == 0 || !world->getEntity(tile.entity).has<ArrowComponent>())
-      return nullptr;
-
-    return &*world->getEntity(tile.entity).get<ArrowComponent>();
+    EntityId tileId = tilemap->tiles.at(pos);
+    EntityPtr tileEntity = world->getEntity(tileId);
+    
+    if (tileEntity.has<ArrowComponent>())
+      return &*tileEntity.get<ArrowComponent>();
   }
 
   return nullptr;
@@ -46,7 +47,7 @@ ArrowComponent* getTopArrow(IWorldPtr world, RefT<TilemapComponent> tilemapLayer
 
 void updateFlowField(IWorldPtr world, EntityPtr map, PathfindingContext& context) {
   auto mapTransform = map.get<TransformComponent>();
-  auto tilemapLayers = map.get<TilemapComponent>();
+  auto tilemap = map.get<TilemapComponent>();
   EntityPtr player = world->getFirstWith(world->set<TransformComponent, PrimaryTargetTag>());
   if (player.isNull())
     return;
@@ -54,15 +55,12 @@ void updateFlowField(IWorldPtr world, EntityPtr map, PathfindingContext& context
   auto playerTransform = player.get<TransformComponent>();
 
   Vec2 localMapPos = mapTransform->getLocalPoint(playerTransform->pos);
-  glm::i16vec2 localTilePos = Tilemap::getNearestTile(localMapPos);
-  if (tilemapLayers->getTopTilemapWith(localTilePos) == UINT32_MAX)
-    return;
-
-  ArrowComponent* startArrow = getTopArrow(world, tilemapLayers, localTilePos);
+  glm::ivec3 localTilePos = TilemapComponent::getNearestTile(localMapPos);
+  ArrowComponent* startArrow = getTopArrow(world, tilemap, localTilePos);
   if (!startArrow)
     return;
   startArrow->dir = glm::normalize(playerTransform->pos -
-                                   mapTransform->getWorldPoint(Tilemap::getLocalTileCenter(localTilePos)));
+                                   mapTransform->getWorldPoint(TilemapComponent::getLocalTileCenter(localTilePos)));
 
   if (context.oldTarget == localTilePos)
     return;
@@ -71,22 +69,22 @@ void updateFlowField(IWorldPtr world, EntityPtr map, PathfindingContext& context
   if (++context.currentGeneration == 0)
     context.currentGeneration = 1;
 
-  std::queue<glm::i16vec2> openList;
+  std::queue<glm::ivec3> openList;
 
   startArrow->cost = 0;
   startArrow->generation = context.currentGeneration;
   openList.emplace(localTilePos);
 
   while (!openList.empty()) {
-    glm::i16vec2 current = openList.front();
+    glm::ivec3 current = openList.front();
     openList.pop();
 
-    ArrowComponent* currentArrow = getTopArrow(world, tilemapLayers, current);
+    ArrowComponent* currentArrow = getTopArrow(world, tilemap, current);
 
     for (int i = 0; i < directions.size(); ++i) {
-      glm::i16vec2 neighbor = current + directions[i];
+      glm::ivec3 neighbor = current + directions[i];
 
-      ArrowComponent* neighborArrow = getTopArrow(world, tilemapLayers, neighbor);
+      ArrowComponent* neighborArrow = getTopArrow(world, tilemap, neighbor);
       if (!neighborArrow)
         continue;
 
@@ -112,7 +110,7 @@ int updatePathfinding(IWorldPtr world, float deltaTime) {
   updateFlowField(world, map, context);
 
   RefT<TransformComponent> mapTransform = map.get<TransformComponent>();
-  RefT<TilemapComponent> tilemapLayers = map.get<TilemapComponent>();
+  RefT<TilemapComponent> tilemap = map.get<TilemapComponent>();
   IEntityIteratorPtr it = world->getWith(world->set<TransformComponent, BodyComponent, SeekPrimaryTargetTag>());
   while (it->hasNext()) {
     EntityPtr seeker = it->next();
@@ -120,8 +118,8 @@ int updatePathfinding(IWorldPtr world, float deltaTime) {
     RefT<BodyComponent> seekerBody = seeker.get<BodyComponent>();
 
     Vec2 localMapPos = mapTransform->getLocalPoint(seekerTransform->pos);
-    glm::i16vec2 localTilePos = Tilemap::getNearestTile(localMapPos);
-    ArrowComponent* arrow = getTopArrow(world, tilemapLayers, localTilePos);
+    glm::ivec3 localTilePos = TilemapComponent::getNearestTile(localMapPos);
+    ArrowComponent* arrow = getTopArrow(world, tilemap, localTilePos);
     if (!arrow)
       continue;
 

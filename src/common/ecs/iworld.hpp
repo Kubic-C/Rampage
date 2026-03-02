@@ -48,14 +48,18 @@ concept MovableComponent =
 
 template<typename T>
 concept FromJsonComponent =
-  requires(T t, Ref component, const json& json) {
-    T::fromJson(component, json);
+  requires(T t, Ref component, AssetLoader loader, const json& json) {
+    T::fromJson(component, loader, json);
   };
 using FromJsonFunc = void(*)(Ref component, AssetLoader loader, const json& json);
 
 struct SerializableTag {
   static void serialize(capnp::MessageBuilder& builder, Ref component);
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
+};
+
+struct JsonableTag {
+  static void fromJson(Ref component, AssetLoader loader, const json& compJson);
 };
 
 class IEntityIterator {

@@ -369,43 +369,7 @@ inline bool tryPlaceItem(EntityPtr worldMap, Inventory inv, const glm::u16vec2& 
 
   EntityPtr item = world->getEntity(stack.item);
   RefT<TilemapComponent> tmLayers = worldMap.get<TilemapComponent>();
-  Tilemap& topTilemap = tmLayers->getToptilemap();
-  Tilemap& bottomTilemap = tmLayers->getBottomtilemap();
 
-  RefT<BodyComponent> body = worldMap.get<BodyComponent>();
-  glm::i16vec2 tilePos = Tilemap::getNearestTile(worldMap.get<TransformComponent>()->getLocalPoint(coords));
-  const TileComponent& tileItemPrefab = *assetLoader.getAsset(item.get<ItemAttrTile>()->tileId).get<TileComponent>();
-  for (int x = tilePos.x; x < tilePos.x + tileItemPrefab.width(); x++) {
-    for (int y = tilePos.y; y < tilePos.y + tileItemPrefab.height(); y++) {
-      glm::i16vec2 tilePos = {x, y};
-
-      if (!bottomTilemap.contains(tilePos))
-        continue;
-      bool isCollidable = bottomTilemap.find(tilePos).flags & TileFlags::IS_COLLIDABLE;
-      if (isCollidable)
-        return false;
-    }
-  }
-
-  for (int x = tilePos.x; x < tilePos.x + tileItemPrefab.width(); x++) {
-    for (int y = tilePos.y; y < tilePos.y + tileItemPrefab.height(); y++) {
-      glm::i16vec2 tilePos = {x, y};
-
-      if (!topTilemap.contains(tilePos))
-        continue;
-
-      EntityPtr tile = world->getEntity(topTilemap.erase(tilePos));
-      if (tile.has<TileItemComponent>())
-        inv.addItem(tile.get<TileItemComponent>()->item);
-      world->destroy(tile);
-    }
-  }
-
-  inv.removeItem(stackPos);
-  tmLayers->getToptilemap().insert(world, body->id, tilePos, worldMap, assetLoader.cloneAsset(item.get<ItemAttrTile>()->tileId));
-
-  if (inv.isStackEmpty(stackPos))
-    world->getContext<InventoryManager>().clearHand();
 
   return true;
 }

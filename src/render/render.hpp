@@ -1,6 +1,7 @@
 #pragma once
 
 #include "opengl/opengl.hpp"
+#include <filesystem>
 
 RAMPAGE_START
 
@@ -26,18 +27,62 @@ struct TextureMap3DComponent {
   TextureArray texArray;
   Sampler sampler;
 
-  TextureMap3DComponent() : texArray(32, 32, 256) {
+  void initDefaultTexture() {
+    // Create a 32x32 checkerboard of black and purple
+    const int size = 32;
+    const int boxSize = 16;  // 16x16 pixel boxes
+    const int channels = 4; // RGBA
+    u8* data = new u8[size * size * channels];
+    
+    // Fill with checkerboard pattern
+    for (int y = 0; y < size; ++y) {
+      for (int x = 0; x < size; ++x) {
+        int boxX = x / boxSize;
+        int boxY = y / boxSize;
+        bool isRed = (boxX + boxY) % 2 == 0;
+        
+        int idx = (y * size + x) * channels;
+        if (isRed) {
+          data[idx + 0] = 255;     // R - Red
+          data[idx + 1] = 0;     // G
+          data[idx + 2] = 0;     // B
+          data[idx + 3] = 255;   // A
+        } else {
+          data[idx + 0] = 128;   // R - Purple
+          data[idx + 1] = 0;     // G
+          data[idx + 2] = 128;   // B
+          data[idx + 3] = 255;   // A
+        }
+      }
+    }
+    
+    texArray.subWholeImage(0, data);
+    delete[] data;
+    
+    textureIds["unknown"] = 0;
+  }
+
+  TextureMap3DComponent() : texArray(32, 32, 1024) {
     sampler.parameter(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     sampler.parameter(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     sampler.parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
     sampler.parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    initDefaultTexture();
+  }
+
+  inline bool isValidImageFile(const std::string& path) {
+    int x, y, n;
+    int ok = stbi_info(path.c_str(), &x, &y, &n);
+    return ok != 0 && x == texArray.getWidth() && y == texArray.getHeight();
   }
 
   u32 loadSprite(const std::string& path) {
     std::string name = getFilename(path);
-    assert(!textureIds.contains(name));
+    if(textureIds.contains(name))
+      return false;
 
-    u32 id = lastFreeTexture++;
+    u32 id = ++lastFreeTexture;
     if (!loadSprite(id, path)) {
       lastFreeTexture--;
       return UINT32_MAX;
@@ -52,25 +97,14 @@ struct TextureMap3DComponent {
     return textureIds.find(name)->second;
   }
 
-  // Gets the sprite located at path, if the sprite with the core name does not
-  // exist yet it is created. if the core name already exists, that sprite will
-  // be grabbed instead.
-  u32 getSpriteFromPath(const std::string& path) {
-    std::string name = getFilename(path);
-    if (textureIds.contains(name))
-      return getSprite(name);
-
-    return loadSprite(path);
-  }
-
-  bool loadSprite(uint32_t index, const std::string& path) {
+  bool loadSprite(uint32_t index, std::string path) {
     assert(index < 256);
 
     int width, height, channels;
     u8* data;
-
     stbi_set_flip_vertically_on_load(true);
     data = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+
     if (!data)
       return false;
 
@@ -81,8 +115,6 @@ struct TextureMap3DComponent {
   }
 };
 
-struct TextureMapInUseTag {
-  EntityId id;
-};
+struct TextureMapInUseTag {};
 
 RAMPAGE_END

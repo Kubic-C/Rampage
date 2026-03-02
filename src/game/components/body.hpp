@@ -39,6 +39,10 @@ public:
       b2DestroyBody(id);
     }
   }
+
+  operator b2BodyId() const {
+    return id;
+  }
 };
 
 RAMPAGE_END

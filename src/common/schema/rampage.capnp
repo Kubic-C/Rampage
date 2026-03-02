@@ -23,6 +23,12 @@ struct Vec2I16 {
     y @1 :Int16;
 }
 
+struct Vec3I32 {
+    x @0 :Int32;
+    y @1 :Int32;
+    z @2 :Int32;
+}
+
 struct TransformComponent {
     pos @0 :Vec2F32;
     rot @1 :Float32;
@@ -112,42 +118,28 @@ struct SpriteComponent {
     subSprites @1 :List(SubSprite);     # flattened list
 }
 
-struct TileBoundComponent {
-    layer @0 :UInt32; 
-    pos @1 :Vec2I16;
-    parent @2 :UInt32;
-}
-
 struct TileItemComponent {
     item @0 :UInt32;   # EntityId of the item
 }
 
-struct TileDef {
-    enableCollision @0 :Bool = false;
-    entity @1 :UInt32 = 0;
-    sizeX @2 :UInt16 = 1;
-    sizeY @3 :UInt16 = 1;
+struct MultiTileComponent {
+    occupiedPositions @0 :List(Vec3I32);
+    anchorPos @1 :Vec3I32;
 }
 
-struct Tile {
-    entity @0 :UInt32 = 0;       # Entity occupying this tile
-    flags @1 :UInt8 = 0;         # TileFlags bitfield
-
-    # Grid position of main tile
-    gridPos @2 :Vec2I16;
-
-    # Size (width, height) for multi-tile
-    sizeOrPosX @3 :Int16 = 1;
-    sizeOrPosY @4 :Int16 = 1;
+struct TileComponent {
+    pos @0 :Vec3I32;
+    parent @1 :UInt32 = 0;
+    material @2 :SurfaceMaterial;
 }
 
-struct Tilemap {
-    layer @0 :UInt32;
-    tiles @1 :List(Tile);         # flattened list of all tiles across layers
+struct TileEntry {
+    pos @0 :Vec3I32;
+    entityId @1 :UInt32;
 }
 
 struct TilemapComponent {
-    tilemaps @0 :List(Tilemap);         # flattened list of all tiles across layers
+    tiles @0 :List(TileEntry);         # tiles map as list of key-value pairs
 }
 
 struct SurfaceMaterial {

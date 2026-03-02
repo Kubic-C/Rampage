@@ -80,14 +80,4 @@ struct SpriteComponent {
   std::vector<std::vector<SubSprite>> subSprites;
 };
 
-// The sprite is not part of a tilemap
-struct SpriteIndependentTag : SerializableTag {
-  SpriteIndependentTag() = default;
-};
-
-struct TilePosComponent {
-  glm::i16vec2 pos;
-  EntityId parent;
-};
-
 RAMPAGE_END

@@ -5,6 +5,7 @@
 #include "../../render/render.hpp"
 #include "../components/sprite.hpp"
 #include "../components/tilemap.hpp"
+#include "../systems/tilemap.hpp"
 
 RAMPAGE_START
 
@@ -138,113 +139,21 @@ void addSpriteInstance(Instance& newInstance, VertexArrayBuffer& va, InstanceBuf
   instances.count++;
 }
 
-void meshTilemap(EntityPtr e, VertexArrayBuffer& va, InstanceBufferComponent& instances) {
-  auto tmLayers = e.get<TilemapComponent>();
-  auto transform = e.get<TransformComponent>();
-  for (int i = 0; i < tmLayers->getTilemapCount(); i++) {
-    Tilemap& tm = tmLayers->getTilemap(i);
-
-    for (glm::i16vec2 tilePos : tm) {
-      TileComponent& tile = tm.find(tilePos);
-
-      glm::u16vec2 dim = tile.size();
-      glm::vec2 tileWorldPos = transform->getWorldPoint(tm.getLocalTileCenter(tilePos, dim));
-      if (!tile.entity) {
+void meshSprite(const Transform& transform, const SpriteComponent& sprite, VertexArrayBuffer& va, InstanceBufferComponent& instances) {
+  for(auto& subSpriteRow : sprite.subSprites) {
+    for(auto& subSprite : subSpriteRow) {
+      for (int i = 0; i < subSprite.layerCount; i++) {
         Instance instance;
-        instance.localPos = {0, 0};
-        instance.worldPos = tileWorldPos;
-        instance.layer = 0;
-        instance.scale = 1.0f;
-        instance.z = static_cast<u8>(WorldLayer::Bottom);
-        instance.rot = 0;
+        instance.localPos = subSprite.get(i).offset;
+        instance.worldPos = transform.pos;
+        instance.layer = subSprite.get(i).texIndex;
+        instance.scale = sprite.scaling;
+        instance.z = static_cast<u8>(subSprite.get(i).layer);
+        instance.rot = subSprite.get(i).rot + transform.rot;
         instance.setDim(1, 1);
         addSpriteInstance(instance, va, instances);
-      } else {
-        auto sprite = e.world()->getEntity(tile.entity).get<SpriteComponent>();
-
-        // if the tile is a single tile, or a multi tile whose sprite component contains only one sprite,
-        // draw in repeat tile mode
-        if (!(tile.flags & TileFlags::IS_MULTI_TILE) ||
-            (tile.flags & TileFlags::IS_MULTI_TILE && sprite->subSprites.size() == 1 &&
-             sprite->subSprites[0].size() == 1)) {
-          SpriteComponent::SubSprite& subSprite = sprite->subSprites[0][0];
-
-          for (int i = 0; i < subSprite.layerCount; i++) {
-            Instance instance;
-            instance.localPos = subSprite.get(i).offset;
-            instance.worldPos = tileWorldPos;
-            instance.layer = subSprite.get(i).texIndex;
-            instance.scale = sprite->scaling;
-            instance.z = static_cast<u8>(subSprite.get(i).layer);
-            instance.rot = subSprite.get(i).rot;
-            instance.setDim(dim.x, dim.y);
-            addSpriteInstance(instance, va, instances);
-          }
-        } else {
-#ifdef DEBUG
-          // Verify that sprite grid dimensions match tile dimensions
-          if (sprite->subSprites.size() != dim.y || 
-              (sprite->subSprites.size() > 0 && sprite->subSprites[0].size() != dim.x)) {
-            // Log mismatch for debugging
-            e.world()->getHost().log(
-                "WARNING: Multitile sprite grid (%zu x %zu) doesn't match tile dimensions (%u x %u)\n",
-                sprite->subSprites[0].size(), sprite->subSprites.size(), dim.x, dim.y);
-          }
-#endif
-          
-          for (size_t y = 0; y < sprite->subSprites.size(); y++) {
-            for (size_t x = 0; x < sprite->subSprites[y].size(); x++) {
-              SpriteComponent::SubSprite& subSprite = sprite->subSprites[y][x];
-
-              for (int i = 0; i < subSprite.layerCount; i++) {
-                Instance instance;
-                instance.localPos = subSprite.get(i).offset;
-                instance.worldPos = tileWorldPos;
-                instance.layer = subSprite.get(i).texIndex;
-                instance.scale = sprite->scaling;
-                instance.z = static_cast<u8>(subSprite.get(i).layer);
-                instance.rot = subSprite.get(i).rot;
-                instance.setDim(1, 1);
-                addSpriteInstance(instance, va, instances);
-              }
-            }
-          }
-        }
       }
     }
-  }
-}
-
-int meshTilemaps(IWorldPtr world, float dt) {
-  EntityPtr spriteRender = world->getFirstWith(world->set<SpriteRendererTag>());
-  auto va = spriteRender.get<VertexArrayBufferComponent>();
-  auto instances = spriteRender.get<InstanceBufferComponent>();
-
-  auto it = world->getWith(world->set<TransformComponent, TilemapComponent>());
-  while (it->hasNext()) {
-    meshTilemap(it->next(), *va, *instances);
-  }
-
-  return 0;
-}
-
-void meshSprite(EntityPtr e, VertexArrayBuffer& va, InstanceBufferComponent& instances) {
-  auto sprite = e.get<SpriteComponent>();
-  auto transform = e.get<TransformComponent>();
-  if (e.has<TileBoundComponent>())
-    return;
-
-  SpriteComponent::SubSprite& subSprite = sprite->subSprites[0][0];
-  for (int i = 0; i < subSprite.layerCount; i++) {
-    Instance instance;
-    instance.localPos = subSprite.get(i).offset;
-    instance.worldPos = transform->pos;
-    instance.layer = subSprite.get(i).texIndex;
-    instance.scale = sprite->scaling;
-    instance.z = static_cast<u8>(subSprite.get(i).layer);
-    instance.rot = subSprite.get(i).rot + transform->rot;
-    instance.setDim(1, 1);
-    addSpriteInstance(instance, va, instances);
   }
 }
 
@@ -253,9 +162,27 @@ int meshSprites(IWorldPtr world, float dt) {
   auto va = spriteRender.get<VertexArrayBufferComponent>();
   auto instances = spriteRender.get<InstanceBufferComponent>();
 
-  auto it = world->getWith(world->set<TransformComponent, SpriteComponent, SpriteIndependentTag>());
+  auto it = world->getWith(world->set<TransformComponent, SpriteComponent>());
   while (it->hasNext()) {
-    meshSprite(it->next(), *va, *instances);
+    EntityPtr entity = it->next();
+    auto transform = entity.get<TransformComponent>();
+    auto sprite = entity.get<SpriteComponent>();
+    meshSprite(*transform, *sprite, *va, *instances);
+  }
+
+  it = world->getWith(world->set<TileComponent, SpriteComponent>());
+  while (it->hasNext()) {
+    EntityPtr entity = it->next();
+    auto tile = entity.get<TileComponent>();
+    auto sprite = entity.get<SpriteComponent>();
+    if(!b2Shape_IsValid(tile->shapeId))
+      continue;
+
+    b2BodyId bodyId = b2Shape_GetBody(tile->shapeId);
+    Transform transform(
+      b2Body_GetWorldPoint(bodyId, TilemapComponent::getLocalTileCenter(glm::ivec2(tile->pos))),
+      b2Body_GetRotation(bodyId));
+    meshSprite(transform, *sprite, *va, *instances);
   }
 
   return 0;
@@ -348,9 +275,6 @@ bool loadSpriteRender(IHost& host) {
   EntityPtr spriteRender = createSpriteRenderEntity(host);
   if (spriteRender.isNull())
     return false;
-
-  // Tilemap System
-  pipeline.getGroup<RenderGroup>().attachToStage<RenderGroup::PreRenderStage>(meshTilemaps);
 
   // Sprite System
   pipeline.getGroup<RenderGroup>().attachToStage<RenderGroup::PreRenderStage>(meshSprites);

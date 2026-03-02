@@ -111,8 +111,7 @@ public:
   AssetId getAssetIdByName(const std::string& name) override {
     auto it = m_assetsByName.find(name);
     if (it == m_assetsByName.end()) {
-      // TODO: Handle not found - throw or return invalid?
-      return AssetId(0);  // Invalid
+      return AssetId(0); 
     }
     return it->second;
   }
@@ -120,7 +119,6 @@ public:
   EntityId getEntityIdByAssetId(AssetId assetId) override {
     auto it = m_assetToEntity.find(assetId);
     if (it == m_assetToEntity.end()) {
-      // TODO: Handle not found
       return NullEntityId;
     }
     return it->second;
@@ -259,6 +257,7 @@ EntityWorld::EntityWorld(IHost& host, PrivateConstructorTag) : m_host(host), m_a
   component<Destroy>(false);
   component<ComponentAddedEvent>(false);
   component<ComponentRemovedEvent>(false);
+  component<AssetTag>(false);
 }
 
 EntityWorld::~EntityWorld() noexcept {

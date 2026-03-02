@@ -89,6 +89,10 @@ struct Rot : b2Rot {
     return dif;
   }
 
+  Vec2 rotate(const Vec2& vec) const {
+    return Vec2(c * vec.x - s * vec.y, s * vec.x + c * vec.y);
+  }
+
   operator b2Rot() const {
     return b2();
   }

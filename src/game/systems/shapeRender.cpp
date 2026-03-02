@@ -7,7 +7,7 @@
 
 RAMPAGE_START
 
-struct ShapeRendererTag : SerializableTag {};
+struct ShapeRendererTag : SerializableTag, JsonableTag {};
 
 const char* triangleVertexShaderSource = R"###(
         #version 400 core

@@ -33,7 +33,7 @@ private:
 };
 
 template <typename T>
-class RefT : protected Ref {
+class RefT : public Ref {
 public:
   RefT(IWorldPtr world, EntityId id) : Ref(world, id, world->component<T>()) {}
 

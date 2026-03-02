@@ -23,6 +23,9 @@ public:
                     data);
   }
 
+  u32 getWidth() const { return m_width; }
+  u32 getHeight() const { return m_height; }
+
 private:
   u32 m_width;
   u32 m_height;

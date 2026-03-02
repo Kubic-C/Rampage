@@ -40,15 +40,15 @@ public:
     tgui::Button::Ptr saveStateBtn = gui.get(playSaveStateTextName)->cast<tgui::Button>();
     saveStateBtn->onMousePress([=]() {
       auto& stateMgr = m_world->getContext<StateManager>();
+      auto& tmMgr = m_world->getContext<TilemapManager>();
 
-
+      if(!tmMgr.checkAndHandleBreakage(m_world, m_tm).empty())
+        std::cout << "Breakage detected on world map creation!" << std::endl;
     });
 
     tgui::Button::Ptr loadStateBtn = gui.get(playLoadStateTextName)->cast<tgui::Button>();
     loadStateBtn->onMousePress([=]() {
       auto& stateMgr = m_world->getContext<StateManager>();
-
-
     });
 
     m_tickText = gui.get(tickTextName)->cast<tgui::Label>();
@@ -59,21 +59,6 @@ public:
 
     EntityPtr base = m_world->create();
     base.disable();
-
-    m_bodyCallback = [this, baseId = base.id()](int x, int y) {
-      Vec2 mousePos = m_world->getContext<RenderModule>().getWorldCoords(
-          m_world->getContext<EventModule>().getMouseCoords());
-
-      auto& loader = m_world->getContext<AssetLoader>();
-
-      std::string enemyType = "BasicZombie";
-      if (rand() % 20 < 1)
-        enemyType = "BigAssZombie";
-
-      EntityPtr seeker = m_world->getAssetLoader().cloneAsset(enemyType);
-      m_world->getEntity(baseId).copyInto(seeker);
-      seeker.get<TransformComponent>()->pos = mousePos + Vec2(x * 0.3f, y * 0.3f) - Vec2(2 * 0.3f, 2 * 0.3f);
-    };
   }
 
   void onEntry() {
@@ -90,11 +75,6 @@ public:
     player.add(m_addedPlayerComponents);
     Inventory playerInvetory = invMgr.createInventory("Player Inventory", 3, 5);
     player.get<InventoryComponent>()->id = playerInvetory;
-    playerInvetory.addItem(assetLoader.getAsset("BasicTurretItem"), 20);
-    playerInvetory.addItem(assetLoader.getAsset("PlaceableHighStoneItem"), 2);
-    playerInvetory.addItem(assetLoader.getAsset("WoodItem"), 32);
-    playerInvetory.addItem(assetLoader.getAsset("BigGunItem"), 4);
-    playerInvetory.addItem(assetLoader.getAsset("BigGunItem"), 2);
 
     // Render
     auto renderRect = player.get<RectangleRenderComponent>();
@@ -113,104 +93,36 @@ public:
     b2CreatePolygonShape(bodyId, &shapeDef, &rect);
 
     RefT<TransformComponent> playerTransform = player.get<TransformComponent>();
-    playerTransform->pos = Vec2(0.0f, 0.0f);
+    playerTransform->pos = Vec2(0.0f, 8.0f);
 
     /* WorldMap & Tilemap Component */
+    {
+      // World Map
+      AssetLoader assetLoader = m_world->getAssetLoader();
+      TilemapManager& tmMgr = m_world->getContext<TilemapManager>();
+      EntityPtr tm = m_world->create();
+      tm.add<BodyComponent>();
+      tm.add<TilemapComponent>();
+      tm.add<WorldMapTag>();
+      tm.add<BodyComponent>();
+      auto bodyComp = tm.get<BodyComponent>();
+      b2BodyDef bodyDef = b2DefaultBodyDef();
+      bodyDef.type = b2_dynamicBody;
+      bodyDef.rotation = Rot(45.0f);
+      bodyComp->id = b2CreateBody(physicsWorld, &bodyDef);
 
-{
-    // World Map
-    EntityPtr tm = m_world->create();
-    tm.add<TransformComponent>();
-    tm.add<BodyComponent>();
-    tm.add<TilemapComponent>();
-    tm.add<WorldMapTag>();
+      size_t testX = 9;
+      size_t testY = 3;
 
-    RefT<TransformComponent> transform = tm.get<TransformComponent>();
-    transform->pos = Vec2(0, 0);
-    transform->rot = Rot(0);
+      for(int y = 0; y < testY; y++)
+        for(int x = 0; x < testX; x++)
+          tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0),  assetLoader.cloneAsset("TestBlock"));
 
-    b2BodyDef bodyDef = b2DefaultBodyDef();
-    bodyDef.type = b2_staticBody;
-    bodyDef.position = Vec2(0, 0);
-    b2BodyId bodyId = b2CreateBody(physicsWorld, &bodyDef);
-    tm.get<BodyComponent>()->id = bodyId;
-
-    RefT<TilemapComponent> tilemapLayers = tm.get<TilemapComponent>();
-    Tilemap& worldLayer = tilemapLayers->getTilemap(TilemapWorldLayer);
-
-    const int gridSize = 3;
-    const int roomRadius = 6;
-    const int spacing = 13; // distance between room centers
-
-    // Precompute room centers
-    std::vector<Vec2> centers;
-    for (int gx = 0; gx < gridSize; gx++) {
-        for (int gy = 0; gy < gridSize; gy++) {
-            int cx = (gx - gridSize/2) * spacing;
-            int cy = (gy - gridSize/2) * spacing;
-            centers.push_back(Vec2(cx, cy));
-        }
+      for(int y = 0; y < testY; y++)
+        for(int x = 0; x < testX; x++)
+          tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x + 16, y, 0),  assetLoader.cloneAsset("TestBlock"));
+      m_tm = tm;  
     }
-
-    auto isInsideRoom = [&](int x, int y) {
-        for (auto& c : centers) {
-            int dx = x - c.x;
-            int dy = y - c.y;
-            if (dx*dx + dy*dy <= roomRadius * roomRadius)
-                return true;
-        }
-        return false;
-    };
-
-    auto isInCorridor = [&](int x, int y) {
-        for (auto& c : centers) {
-            // connect right neighbor
-            Vec2 right = {c.x + spacing, c.y};
-            if (std::find(centers.begin(), centers.end(), right) != centers.end()) {
-                if ( (y >= std::min(c.y, right.y) - 2 && y <= std::max(c.y, right.y) + 2) &&
-                     (x >= std::min(c.x, right.x) && x <= std::max(c.x, right.x)) ) {
-                    return true;
-                }
-            }
-            // connect down neighbor
-            Vec2 down = {c.x, c.y + spacing};
-            if (std::find(centers.begin(), centers.end(), down) != centers.end()) {
-                if ( (x >= std::min(c.x, down.x) - 2 && x <= std::max(c.x, down.x) + 2) &&
-                     (y >= std::min(c.y, down.y) && y <= std::max(c.y, down.y)) ) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    };
-
-    auto tileCallback = [&](int x, int y) {
-        if (isInsideRoom(x, y) || isInCorridor(x, y)) {
-            if (rand() % 100 < 5) {
-                worldLayer.insert(m_world, bodyId, {x, y}, tm, assetLoader.cloneAsset("UnknownTile"));
-            } else {
-                worldLayer.insert(m_world, bodyId, {x, y}, tm, assetLoader.cloneAsset("StoneFloorTile"));
-            }
-        } else {
-          worldLayer.insert(m_world, bodyId, {x, y}, tm, assetLoader.cloneAsset("PermaHighStoneTile"));
-        }
-    };
-
-    // Scan enough area to cover all rooms + corridors
-    int bound = gridSize * spacing / 2 + roomRadius + 5;
-    callInGrid(-bound, -bound, bound, bound, tileCallback);
-}
-
-    EntityPtr e = m_world->create();
-    e.add<TransformComponent>();
-    e.add<SpawnerComponent>();
-
-    auto spawner = e.get<SpawnerComponent>();
-    spawner->spawn = assetLoader.getAsset("BasicZombie");
-    spawner->spawnableRadius = 2.5f;
-    spawner->spawnCount = 100;
-    spawner->spawnRate = 0.5f;
-    spawner->timeSinceLastSpawn = 25.0f;
   }
 
   void onTick(u32 tick, float deltaTime) override {
@@ -231,11 +143,6 @@ public:
     }
 
     m_entityCountText->setText("Set Count: " + std::to_string(m_world->getSetCount()));
-
-    const b2WorldId physicsWorld = m_world->getContext<b2WorldId>();
-    if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F3] && tick % 3 == 0) {
-      callInGrid(-2, -2, 2, 2, m_bodyCallback);
-    }
   }
 
   void onLeave() {
@@ -249,7 +156,7 @@ public:
   }
 
 private:
-  std::function<void(int, int)> m_bodyCallback;
+  EntityId m_tm;
   tgui::Label::Ptr m_tickText;
   tgui::Label::Ptr m_tpsText;
   tgui::Label::Ptr m_fpsText;

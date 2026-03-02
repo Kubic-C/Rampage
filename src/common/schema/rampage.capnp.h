@@ -22,6 +22,7 @@ CAPNP_DECLARE_SCHEMA(a9e6ab088fb12bd3);
 CAPNP_DECLARE_SCHEMA(aa4969aafed57949);
 CAPNP_DECLARE_SCHEMA(b6b875d105f93bc2);
 CAPNP_DECLARE_SCHEMA(b286d739864eb1fd);
+CAPNP_DECLARE_SCHEMA(e46148703c226798);
 CAPNP_DECLARE_SCHEMA(c20fe7c807d7fb38);
 CAPNP_DECLARE_SCHEMA(cc42a9ba24c41f74);
 CAPNP_DECLARE_SCHEMA(86afb0eb4584dca5);
@@ -37,11 +38,10 @@ CAPNP_DECLARE_SCHEMA(e4467db5109b421d);
 CAPNP_DECLARE_SCHEMA(9beb5a9391dd8f69);
 CAPNP_DECLARE_SCHEMA(dd2050bbe6c1c0db);
 CAPNP_DECLARE_SCHEMA(e6da72db6380a96f);
-CAPNP_DECLARE_SCHEMA(cfdafdaad5258332);
 CAPNP_DECLARE_SCHEMA(d1e456c2ce05147e);
-CAPNP_DECLARE_SCHEMA(92563ae6a8094bd1);
-CAPNP_DECLARE_SCHEMA(86a8c3d9ff302653);
-CAPNP_DECLARE_SCHEMA(8a3987ea0b5f8f3e);
+CAPNP_DECLARE_SCHEMA(f49d4e1f28c05796);
+CAPNP_DECLARE_SCHEMA(ed56815cfe688269);
+CAPNP_DECLARE_SCHEMA(886a10f48e6deb05);
 CAPNP_DECLARE_SCHEMA(db1f0b9bc360eb5f);
 CAPNP_DECLARE_SCHEMA(a9e753408edb6a57);
 CAPNP_DECLARE_SCHEMA(d8aee0453808ccb1);
@@ -130,6 +130,21 @@ struct Vec2I16 {
 
   struct _capnpPrivate {
     CAPNP_DECLARE_STRUCT_HEADER(b286d739864eb1fd, 1, 0)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct Vec3I32 {
+  Vec3I32() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(e46148703c226798, 2, 0)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -361,21 +376,6 @@ struct SpriteComponent {
   };
 };
 
-struct TileBoundComponent {
-  TileBoundComponent() = delete;
-
-  class Reader;
-  class Builder;
-  class Pipeline;
-
-  struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(cfdafdaad5258332, 1, 1)
-    #if !CAPNP_LITE
-    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
-    #endif  // !CAPNP_LITE
-  };
-};
-
 struct TileItemComponent {
   TileItemComponent() = delete;
 
@@ -391,45 +391,45 @@ struct TileItemComponent {
   };
 };
 
-struct TileDef {
-  TileDef() = delete;
+struct MultiTileComponent {
+  MultiTileComponent() = delete;
 
   class Reader;
   class Builder;
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(92563ae6a8094bd1, 2, 0)
+    CAPNP_DECLARE_STRUCT_HEADER(f49d4e1f28c05796, 0, 2)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
   };
 };
 
-struct Tile {
-  Tile() = delete;
+struct TileComponent {
+  TileComponent() = delete;
 
   class Reader;
   class Builder;
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(86a8c3d9ff302653, 2, 1)
+    CAPNP_DECLARE_STRUCT_HEADER(ed56815cfe688269, 1, 2)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
   };
 };
 
-struct Tilemap {
-  Tilemap() = delete;
+struct TileEntry {
+  TileEntry() = delete;
 
   class Reader;
   class Builder;
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(8a3987ea0b5f8f3e, 1, 1)
+    CAPNP_DECLARE_STRUCT_HEADER(886a10f48e6deb05, 1, 1)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -1060,6 +1060,92 @@ private:
 class Vec2I16::Pipeline {
 public:
   typedef Vec2I16 Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class Vec3I32::Reader {
+public:
+  typedef Vec3I32 Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::int32_t getX() const;
+
+  inline  ::int32_t getY() const;
+
+  inline  ::int32_t getZ() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class Vec3I32::Builder {
+public:
+  typedef Vec3I32 Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::int32_t getX();
+  inline void setX( ::int32_t value);
+
+  inline  ::int32_t getY();
+  inline void setY( ::int32_t value);
+
+  inline  ::int32_t getZ();
+  inline void setZ( ::int32_t value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class Vec3I32::Pipeline {
+public:
+  typedef Vec3I32 Pipelines;
 
   inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
@@ -2437,98 +2523,6 @@ private:
 };
 #endif  // !CAPNP_LITE
 
-class TileBoundComponent::Reader {
-public:
-  typedef TileBoundComponent Reads;
-
-  Reader() = default;
-  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
-
-  inline ::capnp::MessageSize totalSize() const {
-    return _reader.totalSize().asPublic();
-  }
-
-#if !CAPNP_LITE
-  inline ::kj::StringTree toString() const {
-    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
-  }
-#endif  // !CAPNP_LITE
-
-  inline  ::uint32_t getLayer() const;
-
-  inline bool hasPos() const;
-  inline  ::Schema::Vec2I16::Reader getPos() const;
-
-  inline  ::uint32_t getParent() const;
-
-private:
-  ::capnp::_::StructReader _reader;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::ToDynamic_;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::_::PointerHelpers;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::List;
-  friend class ::capnp::MessageBuilder;
-  friend class ::capnp::Orphanage;
-};
-
-class TileBoundComponent::Builder {
-public:
-  typedef TileBoundComponent Builds;
-
-  Builder() = delete;  // Deleted to discourage incorrect usage.
-                       // You can explicitly initialize to nullptr instead.
-  inline Builder(decltype(nullptr)) {}
-  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
-  inline operator Reader() const { return Reader(_builder.asReader()); }
-  inline Reader asReader() const { return *this; }
-
-  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
-#if !CAPNP_LITE
-  inline ::kj::StringTree toString() const { return asReader().toString(); }
-#endif  // !CAPNP_LITE
-
-  inline  ::uint32_t getLayer();
-  inline void setLayer( ::uint32_t value);
-
-  inline bool hasPos();
-  inline  ::Schema::Vec2I16::Builder getPos();
-  inline void setPos( ::Schema::Vec2I16::Reader value);
-  inline  ::Schema::Vec2I16::Builder initPos();
-  inline void adoptPos(::capnp::Orphan< ::Schema::Vec2I16>&& value);
-  inline ::capnp::Orphan< ::Schema::Vec2I16> disownPos();
-
-  inline  ::uint32_t getParent();
-  inline void setParent( ::uint32_t value);
-
-private:
-  ::capnp::_::StructBuilder _builder;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::ToDynamic_;
-  friend class ::capnp::Orphanage;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::_::PointerHelpers;
-};
-
-#if !CAPNP_LITE
-class TileBoundComponent::Pipeline {
-public:
-  typedef TileBoundComponent Pipelines;
-
-  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
-  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
-      : _typeless(kj::mv(typeless)) {}
-
-  inline  ::Schema::Vec2I16::Pipeline getPos();
-private:
-  ::capnp::AnyPointer::Pipeline _typeless;
-  friend class ::capnp::PipelineHook;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::ToDynamic_;
-};
-#endif  // !CAPNP_LITE
-
 class TileItemComponent::Reader {
 public:
   typedef TileItemComponent Reads;
@@ -2605,9 +2599,9 @@ private:
 };
 #endif  // !CAPNP_LITE
 
-class TileDef::Reader {
+class MultiTileComponent::Reader {
 public:
-  typedef TileDef Reads;
+  typedef MultiTileComponent Reads;
 
   Reader() = default;
   inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
@@ -2622,13 +2616,11 @@ public:
   }
 #endif  // !CAPNP_LITE
 
-  inline bool getEnableCollision() const;
+  inline bool hasOccupiedPositions() const;
+  inline  ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>::Reader getOccupiedPositions() const;
 
-  inline  ::uint32_t getEntity() const;
-
-  inline  ::uint16_t getSizeX() const;
-
-  inline  ::uint16_t getSizeY() const;
+  inline bool hasAnchorPos() const;
+  inline  ::Schema::Vec3I32::Reader getAnchorPos() const;
 
 private:
   ::capnp::_::StructReader _reader;
@@ -2642,9 +2634,9 @@ private:
   friend class ::capnp::Orphanage;
 };
 
-class TileDef::Builder {
+class MultiTileComponent::Builder {
 public:
-  typedef TileDef Builds;
+  typedef MultiTileComponent Builds;
 
   Builder() = delete;  // Deleted to discourage incorrect usage.
                        // You can explicitly initialize to nullptr instead.
@@ -2658,17 +2650,19 @@ public:
   inline ::kj::StringTree toString() const { return asReader().toString(); }
 #endif  // !CAPNP_LITE
 
-  inline bool getEnableCollision();
-  inline void setEnableCollision(bool value);
+  inline bool hasOccupiedPositions();
+  inline  ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>::Builder getOccupiedPositions();
+  inline void setOccupiedPositions( ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>::Reader value);
+  inline  ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>::Builder initOccupiedPositions(unsigned int size);
+  inline void adoptOccupiedPositions(::capnp::Orphan< ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>> disownOccupiedPositions();
 
-  inline  ::uint32_t getEntity();
-  inline void setEntity( ::uint32_t value);
-
-  inline  ::uint16_t getSizeX();
-  inline void setSizeX( ::uint16_t value);
-
-  inline  ::uint16_t getSizeY();
-  inline void setSizeY( ::uint16_t value);
+  inline bool hasAnchorPos();
+  inline  ::Schema::Vec3I32::Builder getAnchorPos();
+  inline void setAnchorPos( ::Schema::Vec3I32::Reader value);
+  inline  ::Schema::Vec3I32::Builder initAnchorPos();
+  inline void adoptAnchorPos(::capnp::Orphan< ::Schema::Vec3I32>&& value);
+  inline ::capnp::Orphan< ::Schema::Vec3I32> disownAnchorPos();
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -2680,14 +2674,15 @@ private:
 };
 
 #if !CAPNP_LITE
-class TileDef::Pipeline {
+class MultiTileComponent::Pipeline {
 public:
-  typedef TileDef Pipelines;
+  typedef MultiTileComponent Pipelines;
 
   inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
       : _typeless(kj::mv(typeless)) {}
 
+  inline  ::Schema::Vec3I32::Pipeline getAnchorPos();
 private:
   ::capnp::AnyPointer::Pipeline _typeless;
   friend class ::capnp::PipelineHook;
@@ -2696,9 +2691,9 @@ private:
 };
 #endif  // !CAPNP_LITE
 
-class Tile::Reader {
+class TileComponent::Reader {
 public:
-  typedef Tile Reads;
+  typedef TileComponent Reads;
 
   Reader() = default;
   inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
@@ -2713,16 +2708,13 @@ public:
   }
 #endif  // !CAPNP_LITE
 
-  inline  ::uint32_t getEntity() const;
+  inline bool hasPos() const;
+  inline  ::Schema::Vec3I32::Reader getPos() const;
 
-  inline  ::uint8_t getFlags() const;
+  inline  ::uint32_t getParent() const;
 
-  inline bool hasGridPos() const;
-  inline  ::Schema::Vec2I16::Reader getGridPos() const;
-
-  inline  ::int16_t getSizeOrPosX() const;
-
-  inline  ::int16_t getSizeOrPosY() const;
+  inline bool hasMaterial() const;
+  inline  ::Schema::SurfaceMaterial::Reader getMaterial() const;
 
 private:
   ::capnp::_::StructReader _reader;
@@ -2736,9 +2728,9 @@ private:
   friend class ::capnp::Orphanage;
 };
 
-class Tile::Builder {
+class TileComponent::Builder {
 public:
-  typedef Tile Builds;
+  typedef TileComponent Builds;
 
   Builder() = delete;  // Deleted to discourage incorrect usage.
                        // You can explicitly initialize to nullptr instead.
@@ -2752,24 +2744,22 @@ public:
   inline ::kj::StringTree toString() const { return asReader().toString(); }
 #endif  // !CAPNP_LITE
 
-  inline  ::uint32_t getEntity();
-  inline void setEntity( ::uint32_t value);
+  inline bool hasPos();
+  inline  ::Schema::Vec3I32::Builder getPos();
+  inline void setPos( ::Schema::Vec3I32::Reader value);
+  inline  ::Schema::Vec3I32::Builder initPos();
+  inline void adoptPos(::capnp::Orphan< ::Schema::Vec3I32>&& value);
+  inline ::capnp::Orphan< ::Schema::Vec3I32> disownPos();
 
-  inline  ::uint8_t getFlags();
-  inline void setFlags( ::uint8_t value);
+  inline  ::uint32_t getParent();
+  inline void setParent( ::uint32_t value);
 
-  inline bool hasGridPos();
-  inline  ::Schema::Vec2I16::Builder getGridPos();
-  inline void setGridPos( ::Schema::Vec2I16::Reader value);
-  inline  ::Schema::Vec2I16::Builder initGridPos();
-  inline void adoptGridPos(::capnp::Orphan< ::Schema::Vec2I16>&& value);
-  inline ::capnp::Orphan< ::Schema::Vec2I16> disownGridPos();
-
-  inline  ::int16_t getSizeOrPosX();
-  inline void setSizeOrPosX( ::int16_t value);
-
-  inline  ::int16_t getSizeOrPosY();
-  inline void setSizeOrPosY( ::int16_t value);
+  inline bool hasMaterial();
+  inline  ::Schema::SurfaceMaterial::Builder getMaterial();
+  inline void setMaterial( ::Schema::SurfaceMaterial::Reader value);
+  inline  ::Schema::SurfaceMaterial::Builder initMaterial();
+  inline void adoptMaterial(::capnp::Orphan< ::Schema::SurfaceMaterial>&& value);
+  inline ::capnp::Orphan< ::Schema::SurfaceMaterial> disownMaterial();
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -2781,15 +2771,16 @@ private:
 };
 
 #if !CAPNP_LITE
-class Tile::Pipeline {
+class TileComponent::Pipeline {
 public:
-  typedef Tile Pipelines;
+  typedef TileComponent Pipelines;
 
   inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
       : _typeless(kj::mv(typeless)) {}
 
-  inline  ::Schema::Vec2I16::Pipeline getGridPos();
+  inline  ::Schema::Vec3I32::Pipeline getPos();
+  inline  ::Schema::SurfaceMaterial::Pipeline getMaterial();
 private:
   ::capnp::AnyPointer::Pipeline _typeless;
   friend class ::capnp::PipelineHook;
@@ -2798,9 +2789,9 @@ private:
 };
 #endif  // !CAPNP_LITE
 
-class Tilemap::Reader {
+class TileEntry::Reader {
 public:
-  typedef Tilemap Reads;
+  typedef TileEntry Reads;
 
   Reader() = default;
   inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
@@ -2815,10 +2806,10 @@ public:
   }
 #endif  // !CAPNP_LITE
 
-  inline  ::uint32_t getLayer() const;
+  inline bool hasPos() const;
+  inline  ::Schema::Vec3I32::Reader getPos() const;
 
-  inline bool hasTiles() const;
-  inline  ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Reader getTiles() const;
+  inline  ::uint32_t getEntityId() const;
 
 private:
   ::capnp::_::StructReader _reader;
@@ -2832,9 +2823,9 @@ private:
   friend class ::capnp::Orphanage;
 };
 
-class Tilemap::Builder {
+class TileEntry::Builder {
 public:
-  typedef Tilemap Builds;
+  typedef TileEntry Builds;
 
   Builder() = delete;  // Deleted to discourage incorrect usage.
                        // You can explicitly initialize to nullptr instead.
@@ -2848,15 +2839,15 @@ public:
   inline ::kj::StringTree toString() const { return asReader().toString(); }
 #endif  // !CAPNP_LITE
 
-  inline  ::uint32_t getLayer();
-  inline void setLayer( ::uint32_t value);
+  inline bool hasPos();
+  inline  ::Schema::Vec3I32::Builder getPos();
+  inline void setPos( ::Schema::Vec3I32::Reader value);
+  inline  ::Schema::Vec3I32::Builder initPos();
+  inline void adoptPos(::capnp::Orphan< ::Schema::Vec3I32>&& value);
+  inline ::capnp::Orphan< ::Schema::Vec3I32> disownPos();
 
-  inline bool hasTiles();
-  inline  ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Builder getTiles();
-  inline void setTiles( ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Reader value);
-  inline  ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Builder initTiles(unsigned int size);
-  inline void adoptTiles(::capnp::Orphan< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>>&& value);
-  inline ::capnp::Orphan< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>> disownTiles();
+  inline  ::uint32_t getEntityId();
+  inline void setEntityId( ::uint32_t value);
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -2868,14 +2859,15 @@ private:
 };
 
 #if !CAPNP_LITE
-class Tilemap::Pipeline {
+class TileEntry::Pipeline {
 public:
-  typedef Tilemap Pipelines;
+  typedef TileEntry Pipelines;
 
   inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
       : _typeless(kj::mv(typeless)) {}
 
+  inline  ::Schema::Vec3I32::Pipeline getPos();
 private:
   ::capnp::AnyPointer::Pipeline _typeless;
   friend class ::capnp::PipelineHook;
@@ -2901,8 +2893,8 @@ public:
   }
 #endif  // !CAPNP_LITE
 
-  inline bool hasTilemaps() const;
-  inline  ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>::Reader getTilemaps() const;
+  inline bool hasTiles() const;
+  inline  ::capnp::List< ::Schema::TileEntry,  ::capnp::Kind::STRUCT>::Reader getTiles() const;
 
 private:
   ::capnp::_::StructReader _reader;
@@ -2932,12 +2924,12 @@ public:
   inline ::kj::StringTree toString() const { return asReader().toString(); }
 #endif  // !CAPNP_LITE
 
-  inline bool hasTilemaps();
-  inline  ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>::Builder getTilemaps();
-  inline void setTilemaps( ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>::Reader value);
-  inline  ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>::Builder initTilemaps(unsigned int size);
-  inline void adoptTilemaps(::capnp::Orphan< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>>&& value);
-  inline ::capnp::Orphan< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>> disownTilemaps();
+  inline bool hasTiles();
+  inline  ::capnp::List< ::Schema::TileEntry,  ::capnp::Kind::STRUCT>::Builder getTiles();
+  inline void setTiles( ::capnp::List< ::Schema::TileEntry,  ::capnp::Kind::STRUCT>::Reader value);
+  inline  ::capnp::List< ::Schema::TileEntry,  ::capnp::Kind::STRUCT>::Builder initTiles(unsigned int size);
+  inline void adoptTiles(::capnp::Orphan< ::capnp::List< ::Schema::TileEntry,  ::capnp::Kind::STRUCT>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::Schema::TileEntry,  ::capnp::Kind::STRUCT>> disownTiles();
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -4928,6 +4920,48 @@ inline void Vec2I16::Builder::setY( ::int16_t value) {
       ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
 }
 
+inline  ::int32_t Vec3I32::Reader::getX() const {
+  return _reader.getDataField< ::int32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::int32_t Vec3I32::Builder::getX() {
+  return _builder.getDataField< ::int32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void Vec3I32::Builder::setX( ::int32_t value) {
+  _builder.setDataField< ::int32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::int32_t Vec3I32::Reader::getY() const {
+  return _reader.getDataField< ::int32_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+
+inline  ::int32_t Vec3I32::Builder::getY() {
+  return _builder.getDataField< ::int32_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+inline void Vec3I32::Builder::setY( ::int32_t value) {
+  _builder.setDataField< ::int32_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::int32_t Vec3I32::Reader::getZ() const {
+  return _reader.getDataField< ::int32_t>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+
+inline  ::int32_t Vec3I32::Builder::getZ() {
+  return _builder.getDataField< ::int32_t>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+inline void Vec3I32::Builder::setZ( ::int32_t value) {
+  _builder.setDataField< ::int32_t>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS, value);
+}
+
 inline bool TransformComponent::Reader::hasPos() const {
   return !_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
@@ -5869,73 +5903,6 @@ inline ::capnp::Orphan< ::capnp::List< ::Schema::SubSprite,  ::capnp::Kind::STRU
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
-inline  ::uint32_t TileBoundComponent::Reader::getLayer() const {
-  return _reader.getDataField< ::uint32_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-
-inline  ::uint32_t TileBoundComponent::Builder::getLayer() {
-  return _builder.getDataField< ::uint32_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-inline void TileBoundComponent::Builder::setLayer( ::uint32_t value) {
-  _builder.setDataField< ::uint32_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
-}
-
-inline bool TileBoundComponent::Reader::hasPos() const {
-  return !_reader.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
-}
-inline bool TileBoundComponent::Builder::hasPos() {
-  return !_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
-}
-inline  ::Schema::Vec2I16::Reader TileBoundComponent::Reader::getPos() const {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec2I16>::get(_reader.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-inline  ::Schema::Vec2I16::Builder TileBoundComponent::Builder::getPos() {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec2I16>::get(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-#if !CAPNP_LITE
-inline  ::Schema::Vec2I16::Pipeline TileBoundComponent::Pipeline::getPos() {
-  return  ::Schema::Vec2I16::Pipeline(_typeless.getPointerField(0));
-}
-#endif  // !CAPNP_LITE
-inline void TileBoundComponent::Builder::setPos( ::Schema::Vec2I16::Reader value) {
-  ::capnp::_::PointerHelpers< ::Schema::Vec2I16>::set(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
-}
-inline  ::Schema::Vec2I16::Builder TileBoundComponent::Builder::initPos() {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec2I16>::init(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-inline void TileBoundComponent::Builder::adoptPos(
-    ::capnp::Orphan< ::Schema::Vec2I16>&& value) {
-  ::capnp::_::PointerHelpers< ::Schema::Vec2I16>::adopt(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
-}
-inline ::capnp::Orphan< ::Schema::Vec2I16> TileBoundComponent::Builder::disownPos() {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec2I16>::disown(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-
-inline  ::uint32_t TileBoundComponent::Reader::getParent() const {
-  return _reader.getDataField< ::uint32_t>(
-      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
-}
-
-inline  ::uint32_t TileBoundComponent::Builder::getParent() {
-  return _builder.getDataField< ::uint32_t>(
-      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
-}
-inline void TileBoundComponent::Builder::setParent( ::uint32_t value) {
-  _builder.setDataField< ::uint32_t>(
-      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
-}
-
 inline  ::uint32_t TileItemComponent::Reader::getItem() const {
   return _reader.getDataField< ::uint32_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
@@ -5950,236 +5917,255 @@ inline void TileItemComponent::Builder::setItem( ::uint32_t value) {
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
 }
 
-inline bool TileDef::Reader::getEnableCollision() const {
-  return _reader.getDataField<bool>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-
-inline bool TileDef::Builder::getEnableCollision() {
-  return _builder.getDataField<bool>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-inline void TileDef::Builder::setEnableCollision(bool value) {
-  _builder.setDataField<bool>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
-}
-
-inline  ::uint32_t TileDef::Reader::getEntity() const {
-  return _reader.getDataField< ::uint32_t>(
-      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
-}
-
-inline  ::uint32_t TileDef::Builder::getEntity() {
-  return _builder.getDataField< ::uint32_t>(
-      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
-}
-inline void TileDef::Builder::setEntity( ::uint32_t value) {
-  _builder.setDataField< ::uint32_t>(
-      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
-}
-
-inline  ::uint16_t TileDef::Reader::getSizeX() const {
-  return _reader.getDataField< ::uint16_t>(
-      ::capnp::bounded<1>() * ::capnp::ELEMENTS, 1u);
-}
-
-inline  ::uint16_t TileDef::Builder::getSizeX() {
-  return _builder.getDataField< ::uint16_t>(
-      ::capnp::bounded<1>() * ::capnp::ELEMENTS, 1u);
-}
-inline void TileDef::Builder::setSizeX( ::uint16_t value) {
-  _builder.setDataField< ::uint16_t>(
-      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value, 1u);
-}
-
-inline  ::uint16_t TileDef::Reader::getSizeY() const {
-  return _reader.getDataField< ::uint16_t>(
-      ::capnp::bounded<4>() * ::capnp::ELEMENTS, 1u);
-}
-
-inline  ::uint16_t TileDef::Builder::getSizeY() {
-  return _builder.getDataField< ::uint16_t>(
-      ::capnp::bounded<4>() * ::capnp::ELEMENTS, 1u);
-}
-inline void TileDef::Builder::setSizeY( ::uint16_t value) {
-  _builder.setDataField< ::uint16_t>(
-      ::capnp::bounded<4>() * ::capnp::ELEMENTS, value, 1u);
-}
-
-inline  ::uint32_t Tile::Reader::getEntity() const {
-  return _reader.getDataField< ::uint32_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-
-inline  ::uint32_t Tile::Builder::getEntity() {
-  return _builder.getDataField< ::uint32_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-inline void Tile::Builder::setEntity( ::uint32_t value) {
-  _builder.setDataField< ::uint32_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
-}
-
-inline  ::uint8_t Tile::Reader::getFlags() const {
-  return _reader.getDataField< ::uint8_t>(
-      ::capnp::bounded<4>() * ::capnp::ELEMENTS);
-}
-
-inline  ::uint8_t Tile::Builder::getFlags() {
-  return _builder.getDataField< ::uint8_t>(
-      ::capnp::bounded<4>() * ::capnp::ELEMENTS);
-}
-inline void Tile::Builder::setFlags( ::uint8_t value) {
-  _builder.setDataField< ::uint8_t>(
-      ::capnp::bounded<4>() * ::capnp::ELEMENTS, value);
-}
-
-inline bool Tile::Reader::hasGridPos() const {
+inline bool MultiTileComponent::Reader::hasOccupiedPositions() const {
   return !_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline bool Tile::Builder::hasGridPos() {
+inline bool MultiTileComponent::Builder::hasOccupiedPositions() {
   return !_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline  ::Schema::Vec2I16::Reader Tile::Reader::getGridPos() const {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec2I16>::get(_reader.getPointerField(
+inline  ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>::Reader MultiTileComponent::Reader::getOccupiedPositions() const {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline  ::Schema::Vec2I16::Builder Tile::Builder::getGridPos() {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec2I16>::get(_builder.getPointerField(
+inline  ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>::Builder MultiTileComponent::Builder::getOccupiedPositions() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void MultiTileComponent::Builder::setOccupiedPositions( ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>::Builder MultiTileComponent::Builder::initOccupiedPositions(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+}
+inline void MultiTileComponent::Builder::adoptOccupiedPositions(
+    ::capnp::Orphan< ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>> MultiTileComponent::Builder::disownOccupiedPositions() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool MultiTileComponent::Reader::hasAnchorPos() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline bool MultiTileComponent::Builder::hasAnchorPos() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline  ::Schema::Vec3I32::Reader MultiTileComponent::Reader::getAnchorPos() const {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::get(_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline  ::Schema::Vec3I32::Builder MultiTileComponent::Builder::getAnchorPos() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::get(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::Schema::Vec3I32::Pipeline MultiTileComponent::Pipeline::getAnchorPos() {
+  return  ::Schema::Vec3I32::Pipeline(_typeless.getPointerField(1));
+}
+#endif  // !CAPNP_LITE
+inline void MultiTileComponent::Builder::setAnchorPos( ::Schema::Vec3I32::Reader value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::set(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+}
+inline  ::Schema::Vec3I32::Builder MultiTileComponent::Builder::initAnchorPos() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::init(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline void MultiTileComponent::Builder::adoptAnchorPos(
+    ::capnp::Orphan< ::Schema::Vec3I32>&& value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::adopt(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::Schema::Vec3I32> MultiTileComponent::Builder::disownAnchorPos() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::disown(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline bool TileComponent::Reader::hasPos() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool TileComponent::Builder::hasPos() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::Schema::Vec3I32::Reader TileComponent::Reader::getPos() const {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::Schema::Vec3I32::Builder TileComponent::Builder::getPos() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::get(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 #if !CAPNP_LITE
-inline  ::Schema::Vec2I16::Pipeline Tile::Pipeline::getGridPos() {
-  return  ::Schema::Vec2I16::Pipeline(_typeless.getPointerField(0));
+inline  ::Schema::Vec3I32::Pipeline TileComponent::Pipeline::getPos() {
+  return  ::Schema::Vec3I32::Pipeline(_typeless.getPointerField(0));
 }
 #endif  // !CAPNP_LITE
-inline void Tile::Builder::setGridPos( ::Schema::Vec2I16::Reader value) {
-  ::capnp::_::PointerHelpers< ::Schema::Vec2I16>::set(_builder.getPointerField(
+inline void TileComponent::Builder::setPos( ::Schema::Vec3I32::Reader value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::set(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), value);
 }
-inline  ::Schema::Vec2I16::Builder Tile::Builder::initGridPos() {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec2I16>::init(_builder.getPointerField(
+inline  ::Schema::Vec3I32::Builder TileComponent::Builder::initPos() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::init(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline void Tile::Builder::adoptGridPos(
-    ::capnp::Orphan< ::Schema::Vec2I16>&& value) {
-  ::capnp::_::PointerHelpers< ::Schema::Vec2I16>::adopt(_builder.getPointerField(
+inline void TileComponent::Builder::adoptPos(
+    ::capnp::Orphan< ::Schema::Vec3I32>&& value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::adopt(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
 }
-inline ::capnp::Orphan< ::Schema::Vec2I16> Tile::Builder::disownGridPos() {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec2I16>::disown(_builder.getPointerField(
+inline ::capnp::Orphan< ::Schema::Vec3I32> TileComponent::Builder::disownPos() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
-inline  ::int16_t Tile::Reader::getSizeOrPosX() const {
-  return _reader.getDataField< ::int16_t>(
-      ::capnp::bounded<3>() * ::capnp::ELEMENTS, 1);
-}
-
-inline  ::int16_t Tile::Builder::getSizeOrPosX() {
-  return _builder.getDataField< ::int16_t>(
-      ::capnp::bounded<3>() * ::capnp::ELEMENTS, 1);
-}
-inline void Tile::Builder::setSizeOrPosX( ::int16_t value) {
-  _builder.setDataField< ::int16_t>(
-      ::capnp::bounded<3>() * ::capnp::ELEMENTS, value, 1);
-}
-
-inline  ::int16_t Tile::Reader::getSizeOrPosY() const {
-  return _reader.getDataField< ::int16_t>(
-      ::capnp::bounded<4>() * ::capnp::ELEMENTS, 1);
-}
-
-inline  ::int16_t Tile::Builder::getSizeOrPosY() {
-  return _builder.getDataField< ::int16_t>(
-      ::capnp::bounded<4>() * ::capnp::ELEMENTS, 1);
-}
-inline void Tile::Builder::setSizeOrPosY( ::int16_t value) {
-  _builder.setDataField< ::int16_t>(
-      ::capnp::bounded<4>() * ::capnp::ELEMENTS, value, 1);
-}
-
-inline  ::uint32_t Tilemap::Reader::getLayer() const {
+inline  ::uint32_t TileComponent::Reader::getParent() const {
   return _reader.getDataField< ::uint32_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
 
-inline  ::uint32_t Tilemap::Builder::getLayer() {
+inline  ::uint32_t TileComponent::Builder::getParent() {
   return _builder.getDataField< ::uint32_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
-inline void Tilemap::Builder::setLayer( ::uint32_t value) {
+inline void TileComponent::Builder::setParent( ::uint32_t value) {
   _builder.setDataField< ::uint32_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
 }
 
-inline bool Tilemap::Reader::hasTiles() const {
+inline bool TileComponent::Reader::hasMaterial() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline bool TileComponent::Builder::hasMaterial() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline  ::Schema::SurfaceMaterial::Reader TileComponent::Reader::getMaterial() const {
+  return ::capnp::_::PointerHelpers< ::Schema::SurfaceMaterial>::get(_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline  ::Schema::SurfaceMaterial::Builder TileComponent::Builder::getMaterial() {
+  return ::capnp::_::PointerHelpers< ::Schema::SurfaceMaterial>::get(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::Schema::SurfaceMaterial::Pipeline TileComponent::Pipeline::getMaterial() {
+  return  ::Schema::SurfaceMaterial::Pipeline(_typeless.getPointerField(1));
+}
+#endif  // !CAPNP_LITE
+inline void TileComponent::Builder::setMaterial( ::Schema::SurfaceMaterial::Reader value) {
+  ::capnp::_::PointerHelpers< ::Schema::SurfaceMaterial>::set(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+}
+inline  ::Schema::SurfaceMaterial::Builder TileComponent::Builder::initMaterial() {
+  return ::capnp::_::PointerHelpers< ::Schema::SurfaceMaterial>::init(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline void TileComponent::Builder::adoptMaterial(
+    ::capnp::Orphan< ::Schema::SurfaceMaterial>&& value) {
+  ::capnp::_::PointerHelpers< ::Schema::SurfaceMaterial>::adopt(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::Schema::SurfaceMaterial> TileComponent::Builder::disownMaterial() {
+  return ::capnp::_::PointerHelpers< ::Schema::SurfaceMaterial>::disown(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline bool TileEntry::Reader::hasPos() const {
   return !_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline bool Tilemap::Builder::hasTiles() {
+inline bool TileEntry::Builder::hasPos() {
   return !_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline  ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Reader Tilemap::Reader::getTiles() const {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
+inline  ::Schema::Vec3I32::Reader TileEntry::Reader::getPos() const {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::get(_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline  ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Builder Tilemap::Builder::getTiles() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
+inline  ::Schema::Vec3I32::Builder TileEntry::Builder::getPos() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::get(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline void Tilemap::Builder::setTiles( ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Reader value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
+#if !CAPNP_LITE
+inline  ::Schema::Vec3I32::Pipeline TileEntry::Pipeline::getPos() {
+  return  ::Schema::Vec3I32::Pipeline(_typeless.getPointerField(0));
+}
+#endif  // !CAPNP_LITE
+inline void TileEntry::Builder::setPos( ::Schema::Vec3I32::Reader value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::set(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), value);
 }
-inline  ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>::Builder Tilemap::Builder::initTiles(unsigned int size) {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+inline  ::Schema::Vec3I32::Builder TileEntry::Builder::initPos() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline void Tilemap::Builder::adoptTiles(
-    ::capnp::Orphan< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>>&& value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
+inline void TileEntry::Builder::adoptPos(
+    ::capnp::Orphan< ::Schema::Vec3I32>&& value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::adopt(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
 }
-inline ::capnp::Orphan< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>> Tilemap::Builder::disownTiles() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tile,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
+inline ::capnp::Orphan< ::Schema::Vec3I32> TileEntry::Builder::disownPos() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
-inline bool TilemapComponent::Reader::hasTilemaps() const {
+inline  ::uint32_t TileEntry::Reader::getEntityId() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t TileEntry::Builder::getEntityId() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void TileEntry::Builder::setEntityId( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool TilemapComponent::Reader::hasTiles() const {
   return !_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline bool TilemapComponent::Builder::hasTilemaps() {
+inline bool TilemapComponent::Builder::hasTiles() {
   return !_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline  ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>::Reader TilemapComponent::Reader::getTilemaps() const {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
+inline  ::capnp::List< ::Schema::TileEntry,  ::capnp::Kind::STRUCT>::Reader TilemapComponent::Reader::getTiles() const {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::TileEntry,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline  ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>::Builder TilemapComponent::Builder::getTilemaps() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
+inline  ::capnp::List< ::Schema::TileEntry,  ::capnp::Kind::STRUCT>::Builder TilemapComponent::Builder::getTiles() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::TileEntry,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline void TilemapComponent::Builder::setTilemaps( ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>::Reader value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
+inline void TilemapComponent::Builder::setTiles( ::capnp::List< ::Schema::TileEntry,  ::capnp::Kind::STRUCT>::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::TileEntry,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), value);
 }
-inline  ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>::Builder TilemapComponent::Builder::initTilemaps(unsigned int size) {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
+inline  ::capnp::List< ::Schema::TileEntry,  ::capnp::Kind::STRUCT>::Builder TilemapComponent::Builder::initTiles(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::TileEntry,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), size);
 }
-inline void TilemapComponent::Builder::adoptTilemaps(
-    ::capnp::Orphan< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>>&& value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
+inline void TilemapComponent::Builder::adoptTiles(
+    ::capnp::Orphan< ::capnp::List< ::Schema::TileEntry,  ::capnp::Kind::STRUCT>>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::TileEntry,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
 }
-inline ::capnp::Orphan< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>> TilemapComponent::Builder::disownTilemaps() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::Tilemap,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
+inline ::capnp::Orphan< ::capnp::List< ::Schema::TileEntry,  ::capnp::Kind::STRUCT>> TilemapComponent::Builder::disownTiles() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::TileEntry,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 

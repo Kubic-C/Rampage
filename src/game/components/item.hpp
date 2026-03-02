@@ -6,7 +6,7 @@ RAMPAGE_START
 
 using InventoryId = u32;
 
-struct ItemAttrUnique : SerializableTag {};
+struct ItemAttrUnique : SerializableTag, JsonableTag {};
 
 struct InventoryComponent {
   static void serialize(capnp::MessageBuilder& builder, Ref component);

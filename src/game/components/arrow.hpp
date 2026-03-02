@@ -53,11 +53,11 @@ struct ArrowComponent {
   u32 tileCost = 0;
 };
 
-struct PrimaryTargetTag : SerializableTag{
+struct PrimaryTargetTag : SerializableTag, JsonableTag {
   PrimaryTargetTag() = default;
 };
 
-struct SeekPrimaryTargetTag : SerializableTag {
+struct SeekPrimaryTargetTag : SerializableTag, JsonableTag {
   SeekPrimaryTargetTag() = default;
 };
 

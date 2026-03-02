@@ -1,16 +1,146 @@
  [
   {
-    "name": "RootLoader_DONOTREFERENCE",
+    "name": "RootLoader",
     "data": {
-      "type": "scene",
-      "desc": "Root Loading File",
-      "load": [
-        "entities/sprites.json",
-        "entities/items.json",
-        "entities/tiles.json",
-        "entities/scenes/basicScene.json"
-      ],
-      "scene": []
+      "type": "Entity",
+      "components": []
+    }
+  },
+  {
+    "name": "TestBlock",
+    "data": {
+    "type": "Entity",
+      "components": [
+        {
+          "type": "SpriteComponent",
+          "subSprites": [
+            {
+              "layers": [
+                {
+                  "path": "wood",
+                  "layer": "Top"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "TileComponent",
+          "material": {
+            "friction": 0.5,
+            "restitution": 0.0
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "TestMultiTile",
+    "data": {
+      "type": "Entity",
+      "components": [
+        {
+          "type": "SpriteComponent",
+          "subSprites": [
+            {
+              "gridPos": {
+                "x": 0,
+                "y": 0
+              },
+              "layers": [
+                {
+                  "offset": {
+                    "x": 0,
+                    "y": 0
+                  },
+                  "path": "permaHighStone",
+                  "layer": "Top"
+                }
+              ]
+            },
+            {
+              "gridPos": {
+                "x": 1,
+                "y": 0
+              },
+              "layers": [
+                {
+                  "offset": {
+                    "x": 0.5,
+                    "y": 0
+                  },
+                  "path": "permaHighStone",
+                  "layer": "Top"
+                }
+              ]
+            },
+            {
+              "gridPos": {
+                "x": 0,
+                "y": 1
+              },
+              "layers": [
+                {
+                  "offset": {
+                    "x": 0,
+                    "y": 0.5
+                  },
+                  "path": "permaHighStone",
+                  "layer": "Top"
+                }
+              ]
+            },
+            {
+              "gridPos": {
+                "x": 1,
+                "y": 1
+              },
+              "layers": [
+                {
+                  "offset": {
+                    "x": 0.5,
+                    "y": 0.5
+                  },
+                  "path": "permaHighStone",
+                  "layer": "Top"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "TileComponent",
+          "material": {
+            "friction": 0.5,
+            "restitution": 0.0
+          }
+        },
+        {
+          "type": "MultiTileComponent",
+          "occupiedPositions": [
+            {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "z": 0
+            },
+            {
+              "x": 0,
+              "y": 1,
+              "z": 0
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "z": 0
+            }
+          ]
+        }
+      ]
     }
   }
 ] 

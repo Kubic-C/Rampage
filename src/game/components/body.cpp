@@ -166,6 +166,10 @@ void BodyComponent::fromJson(EntityPtr entity, const std::string& parentDir, con
   b2BodyDef bodyDef = b2DefaultBodyDef();
   bodyDef.isEnabled = false; // fromJson means this component is being created from an asset, so we start disabled. The system that creates the entity from the asset can then enable it when ready.
   
+  // Explicitly zero velocity for freshly created bodies from assets
+  bodyDef.linearVelocity = b2Vec2{0.0f, 0.0f};
+  bodyDef.angularVelocity = 0.0f;
+  
   // Set body type (dynamic=1, kinematic=2, static=0)
   if (jsonData.contains("bodyType")) {
     bodyDef.type = static_cast<b2BodyType>(jsonData["bodyType"].get<int>());
