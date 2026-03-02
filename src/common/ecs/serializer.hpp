@@ -16,7 +16,7 @@ public:
   Serializer();
 
   void begin(IWorldPtr interfaceToUse);
-  std::vector<u8> end();
+  void end(const char* saveFile);
 
   void queue(EntityId eid, const ComponentSet& set);
   void queueAllWith(const ComponentSet& set);
@@ -28,7 +28,6 @@ public:
 
   template<IntegerIndexedContainer<ComponentId> Container>
   void serializeState(IWorld& world, Container entitiesToSerialize, Schema::State::Builder stateBuilder) {
-    auto regCompsBuilder = stateBuilder.initRegisteredComponents((u32)m_componentSerializeFuncs.size());
     auto entitiesBuilder = stateBuilder.initEntities((u32)entitiesToSerialize.size());
 
     ComponentSetBuilder compSetBuilder;
@@ -38,13 +37,13 @@ public:
       compSetBuilder.add(compSet);
     }
     
+    auto regCompsBuilder = stateBuilder.initRegisteredComponents((u32)compSetBuilder.list().size());
     for (size_t i = 0; i < compSetBuilder.list().size(); ++i)
       serializeComponentIdName(world, compSetBuilder.list()[(u32)i], regCompsBuilder[(u32)i]);
   }
 
   template<IntegerIndexedContainer<ComponentId> Container>
   void serializeStateWithNames(IWorld& world, Container entitiesToSerialize, Schema::State::Builder stateBuilder) {
-    auto regCompsBuilder = stateBuilder.initRegisteredComponents((u32)m_componentSerializeFuncs.size());
     auto entitiesBuilder = stateBuilder.initEntities((u32)entitiesToSerialize.size());
 
     ComponentSetBuilder compSetBuilder;
@@ -54,6 +53,7 @@ public:
       compSetBuilder.add(compSet);
     }
 
+    auto regCompsBuilder = stateBuilder.initRegisteredComponents((u32)compSetBuilder.list().size());
     for (size_t i = 0; i < compSetBuilder.list().size(); ++i)
       serializeComponentIdName(world, compSetBuilder.list()[(u32)i], regCompsBuilder[(u32)i]);
   }

@@ -75,9 +75,7 @@ public:
     return loadAssetsFromString(world, jsonStr);
   }
 
-  bool loadAssetsFromString(IWorldPtr _world, const std::string& string) override {
-    IWorldPtr world = TaggedEntityWorld::create(_world, _world->component<AssetTag>());    
-
+  bool loadAssetsFromString(IWorldPtr world, const std::string& string) override {
     json assetList = json::parse(string, nullptr, false, true);
     if (assetList.is_discarded()) {
       world->getHost().log("<bgRed>Failed to parse JSON from asset string: %s<reset>", string.c_str());
@@ -267,7 +265,6 @@ EntityWorld::EntityWorld(IHost& host, PrivateConstructorTag) : m_host(host), m_a
   component<Destroy>(false);
   component<ComponentAddedEvent>(false);
   component<ComponentRemovedEvent>(false);
-  component<AssetTag>(false);
 }
 
 EntityWorld::~EntityWorld() noexcept {

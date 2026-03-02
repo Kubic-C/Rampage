@@ -3,3 +3,4 @@
 #include "iworld.hpp"
 #include "entityPtr.hpp"
 #include "iassetLoader.hpp"
+#include "serializer.hpp"

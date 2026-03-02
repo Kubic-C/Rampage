@@ -9,7 +9,7 @@ RAMPAGE_START
 
 struct TransformComponent : public Transform {
   static void serialize(capnp::MessageBuilder& builder, Ref component);
-  static void deserialize(capnp::MessageReader& reader, Ref component);
+  static void deserialize(capnp::MessageReader& reader, const IdMapper& idMapper,Ref component);
   static void fromJson(Ref component, AssetLoader loader, const json& compJson);
   TransformComponent& operator=(const Transform& transform);
 };

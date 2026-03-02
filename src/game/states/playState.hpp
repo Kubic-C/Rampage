@@ -39,13 +39,20 @@ public:
 
     tgui::Button::Ptr saveStateBtn = gui.get(playSaveStateTextName)->cast<tgui::Button>();
     saveStateBtn->onMousePress([=]() {
-      auto& stateMgr = m_world->getContext<StateManager>();
-      auto& tmMgr = m_world->getContext<TilemapManager>();
+        auto& serializer = m_world->getSerializer();
+        EntityPtr player = m_world->getFirstWith(m_world->set<CameraInUseTag>());
+        
+        serializer.begin(m_world);
+        serializer.queueAllWith(m_world->set<OwnedBy<PlayState>>());
+        serializer.queue(player, player.set());
+        serializer.end("saveFile.rampage");
     });
 
     tgui::Button::Ptr loadStateBtn = gui.get(playLoadStateTextName)->cast<tgui::Button>();
     loadStateBtn->onMousePress([=]() {
-      auto& stateMgr = m_world->getContext<StateManager>();
+        auto& deserializer = m_world->getDeserializer();
+        m_world->destroyAllEntitiesWith(m_world->set<OwnedBy<PlayState>, IWorld::Enabled>());
+        deserializer.deserializeFromFile(*m_world, "saveFile.rampage");
     });
 
     m_tickText = gui.get(tickTextName)->cast<tgui::Label>();
@@ -92,7 +99,7 @@ public:
     RefT<TransformComponent> playerTransform = player.get<TransformComponent>();
     playerTransform->pos = Vec2(0.0f, 8.0f);
 
-    assetLoader.cloneAsset("BasicZombie");
+    assetLoader.cloneAsset("BigAssZombie");
 
     /* WorldMap & Tilemap Component */
     {

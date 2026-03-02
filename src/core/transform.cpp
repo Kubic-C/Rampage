@@ -11,7 +11,7 @@ void TransformComponent::serialize(capnp::MessageBuilder& builder, Ref component
   transformBuilder.setRot(transform->rot);
 }
 
-void TransformComponent::deserialize(capnp::MessageReader& reader, Ref component) {
+void TransformComponent::deserialize(capnp::MessageReader& reader, const IdMapper& idMapper,Ref component) {
   auto transformReader = reader.getRoot<Schema::TransformComponent>();
   auto transform = component.cast<TransformComponent>();
 

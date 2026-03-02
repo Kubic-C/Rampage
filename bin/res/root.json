@@ -69,6 +69,7 @@
         },
         {
           "type": "SpriteComponent",
+          "scaling": 2.0,
           "subSprites": [
             {
               "layers": [

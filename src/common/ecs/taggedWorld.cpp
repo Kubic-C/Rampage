@@ -29,10 +29,6 @@ EntityPtr TaggedEntityWorld::create(EntityId explicitId) {
 }
 
 EntityPtr TaggedEntityWorld::getEntity(EntityId id) {
-  if(!has(id, m_worldTagComponentId)) {
-    add(id, ComponentSet{m_worldTagComponentId});
-  }
-
   return EntityPtr(m_self, id);
 }
 

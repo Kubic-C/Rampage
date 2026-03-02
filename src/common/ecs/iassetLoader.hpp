@@ -5,7 +5,6 @@
 
 RAMPAGE_START
 
-struct AssetTag {};
 struct AssetIdType {};
 using AssetId = StrongId<AssetIdType>;
 

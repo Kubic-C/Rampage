@@ -10,7 +10,7 @@ void CameraComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
   cameraBuilder.setRot(camera->m_rot);
 }
 
-void CameraComponent::deserialize(capnp::MessageReader& reader, Ref component) {
+void CameraComponent::deserialize(capnp::MessageReader& reader, const IdMapper& idMapper, Ref component) {
   auto cameraReader = reader.getRoot<Schema::CameraComponent>();
   auto camera = component.cast<CameraComponent>();
 

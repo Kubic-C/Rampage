@@ -14,17 +14,15 @@ void Serializer::begin(IWorldPtr interfaceToUse) {
   m_input->interfaceToUse = interfaceToUse;
 }
 
-std::vector<u8> Serializer::end() {
+void Serializer::end(const char* saveFile) {
   std::vector<u8> output;
   kj::VectorOutputStream kjOutput;
 
   serializeState(*m_input->interfaceToUse, m_input->entitiesToSerialize, m_input->messageBuilder.initRoot<Schema::State>());
-  capnp::writePackedMessage(kjOutput, m_input->messageBuilder);
   output.insert(output.end(), kjOutput.getArray().begin(), kjOutput.getArray().end());
+  serializeToFile(m_input->messageBuilder, saveFile);
 
   m_input = nullptr;
-
-  return output;  
 }
 
 void Serializer::queue(EntityId eid, const ComponentSet& set) {
@@ -54,6 +52,10 @@ void Serializer::serializeEntity(IWorld& world, EntityId eid, const ComponentSet
     capnp::MallocMessageBuilder compMsgBuilder(m_scratchBuffer);
 
     compIdsBuilder.set(j, compId);
+    if(m_componentSerializeFuncs.size() <= compId || m_componentSerializeFuncs[compId] == nullptr) {
+      world.getHost().log("No serialize func registered for component %s (id %d), skipping serialization of this component\n", world.nameOf(compId).data(), compId);
+      continue;
+    }
     m_componentSerializeFuncs[compId](compMsgBuilder, world.get(eid, compId));
     m_scratchCompBytesStream.clear();
     capnp::writePackedMessage(m_scratchCompBytesStream, compMsgBuilder);
@@ -72,6 +74,10 @@ void Serializer::serializeAssetEntity(IWorld& world, EntityId eid, const std::st
     capnp::MallocMessageBuilder compMsgBuilder(m_scratchBuffer);
 
     compIdsBuilder.set(j, compId);
+    if(m_componentSerializeFuncs.size() <= compId || m_componentSerializeFuncs[compId] == nullptr) {
+      world.getHost().log("No serialize func registered for component %s (id %d), skipping serialization of this component\n", world.nameOf(compId).data(), compId);
+      continue;
+    }
     m_componentSerializeFuncs[compId](compMsgBuilder, world.get(eid, compId));
     m_scratchCompBytesStream.clear();
     capnp::writePackedMessage(m_scratchCompBytesStream, compMsgBuilder);
@@ -142,7 +148,7 @@ bool Deserializer::deserializeState(IWorld& world, Schema::State::Reader stateRe
     if(world.exists(serId))
       newId = world.create();
     else
-      newId = serId;
+      newId = world.ensure(serId);
 
     idMapper.add(serId, newId);
   }

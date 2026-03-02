@@ -28,7 +28,9 @@ public:
     loadScene->onMousePress([=]() {
       StateManager& stateMgr = world->getContext<StateManager>();
       stateMgr.disableState("MenuState");
-
+      auto& deserializer = m_world->getDeserializer();
+      m_world->destroyAllEntitiesWith(m_world->set<OwnedBy<PlayState>, IWorld::Enabled>());
+      deserializer.deserializeFromFile(*m_world, "saveFile.rampage");
      });
   }
 
