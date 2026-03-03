@@ -4,7 +4,6 @@
 #include "body.hpp"
 #include "collisionEvent.hpp"
 #include "health.hpp"
-#include "item.hpp"
 #include "player.hpp"
 #include "shapes.hpp"
 #include "spawner.hpp"
@@ -12,6 +11,7 @@
 #include "tilemap.hpp"
 #include "turret.hpp"
 #include "worldMap.hpp"
+#include "inventory.hpp"
 
 RAMPAGE_START
 
@@ -24,11 +24,6 @@ inline void registerGameComponents(IWorldPtr world) {
   world->component<LifetimeComponent>(false);
   world->component<BulletDamageComponent>(false);
   world->component<ContactDamageComponent>(false);
-  world->component<ItemAttrStackCost>(false);
-  world->component<ItemAttrUnique>(false);
-  world->component<ItemAttrIcon>(false);
-  world->component<ItemAttrTile>(false);
-  world->component<TileItemComponent>(false);
   world->component<PlayerComponent>(false);
   world->component<CircleRenderComponent>(false);
   world->component<RectangleRenderComponent>(false);
@@ -43,6 +38,8 @@ inline void registerGameComponents(IWorldPtr world) {
   world->component<PrimaryTargetTag>(false);
   world->component<LastCollisionData>(false);
   world->component<InventoryComponent>(false);
+  world->component<ItemComponent>(false);
+  world->component<InventoryViewComponent>(false);
 }
 
 RAMPAGE_END

@@ -5,6 +5,7 @@
 #include "../components/components.hpp"
 #include "state.hpp"
 #include "../../common/ecs/taggedWorld.hpp"
+#include "../systems/inventory.hpp"
 
 RAMPAGE_START
 
@@ -25,7 +26,7 @@ public:
     m_world = TaggedEntityWorld::create(_world, _world->component<OwnedBy<PlayState>>());
 
     m_addedPlayerComponents = m_world->set<PlayerComponent, PrimaryTargetTag, BodyComponent,
-                                          RectangleRenderComponent, InventoryComponent>();
+                                          RectangleRenderComponent>();
 
     auto& gui = m_world->getContext<tgui::Gui>();
     m_menu = m_world->getContext<tgui::Gui>().get(menuName);
@@ -77,8 +78,36 @@ public:
 
     /* Player */
     player.add(m_addedPlayerComponents);
-    Inventory playerInvetory = invMgr.createInventory("Player Inventory", 3, 5);
-    player.get<InventoryComponent>()->id = playerInvetory;
+
+    EntityPtr basicTurretItem = m_world->create();
+    basicTurretItem.add<ItemComponent>();
+    auto itemComp = basicTurretItem.get<ItemComponent>(); 
+    itemComp->name = "Basic Turret";
+    itemComp->icon = tgui::Texture("res/entities/basicTurretIcon.png");
+    itemComp->isUnique = false;
+    itemComp->maxStackSize = 16;
+    itemComp->stackCost = 4;
+ 
+    player.add<InventoryComponent>();
+    invMgr.createInventory(m_world, player, 5, 5);
+    player.add<InventoryViewComponent>();
+    auto invView = player.get<InventoryViewComponent>();
+    invView->inventoryEntityId = player;
+    invView->name = "Player Inventory";
+    invView->isVisible = true;
+
+    {
+      EntityPtr e = m_world->create();
+      e.add<InventoryComponent>();
+      invMgr.createInventory(m_world, e, 5, 5);
+      e.add<InventoryViewComponent>();
+      auto invView = e.get<InventoryViewComponent>();
+      invView->inventoryEntityId = e;
+      invView->name = "Other Inventory";
+      invView->isVisible = true;
+    }
+
+    invMgr.addItem(m_world, player.id(), basicTurretItem.id(), 10);
 
     // Render
     auto renderRect = player.get<RectangleRenderComponent>();

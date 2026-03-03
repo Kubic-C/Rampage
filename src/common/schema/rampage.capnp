@@ -47,18 +47,27 @@ struct ArrowComponent {
 }
 
 struct ItemStack {
-    location @0: Vec2U16;
-    maxStackCost @1 :UInt32;
-    stackCount @2 :Int32;
-    itemEntityId @3 :UInt32;
+    count @0 :UInt32;
+    itemId @1 :UInt32;
 }
 
-struct InventoryData {
+struct ItemComponent {
     name @0 :Text;
+    maxStackSize @1 :UInt32 = 64;
+    stackCost @2 :UInt32 = 1;
+    isUnique @3 :Bool = false;
+    description @4 :Text = "";
+}
+
+struct ItemPropertiesComponent {
+    durability @0 :UInt16 = 0;
+    maxDurability @1 :UInt16 = 0;
+}
+
+struct InventoryComponent {
+    cols @0 :UInt16;
     rows @1 :UInt16;
-    cols @2 :UInt16;
-    items @3 :List(ItemStack);
-    visible @4 :Bool;
+    items @2 :List(ItemStack);
 }
 
 struct ItemAttrIcon {

@@ -27,7 +27,9 @@ CAPNP_DECLARE_SCHEMA(c20fe7c807d7fb38);
 CAPNP_DECLARE_SCHEMA(cc42a9ba24c41f74);
 CAPNP_DECLARE_SCHEMA(86afb0eb4584dca5);
 CAPNP_DECLARE_SCHEMA(cb637bd845811715);
-CAPNP_DECLARE_SCHEMA(e16a16b21eaf8301);
+CAPNP_DECLARE_SCHEMA(d384dfc79196c7ad);
+CAPNP_DECLARE_SCHEMA(8f17c18069203e01);
+CAPNP_DECLARE_SCHEMA(d1389ed8f3176caa);
 CAPNP_DECLARE_SCHEMA(8aca00a572816934);
 CAPNP_DECLARE_SCHEMA(a6300e38d3b75a9e);
 CAPNP_DECLARE_SCHEMA(f4ef1ba59d753bf2);
@@ -204,22 +206,52 @@ struct ItemStack {
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(cb637bd845811715, 2, 1)
+    CAPNP_DECLARE_STRUCT_HEADER(cb637bd845811715, 1, 0)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
   };
 };
 
-struct InventoryData {
-  InventoryData() = delete;
+struct ItemComponent {
+  ItemComponent() = delete;
 
   class Reader;
   class Builder;
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(e16a16b21eaf8301, 1, 2)
+    CAPNP_DECLARE_STRUCT_HEADER(d384dfc79196c7ad, 2, 2)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct ItemPropertiesComponent {
+  ItemPropertiesComponent() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(8f17c18069203e01, 1, 0)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct InventoryComponent {
+  InventoryComponent() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(d1389ed8f3176caa, 1, 1)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -1441,14 +1473,9 @@ public:
   }
 #endif  // !CAPNP_LITE
 
-  inline bool hasLocation() const;
-  inline  ::Schema::Vec2U16::Reader getLocation() const;
+  inline  ::uint32_t getCount() const;
 
-  inline  ::uint32_t getMaxStackCost() const;
-
-  inline  ::int32_t getStackCount() const;
-
-  inline  ::uint32_t getItemEntityId() const;
+  inline  ::uint32_t getItemId() const;
 
 private:
   ::capnp::_::StructReader _reader;
@@ -1478,21 +1505,11 @@ public:
   inline ::kj::StringTree toString() const { return asReader().toString(); }
 #endif  // !CAPNP_LITE
 
-  inline bool hasLocation();
-  inline  ::Schema::Vec2U16::Builder getLocation();
-  inline void setLocation( ::Schema::Vec2U16::Reader value);
-  inline  ::Schema::Vec2U16::Builder initLocation();
-  inline void adoptLocation(::capnp::Orphan< ::Schema::Vec2U16>&& value);
-  inline ::capnp::Orphan< ::Schema::Vec2U16> disownLocation();
+  inline  ::uint32_t getCount();
+  inline void setCount( ::uint32_t value);
 
-  inline  ::uint32_t getMaxStackCost();
-  inline void setMaxStackCost( ::uint32_t value);
-
-  inline  ::int32_t getStackCount();
-  inline void setStackCount( ::int32_t value);
-
-  inline  ::uint32_t getItemEntityId();
-  inline void setItemEntityId( ::uint32_t value);
+  inline  ::uint32_t getItemId();
+  inline void setItemId( ::uint32_t value);
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -1512,7 +1529,6 @@ public:
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
       : _typeless(kj::mv(typeless)) {}
 
-  inline  ::Schema::Vec2U16::Pipeline getLocation();
 private:
   ::capnp::AnyPointer::Pipeline _typeless;
   friend class ::capnp::PipelineHook;
@@ -1521,9 +1537,9 @@ private:
 };
 #endif  // !CAPNP_LITE
 
-class InventoryData::Reader {
+class ItemComponent::Reader {
 public:
-  typedef InventoryData Reads;
+  typedef ItemComponent Reads;
 
   Reader() = default;
   inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
@@ -1541,14 +1557,14 @@ public:
   inline bool hasName() const;
   inline  ::capnp::Text::Reader getName() const;
 
-  inline  ::uint16_t getRows() const;
+  inline  ::uint32_t getMaxStackSize() const;
 
-  inline  ::uint16_t getCols() const;
+  inline  ::uint32_t getStackCost() const;
 
-  inline bool hasItems() const;
-  inline  ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Reader getItems() const;
+  inline bool getIsUnique() const;
 
-  inline bool getVisible() const;
+  inline bool hasDescription() const;
+  inline  ::capnp::Text::Reader getDescription() const;
 
 private:
   ::capnp::_::StructReader _reader;
@@ -1562,9 +1578,9 @@ private:
   friend class ::capnp::Orphanage;
 };
 
-class InventoryData::Builder {
+class ItemComponent::Builder {
 public:
-  typedef InventoryData Builds;
+  typedef ItemComponent Builds;
 
   Builder() = delete;  // Deleted to discourage incorrect usage.
                        // You can explicitly initialize to nullptr instead.
@@ -1585,21 +1601,21 @@ public:
   inline void adoptName(::capnp::Orphan< ::capnp::Text>&& value);
   inline ::capnp::Orphan< ::capnp::Text> disownName();
 
-  inline  ::uint16_t getRows();
-  inline void setRows( ::uint16_t value);
+  inline  ::uint32_t getMaxStackSize();
+  inline void setMaxStackSize( ::uint32_t value);
 
-  inline  ::uint16_t getCols();
-  inline void setCols( ::uint16_t value);
+  inline  ::uint32_t getStackCost();
+  inline void setStackCost( ::uint32_t value);
 
-  inline bool hasItems();
-  inline  ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Builder getItems();
-  inline void setItems( ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Reader value);
-  inline  ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Builder initItems(unsigned int size);
-  inline void adoptItems(::capnp::Orphan< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>>&& value);
-  inline ::capnp::Orphan< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>> disownItems();
+  inline bool getIsUnique();
+  inline void setIsUnique(bool value);
 
-  inline bool getVisible();
-  inline void setVisible(bool value);
+  inline bool hasDescription();
+  inline  ::capnp::Text::Builder getDescription();
+  inline void setDescription( ::capnp::Text::Reader value);
+  inline  ::capnp::Text::Builder initDescription(unsigned int size);
+  inline void adoptDescription(::capnp::Orphan< ::capnp::Text>&& value);
+  inline ::capnp::Orphan< ::capnp::Text> disownDescription();
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -1611,9 +1627,181 @@ private:
 };
 
 #if !CAPNP_LITE
-class InventoryData::Pipeline {
+class ItemComponent::Pipeline {
 public:
-  typedef InventoryData Pipelines;
+  typedef ItemComponent Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class ItemPropertiesComponent::Reader {
+public:
+  typedef ItemPropertiesComponent Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint16_t getDurability() const;
+
+  inline  ::uint16_t getMaxDurability() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class ItemPropertiesComponent::Builder {
+public:
+  typedef ItemPropertiesComponent Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint16_t getDurability();
+  inline void setDurability( ::uint16_t value);
+
+  inline  ::uint16_t getMaxDurability();
+  inline void setMaxDurability( ::uint16_t value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class ItemPropertiesComponent::Pipeline {
+public:
+  typedef ItemPropertiesComponent Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class InventoryComponent::Reader {
+public:
+  typedef InventoryComponent Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint16_t getCols() const;
+
+  inline  ::uint16_t getRows() const;
+
+  inline bool hasItems() const;
+  inline  ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Reader getItems() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class InventoryComponent::Builder {
+public:
+  typedef InventoryComponent Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint16_t getCols();
+  inline void setCols( ::uint16_t value);
+
+  inline  ::uint16_t getRows();
+  inline void setRows( ::uint16_t value);
+
+  inline bool hasItems();
+  inline  ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Builder getItems();
+  inline void setItems( ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Reader value);
+  inline  ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Builder initItems(unsigned int size);
+  inline void adoptItems(::capnp::Orphan< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>> disownItems();
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class InventoryComponent::Pipeline {
+public:
+  typedef InventoryComponent Pipelines;
 
   inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
@@ -5129,195 +5317,234 @@ inline void ArrowComponent::Builder::setTileCost( ::uint32_t value) {
       ::capnp::bounded<2>() * ::capnp::ELEMENTS, value);
 }
 
-inline bool ItemStack::Reader::hasLocation() const {
-  return !_reader.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
-}
-inline bool ItemStack::Builder::hasLocation() {
-  return !_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
-}
-inline  ::Schema::Vec2U16::Reader ItemStack::Reader::getLocation() const {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec2U16>::get(_reader.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-inline  ::Schema::Vec2U16::Builder ItemStack::Builder::getLocation() {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec2U16>::get(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-#if !CAPNP_LITE
-inline  ::Schema::Vec2U16::Pipeline ItemStack::Pipeline::getLocation() {
-  return  ::Schema::Vec2U16::Pipeline(_typeless.getPointerField(0));
-}
-#endif  // !CAPNP_LITE
-inline void ItemStack::Builder::setLocation( ::Schema::Vec2U16::Reader value) {
-  ::capnp::_::PointerHelpers< ::Schema::Vec2U16>::set(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
-}
-inline  ::Schema::Vec2U16::Builder ItemStack::Builder::initLocation() {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec2U16>::init(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-inline void ItemStack::Builder::adoptLocation(
-    ::capnp::Orphan< ::Schema::Vec2U16>&& value) {
-  ::capnp::_::PointerHelpers< ::Schema::Vec2U16>::adopt(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
-}
-inline ::capnp::Orphan< ::Schema::Vec2U16> ItemStack::Builder::disownLocation() {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec2U16>::disown(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-
-inline  ::uint32_t ItemStack::Reader::getMaxStackCost() const {
+inline  ::uint32_t ItemStack::Reader::getCount() const {
   return _reader.getDataField< ::uint32_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
 
-inline  ::uint32_t ItemStack::Builder::getMaxStackCost() {
+inline  ::uint32_t ItemStack::Builder::getCount() {
   return _builder.getDataField< ::uint32_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
-inline void ItemStack::Builder::setMaxStackCost( ::uint32_t value) {
+inline void ItemStack::Builder::setCount( ::uint32_t value) {
   _builder.setDataField< ::uint32_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
 }
 
-inline  ::int32_t ItemStack::Reader::getStackCount() const {
-  return _reader.getDataField< ::int32_t>(
+inline  ::uint32_t ItemStack::Reader::getItemId() const {
+  return _reader.getDataField< ::uint32_t>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS);
 }
 
-inline  ::int32_t ItemStack::Builder::getStackCount() {
-  return _builder.getDataField< ::int32_t>(
+inline  ::uint32_t ItemStack::Builder::getItemId() {
+  return _builder.getDataField< ::uint32_t>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS);
 }
-inline void ItemStack::Builder::setStackCount( ::int32_t value) {
-  _builder.setDataField< ::int32_t>(
+inline void ItemStack::Builder::setItemId( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
 }
 
-inline  ::uint32_t ItemStack::Reader::getItemEntityId() const {
-  return _reader.getDataField< ::uint32_t>(
-      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
-}
-
-inline  ::uint32_t ItemStack::Builder::getItemEntityId() {
-  return _builder.getDataField< ::uint32_t>(
-      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
-}
-inline void ItemStack::Builder::setItemEntityId( ::uint32_t value) {
-  _builder.setDataField< ::uint32_t>(
-      ::capnp::bounded<2>() * ::capnp::ELEMENTS, value);
-}
-
-inline bool InventoryData::Reader::hasName() const {
+inline bool ItemComponent::Reader::hasName() const {
   return !_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline bool InventoryData::Builder::hasName() {
+inline bool ItemComponent::Builder::hasName() {
   return !_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline  ::capnp::Text::Reader InventoryData::Reader::getName() const {
+inline  ::capnp::Text::Reader ItemComponent::Reader::getName() const {
   return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline  ::capnp::Text::Builder InventoryData::Builder::getName() {
+inline  ::capnp::Text::Builder ItemComponent::Builder::getName() {
   return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline void InventoryData::Builder::setName( ::capnp::Text::Reader value) {
+inline void ItemComponent::Builder::setName( ::capnp::Text::Reader value) {
   ::capnp::_::PointerHelpers< ::capnp::Text>::set(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), value);
 }
-inline  ::capnp::Text::Builder InventoryData::Builder::initName(unsigned int size) {
+inline  ::capnp::Text::Builder ItemComponent::Builder::initName(unsigned int size) {
   return ::capnp::_::PointerHelpers< ::capnp::Text>::init(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), size);
 }
-inline void InventoryData::Builder::adoptName(
+inline void ItemComponent::Builder::adoptName(
     ::capnp::Orphan< ::capnp::Text>&& value) {
   ::capnp::_::PointerHelpers< ::capnp::Text>::adopt(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
 }
-inline ::capnp::Orphan< ::capnp::Text> InventoryData::Builder::disownName() {
+inline ::capnp::Orphan< ::capnp::Text> ItemComponent::Builder::disownName() {
   return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
-inline  ::uint16_t InventoryData::Reader::getRows() const {
+inline  ::uint32_t ItemComponent::Reader::getMaxStackSize() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, 64u);
+}
+
+inline  ::uint32_t ItemComponent::Builder::getMaxStackSize() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, 64u);
+}
+inline void ItemComponent::Builder::setMaxStackSize( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value, 64u);
+}
+
+inline  ::uint32_t ItemComponent::Reader::getStackCost() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, 1u);
+}
+
+inline  ::uint32_t ItemComponent::Builder::getStackCost() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, 1u);
+}
+inline void ItemComponent::Builder::setStackCost( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value, 1u);
+}
+
+inline bool ItemComponent::Reader::getIsUnique() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<64>() * ::capnp::ELEMENTS);
+}
+
+inline bool ItemComponent::Builder::getIsUnique() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<64>() * ::capnp::ELEMENTS);
+}
+inline void ItemComponent::Builder::setIsUnique(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<64>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool ItemComponent::Reader::hasDescription() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline bool ItemComponent::Builder::hasDescription() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::Text::Reader ItemComponent::Reader::getDescription() const {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS),
+        ::capnp::schemas::bp_d384dfc79196c7ad + 98);
+}
+inline  ::capnp::Text::Builder ItemComponent::Builder::getDescription() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS),
+        ::capnp::schemas::bp_d384dfc79196c7ad + 98);
+}
+inline void ItemComponent::Builder::setDescription( ::capnp::Text::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::set(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::Text::Builder ItemComponent::Builder::initDescription(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::init(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), size);
+}
+inline void ItemComponent::Builder::adoptDescription(
+    ::capnp::Orphan< ::capnp::Text>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::adopt(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::Text> ItemComponent::Builder::disownDescription() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline  ::uint16_t ItemPropertiesComponent::Reader::getDurability() const {
   return _reader.getDataField< ::uint16_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
 
-inline  ::uint16_t InventoryData::Builder::getRows() {
+inline  ::uint16_t ItemPropertiesComponent::Builder::getDurability() {
   return _builder.getDataField< ::uint16_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
-inline void InventoryData::Builder::setRows( ::uint16_t value) {
+inline void ItemPropertiesComponent::Builder::setDurability( ::uint16_t value) {
   _builder.setDataField< ::uint16_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
 }
 
-inline  ::uint16_t InventoryData::Reader::getCols() const {
+inline  ::uint16_t ItemPropertiesComponent::Reader::getMaxDurability() const {
   return _reader.getDataField< ::uint16_t>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS);
 }
 
-inline  ::uint16_t InventoryData::Builder::getCols() {
+inline  ::uint16_t ItemPropertiesComponent::Builder::getMaxDurability() {
   return _builder.getDataField< ::uint16_t>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS);
 }
-inline void InventoryData::Builder::setCols( ::uint16_t value) {
+inline void ItemPropertiesComponent::Builder::setMaxDurability( ::uint16_t value) {
   _builder.setDataField< ::uint16_t>(
       ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
 }
 
-inline bool InventoryData::Reader::hasItems() const {
+inline  ::uint16_t InventoryComponent::Reader::getCols() const {
+  return _reader.getDataField< ::uint16_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint16_t InventoryComponent::Builder::getCols() {
+  return _builder.getDataField< ::uint16_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void InventoryComponent::Builder::setCols( ::uint16_t value) {
+  _builder.setDataField< ::uint16_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint16_t InventoryComponent::Reader::getRows() const {
+  return _reader.getDataField< ::uint16_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint16_t InventoryComponent::Builder::getRows() {
+  return _builder.getDataField< ::uint16_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+inline void InventoryComponent::Builder::setRows( ::uint16_t value) {
+  _builder.setDataField< ::uint16_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool InventoryComponent::Reader::hasItems() const {
   return !_reader.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline bool InventoryData::Builder::hasItems() {
+inline bool InventoryComponent::Builder::hasItems() {
   return !_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline  ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Reader InventoryData::Reader::getItems() const {
+inline  ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Reader InventoryComponent::Reader::getItems() const {
   return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline  ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Builder InventoryData::Builder::getItems() {
+inline  ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Builder InventoryComponent::Builder::getItems() {
   return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline void InventoryData::Builder::setItems( ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Reader value) {
+inline void InventoryComponent::Builder::setItems( ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Reader value) {
   ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
 }
-inline  ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Builder InventoryData::Builder::initItems(unsigned int size) {
+inline  ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>::Builder InventoryComponent::Builder::initItems(unsigned int size) {
   return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS), size);
+      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
 }
-inline void InventoryData::Builder::adoptItems(
+inline void InventoryComponent::Builder::adoptItems(
     ::capnp::Orphan< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>>&& value) {
   ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
 }
-inline ::capnp::Orphan< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>> InventoryData::Builder::disownItems() {
+inline ::capnp::Orphan< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>> InventoryComponent::Builder::disownItems() {
   return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
-}
-
-inline bool InventoryData::Reader::getVisible() const {
-  return _reader.getDataField<bool>(
-      ::capnp::bounded<32>() * ::capnp::ELEMENTS);
-}
-
-inline bool InventoryData::Builder::getVisible() {
-  return _builder.getDataField<bool>(
-      ::capnp::bounded<32>() * ::capnp::ELEMENTS);
-}
-inline void InventoryData::Builder::setVisible(bool value) {
-  _builder.setDataField<bool>(
-      ::capnp::bounded<32>() * ::capnp::ELEMENTS, value);
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
 inline bool ItemAttrIcon::Reader::hasName() const {

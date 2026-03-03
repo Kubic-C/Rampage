@@ -9,14 +9,11 @@
 #include "../components/tilemap.hpp"
 #include "../components/worldMap.hpp"
 
-#include "../inventory.hpp"
-
 RAMPAGE_START
 
 void updatePlayer(EntityPtr e, float dt) {
   IWorldPtr world = e.world();
   auto& render = world->getContext<RenderModule>();
-  auto& invMgr = world->getContext<InventoryManager>();
   auto& eventMgr = world->getContext<EventModule>();
   auto assetLoader = world->getAssetLoader();
 
@@ -24,7 +21,6 @@ void updatePlayer(EntityPtr e, float dt) {
   auto transform = e.get<TransformComponent>();
   auto player = e.get<PlayerComponent>();
   auto camera = e.get<CameraComponent>();
-  Inventory inv = invMgr.getInventory(e.get<InventoryComponent>()->id);
 
   /* Linear Movement */
   float mass = b2Body_GetMass(body->id);
@@ -67,21 +63,11 @@ void updatePlayer(EntityPtr e, float dt) {
   player->mouse = render.getWorldCoords(mouseScreen);
   glm::vec2 dir = glm::normalize((Vec2)b2Body_GetPosition(body->id) - player->mouse);
   transform->rot = Rot(atan2(dir.y, dir.x));
-
-  /* Inventory Stuff */
-  if (eventMgr.isKeyPressed(Key::Tab))
-    inv.setVisible(!inv.getVisible());
-  if (eventMgr.isKeyHeld(Key::F4))
-    inv.addItem(assetLoader.getAsset("WoodItem"), 4);
-  if (eventMgr.isKeyHeld(Key::F) && !invMgr.isHandEmpty() &&
-      !world->getContext<tgui::Gui>().getWidgetAtPos(mouseScreen, false).get())
-    tryPlaceItem(world->getFirstWith(world->set<WorldMapTag>()), invMgr.getHandInventory(),
-                 invMgr.getHandInventoryPos(), player->mouse);
 }
 
 int updatePlayers(IWorldPtr world, float dt) {
   auto it = world->getWith(
-      world->set<BodyComponent, TransformComponent, PlayerComponent, CameraComponent, InventoryComponent>());
+      world->set<BodyComponent, TransformComponent, PlayerComponent, CameraComponent>());
   while (it->hasNext())
     updatePlayer(it->next(), dt);
 

@@ -3,12 +3,9 @@
 #include "../render/camera.hpp"
 #include "../render/render.hpp"
 
-#include "inventory.hpp"
-
 #include "components/components.hpp"
 #include "systems/gui.hpp"
 #include "systems/health.hpp"
-#include "systems/item.hpp"
 #include "systems/pathfinding.hpp"
 #include "systems/physics.hpp"
 #include "systems/shapeRender.hpp"
@@ -21,6 +18,7 @@
 #include "states/playState.hpp"
 #include "states/state.hpp"
 #include "systems/player.hpp"
+#include "systems/inventory.hpp"
 
 RAMPAGE_START
 
@@ -68,9 +66,7 @@ int GameModule::onLoad() {
   gui.loadWidgetsFromFile("./res/form.txt");
   loadGuiSystems(*m_host);
 
-  world->addContext<InventoryManager>(world);
-  auto& invMgr = world->getContext<InventoryManager>();
-  invMgr.setDefaultItemIcon("./res/clear.png");
+  world->addContext<InventoryManager>();
 
   world->getAssetLoader().loadAssetsFromFile("./res/root.json");
 
@@ -78,17 +74,18 @@ int GameModule::onLoad() {
   loadSpawnerSystems(*m_host);
   loadPhysicsSystems(*m_host, 4);
   loadPathfindingSystems(*m_host);
-  loadItemSystems(*m_host);
   loadHealthSystems(*m_host);
   loadPlayerSystems(*m_host);
   loadShapeRender(*m_host);
   loadTurretSystems(*m_host);
+  loadInventorySystems(*m_host);
 
   world->addContext<StateManager>();
   auto& stateMgr = world->getContext<StateManager>();
   stateMgr.createState<PlayState>("PlayState", world);
   stateMgr.createState<MenuState>("MenuState", world);
   stateMgr.enableState("MenuState");
+
 
   m_host->getPipeline().getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(tickState);
 

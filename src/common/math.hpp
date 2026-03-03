@@ -15,6 +15,8 @@ struct Vec2 : glm::vec2 {
   Vec2(const glm::vec2& other) : glm::vec2(other) {}
 
   Vec2(const b2Vec2& other) : glm::vec2(other.x, other.y) {}
+  
+  Vec2(const tgui::Vector2f& other) : glm::vec2(other.x, other.y) {}
 
   Vec2& operator=(const b2Vec2& other) {
     x = other.x;

@@ -11,8 +11,6 @@ target_sources(
   "components/collisionEvent.hpp"
   "components/health.hpp"
   "components/health.cpp"
-  "components/item.hpp"
-  "components/item.cpp"
   "components/player.cpp"
   "components/player.hpp"
   "components/spawner.hpp"
@@ -25,6 +23,8 @@ target_sources(
   "components/turret.cpp"   
   "components/shapes.hpp"  
   "components/shapes.cpp"  
+  "components/inventory.hpp"
+  "components/inventory.cpp"
   "components/worldMap.hpp"
   "components/components.hpp")
 
@@ -36,8 +36,6 @@ target_sources(
 
 target_sources(
   RGame PUBLIC
-  "inventory.cpp"
-  "inventory.hpp"
   "scene.hpp")
 
 target_sources(
@@ -46,6 +44,8 @@ target_sources(
   "systems/spriteRender.hpp"
   "systems/tilemap.cpp"
   "systems/tilemap.hpp"
+  "systems/inventory.hpp"
+  "systems/inventory.cpp"
   "systems/spawner.cpp"
   "systems/spawner.hpp"
   "systems/player.cpp"
@@ -54,8 +54,6 @@ target_sources(
   "systems/physics.hpp"
   "systems/pathfinding.cpp"
   "systems/pathfinding.hpp"
-  "systems/item.cpp"
-  "systems/item.hpp"
   "systems/health.cpp"
   "systems/health.hpp"
   "systems/gui.cpp"
