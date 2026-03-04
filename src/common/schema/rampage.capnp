@@ -57,6 +57,7 @@ struct ItemComponent {
     stackCost @2 :UInt32 = 1;
     isUnique @3 :Bool = false;
     description @4 :Text = "";
+    iconPath @5 :Text = "";
 }
 
 struct ItemPropertiesComponent {
@@ -68,6 +69,23 @@ struct InventoryComponent {
     cols @0 :UInt16;
     rows @1 :UInt16;
     items @2 :List(ItemStack);
+}
+
+struct InventoryViewComponent {
+    inventoryEntityId @0 :UInt32;
+    name @1 :Text = "Inventory";
+    pos @2 :Vec2F32;
+    isVisible @3 :Bool = false;
+    isInteractable @4 :Bool = true;
+    padding @5 :Vec2F32;
+    slotSize @6 :Float32 = 48.0;
+    rounding @7 :Float32 = 0.0;
+    windowBackgroundColor @8 :UInt32;     # RGBA packed
+    borderColor @9 :UInt32;               # RGBA packed
+    emptySlotColor @10 :UInt32;           # RGBA packed
+    textColor @11 :UInt32;                # RGBA packed
+    hoverSlotColor @12 :UInt32;           # RGBA packed
+    dragHoverSlotColor @13 :UInt32;       # RGBA packed
 }
 
 struct ItemAttrIcon {
@@ -125,10 +143,6 @@ struct SubSprite {
 struct SpriteComponent {
     scaling @0 :Float32 = 1.0;
     subSprites @1 :List(SubSprite);     # flattened list
-}
-
-struct TileItemComponent {
-    item @0 :UInt32;   # EntityId of the item
 }
 
 struct MultiTileComponent {

@@ -30,6 +30,7 @@ CAPNP_DECLARE_SCHEMA(cb637bd845811715);
 CAPNP_DECLARE_SCHEMA(d384dfc79196c7ad);
 CAPNP_DECLARE_SCHEMA(8f17c18069203e01);
 CAPNP_DECLARE_SCHEMA(d1389ed8f3176caa);
+CAPNP_DECLARE_SCHEMA(853d504be38b2d2c);
 CAPNP_DECLARE_SCHEMA(8aca00a572816934);
 CAPNP_DECLARE_SCHEMA(a6300e38d3b75a9e);
 CAPNP_DECLARE_SCHEMA(f4ef1ba59d753bf2);
@@ -40,7 +41,6 @@ CAPNP_DECLARE_SCHEMA(e4467db5109b421d);
 CAPNP_DECLARE_SCHEMA(9beb5a9391dd8f69);
 CAPNP_DECLARE_SCHEMA(dd2050bbe6c1c0db);
 CAPNP_DECLARE_SCHEMA(e6da72db6380a96f);
-CAPNP_DECLARE_SCHEMA(d1e456c2ce05147e);
 CAPNP_DECLARE_SCHEMA(f49d4e1f28c05796);
 CAPNP_DECLARE_SCHEMA(ed56815cfe688269);
 CAPNP_DECLARE_SCHEMA(886a10f48e6deb05);
@@ -221,7 +221,7 @@ struct ItemComponent {
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(d384dfc79196c7ad, 2, 2)
+    CAPNP_DECLARE_STRUCT_HEADER(d384dfc79196c7ad, 2, 3)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -252,6 +252,21 @@ struct InventoryComponent {
 
   struct _capnpPrivate {
     CAPNP_DECLARE_STRUCT_HEADER(d1389ed8f3176caa, 1, 1)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct InventoryViewComponent {
+  InventoryViewComponent() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(853d504be38b2d2c, 5, 3)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -402,21 +417,6 @@ struct SpriteComponent {
 
   struct _capnpPrivate {
     CAPNP_DECLARE_STRUCT_HEADER(e6da72db6380a96f, 1, 1)
-    #if !CAPNP_LITE
-    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
-    #endif  // !CAPNP_LITE
-  };
-};
-
-struct TileItemComponent {
-  TileItemComponent() = delete;
-
-  class Reader;
-  class Builder;
-  class Pipeline;
-
-  struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(d1e456c2ce05147e, 1, 0)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -1566,6 +1566,9 @@ public:
   inline bool hasDescription() const;
   inline  ::capnp::Text::Reader getDescription() const;
 
+  inline bool hasIconPath() const;
+  inline  ::capnp::Text::Reader getIconPath() const;
+
 private:
   ::capnp::_::StructReader _reader;
   template <typename, ::capnp::Kind>
@@ -1616,6 +1619,13 @@ public:
   inline  ::capnp::Text::Builder initDescription(unsigned int size);
   inline void adoptDescription(::capnp::Orphan< ::capnp::Text>&& value);
   inline ::capnp::Orphan< ::capnp::Text> disownDescription();
+
+  inline bool hasIconPath();
+  inline  ::capnp::Text::Builder getIconPath();
+  inline void setIconPath( ::capnp::Text::Reader value);
+  inline  ::capnp::Text::Builder initIconPath(unsigned int size);
+  inline void adoptIconPath(::capnp::Orphan< ::capnp::Text>&& value);
+  inline ::capnp::Orphan< ::capnp::Text> disownIconPath();
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -1807,6 +1817,164 @@ public:
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
       : _typeless(kj::mv(typeless)) {}
 
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class InventoryViewComponent::Reader {
+public:
+  typedef InventoryViewComponent Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getInventoryEntityId() const;
+
+  inline bool hasName() const;
+  inline  ::capnp::Text::Reader getName() const;
+
+  inline bool hasPos() const;
+  inline  ::Schema::Vec2F32::Reader getPos() const;
+
+  inline bool getIsVisible() const;
+
+  inline bool getIsInteractable() const;
+
+  inline bool hasPadding() const;
+  inline  ::Schema::Vec2F32::Reader getPadding() const;
+
+  inline float getSlotSize() const;
+
+  inline float getRounding() const;
+
+  inline  ::uint32_t getWindowBackgroundColor() const;
+
+  inline  ::uint32_t getBorderColor() const;
+
+  inline  ::uint32_t getEmptySlotColor() const;
+
+  inline  ::uint32_t getTextColor() const;
+
+  inline  ::uint32_t getHoverSlotColor() const;
+
+  inline  ::uint32_t getDragHoverSlotColor() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class InventoryViewComponent::Builder {
+public:
+  typedef InventoryViewComponent Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getInventoryEntityId();
+  inline void setInventoryEntityId( ::uint32_t value);
+
+  inline bool hasName();
+  inline  ::capnp::Text::Builder getName();
+  inline void setName( ::capnp::Text::Reader value);
+  inline  ::capnp::Text::Builder initName(unsigned int size);
+  inline void adoptName(::capnp::Orphan< ::capnp::Text>&& value);
+  inline ::capnp::Orphan< ::capnp::Text> disownName();
+
+  inline bool hasPos();
+  inline  ::Schema::Vec2F32::Builder getPos();
+  inline void setPos( ::Schema::Vec2F32::Reader value);
+  inline  ::Schema::Vec2F32::Builder initPos();
+  inline void adoptPos(::capnp::Orphan< ::Schema::Vec2F32>&& value);
+  inline ::capnp::Orphan< ::Schema::Vec2F32> disownPos();
+
+  inline bool getIsVisible();
+  inline void setIsVisible(bool value);
+
+  inline bool getIsInteractable();
+  inline void setIsInteractable(bool value);
+
+  inline bool hasPadding();
+  inline  ::Schema::Vec2F32::Builder getPadding();
+  inline void setPadding( ::Schema::Vec2F32::Reader value);
+  inline  ::Schema::Vec2F32::Builder initPadding();
+  inline void adoptPadding(::capnp::Orphan< ::Schema::Vec2F32>&& value);
+  inline ::capnp::Orphan< ::Schema::Vec2F32> disownPadding();
+
+  inline float getSlotSize();
+  inline void setSlotSize(float value);
+
+  inline float getRounding();
+  inline void setRounding(float value);
+
+  inline  ::uint32_t getWindowBackgroundColor();
+  inline void setWindowBackgroundColor( ::uint32_t value);
+
+  inline  ::uint32_t getBorderColor();
+  inline void setBorderColor( ::uint32_t value);
+
+  inline  ::uint32_t getEmptySlotColor();
+  inline void setEmptySlotColor( ::uint32_t value);
+
+  inline  ::uint32_t getTextColor();
+  inline void setTextColor( ::uint32_t value);
+
+  inline  ::uint32_t getHoverSlotColor();
+  inline void setHoverSlotColor( ::uint32_t value);
+
+  inline  ::uint32_t getDragHoverSlotColor();
+  inline void setDragHoverSlotColor( ::uint32_t value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class InventoryViewComponent::Pipeline {
+public:
+  typedef InventoryViewComponent Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+  inline  ::Schema::Vec2F32::Pipeline getPos();
+  inline  ::Schema::Vec2F32::Pipeline getPadding();
 private:
   ::capnp::AnyPointer::Pipeline _typeless;
   friend class ::capnp::PipelineHook;
@@ -2698,82 +2866,6 @@ private:
 class SpriteComponent::Pipeline {
 public:
   typedef SpriteComponent Pipelines;
-
-  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
-  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
-      : _typeless(kj::mv(typeless)) {}
-
-private:
-  ::capnp::AnyPointer::Pipeline _typeless;
-  friend class ::capnp::PipelineHook;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::ToDynamic_;
-};
-#endif  // !CAPNP_LITE
-
-class TileItemComponent::Reader {
-public:
-  typedef TileItemComponent Reads;
-
-  Reader() = default;
-  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
-
-  inline ::capnp::MessageSize totalSize() const {
-    return _reader.totalSize().asPublic();
-  }
-
-#if !CAPNP_LITE
-  inline ::kj::StringTree toString() const {
-    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
-  }
-#endif  // !CAPNP_LITE
-
-  inline  ::uint32_t getItem() const;
-
-private:
-  ::capnp::_::StructReader _reader;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::ToDynamic_;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::_::PointerHelpers;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::List;
-  friend class ::capnp::MessageBuilder;
-  friend class ::capnp::Orphanage;
-};
-
-class TileItemComponent::Builder {
-public:
-  typedef TileItemComponent Builds;
-
-  Builder() = delete;  // Deleted to discourage incorrect usage.
-                       // You can explicitly initialize to nullptr instead.
-  inline Builder(decltype(nullptr)) {}
-  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
-  inline operator Reader() const { return Reader(_builder.asReader()); }
-  inline Reader asReader() const { return *this; }
-
-  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
-#if !CAPNP_LITE
-  inline ::kj::StringTree toString() const { return asReader().toString(); }
-#endif  // !CAPNP_LITE
-
-  inline  ::uint32_t getItem();
-  inline void setItem( ::uint32_t value);
-
-private:
-  ::capnp::_::StructBuilder _builder;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::ToDynamic_;
-  friend class ::capnp::Orphanage;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::_::PointerHelpers;
-};
-
-#if !CAPNP_LITE
-class TileItemComponent::Pipeline {
-public:
-  typedef TileItemComponent Pipelines;
 
   inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
@@ -5432,12 +5524,12 @@ inline bool ItemComponent::Builder::hasDescription() {
 inline  ::capnp::Text::Reader ItemComponent::Reader::getDescription() const {
   return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_reader.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS),
-        ::capnp::schemas::bp_d384dfc79196c7ad + 98);
+        ::capnp::schemas::bp_d384dfc79196c7ad + 105);
 }
 inline  ::capnp::Text::Builder ItemComponent::Builder::getDescription() {
   return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_builder.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS),
-        ::capnp::schemas::bp_d384dfc79196c7ad + 98);
+        ::capnp::schemas::bp_d384dfc79196c7ad + 105);
 }
 inline void ItemComponent::Builder::setDescription( ::capnp::Text::Reader value) {
   ::capnp::_::PointerHelpers< ::capnp::Text>::set(_builder.getPointerField(
@@ -5455,6 +5547,42 @@ inline void ItemComponent::Builder::adoptDescription(
 inline ::capnp::Orphan< ::capnp::Text> ItemComponent::Builder::disownDescription() {
   return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline bool ItemComponent::Reader::hasIconPath() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS).isNull();
+}
+inline bool ItemComponent::Builder::hasIconPath() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::Text::Reader ItemComponent::Reader::getIconPath() const {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_reader.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS),
+        ::capnp::schemas::bp_d384dfc79196c7ad + 115);
+}
+inline  ::capnp::Text::Builder ItemComponent::Builder::getIconPath() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS),
+        ::capnp::schemas::bp_d384dfc79196c7ad + 115);
+}
+inline void ItemComponent::Builder::setIconPath( ::capnp::Text::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::set(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::Text::Builder ItemComponent::Builder::initIconPath(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::init(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS), size);
+}
+inline void ItemComponent::Builder::adoptIconPath(
+    ::capnp::Orphan< ::capnp::Text>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::adopt(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::Text> ItemComponent::Builder::disownIconPath() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS));
 }
 
 inline  ::uint16_t ItemPropertiesComponent::Reader::getDurability() const {
@@ -5545,6 +5673,274 @@ inline void InventoryComponent::Builder::adoptItems(
 inline ::capnp::Orphan< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>> InventoryComponent::Builder::disownItems() {
   return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ItemStack,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline  ::uint32_t InventoryViewComponent::Reader::getInventoryEntityId() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t InventoryViewComponent::Builder::getInventoryEntityId() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void InventoryViewComponent::Builder::setInventoryEntityId( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool InventoryViewComponent::Reader::hasName() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool InventoryViewComponent::Builder::hasName() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::Text::Reader InventoryViewComponent::Reader::getName() const {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS),
+        ::capnp::schemas::bp_853d504be38b2d2c + 136, 9);
+}
+inline  ::capnp::Text::Builder InventoryViewComponent::Builder::getName() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS),
+        ::capnp::schemas::bp_853d504be38b2d2c + 136, 9);
+}
+inline void InventoryViewComponent::Builder::setName( ::capnp::Text::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::Text::Builder InventoryViewComponent::Builder::initName(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+}
+inline void InventoryViewComponent::Builder::adoptName(
+    ::capnp::Orphan< ::capnp::Text>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::Text> InventoryViewComponent::Builder::disownName() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool InventoryViewComponent::Reader::hasPos() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline bool InventoryViewComponent::Builder::hasPos() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline  ::Schema::Vec2F32::Reader InventoryViewComponent::Reader::getPos() const {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::get(_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline  ::Schema::Vec2F32::Builder InventoryViewComponent::Builder::getPos() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::get(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::Schema::Vec2F32::Pipeline InventoryViewComponent::Pipeline::getPos() {
+  return  ::Schema::Vec2F32::Pipeline(_typeless.getPointerField(1));
+}
+#endif  // !CAPNP_LITE
+inline void InventoryViewComponent::Builder::setPos( ::Schema::Vec2F32::Reader value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::set(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+}
+inline  ::Schema::Vec2F32::Builder InventoryViewComponent::Builder::initPos() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::init(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline void InventoryViewComponent::Builder::adoptPos(
+    ::capnp::Orphan< ::Schema::Vec2F32>&& value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::adopt(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::Schema::Vec2F32> InventoryViewComponent::Builder::disownPos() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::disown(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline bool InventoryViewComponent::Reader::getIsVisible() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<32>() * ::capnp::ELEMENTS);
+}
+
+inline bool InventoryViewComponent::Builder::getIsVisible() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<32>() * ::capnp::ELEMENTS);
+}
+inline void InventoryViewComponent::Builder::setIsVisible(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<32>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool InventoryViewComponent::Reader::getIsInteractable() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<33>() * ::capnp::ELEMENTS, true);
+}
+
+inline bool InventoryViewComponent::Builder::getIsInteractable() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<33>() * ::capnp::ELEMENTS, true);
+}
+inline void InventoryViewComponent::Builder::setIsInteractable(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<33>() * ::capnp::ELEMENTS, value, true);
+}
+
+inline bool InventoryViewComponent::Reader::hasPadding() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS).isNull();
+}
+inline bool InventoryViewComponent::Builder::hasPadding() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS).isNull();
+}
+inline  ::Schema::Vec2F32::Reader InventoryViewComponent::Reader::getPadding() const {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::get(_reader.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS));
+}
+inline  ::Schema::Vec2F32::Builder InventoryViewComponent::Builder::getPadding() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::get(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::Schema::Vec2F32::Pipeline InventoryViewComponent::Pipeline::getPadding() {
+  return  ::Schema::Vec2F32::Pipeline(_typeless.getPointerField(2));
+}
+#endif  // !CAPNP_LITE
+inline void InventoryViewComponent::Builder::setPadding( ::Schema::Vec2F32::Reader value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::set(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS), value);
+}
+inline  ::Schema::Vec2F32::Builder InventoryViewComponent::Builder::initPadding() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::init(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS));
+}
+inline void InventoryViewComponent::Builder::adoptPadding(
+    ::capnp::Orphan< ::Schema::Vec2F32>&& value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::adopt(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::Schema::Vec2F32> InventoryViewComponent::Builder::disownPadding() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::disown(_builder.getPointerField(
+      ::capnp::bounded<2>() * ::capnp::POINTERS));
+}
+
+inline float InventoryViewComponent::Reader::getSlotSize() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS, 1111490560u);
+}
+
+inline float InventoryViewComponent::Builder::getSlotSize() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS, 1111490560u);
+}
+inline void InventoryViewComponent::Builder::setSlotSize(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS, value, 1111490560u);
+}
+
+inline float InventoryViewComponent::Reader::getRounding() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS);
+}
+
+inline float InventoryViewComponent::Builder::getRounding() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS);
+}
+inline void InventoryViewComponent::Builder::setRounding(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t InventoryViewComponent::Reader::getWindowBackgroundColor() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t InventoryViewComponent::Builder::getWindowBackgroundColor() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS);
+}
+inline void InventoryViewComponent::Builder::setWindowBackgroundColor( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t InventoryViewComponent::Reader::getBorderColor() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t InventoryViewComponent::Builder::getBorderColor() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS);
+}
+inline void InventoryViewComponent::Builder::setBorderColor( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t InventoryViewComponent::Reader::getEmptySlotColor() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<6>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t InventoryViewComponent::Builder::getEmptySlotColor() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<6>() * ::capnp::ELEMENTS);
+}
+inline void InventoryViewComponent::Builder::setEmptySlotColor( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<6>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t InventoryViewComponent::Reader::getTextColor() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<7>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t InventoryViewComponent::Builder::getTextColor() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<7>() * ::capnp::ELEMENTS);
+}
+inline void InventoryViewComponent::Builder::setTextColor( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<7>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t InventoryViewComponent::Reader::getHoverSlotColor() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<8>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t InventoryViewComponent::Builder::getHoverSlotColor() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<8>() * ::capnp::ELEMENTS);
+}
+inline void InventoryViewComponent::Builder::setHoverSlotColor( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<8>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t InventoryViewComponent::Reader::getDragHoverSlotColor() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<9>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t InventoryViewComponent::Builder::getDragHoverSlotColor() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<9>() * ::capnp::ELEMENTS);
+}
+inline void InventoryViewComponent::Builder::setDragHoverSlotColor( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<9>() * ::capnp::ELEMENTS, value);
 }
 
 inline bool ItemAttrIcon::Reader::hasName() const {
@@ -6133,20 +6529,6 @@ inline void SpriteComponent::Builder::adoptSubSprites(
 inline ::capnp::Orphan< ::capnp::List< ::Schema::SubSprite,  ::capnp::Kind::STRUCT>> SpriteComponent::Builder::disownSubSprites() {
   return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::SubSprite,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-
-inline  ::uint32_t TileItemComponent::Reader::getItem() const {
-  return _reader.getDataField< ::uint32_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-
-inline  ::uint32_t TileItemComponent::Builder::getItem() {
-  return _builder.getDataField< ::uint32_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-inline void TileItemComponent::Builder::setItem( ::uint32_t value) {
-  _builder.setDataField< ::uint32_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
 }
 
 inline bool MultiTileComponent::Reader::hasOccupiedPositions() const {

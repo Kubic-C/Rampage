@@ -407,7 +407,7 @@ int updateInventoryViews(IWorldPtr world, float dt) {
   while(it->hasNext()) {
     EntityPtr entity = it->next();
     auto viewComp = entity.get<InventoryViewComponent>();
-    viewComp->update(world, world->getContext<tgui::Gui>());
+    viewComp->update(entity, world->getContext<tgui::Gui>());
   }
 
   return 0;

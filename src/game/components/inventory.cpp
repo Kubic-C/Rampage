@@ -17,6 +17,7 @@ void ItemComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
   itemBuilder.setMaxStackSize(self->maxStackSize);
   itemBuilder.setStackCost(self->stackCost);
   itemBuilder.setIsUnique(self->isUnique);
+  itemBuilder.setIconPath((std::string)self->icon.getId()); // Assuming TGUI's Texture has a method to get the original file path
 }
 
 void ItemComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component) {
@@ -28,7 +29,7 @@ void ItemComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id
   self->maxStackSize = itemReader.getMaxStackSize();
   self->stackCost = itemReader.getStackCost();
   self->isUnique = itemReader.getIsUnique();
-  // TODO: Handle TGUI's textures.
+  self->icon = tgui::Texture(itemReader.getIconPath().cStr()); // Load texture from path
 }
 
 void ItemComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
@@ -69,14 +70,14 @@ void InventoryComponent::serialize(capnp::MessageBuilder& builder, Ref component
   invBuilder.setRows(self->rows);
 
   // Serialize items list
-  auto itemsBuilder = invBuilder.initItems(self->items.size());
+  auto itemsBuilder = invBuilder.initItems((u32)self->items.size());
   for (size_t i = 0; i < self->items.size(); ++i) {
-    itemsBuilder[i].setCount(self->items[i].count);
-    itemsBuilder[i].setItemId(self->items[i].itemId);
+    itemsBuilder[(u32)i].setCount(self->items[i].count);
+    itemsBuilder[(u32)i].setItemId(self->items[i].itemId);
   }
 }
 
-void InventoryComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component) {
+void InventoryComponent::deserialize(capnp::MessageReader& reader, const IdMapper& idMapper, Ref component) {
   auto invReader = reader.getRoot<Schema::InventoryComponent>();
   auto self = component.cast<InventoryComponent>();
 
@@ -89,7 +90,7 @@ void InventoryComponent::deserialize(capnp::MessageReader& reader, const IdMappe
   for (const auto& itemReader : itemsReader) {
     ItemStack stack;
     stack.count = itemReader.getCount();
-    stack.itemId = id.resolve(itemReader.getItemId()); // Remap old EntityId -> new EntityId
+    stack.itemId = idMapper.resolve(itemReader.getItemId());
     self->items.push_back(stack);
   }
 }
@@ -155,21 +156,188 @@ tgui::Color getContrastingColor(const tgui::Color& color) {
     }
 }
 
-void InventoryViewComponent::update(IWorldPtr world, tgui::Gui& gui) {
-  // Get the inventory entity and component
-  auto invEntity = world->getEntity(inventoryEntityId);
-  if (!invEntity || !invEntity.has<InventoryComponent>()) {
-    return; // Inventory doesn't exist or doesn't have component
+// Helper functions to convert color to/from packed UInt32
+inline u32 packColor(const tgui::Color& color) {
+  return (static_cast<u32>(color.getRed()) << 24) |
+         (static_cast<u32>(color.getGreen()) << 16) |
+         (static_cast<u32>(color.getBlue()) << 8) |
+         static_cast<u32>(color.getAlpha());
+}
+
+inline tgui::Color unpackColor(u32 packed) {
+  return tgui::Color(
+    (packed >> 24) & 0xFF,
+    (packed >> 16) & 0xFF,
+    (packed >> 8) & 0xFF,
+    packed & 0xFF
+  );
+}
+
+void InventoryViewComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
+  auto viewBuilder = builder.initRoot<Schema::InventoryViewComponent>();
+  auto self = component.cast<InventoryViewComponent>();
+
+  viewBuilder.setInventoryEntityId(self->inventoryEntityId);
+  viewBuilder.setName(self->name);
+
+  auto posBuilder = viewBuilder.initPos();
+  posBuilder.setX(self->pos.x);
+  posBuilder.setY(self->pos.y);
+
+  viewBuilder.setIsVisible(self->isVisible);
+  viewBuilder.setIsInteractable(self->isInteractable);
+
+  auto paddingBuilder = viewBuilder.initPadding();
+  paddingBuilder.setX(self->padding.x);
+  paddingBuilder.setY(self->padding.y);
+
+  viewBuilder.setSlotSize(self->slotSize);
+  viewBuilder.setRounding(self->rounding);
+
+  viewBuilder.setWindowBackgroundColor(packColor(self->windowBackgroundColor));
+  viewBuilder.setBorderColor(packColor(self->borderColor));
+  viewBuilder.setEmptySlotColor(packColor(self->emptySlotColor));
+  viewBuilder.setTextColor(packColor(self->textColor));
+  viewBuilder.setHoverSlotColor(packColor(self->hoverSlotColor));
+  viewBuilder.setDragHoverSlotColor(packColor(self->dragHoverSlotColor));
+}
+
+void InventoryViewComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component) {
+  auto viewReader = reader.getRoot<Schema::InventoryViewComponent>();
+  auto self = component.cast<InventoryViewComponent>();
+
+  self->inventoryEntityId = id.resolve(viewReader.getInventoryEntityId());
+  self->name = viewReader.getName();
+
+  auto posReader = viewReader.getPos();
+  self->pos = Vec2(posReader.getX(), posReader.getY());
+
+  self->isVisible = viewReader.getIsVisible();
+  self->isInteractable = viewReader.getIsInteractable();
+
+  auto paddingReader = viewReader.getPadding();
+  self->padding = Vec2(paddingReader.getX(), paddingReader.getY());
+
+  self->slotSize = viewReader.getSlotSize();
+  self->rounding = viewReader.getRounding();
+
+  self->windowBackgroundColor = unpackColor(viewReader.getWindowBackgroundColor());
+  self->borderColor = unpackColor(viewReader.getBorderColor());
+  self->emptySlotColor = unpackColor(viewReader.getEmptySlotColor());
+  self->textColor = unpackColor(viewReader.getTextColor());
+  self->hoverSlotColor = unpackColor(viewReader.getHoverSlotColor());
+  self->dragHoverSlotColor = unpackColor(viewReader.getDragHoverSlotColor());
+}
+
+void InventoryViewComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
+  auto self = component.cast<InventoryViewComponent>();
+
+  if (compJson.contains("name") && compJson["name"].is_string()) {
+    self->name = compJson["name"];
   }
 
-  auto invComp = invEntity.get<InventoryComponent>();
+  if (compJson.contains("pos") && compJson["pos"].is_object()) {
+    const auto& posJson = compJson["pos"];
+    if (posJson.contains("x") && posJson["x"].is_number()) {
+      self->pos.x = posJson["x"];
+    }
+    if (posJson.contains("y") && posJson["y"].is_number()) {
+      self->pos.y = posJson["y"];
+    }
+  }
 
-  // Check if inventory grid size changed (rebuild UI if it did)
-  bool gridSizeChanged = false;
-  if (cachedRows != invComp->rows || cachedCols != invComp->cols) {
-    gridSizeChanged = true;
-    cachedRows = invComp->rows;
-    cachedCols = invComp->cols;
+  if (compJson.contains("isVisible") && compJson["isVisible"].is_boolean()) {
+    self->isVisible = compJson["isVisible"];
+  }
+
+  if (compJson.contains("isInteractable") && compJson["isInteractable"].is_boolean()) {
+    self->isInteractable = compJson["isInteractable"];
+  }
+
+  if (compJson.contains("padding") && compJson["padding"].is_object()) {
+    const auto& padJson = compJson["padding"];
+    if (padJson.contains("x") && padJson["x"].is_number()) {
+      self->padding.x = padJson["x"];
+    }
+    if (padJson.contains("y") && padJson["y"].is_number()) {
+      self->padding.y = padJson["y"];
+    }
+  }
+
+  if (compJson.contains("slotSize") && compJson["slotSize"].is_number()) {
+    self->slotSize = compJson["slotSize"];
+  }
+
+  if (compJson.contains("rounding") && compJson["rounding"].is_number()) {
+    self->rounding = compJson["rounding"];
+  }
+
+  // Helper lambda to parse color from JSON (expecting array [R,G,B,A] or hex string)
+  auto parseColor = [](const json& colorJson) -> tgui::Color {
+    if (colorJson.is_array() && colorJson.size() == 4) {
+      return tgui::Color(
+        (colorJson[0].is_number() ? (int)colorJson[0] : (int)0),
+        (colorJson[1].is_number() ? (int)colorJson[1] : (int)0),
+        (colorJson[2].is_number() ? (int)colorJson[2] : (int)0),
+        (colorJson[3].is_number() ? (int)colorJson[3] : (int)255)
+      );
+    }
+    return tgui::Color::Black;
+  };
+
+  if (compJson.contains("windowBackgroundColor")) {
+    self->windowBackgroundColor = parseColor(compJson["windowBackgroundColor"]);
+  }
+
+  if (compJson.contains("borderColor")) {
+    self->borderColor = parseColor(compJson["borderColor"]);
+  }
+
+  if (compJson.contains("emptySlotColor")) {
+    self->emptySlotColor = parseColor(compJson["emptySlotColor"]);
+  }
+
+  if (compJson.contains("textColor")) {
+    self->textColor = parseColor(compJson["textColor"]);
+  }
+
+  if (compJson.contains("hoverSlotColor")) {
+    self->hoverSlotColor = parseColor(compJson["hoverSlotColor"]);
+  }
+
+  if (compJson.contains("dragHoverSlotColor")) {
+    self->dragHoverSlotColor = parseColor(compJson["dragHoverSlotColor"]);
+  }
+}
+
+InventoryViewComponent::~InventoryViewComponent() {
+  // Ensure we clean up the TGUI window if this component is destroyed
+  if (window) {
+    window->removeAllWidgets();
+    window->getParent()->remove(window);
+    window = nullptr;
+  }
+}
+
+void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
+  if (!inventoryEntity || !inventoryEntity.has<InventoryComponent>()) {
+    return; // Inventory doesn't exist or doesn't have component
+  }
+  
+  IWorldPtr world = inventoryEntity.world();
+  auto invComp = inventoryEntity.get<InventoryComponent>();
+  if(invComp->items.size() != invComp->cols * invComp->rows) {
+    // Inventory is invalid, access would cause a crash.
+    // This is usually right after deserialization and should
+    // fix itself next game tick.
+    return;
+  }
+
+  inventoryEntityId = inventoryEntity;
+
+  // Check if inventory checksum changed (rebuild UI if it did)
+  if (hasVisualConfigChanged(invComp->cols, invComp->rows, prevVisualChecksum)) {
+    prevVisualChecksum = calculateVisualChecksum(invComp->cols, invComp->rows);
     
     // Destroy existing window and UI elements if grid changed
     if (window) {
@@ -185,6 +353,7 @@ void InventoryViewComponent::update(IWorldPtr world, tgui::Gui& gui) {
   if (!window) {
     window = tgui::ChildWindow::create();
     window->setTitle(name);
+    window->setPosition(pos.x, pos.y);
 
     window->getRenderer()->setTitleBarHeight(15);
     window->getRenderer()->setTitleBarColor(windowBackgroundColor); 
@@ -250,15 +419,15 @@ void InventoryViewComponent::update(IWorldPtr world, tgui::Gui& gui) {
         });
 
         // Add mouse event handlers for drag and drop
-        label->onMousePress([this, slotPos, world]() {
+        label->onMousePress([this, slotPos, inventoryEntity]() {
           if (isInteractable) {
-            onSlotMouseDown(world, slotPos);
+            onSlotMouseDown(inventoryEntity, slotPos);
           }
         });
         
-        label->onMouseRelease([this, slotPos, world]() {
+        label->onMouseRelease([this, slotPos, inventoryEntity]() {
           if (isInteractable) {
-            onSlotMouseUp(world, slotPos);
+            onSlotMouseUp(inventoryEntity, slotPos);
           }
         });
       }
@@ -272,7 +441,17 @@ void InventoryViewComponent::update(IWorldPtr world, tgui::Gui& gui) {
     );
 
     window->setVisible(isVisible);
+    window->onPositionChange([this]() {
+      pos = Vec2(window->getPosition().x, window->getPosition().y);
+    });
   }
+
+  if(window->isVisible() != isVisible)
+    window->setVisible(isVisible);
+  if(window->getTitle() != name)
+    window->setTitle(name); 
+  if(window->getPosition() != tgui::Vector2f(pos.x, pos.y))
+    window->setPosition(pos.x, pos.y);
 
   // Update slot contents
   for (u16 y = 0; y < invComp->rows; ++y) {
@@ -315,19 +494,15 @@ void InventoryViewComponent::update(IWorldPtr world, tgui::Gui& gui) {
       }
     }
   }
-
-  // Update visibility
-  window->setVisible(isVisible);
 }
 
-void InventoryViewComponent::onSlotMouseDown(IWorldPtr world, glm::u16vec2 slotPos) {
+void InventoryViewComponent::onSlotMouseDown(EntityPtr inventoryEntity, glm::u16vec2 slotPos) {
   // Check if slot is empty - only start drag if there's an item
-  auto invEntity = world->getEntity(inventoryEntityId);
-  if (!invEntity || !invEntity.has<InventoryComponent>()) {
+  if (!inventoryEntity || !inventoryEntity.has<InventoryComponent>()) {
     return;
   }
 
-  auto invComp = invEntity.get<InventoryComponent>();
+  auto invComp = inventoryEntity.get<InventoryComponent>();
   const ItemStack& slot = invComp->getSlot(slotPos.x, slotPos.y);
 
   if (slot.itemId != 0) {
@@ -337,7 +512,7 @@ void InventoryViewComponent::onSlotMouseDown(IWorldPtr world, glm::u16vec2 slotP
   }
 }
 
-void InventoryViewComponent::onSlotMouseUp(IWorldPtr world, glm::u16vec2 dropSlot) {
+void InventoryViewComponent::onSlotMouseUp(EntityPtr inventoryEntity, glm::u16vec2 dropSlot) {
   if (!isDragging) {
     return;
   }
@@ -346,25 +521,60 @@ void InventoryViewComponent::onSlotMouseUp(IWorldPtr world, glm::u16vec2 dropSlo
 
   // Only perform drop if we have a valid source view
   if (dragSourceView != nullptr) {
-    performItemDrop(world, dragSourceView, dragStartSlot, dropSlot);
+    performItemDrop(inventoryEntity, dragSourceView, dragStartSlot, dropSlot);
   }
 
   dragSourceView = nullptr;
 }
 
-void InventoryViewComponent::performItemDrop(IWorldPtr world, InventoryViewComponent* sourceView, 
+void InventoryViewComponent::performItemDrop(EntityPtr inventoryEntity, InventoryViewComponent* sourceView, 
                                              glm::u16vec2 sourceSlot, glm::u16vec2 targetSlot) {
   // Use InventoryManager to perform the move
   InventoryManager invMgr;
 
   // Source and target inventory entity IDs
   EntityId srcInvId = sourceView->inventoryEntityId;
-  EntityId dstInvId = inventoryEntityId;
+  EntityId dstInvId = inventoryEntity;
 
   // Perform the move operation
   // moveItems intelligently merges stacks or swaps based on item types
-  invMgr.moveItems(world, srcInvId, sourceSlot.x, sourceSlot.y,
+  invMgr.moveItems(inventoryEntity.world(), srcInvId, sourceSlot.x, sourceSlot.y,
                    dstInvId, targetSlot.x, targetSlot.y, 0); // 0 = move all
+}
+
+u32 InventoryViewComponent::calculateVisualChecksum(u32 sizeX, u32 sizeY) const {
+  u32 hash = 0;
+  
+  // Hash numeric properties
+  hash = ((hash << 5) + hash) ^ std::hash<float>()(padding.x);
+  hash = ((hash << 5) + hash) ^ std::hash<float>()(padding.y);
+  hash = ((hash << 5) + hash) ^ std::hash<float>()(slotSize);
+  hash = ((hash << 5) + hash) ^ std::hash<float>()(rounding);
+  
+  // Hash color values (RGBA)
+  auto hashColor = [](u32& h, const tgui::Color& color) {
+    h = ((h << 5) + h) ^ (static_cast<u32>(color.getRed()) << 24);
+    h = ((h << 5) + h) ^ (static_cast<u32>(color.getGreen()) << 16);
+    h = ((h << 5) + h) ^ (static_cast<u32>(color.getBlue()) << 8);
+    h = ((h << 5) + h) ^ static_cast<u32>(color.getAlpha());
+  };
+  
+  hashColor(hash, windowBackgroundColor);
+  hashColor(hash, borderColor);
+  hashColor(hash, emptySlotColor);
+  hashColor(hash, textColor);
+  hashColor(hash, hoverSlotColor);
+  hashColor(hash, dragHoverSlotColor);
+  
+  // Hash cached grid dimensions (indicates inventory size)
+  hash = ((hash << 5) + hash) ^ sizeX;
+  hash = ((hash << 5) + hash) ^ sizeY;
+  
+  return hash;
+}
+
+bool InventoryViewComponent::hasVisualConfigChanged(u32 sizeX, u32 sizeY, u32 previousChecksum) const {
+  return calculateVisualChecksum(sizeX, sizeY) != previousChecksum;
 }
 
 

@@ -141,6 +141,9 @@ glm::mat4 RenderModule::getView() const {
   EntityPtr cameraEntity = world->getFirstWith(world->set<CameraInUseTag>());
   glm::ivec2 screenDim = getWindowSize();
 
+  if(!cameraEntity.exists())
+    return glm::identity<glm::mat4>();
+
   auto camera = cameraEntity.get<CameraComponent>();
   auto transform = cameraEntity.get<TransformComponent>();
 

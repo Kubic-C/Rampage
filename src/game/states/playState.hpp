@@ -25,9 +25,6 @@ public:
     _world->component<OwnedBy<PlayState>>(false);
     m_world = TaggedEntityWorld::create(_world, _world->component<OwnedBy<PlayState>>());
 
-    m_addedPlayerComponents = m_world->set<PlayerComponent, PrimaryTargetTag, BodyComponent,
-                                          RectangleRenderComponent>();
-
     auto& gui = m_world->getContext<tgui::Gui>();
     m_menu = m_world->getContext<tgui::Gui>().get(menuName);
 
@@ -41,19 +38,25 @@ public:
     tgui::Button::Ptr saveStateBtn = gui.get(playSaveStateTextName)->cast<tgui::Button>();
     saveStateBtn->onMousePress([=]() {
         auto& serializer = m_world->getSerializer();
-        EntityPtr player = m_world->getFirstWith(m_world->set<CameraInUseTag>());
         
         serializer.begin(m_world);
         serializer.queueAllWith(m_world->set<OwnedBy<PlayState>>());
-        serializer.queue(player, player.set());
         serializer.end("saveFile.rampage");
     });
 
     tgui::Button::Ptr loadStateBtn = gui.get(playLoadStateTextName)->cast<tgui::Button>();
     loadStateBtn->onMousePress([=]() {
         auto& deserializer = m_world->getDeserializer();
-        m_world->destroyAllEntitiesWith(m_world->set<OwnedBy<PlayState>, IWorld::Enabled>());
-        deserializer.deserializeFromFile(*m_world, "saveFile.rampage");
+        auto& serializer = m_world->getSerializer();
+
+        // Testing serialization and deserialization stability.
+        for(size_t i = 0; i < 5; i++) {
+          m_world->destroyAllEntitiesWith(m_world->set<OwnedBy<PlayState>, IWorld::Enabled>());
+          deserializer.deserializeFromFile(*m_world, "saveFile.rampage");
+          serializer.begin(m_world);
+          serializer.queueAllWith(m_world->set<OwnedBy<PlayState>>());
+          serializer.end("saveFile.rampage");
+        }
     });
 
     m_tickText = gui.get(tickTextName)->cast<tgui::Label>();
@@ -71,13 +74,9 @@ public:
     auto& stateMgr = m_world->getContext<StateManager>();
     auto& invMgr = m_world->getContext<InventoryManager>();
     auto assetLoader = m_world->getAssetLoader();
-    EntityPtr player = m_world->getFirstWith(m_world->set<CameraInUseTag>());
 
     m_menu->setEnabled(true);
     m_menu->setVisible(true);
-
-    /* Player */
-    player.add(m_addedPlayerComponents);
 
     EntityPtr basicTurretItem = m_world->create();
     basicTurretItem.add<ItemComponent>();
@@ -87,12 +86,21 @@ public:
     itemComp->isUnique = false;
     itemComp->maxStackSize = 16;
     itemComp->stackCost = 4;
- 
+
+    /* Player */
+    EntityPtr player = m_world->create();
+    player.add<CameraComponent>();
+    player.add<CameraInUseTag>();
+    player.add<PlayerComponent>();
+    player.add<PrimaryTargetTag>();
+    player.add<BodyComponent>();
+    player.add<RectangleRenderComponent>();
     player.add<InventoryComponent>();
-    invMgr.createInventory(m_world, player, 5, 5);
     player.add<InventoryViewComponent>();
+    player.add<TransformComponent>();
+
+    invMgr.createInventory(m_world, player, 5, 5);
     auto invView = player.get<InventoryViewComponent>();
-    invView->inventoryEntityId = player;
     invView->name = "Player Inventory";
     invView->isVisible = true;
 
@@ -102,7 +110,6 @@ public:
       invMgr.createInventory(m_world, e, 5, 5);
       e.add<InventoryViewComponent>();
       auto invView = e.get<InventoryViewComponent>();
-      invView->inventoryEntityId = e;
       invView->name = "Other Inventory";
       invView->isVisible = true;
     }
@@ -171,22 +178,11 @@ public:
     m_tpsText->setText("TPS: " + std::to_string(appStats.tps));
     m_fpsText->setText("FPS: " + std::to_string(appStats.fps));
     m_activeBodiesText->setText("Active Rigid Bodies: " + std::to_string(activeBodies));
-    int count = 0;
-    auto eIt = m_world->getWith(
-        m_world->set<LifetimeComponent, HealthComponent, ContactDamageComponent, BodyComponent, CircleRenderComponent, TransformComponent>());
-    while (eIt->hasNext()) {
-      eIt->next();
-      count++;
-    }
-
-    m_entityCountText->setText("Set Count: " + std::to_string(m_world->getSetCount()));
+    m_entityCountText->setText("Entity Count: " + std::to_string(m_world->getEntityCount()));
   }
 
   void onLeave() {
-    EntityPtr player = m_world->getFirstWith(m_world->set<CameraComponent>());
-
     m_world->destroyAllEntitiesWith(m_world->set<OwnedBy<PlayState>, IWorld::Enabled>());
-    player.remove(m_addedPlayerComponents);
 
     m_menu->setEnabled(false);
     m_menu->setVisible(false);

@@ -36,10 +36,6 @@ int GameModule::onLoad() {
 
   registerGameComponents(world);
 
-  EntityPtr camera = world->create();
-  camera.add<TransformComponent>();
-  camera.add<CameraComponent>();
-  camera.add<CameraInUseTag>();
   EntityPtr textureMap = world->create();
   textureMap.add<TextureMap3DComponent>();
   textureMap.add<TextureMapInUseTag>();

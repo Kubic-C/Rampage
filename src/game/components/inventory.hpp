@@ -65,9 +65,13 @@ struct InventoryComponent {
 };
 
 struct InventoryViewComponent {
-  EntityId inventoryEntityId;
+  static void serialize(capnp::MessageBuilder& builder, Ref component);
+  static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
+  static void fromJson(Ref component, AssetLoader loader, const json& compJson);
+  ~InventoryViewComponent();
 
   std::string name = "Inventory";
+  Vec2 pos = Vec2(100, 100);
   bool isVisible = false;
   bool isInteractable = true;
   Vec2 padding = Vec2(5, 5);
@@ -80,7 +84,7 @@ struct InventoryViewComponent {
   tgui::Color hoverSlotColor = tgui::Color(200, 100, 100, 200);
   tgui::Color dragHoverSlotColor = tgui::Color(100, 200, 100, 200);
 
-  void update(IWorldPtr world, tgui::Gui& gui);
+  void update(EntityPtr inventoryEntity, tgui::Gui& gui);
 
 private:
   tgui::ChildWindow::Ptr window;
@@ -89,20 +93,24 @@ private:
   std::vector<tgui::Label::Ptr> slotLabels;
 
   // Track grid size changes to rebuild UI when inventory dimensions change
-  u16 cachedRows = 0;
-  u16 cachedCols = 0;
+  u32 prevVisualChecksum;
+  EntityId inventoryEntityId; // The entity this view is representing (for drag/drop)
 
   // Drag and drop state (static = global drag state, only one drag at a time)
   static bool isDragging;
   static glm::u16vec2 dragStartSlot;
   static InventoryViewComponent* dragSourceView;  // Pointer to the view we're dragging from
 
+  // Checksum is based off visual config and inventory size - if it changes, we need to rebuild the UI
+  u32 calculateVisualChecksum(u32 sizeX, u32 sizeY) const;
+  bool hasVisualConfigChanged(u32 sizeX, u32 sizeY, u32 previousChecksum) const;
+
   // Slot click/drag callbacks
-  void onSlotMouseDown(IWorldPtr world, glm::u16vec2 slotPos);
-  void onSlotMouseUp(IWorldPtr world, glm::u16vec2 slotPos);
+  void onSlotMouseDown(EntityPtr inventoryEntity, glm::u16vec2 slotPos);
+  void onSlotMouseUp(EntityPtr inventoryEntity, glm::u16vec2 slotPos);
   
   // Helper to perform the actual item move
-  void performItemDrop(IWorldPtr world, InventoryViewComponent* sourceView, glm::u16vec2 sourceSlot, 
+  void performItemDrop(EntityPtr inventoryEntity, InventoryViewComponent* sourceView, glm::u16vec2 sourceSlot, 
                        glm::u16vec2 targetSlot);
 };
 
