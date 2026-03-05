@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Game Asset Loader Schema",
+  "description": "Schema for loading game entity assets with components as discriminated variants",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["name", "data"],
+    "properties": {
+      "name": { "type": "string" },
+      "data": {
+        "type": "object",
+        "required": ["type", "components"],
+        "properties": {
+          "type": { "type": "string", "const": "Entity" },
+          "components": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["type"],
+              "oneOf": [
+                {
+                  "properties": {
+                    "type": { "const": "TransformComponent" },
+                    "scale": { "type": "number" }
+                  },
+                  "required": ["type"]
+                },
+                {
+                  "properties": {
+                    "type": { "const": "SpriteComponent" },
+                    "scaling": { "type": "number" },
+                    "subSprites": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "gridPos": {
+                            "type": "object",
+                            "properties": {
+                              "x": { "type": "number" },
+                              "y": { "type": "number" }
+                            },
+                            "required": ["x", "y"]
+                          },
+                          "layers": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": ["path", "layer"],
+                              "properties": {
+                                "path": { "type": "string" },
+                                "layer": { "type": "string" },
+                                "offset": {
+                                  "type": "object",
+                                  "properties": {
+                                    "x": { "type": "number" },
+                                    "y": { "type": "number" }
+                                  },
+                                  "required": ["x", "y"]
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "required": ["layers"]
+                      }
+                    }
+                  },
+                  "required": ["type", "subSprites"]
+                },
+                {
+                  "properties": {
+                    "type": { "const": "SeekPrimaryTargetTag" }
+                  },
+                  "required": ["type"]
+                },
+                {
+                  "properties": {
+                    "type": { "const": "HealthComponent" },
+                    "health": { "type": "number" }
+                  },
+                  "required": ["type", "health"]
+                },
+                {
+                  "properties": {
+                    "type": { "const": "ContactDamageComponent" },
+                    "damage": { "type": "number" }
+                  },
+                  "required": ["type", "damage"]
+                },
+                {
+                  "properties": {
+                    "type": { "const": "BodyComponent" },
+                    "bodyType": { "type": "string", "enum": ["dynamic", "static", "kinematic"] },
+                    "linearDamping": { "type": "number" },
+                    "shapes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "enableContactEvents": { "type": "boolean" },
+                          "categoryMask": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                          },
+                          "collisionMask": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                          },
+                          "density": { "type": "number" },
+                          "shape": {
+                            "type": "object",
+                            "required": ["shapeType"],
+                            "properties": {
+                              "shapeType": { "type": "string", "enum": ["Circle", "Box"] },
+                              "radius": { "type": "number" },
+                              "width": { "type": "number" },
+                              "height": { "type": "number" }
+                            }
+                          }
+                        },
+                        "required": ["enableContactEvents", "categoryMask", "collisionMask", "density", "shape"]
+                      }
+                    }
+                  },
+                  "required": ["type", "bodyType", "linearDamping", "shapes"]
+                },
+                {
+                  "properties": {
+                    "type": { "const": "TileComponent" },
+                    "collidable": { "type": "boolean" },
+                    "material": {
+                      "type": "object",
+                      "properties": {
+                        "friction": { "type": "number" },
+                        "restitution": { "type": "number" }
+                      },
+                      "required": ["friction", "restitution"]
+                    }
+                  }
+                },
+                {
+                  "properties": {
+                    "type": { "const": "ArrowComponent" },
+                    "tileCost": { "type": "number" }
+                  }
+                },
+                {
+                  "properties": {
+                    "type": { "const": "MultiTileComponent" },
+                    "occupiedPositions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["x", "y", "z"],
+                        "properties": {
+                          "x": { "type": "number" },
+                          "y": { "type": "number" },
+                          "z": { "type": "number" }
+                        }
+                      }
+                    },
+                    "anchorPos": {
+                      "type": "object",
+                      "required": ["x", "y", "z"],
+                      "properties": {
+                        "x": { "type": "number" },
+                        "y": { "type": "number" },
+                        "z": { "type": "number" }
+                      }
+                    }
+                  },
+                  "required": ["type", "occupiedPositions", "anchorPos"]
+                },
+                {
+                  "properties": {
+                    "type": { "const": "TurretComponent" },
+                    "fireRate": { "type": "number" },
+                    "radius": { "type": "number" },
+                    "turnSpeed": { "type": "number" },
+                    "shootRange": { "type": "number" },
+                    "stopRange": { "type": "number" },
+                    "muzzleVelocity": { "type": "number" },
+                    "bulletRadius": { "type": "number" },
+                    "bulletDamage": { "type": "number" }
+                  },
+                  "required": ["type"]
+                }
+              ],
+              "discriminator": { "propertyName": "type" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

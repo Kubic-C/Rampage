@@ -31,6 +31,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "$<0:>${CMAKE_SOURCE_DIR}/bin")
 
 # Include sub-projects.
 add_subdirectory("deps")
+add_subdirectory("tools")
 add_subdirectory("src")
 
 if(ASAN_ON)

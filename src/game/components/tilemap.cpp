@@ -167,9 +167,27 @@ void TilemapComponent::serialize(capnp::MessageBuilder& builder, Ref component) 
   }
 }
 
+Vec2 getCenterOfShape(b2ShapeId shapeId) {
+  switch (b2Shape_GetType(shapeId))
+  {
+  case b2_circleShape: {
+    b2Circle circle = b2Shape_GetCircle(shapeId);
+    return Vec2(circle.center);
+  }
+  case b2_polygonShape: {
+    b2Polygon poly = b2Shape_GetPolygon(shapeId);
+    return Vec2(poly.centroid);
+  }
+  default:
+    return Vec2(0.0f);
+  }
+}
+
 void TilemapComponent::deserialize(capnp::MessageReader& reader, const IdMapper& idMapper, Ref component) {
   auto tilemapReader = reader.getRoot<Schema::TilemapComponent>();
+  auto world = component.getWorld();
   auto self = component.cast<TilemapComponent>();
+  auto body = self.getEntity().get<BodyComponent>()->id;
   
   // Deserialize tiles list back into map
   self->tiles.clear();
@@ -177,8 +195,22 @@ void TilemapComponent::deserialize(capnp::MessageReader& reader, const IdMapper&
   for (auto tileEntryReader : tilesReader) {
     const auto posReader = tileEntryReader.getPos();
     glm::ivec3 pos(posReader.getX(), posReader.getY(), posReader.getZ());
-    EntityId entityId = tileEntryReader.getEntityId();
-    self->tiles[pos] = idMapper.resolve(entityId);
+    EntityId entityId = idMapper.resolve(tileEntryReader.getEntityId());
+    self->tiles[pos] = entityId;
+
+    // If the entity has not yet already been deserialized, ensure its existence and add a TileComponent.
+    // This will have no effect on the entity if it has not already been deserialized as
+    // additional add operations are redundant and the the resolved entityId is already reserved.
+    world->ensure(entityId).add<TileComponent>();
+  }
+
+  u32 shapeCount = b2Body_GetShapeCount(body);
+  std::vector<b2ShapeId> shapeIds(shapeCount); // to keep track of shapeIds for cleanup if needed
+  b2Body_GetShapes(body, shapeIds.data(), shapeCount);
+  for (u32 i = 0; i < shapeCount; i++) {
+    b2ShapeId shapeId = shapeIds[i];
+    Vec2 pos = getCenterOfShape(shapeId); // Get the position of the shape's center
+    world->getEntity(self->tiles[TilemapComponent::getNearestTile(pos)]).get<TileComponent>()->shapeId = shapeId;
   }
 }
 
@@ -212,6 +244,26 @@ void TilemapComponent::fromJson(Ref component, AssetLoader loader, const json& c
         }
       }
     }
+  }
+}
+
+void TilemapComponent::copy(Ref src, Ref dst) {
+  auto world = src.getWorld();
+  auto srcTilemap = src.cast<TilemapComponent>();
+  auto dstTilemap = dst.cast<TilemapComponent>();
+
+  for(const auto& [pos, entityId] : srcTilemap->tiles) {
+    dstTilemap->tiles[pos] = world->clone(entityId);
+  }
+
+  auto body = dst.getEntity().get<BodyComponent>()->id;
+  u32 shapeCount = b2Body_GetShapeCount(body);
+  std::vector<b2ShapeId> shapeIds(shapeCount); // to keep track of shapeIds for cleanup if needed
+  b2Body_GetShapes(body, shapeIds.data(), shapeCount);
+  for (u32 i = 0; i < shapeCount; i++) {
+    b2ShapeId shapeId = shapeIds[i];
+    Vec2 pos = getCenterOfShape(shapeId); // Get the position of the shape's center
+    world->getEntity(dstTilemap->tiles[TilemapComponent::getNearestTile(pos)]).get<TileComponent>()->shapeId = shapeId;
   }
 }
 

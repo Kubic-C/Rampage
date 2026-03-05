@@ -51,9 +51,9 @@ public:
 
         // Testing serialization and deserialization stability.
         for(size_t i = 0; i < 5; i++) {
+          serializer.begin(m_world);
           m_world->destroyAllEntitiesWith(m_world->set<OwnedBy<PlayState>, IWorld::Enabled>());
           deserializer.deserializeFromFile(*m_world, "saveFile.rampage");
-          serializer.begin(m_world);
           serializer.queueAllWith(m_world->set<OwnedBy<PlayState>>());
           serializer.end("saveFile.rampage");
         }
@@ -102,7 +102,7 @@ public:
     invMgr.createInventory(m_world, player, 5, 5);
     auto invView = player.get<InventoryViewComponent>();
     invView->name = "Player Inventory";
-    invView->isVisible = true;
+    // invView->isVisible = true;
 
     {
       EntityPtr e = m_world->create();
@@ -111,7 +111,7 @@ public:
       e.add<InventoryViewComponent>();
       auto invView = e.get<InventoryViewComponent>();
       invView->name = "Other Inventory";
-      invView->isVisible = true;
+      // invView->isVisible = true;
     }
 
     invMgr.addItem(m_world, player.id(), basicTurretItem.id(), 10);
@@ -135,8 +135,6 @@ public:
     RefT<TransformComponent> playerTransform = player.get<TransformComponent>();
     playerTransform->pos = Vec2(0.0f, 8.0f);
 
-    assetLoader.cloneAsset("BigAssZombie");
-
     /* WorldMap & Tilemap Component */
     {
       // World Map
@@ -145,28 +143,30 @@ public:
       tm.add<TransformComponent>();
       tm.add<BodyComponent>();
       tm.add<TilemapComponent>();
-      tm.add<WorldMapTag>();
       tm.add<BodyComponent>();
       auto bodyComp = tm.get<BodyComponent>();
       b2BodyDef bodyDef = b2DefaultBodyDef();
-      bodyDef.type = b2_staticBody;
+      bodyDef.type = b2_dynamicBody;
       bodyComp->id = b2CreateBody(physicsWorld, &bodyDef);
 
-      int length = 52;
-      int radius = length / 2;
-      int center = length / 2;
-      for(int x = -center; x < center; x++) {
-        for(int y = -center; y < center; y++) {
-          if(glm::distance(glm::vec2(x, y), glm::vec2(0, 0)) <= radius) {
-            tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0), assetLoader.cloneAsset("StoneFloorTile"));
-          } else {
-            tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0), assetLoader.cloneAsset("PermaHighStoneTile"));
-          }
+      int length = 5;
+      for(int x = -length; x < length; x++) {
+        for(int y = -length; y < length; y++) {
+          tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0), assetLoader.cloneAsset("PermaHighStoneTile"));
         }
       }
 
+      EntityPtr entity = tm.clone();
+      entity.get<TransformComponent>()->pos = Vec2(50.0f, 0.0f); 
+
       m_tm = tm;  
     }
+  }
+
+  static float isAllowed(b2ShapeId shapeId, b2Vec2 point, b2Vec2 normal, float fraction, void* context) {
+    std::vector<b2ShapeId>& shapes = *(std::vector<b2ShapeId>*)context;
+    shapes.push_back(shapeId);
+    return 0;
   }
 
   void onTick(u32 tick, float deltaTime) override {
@@ -179,6 +179,25 @@ public:
     m_fpsText->setText("FPS: " + std::to_string(appStats.fps));
     m_activeBodiesText->setText("Active Rigid Bodies: " + std::to_string(activeBodies));
     m_entityCountText->setText("Entity Count: " + std::to_string(m_world->getEntityCount()));
+
+    Vec2 origin = m_world->getContext<RenderModule>().getWorldCoords(m_world->getContext<EventModule>().getMouseCoords());
+
+    std::vector<b2ShapeId> shapes;
+
+    b2QueryFilter filter;
+    filter.maskBits = All;
+    filter.categoryBits = All;
+    b2World_CastRay(physicsWorldId, origin, Vec2(0), filter, isAllowed, &shapes);
+
+    for(b2ShapeId shape : shapes) {
+      EntityPtr entity = b2DataToEntity(m_world, b2Shape_GetUserData(shape));
+
+      if(entity.has<TileComponent>()) {
+        auto tileComp = entity.get<TileComponent>();
+        m_world->destroy(entity.id());
+        m_world->getEntity(m_tm).get<TilemapComponent>()->tiles.erase(tileComp->pos);          
+      }
+    }
   }
 
   void onLeave() {

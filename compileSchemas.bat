@@ -42,5 +42,40 @@ echo Generated files:
 echo   - rampage.capnp.h
 echo   - rampage.capnp.c++
 echo.
+
+REM Compile JSON schema
+echo Compiling JSON schema...
+cd /d "%~dp0src\common\schema"
+
+set RAMPSONC=%~dp0bin\Rampsonc.exe
+
+if not exist "%RAMPSONC%" (
+    echo Error: Rampsonc not found at %RAMPSONC%
+    exit /b 1
+)
+
+echo Using Rampsonc: %RAMPSONC%
+
+REM Copy schema.json to schema directory if it doesn't exist
+if not exist "schema.json" (
+    copy "%~dp0bin\res\schema.json" "schema.json" >nul
+    if errorlevel 1 (
+        echo Error: Could not copy schema.json from bin\res
+        exit /b 1
+    )
+)
+
+REM Compile the JSON schema
+"%RAMPSONC%" schema.json
+if errorlevel 1 (
+    echo Error: Failed to compile schema.json
+    exit /b 1
+)
+
+echo.
+echo Successfully compiled schema.json
+echo Generated file:
+echo   - jsonSchema.hpp
+echo.
 echo Build the project to regenerate headers if needed.
 pause

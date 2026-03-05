@@ -71,6 +71,7 @@ struct TilemapComponent {
   static void serialize(capnp::MessageBuilder& builder, Ref component);
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
   static void fromJson(Ref component, AssetLoader loader, const json& compJson);
+  static void copy(Ref src, Ref dst);
 
   static constexpr int maxTopLayer = 1;
   static constexpr int minTopLayer = -1;
