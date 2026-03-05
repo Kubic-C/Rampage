@@ -2,417 +2,772 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Game Asset Loader Schema",
   "description": "Schema for loading game entity assets with components as discriminated variants",
-  "type": "array",
-  "items": {
-    "type": "object",
-    "required": ["name", "data"],
-    "properties": {
-      "name": { "type": "string" },
-      "data": {
+  "type": "object",
+  "properties": {
+    "entities": {
+      "type": "array",
+      "items": {
         "type": "object",
-        "required": ["type", "components"],
+        "required": [
+          "name",
+          "data"
+        ],
         "properties": {
-          "type": { "type": "string", "const": "Entity" },
-          "components": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": ["type"],
-              "oneOf": [
-                {
-                  "properties": {
-                    "type": { "const": "TransformComponent" },
-                    "pos": {
-                      "type": "object",
+          "name": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "type",
+              "components"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "Entity"
+              },
+              "components": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "type"
+                  ],
+                  "oneOf": [
+                    {
                       "properties": {
-                        "x": { "type": "number" },
-                        "y": { "type": "number" }
-                      }
-                    },
-                    "rot": { "type": "number" }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "SpriteComponent" },
-                    "scaling": { "type": "number" },
-                    "subSprites": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "gridPos": {
-                            "type": "object",
-                            "properties": {
-                              "x": { "type": "number" },
-                              "y": { "type": "number" }
-                            }
-                          },
-                          "layers": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "path": { "type": "string" },
-                                "layer": { "type": "string", "enum": ["Bottom", "Floor", "Wall", "Turret", "Item", "Top"] },
-                                "offset": {
-                                  "type": "object",
-                                  "properties": {
-                                    "x": { "type": "number" },
-                                    "y": { "type": "number" }
-                                  }
-                                },
-                                "rot": { "type": "number" }
-                              }
+                        "type": {
+                          "const": "TransformComponent"
+                        },
+                        "pos": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number"
+                            },
+                            "y": {
+                              "type": "number"
                             }
                           }
+                        },
+                        "rot": {
+                          "type": "number"
                         }
-                      }
-                    }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "CameraComponent" },
-                    "zoom": { "type": "number" },
-                    "rot": { "type": "number" }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "SeekPrimaryTargetTag" }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "PrimaryTargetTag" }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "WorldMapTag" }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "HealthComponent" },
-                    "health": { "type": "number" }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "ContactDamageComponent" },
-                    "damage": { "type": "number" }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "BulletDamageComponent" },
-                    "damage": { "type": "number" }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "LifetimeComponent" },
-                    "timeLeft": { "type": "number" }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "PlayerComponent" },
-                    "accel": { "type": "number" },
-                    "maxSpeed": { "type": "number" }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "BodyComponent" },
-                    "bodyType": { "type": "string", "enum": ["dynamic", "static", "kinematic"] },
-                    "linearDamping": { "type": "number" },
-                    "angularDamping": { "type": "number" },
-                    "gravityScale": { "type": "number" },
-                    "isBullet": { "type": "boolean" },
-                    "enableSleep": { "type": "boolean" },
-                    "shapes": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "enableContactEvents": { "type": "boolean" },
-                          "enableSensorEvents": { "type": "boolean" },
-                          "density": { "type": "number" },
-                          "friction": { "type": "number" },
-                          "restitution": { "type": "number" },
-                          "isSensor": { "type": "boolean" },
-                          "categoryMask": {
-                            "type": "array",
-                            "items": { "type": "string" }
-                          },
-                          "collisionMask": {
-                            "type": "array",
-                            "items": { "type": "string" }
-                          },
-                          "shape": {
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "properties": {
+                        "type": {
+                          "const": "SpriteComponent"
+                        },
+                        "scaling": {
+                          "type": "number"
+                        },
+                        "subSprites": {
+                          "type": "array",
+                          "items": {
                             "type": "object",
-                            "required": ["shapeType"],
                             "properties": {
-                              "shapeType": { "type": "string", "enum": ["Circle", "Polygon"] },
-                              "radius": { "type": "number" },
-                              "vertices": {
+                              "gridPos": {
+                                "type": "object",
+                                "properties": {
+                                  "x": {
+                                    "type": "number"
+                                  },
+                                  "y": {
+                                    "type": "number"
+                                  }
+                                }
+                              },
+                              "layers": {
                                 "type": "array",
                                 "items": {
                                   "type": "object",
-                                  "required": ["x", "y"],
                                   "properties": {
-                                    "x": { "type": "number" },
-                                    "y": { "type": "number" }
+                                    "path": {
+                                      "type": "string"
+                                    },
+                                    "layer": {
+                                      "type": "string",
+                                      "enum": [
+                                        "Bottom",
+                                        "Floor",
+                                        "Wall",
+                                        "Turret",
+                                        "Item",
+                                        "Top"
+                                      ]
+                                    },
+                                    "offset": {
+                                      "type": "object",
+                                      "properties": {
+                                        "x": {
+                                          "type": "number"
+                                        },
+                                        "y": {
+                                          "type": "number"
+                                        }
+                                      }
+                                    },
+                                    "rot": {
+                                      "type": "number"
+                                    }
                                   }
-                                },
-                                "maxItems": 8
+                                }
                               }
                             }
                           }
                         }
-                      }
-                    }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "TileComponent" },
-                    "collidable": { "type": "boolean" },
-                    "pos": {
-                      "type": "object",
-                      "properties": {
-                        "x": { "type": "integer" },
-                        "y": { "type": "integer" },
-                        "z": { "type": "integer" }
-                      }
+                      },
+                      "required": [
+                        "type"
+                      ]
                     },
-                    "material": {
-                      "type": "object",
+                    {
                       "properties": {
-                        "friction": { "type": "number" },
-                        "restitution": { "type": "number" }
-                      }
-                    }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "ArrowComponent" },
-                    "dir": {
-                      "type": "object",
-                      "properties": {
-                        "x": { "type": "number" },
-                        "y": { "type": "number" }
-                      }
-                    },
-                    "cost": { "type": "number" },
-                    "generation": { "type": "integer", "minimum": 0 },
-                    "tileCost": { "type": "integer", "minimum": 0 }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "MultiTileComponent" },
-                    "occupiedPositions": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "x": { "type": "integer" },
-                          "y": { "type": "integer" },
-                          "z": { "type": "integer" }
+                        "type": {
+                          "const": "CameraComponent"
+                        },
+                        "zoom": {
+                          "type": "number"
+                        },
+                        "rot": {
+                          "type": "number"
                         }
-                      }
+                      },
+                      "required": [
+                        "type"
+                      ]
                     },
-                    "anchorPos": {
-                      "type": "object",
+                    {
                       "properties": {
-                        "x": { "type": "integer" },
-                        "y": { "type": "integer" },
-                        "z": { "type": "integer" }
-                      }
-                    }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "TurretComponent" },
-                    "fireRate": { "type": "number" },
-                    "timeSinceLastShot": { "type": "number" },
-                    "radius": { "type": "number" },
-                    "rot": { "type": "number" },
-                    "turnSpeed": { "type": "number" },
-                    "shootRange": { "type": "number" },
-                    "stopRange": { "type": "number" },
-                    "muzzleVelocity": { "type": "number" },
-                    "bulletRadius": { "type": "number" },
-                    "bulletDamage": { "type": "number" },
-                    "bulletHealth": { "type": "number" },
-                    "summon": { "type": "string" }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "SpawnerComponent" },
-                    "spawn": { "type": "string" },
-                    "spawnRate": { "type": "number" },
-                    "spawnableRadius": { "type": "number" },
-                    "spawnCount": { "type": "integer", "minimum": 0 }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "CircleRenderComponent" },
-                    "radius": { "type": "number" },
-                    "offset": {
-                      "type": "object",
-                      "properties": {
-                        "x": { "type": "number" },
-                        "y": { "type": "number" }
-                      }
-                    },
-                    "z": { "type": "number" },
-                    "color": {
-                      "type": "object",
-                      "properties": {
-                        "r": { "type": "number" },
-                        "g": { "type": "number" },
-                        "b": { "type": "number" }
-                      }
-                    }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "RectangleRenderComponent" },
-                    "hw": { "type": "number" },
-                    "hh": { "type": "number" },
-                    "z": { "type": "number" },
-                    "color": {
-                      "type": "object",
-                      "properties": {
-                        "r": { "type": "number" },
-                        "g": { "type": "number" },
-                        "b": { "type": "number" }
-                      }
-                    }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "ItemComponent" },
-                    "name": { "type": "string" },
-                    "description": { "type": "string" },
-                    "maxStackSize": { "type": "integer", "minimum": 0 },
-                    "stackCost": { "type": "integer", "minimum": 0 },
-                    "isUnique": { "type": "boolean" },
-                    "iconAsset": { "type": "string" }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "InventoryComponent" },
-                    "cols": { "type": "integer", "minimum": 0 },
-                    "rows": { "type": "integer", "minimum": 0 },
-                    "items": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "count": { "type": "integer", "minimum": 0 },
-                          "itemEntityName": { "type": "string" }
+                        "type": {
+                          "const": "SeekPrimaryTargetTag"
                         }
-                      }
-                    }
-                  },
-                  "required": ["type"]
-                },
-                {
-                  "properties": {
-                    "type": { "const": "InventoryViewComponent" },
-                    "name": { "type": "string" },
-                    "pos": {
-                      "type": "object",
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
                       "properties": {
-                        "x": { "type": "number" },
-                        "y": { "type": "number" }
-                      }
+                        "type": {
+                          "const": "PrimaryTargetTag"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
                     },
-                    "isVisible": { "type": "boolean" },
-                    "isInteractable": { "type": "boolean" },
-                    "padding": {
-                      "type": "object",
+                    {
                       "properties": {
-                        "x": { "type": "number" },
-                        "y": { "type": "number" }
-                      }
+                        "type": {
+                          "const": "WorldMapTag"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
                     },
-                    "slotSize": { "type": "number" },
-                    "rounding": { "type": "number" },
-                    "windowBackgroundColor": {
-                      "type": "array",
-                      "items": { "type": "integer" },
-                      "minItems": 4,
-                      "maxItems": 4
+                    {
+                      "properties": {
+                        "type": {
+                          "const": "HealthComponent"
+                        },
+                        "health": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
                     },
-                    "borderColor": {
-                      "type": "array",
-                      "items": { "type": "integer" },
-                      "minItems": 4,
-                      "maxItems": 4
+                    {
+                      "properties": {
+                        "type": {
+                          "const": "ContactDamageComponent"
+                        },
+                        "damage": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
                     },
-                    "emptySlotColor": {
-                      "type": "array",
-                      "items": { "type": "integer" },
-                      "minItems": 4,
-                      "maxItems": 4
+                    {
+                      "properties": {
+                        "type": {
+                          "const": "BulletDamageComponent"
+                        },
+                        "damage": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
                     },
-                    "textColor": {
-                      "type": "array",
-                      "items": { "type": "integer" },
-                      "minItems": 4,
-                      "maxItems": 4
+                    {
+                      "properties": {
+                        "type": {
+                          "const": "LifetimeComponent"
+                        },
+                        "timeLeft": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
                     },
-                    "hoverSlotColor": {
-                      "type": "array",
-                      "items": { "type": "integer" },
-                      "minItems": 4,
-                      "maxItems": 4
+                    {
+                      "properties": {
+                        "type": {
+                          "const": "PlayerComponent"
+                        },
+                        "accel": {
+                          "type": "number"
+                        },
+                        "maxSpeed": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
                     },
-                    "dragHoverSlotColor": {
-                      "type": "array",
-                      "items": { "type": "integer" },
-                      "minItems": 4,
-                      "maxItems": 4
+                    {
+                      "properties": {
+                        "type": {
+                          "const": "BodyComponent"
+                        },
+                        "bodyType": {
+                          "type": "string",
+                          "enum": [
+                            "dynamic",
+                            "static",
+                            "kinematic"
+                          ]
+                        },
+                        "linearDamping": {
+                          "type": "number"
+                        },
+                        "angularDamping": {
+                          "type": "number"
+                        },
+                        "gravityScale": {
+                          "type": "number"
+                        },
+                        "isBullet": {
+                          "type": "boolean"
+                        },
+                        "enableSleep": {
+                          "type": "boolean"
+                        },
+                        "shapes": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "enableContactEvents": {
+                                "type": "boolean"
+                              },
+                              "enableSensorEvents": {
+                                "type": "boolean"
+                              },
+                              "density": {
+                                "type": "number"
+                              },
+                              "friction": {
+                                "type": "number"
+                              },
+                              "restitution": {
+                                "type": "number"
+                              },
+                              "isSensor": {
+                                "type": "boolean"
+                              },
+                              "categoryMask": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "collisionMask": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "shape": {
+                                "type": "object",
+                                "required": [
+                                  "shapeType"
+                                ],
+                                "properties": {
+                                  "shapeType": {
+                                    "type": "string",
+                                    "enum": [
+                                      "Circle",
+                                      "Polygon"
+                                    ]
+                                  },
+                                  "radius": {
+                                    "type": "number",
+                                    "default": 0
+                                  },
+                                  "vertices": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "required": [
+                                        "x",
+                                        "y"
+                                      ],
+                                      "properties": {
+                                        "x": {
+                                          "type": "number"
+                                        },
+                                        "y": {
+                                          "type": "number"
+                                        }
+                                      }
+                                    },
+                                    "maxItems": 8
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "properties": {
+                        "type": {
+                          "const": "TileComponent"
+                        },
+                        "collidable": {
+                          "type": "boolean"
+                        },
+                        "pos": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "integer"
+                            },
+                            "y": {
+                              "type": "integer"
+                            },
+                            "z": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "material": {
+                          "type": "object",
+                          "properties": {
+                            "friction": {
+                              "type": "number"
+                            },
+                            "restitution": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "properties": {
+                        "type": {
+                          "const": "ArrowComponent"
+                        },
+                        "dir": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number"
+                            },
+                            "y": {
+                              "type": "number"
+                            }
+                          }
+                        },
+                        "cost": {
+                          "type": "number"
+                        },
+                        "generation": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "tileCost": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "properties": {
+                        "type": {
+                          "const": "MultiTileComponent"
+                        },
+                        "occupiedPositions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "x": {
+                                "type": "integer"
+                              },
+                              "y": {
+                                "type": "integer"
+                              },
+                              "z": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        },
+                        "anchorPos": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "integer"
+                            },
+                            "y": {
+                              "type": "integer"
+                            },
+                            "z": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "properties": {
+                        "type": {
+                          "const": "TurretComponent"
+                        },
+                        "fireRate": {
+                          "type": "number"
+                        },
+                        "timeSinceLastShot": {
+                          "type": "number"
+                        },
+                        "radius": {
+                          "type": "number"
+                        },
+                        "rot": {
+                          "type": "number"
+                        },
+                        "turnSpeed": {
+                          "type": "number"
+                        },
+                        "shootRange": {
+                          "type": "number"
+                        },
+                        "stopRange": {
+                          "type": "number"
+                        },
+                        "muzzleVelocity": {
+                          "type": "number"
+                        },
+                        "bulletRadius": {
+                          "type": "number"
+                        },
+                        "bulletDamage": {
+                          "type": "number"
+                        },
+                        "bulletHealth": {
+                          "type": "number"
+                        },
+                        "summon": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "properties": {
+                        "type": {
+                          "const": "SpawnerComponent"
+                        },
+                        "spawn": {
+                          "type": "string"
+                        },
+                        "spawnRate": {
+                          "type": "number"
+                        },
+                        "spawnableRadius": {
+                          "type": "number"
+                        },
+                        "spawnCount": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "properties": {
+                        "type": {
+                          "const": "CircleRenderComponent"
+                        },
+                        "radius": {
+                          "type": "number"
+                        },
+                        "offset": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number"
+                            },
+                            "y": {
+                              "type": "number"
+                            }
+                          }
+                        },
+                        "z": {
+                          "type": "number"
+                        },
+                        "color": {
+                          "type": "object",
+                          "properties": {
+                            "r": {
+                              "type": "number"
+                            },
+                            "g": {
+                              "type": "number"
+                            },
+                            "b": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "properties": {
+                        "type": {
+                          "const": "RectangleRenderComponent"
+                        },
+                        "hw": {
+                          "type": "number"
+                        },
+                        "hh": {
+                          "type": "number"
+                        },
+                        "z": {
+                          "type": "number"
+                        },
+                        "color": {
+                          "type": "object",
+                          "properties": {
+                            "r": {
+                              "type": "number"
+                            },
+                            "g": {
+                              "type": "number"
+                            },
+                            "b": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "properties": {
+                        "type": {
+                          "const": "ItemComponent"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "maxStackSize": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "stackCost": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "isUnique": {
+                          "type": "boolean"
+                        },
+                        "iconAsset": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "properties": {
+                        "type": {
+                          "const": "InventoryComponent"
+                        },
+                        "cols": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "rows": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "count": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "itemEntityName": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "properties": {
+                        "type": {
+                          "const": "InventoryViewComponent"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "pos": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number"
+                            },
+                            "y": {
+                              "type": "number"
+                            }
+                          }
+                        },
+                        "isVisible": {
+                          "type": "boolean"
+                        },
+                        "isInteractable": {
+                          "type": "boolean"
+                        },
+                        "padding": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number"
+                            },
+                            "y": {
+                              "type": "number"
+                            }
+                          }
+                        },
+                        "slotSize": {
+                          "type": "number"
+                        },
+                        "rounding": {
+                          "type": "number"
+                        },
+                        "windowBackgroundColor": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer"
+                          },
+                          "minItems": 4,
+                          "maxItems": 4
+                        },
+                        "borderColor": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer"
+                          },
+                          "minItems": 4,
+                          "maxItems": 4
+                        },
+                        "emptySlotColor": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer"
+                          },
+                          "minItems": 4,
+                          "maxItems": 4
+                        },
+                        "textColor": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer"
+                          },
+                          "minItems": 4,
+                          "maxItems": 4
+                        },
+                        "hoverSlotColor": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer"
+                          },
+                          "minItems": 4,
+                          "maxItems": 4
+                        },
+                        "dragHoverSlotColor": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer"
+                          },
+                          "minItems": 4,
+                          "maxItems": 4
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
                     }
-                  },
-                  "required": ["type"]
+                  ],
+                  "discriminator": {
+                    "propertyName": "type"
+                  }
                 }
-              ],
-              "discriminator": { "propertyName": "type" }
+              }
             }
           }
         }

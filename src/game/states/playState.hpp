@@ -78,62 +78,20 @@ public:
     m_menu->setEnabled(true);
     m_menu->setVisible(true);
 
-    EntityPtr basicTurretItem = m_world->create();
-    basicTurretItem.add<ItemComponent>();
-    auto itemComp = basicTurretItem.get<ItemComponent>(); 
-    itemComp->name = "Basic Turret";
-    itemComp->icon = tgui::Texture("res/entities/basicTurretIcon.png");
-    itemComp->isUnique = false;
-    itemComp->maxStackSize = 16;
-    itemComp->stackCost = 4;
-
     /* Player */
-    EntityPtr player = m_world->create();
-    player.add<CameraComponent>();
+    EntityPtr player = assetLoader.cloneAsset("BasicPlayer");
     player.add<CameraInUseTag>();
-    player.add<PlayerComponent>();
-    player.add<PrimaryTargetTag>();
-    player.add<BodyComponent>();
-    player.add<RectangleRenderComponent>();
-    player.add<InventoryComponent>();
-    player.add<InventoryViewComponent>();
-    player.add<TransformComponent>();
+    invMgr.addItem(m_world, player, assetLoader.getAsset("BasicTurretItem"), 64);
+    invMgr.addItem(m_world, player, assetLoader.getAsset("BigGunTurretItem"), 4);
+    invMgr.addItem(m_world, player, assetLoader.getAsset("WoodItem"), 43);
+    invMgr.addItem(m_world, player, assetLoader.getAsset("FenceItem"), 27);
+    invMgr.addItem(m_world, player, assetLoader.getAsset("PlaceableHighStoneItem"));
+    invMgr.addItem(m_world, player, assetLoader.getAsset("ZombieSpawnableItem"), 21);
 
-    invMgr.createInventory(m_world, player, 5, 5);
-    auto invView = player.get<InventoryViewComponent>();
-    invView->name = "Player Inventory";
-    // invView->isVisible = true;
-
-    {
-      EntityPtr e = m_world->create();
-      e.add<InventoryComponent>();
-      invMgr.createInventory(m_world, e, 5, 5);
-      e.add<InventoryViewComponent>();
-      auto invView = e.get<InventoryViewComponent>();
-      invView->name = "Other Inventory";
-      // invView->isVisible = true;
+    for(int i = 0; i < 20; i++) {
+      EntityPtr ptr = assetLoader.cloneAsset("BasicZombie");
+      ptr.get<TransformComponent>()->pos = Vec2((i % 100) * 0.5f, (i % 15) * 0.5f);
     }
-
-    invMgr.addItem(m_world, player.id(), basicTurretItem.id(), 10);
-
-    // Render
-    auto renderRect = player.get<RectangleRenderComponent>();
-    renderRect->hw = 0.12f;
-    renderRect->hh = 0.12f;
-
-    // Collider
-    b2BodyDef bodyDef = b2DefaultBodyDef();
-    bodyDef.type = b2_dynamicBody;
-    bodyDef.linearDamping = 10;
-    b2BodyId bodyId = b2CreateBody(physicsWorld, &bodyDef);
-    player.get<BodyComponent>()->id = bodyId;
-    b2ShapeDef shapeDef = b2DefaultShapeDef();
-    shapeDef.density = 1000;
-    b2Polygon rect = b2MakeBox(0.12f, 0.12f);
-    b2CreatePolygonShape(bodyId, &shapeDef, &rect);
-
-    RefT<TransformComponent> playerTransform = player.get<TransformComponent>();
-    playerTransform->pos = Vec2(0.0f, 8.0f);
 
     /* WorldMap & Tilemap Component */
     {
@@ -144,20 +102,26 @@ public:
       tm.add<BodyComponent>();
       tm.add<TilemapComponent>();
       tm.add<BodyComponent>();
+      tm.add<WorldMapTag>();
       auto bodyComp = tm.get<BodyComponent>();
       b2BodyDef bodyDef = b2DefaultBodyDef();
-      bodyDef.type = b2_dynamicBody;
+      bodyDef.type = b2_staticBody;
       bodyComp->id = b2CreateBody(physicsWorld, &bodyDef);
 
-      int length = 5;
-      for(int x = -length; x < length; x++) {
-        for(int y = -length; y < length; y++) {
-          tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0), assetLoader.cloneAsset("PermaHighStoneTile"));
-        }
-      }
+      int length = 10;
+      for(int x = -length; x < length * 10; x++)
+        for(int y = -length; y < length; y++)
+          tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0), assetLoader.cloneAsset("StoneFloorTile"));
 
-      EntityPtr entity = tm.clone();
-      entity.get<TransformComponent>()->pos = Vec2(50.0f, 0.0f); 
+      // Stone outline around the tilemap
+      for(int x = -length - 1; x <= length * 10; x++) {
+        tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, length, 0), assetLoader.cloneAsset("PermaHighStoneTile"));
+        tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, -length - 1, 0), assetLoader.cloneAsset("PermaHighStoneTile"));
+      }
+      for(int y = -length; y < length; y++) {
+        tmMgr.insertTile(m_world, tm.id(), glm::ivec3(-length - 1, y, 0), assetLoader.cloneAsset("PermaHighStoneTile"));
+        tmMgr.insertTile(m_world, tm.id(), glm::ivec3(length * 10, y, 0), assetLoader.cloneAsset("PermaHighStoneTile"));
+      }
 
       m_tm = tm;  
     }
@@ -172,6 +136,7 @@ public:
   void onTick(u32 tick, float deltaTime) override {
     auto& appStats = m_world->getContext<AppStats>();
     auto& physicsWorldId = m_world->getContext<b2WorldId>();
+    auto& tmMgr = m_world->getContext<TilemapManager>();
     const u32 activeBodies = b2World_GetAwakeBodyCount(physicsWorldId);
 
     m_tickText->setText("Tick: " + std::to_string(tick));
@@ -188,16 +153,18 @@ public:
     filter.maskBits = All;
     filter.categoryBits = All;
     b2World_CastRay(physicsWorldId, origin, Vec2(0), filter, isAllowed, &shapes);
-
     for(b2ShapeId shape : shapes) {
       EntityPtr entity = b2DataToEntity(m_world, b2Shape_GetUserData(shape));
+      if(entity.isNull() || !entity.alive())
+        continue;
 
       if(entity.has<TileComponent>()) {
         auto tileComp = entity.get<TileComponent>();
-        m_world->destroy(entity.id());
-        m_world->getEntity(m_tm).get<TilemapComponent>()->tiles.erase(tileComp->pos);          
+        // m_world->destroy(tmMgr.removeTile(m_world, tileComp->parent, tileComp->pos));
       }
     }
+
+    tmMgr.checkAndHandleBreakage(m_world, m_tm);
   }
 
   void onLeave() {

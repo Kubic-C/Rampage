@@ -136,7 +136,7 @@ EntityPtr TilemapManager::removeTile(IWorldPtr world, EntityId tilemapEntityId, 
   // Check if the tilemap has split
   checkAndHandleBreakage(world, tilemapEntityId);
 
-  return world->getEntity(tileEntity);
+  return tileEntity;
 }
 
 bool TilemapManager::isAnchorTile(IWorldPtr world, EntityId tileId) {
@@ -288,6 +288,7 @@ std::vector<EntityPtr> TilemapManager::checkAndHandleBreakage(IWorldPtr world, E
 
       // Move tile to new tilemap
       newTilemap->tiles[newPos] = tilemap->tiles[oldPos];
+      tilemap->tiles[oldPos] = NullEntityId;
     }
 
     // Recalculate mass for new tilemap

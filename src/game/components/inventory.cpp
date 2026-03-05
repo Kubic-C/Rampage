@@ -29,7 +29,11 @@ void ItemComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id
   self->maxStackSize = itemReader.getMaxStackSize();
   self->stackCost = itemReader.getStackCost();
   self->isUnique = itemReader.getIsUnique();
-  self->icon = tgui::Texture(itemReader.getIconPath().cStr()); // Load texture from path
+  
+  std::string pathStr = itemReader.getIconPath().cStr();
+  if (std::filesystem::exists(pathStr)) {
+    self->icon = tgui::Texture(pathStr); // Load texture from path
+  }
 }
 
 void ItemComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
@@ -53,7 +57,12 @@ void ItemComponent::fromJson(Ref component, AssetLoader loader, const JSchema::J
 
   // Load icon from asset loader if iconAsset is specified
   if (compJson->hasIconAsset()) {
-    self->icon = tgui::Texture(compJson->getIconAsset());
+    std::string pathStr = compJson->getIconAsset();
+    if (std::filesystem::exists(pathStr)) {
+      self->icon = tgui::Texture(pathStr); // Load texture from path
+    } else {
+      component.getWorld()->getHost().log("Could not load icon asset for ItemComponent: %s for %s", pathStr.c_str(), self->name.c_str());
+    }
   }
 }
 
@@ -378,15 +387,17 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
         window->add(label);
         slotLabels[index] = label;
 
-        label->onMouseEnter([this, index]() {
+        label->onMouseEnter([this, inventoryEntity, index]() {
           if (isInteractable) {
             slotBackgrounds[index]->getRenderer()->setBackgroundColor(isDragging ? dragHoverSlotColor : hoverSlotColor);
+            showTooltip(inventoryEntity, index);
           }
         });
 
         label->onMouseLeave([this, index]() {
           if (isInteractable) {
             slotBackgrounds[index]->getRenderer()->setBackgroundColor(emptySlotColor);
+            hideTooltip();
           }
         });
 
@@ -416,6 +427,56 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
     window->onPositionChange([this]() {
       pos = Vec2(window->getPosition().x, window->getPosition().y);
     });
+
+    // Create tooltip panel (initially hidden)
+    if (!tooltipPanel) {
+      tgui::Vector2f windowSize = window->getSize();
+      float tooltipWidth = windowSize.x;
+      float tooltipHeight = windowSize.y * 0.7f; // 70% of window height
+
+      tooltipPanel = tgui::Panel::create();
+      tooltipPanel->setSize(tooltipWidth, tooltipHeight);
+      tooltipPanel->getRenderer()->setBackgroundColor(windowBackgroundColor);
+      tooltipPanel->getRenderer()->setBorderColor(borderColor);
+      tooltipPanel->getRenderer()->setBorders({2, 2, 2, 2});
+      gui.add(tooltipPanel);
+
+      // Tooltip icon (scale with window)
+      float iconSize = slotSize * 0.8f;
+      tooltipIcon = tgui::Picture::create();
+      tooltipIcon->setSize(iconSize, iconSize);
+      tooltipIcon->setPosition(5, 5);
+      tooltipPanel->add(tooltipIcon);
+
+      // Tooltip name label
+      tooltipName = tgui::Label::create();
+      tooltipName->setSize(tooltipWidth - iconSize - 15, tooltipHeight * 0.25f);
+      tooltipName->setPosition(iconSize + 10, 5);
+      tooltipName->getRenderer()->setTextColor(textColor);
+      tooltipName->setTextSize(12);
+      tooltipPanel->add(tooltipName);
+
+      tooltipDescription = tgui::Label::create();
+      tooltipDescription->setSize(tooltipWidth - 10, tooltipHeight * 0.5f);
+      tooltipDescription->setPosition(5, iconSize + 10);
+      tooltipDescription->getRenderer()->setTextColor(textColor);
+      tooltipDescription->getRenderer()->setBorderColor(borderColor);
+      tooltipDescription->getRenderer()->setBorders({1, 1, 1, 1});
+      tooltipDescription->setTextSize(11);
+      tooltipDescription->setScrollbarPolicy(tgui::Scrollbar::Policy::Never);
+      tooltipPanel->add(tooltipDescription);
+
+      // Tooltip unique status label
+      tooltipUnique = tgui::Label::create();
+      tooltipUnique->setSize(tooltipWidth - 10, tooltipHeight * 0.15f);
+      tooltipUnique->getRenderer()->setTextColor(textColor);
+      tooltipUnique->setTextSize(11);
+      tooltipUnique->setAutoLayout(tgui::AutoLayout::Bottom);
+      tooltipUnique->setScrollbarPolicy(tgui::Scrollbar::Policy::Never);
+      tooltipPanel->add(tooltipUnique);
+
+      tooltipPanel->setVisible(false);
+    }
   }
 
   if(window->isVisible() != isVisible)
@@ -549,5 +610,52 @@ bool InventoryViewComponent::hasVisualConfigChanged(u32 sizeX, u32 sizeY, u32 pr
   return calculateVisualChecksum(sizeX, sizeY) != previousChecksum;
 }
 
+
+void InventoryViewComponent::showTooltip(EntityPtr inventoryEntity, size_t slotIndex) {
+  if (!inventoryEntity || !inventoryEntity.has<InventoryComponent>() || !tooltipPanel) {
+    return;
+  }
+
+  auto invComp = inventoryEntity.get<InventoryComponent>();
+  if (slotIndex >= invComp->items.size()) {
+    return;
+  }
+
+  const ItemStack& slot = invComp->items[slotIndex];
+  if (slot.itemId == 0) {
+    tooltipPanel->setVisible(false);
+    return;
+  }
+
+  IWorldPtr world = inventoryEntity.world();
+  auto itemEntity = world->getEntity(slot.itemId);
+  if (!itemEntity || !itemEntity.has<ItemComponent>()) {
+    tooltipPanel->setVisible(false);
+    return;
+  }
+
+  auto itemComp = itemEntity.get<ItemComponent>();
+
+  // Update tooltip content
+  tooltipIcon->getRenderer()->setTexture(itemComp->icon);
+  tooltipName->setText(itemComp->name);
+  tooltipDescription->setText(itemComp->description.empty() ? "No description" : itemComp->description);
+  tooltipUnique->setText(itemComp->isUnique ? "Unique Item" : "Stackable");
+
+  // Position tooltip below the inventory window
+  if (window) {
+    tgui::Vector2f windowPos = window->getPosition();
+    tgui::Vector2f windowSize = window->getSize();
+    tooltipPanel->setPosition(windowPos.x, windowPos.y + windowSize.y + 10);
+  }
+
+  tooltipPanel->setVisible(true);
+}
+
+void InventoryViewComponent::hideTooltip() {
+  if (tooltipPanel) {
+    tooltipPanel->setVisible(false);
+  }
+}
 
 RAMPAGE_END

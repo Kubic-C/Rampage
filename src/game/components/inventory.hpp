@@ -92,6 +92,13 @@ private:
   std::vector<tgui::Picture::Ptr> slotPictures;
   std::vector<tgui::Label::Ptr> slotLabels;
 
+  // Tooltip panel and widgets
+  tgui::Panel::Ptr tooltipPanel;
+  tgui::Picture::Ptr tooltipIcon;
+  tgui::Label::Ptr tooltipName;
+  tgui::Label::Ptr tooltipDescription;
+  tgui::Label::Ptr tooltipUnique;
+
   // Track grid size changes to rebuild UI when inventory dimensions change
   u32 prevVisualChecksum;
   EntityId inventoryEntityId; // The entity this view is representing (for drag/drop)
@@ -108,6 +115,10 @@ private:
   // Slot click/drag callbacks
   void onSlotMouseDown(EntityPtr inventoryEntity, glm::u16vec2 slotPos);
   void onSlotMouseUp(EntityPtr inventoryEntity, glm::u16vec2 slotPos);
+  
+  // Tooltip display helpers
+  void showTooltip(EntityPtr inventoryEntity, size_t slotIndex);
+  void hideTooltip();
   
   // Helper to perform the actual item move
   void performItemDrop(EntityPtr inventoryEntity, InventoryViewComponent* sourceView, glm::u16vec2 sourceSlot, 

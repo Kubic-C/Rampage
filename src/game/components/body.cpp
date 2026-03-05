@@ -251,7 +251,7 @@ void BodyComponent::addShapeFromJson(b2BodyId bodyId, const JSchema::ShapesItem&
         circle.radius = shapeDef2.getRadius();
       b2CreateCircleShape(bodyId, &shapeDef, &circle);
     } else if (shapeType == "Polygon") {
-      b2Polygon polygon;
+      b2Polygon polygon{0};
       if (shapeDef2.hasVertices()) {
         const auto& vertices = shapeDef2.getVertices();
         if (vertices.size() <= 8) {
@@ -261,7 +261,7 @@ void BodyComponent::addShapeFromJson(b2BodyId bodyId, const JSchema::ShapesItem&
             verts[i] = b2Vec2{(float)vertices[i].getX(), (float)vertices[i].getY()};
 
           b2Hull hull = b2ComputeHull(verts, size);
-          b2Polygon poly = b2MakePolygon(&hull, 0.0f); 
+          polygon = b2MakePolygon(&hull, 0.0f); 
         }
       }
       b2CreatePolygonShape(bodyId, &shapeDef, &polygon);

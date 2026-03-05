@@ -1,424 +1,582 @@
- [
-  {
-    "name": "RootLoader",
-    "data": {
-      "type": "Entity",
-      "components": []
-    }
-  },
-  {
-    "name": "BasicZombie",
-    "data": {
-      "type": "Entity",
-      "components": [
-        {
-          "type": "TransformComponent"
-        },
-        {
-          "type": "SpriteComponent",
-          "subSprites": [
-            {
-              "layers": [
-                {
-                  "path": "zombie",
-                  "layer": "Top"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "SeekPrimaryTargetTag"
-        },
-        {
-          "type": "HealthComponent",
-          "health": 100
-        },
-        {
-          "type": "ContactDamageComponent",
-          "damage": 5
-        },
-        {
-          "type": "BodyComponent",
-          "bodyType": "dynamic",
-          "linearDamping": 5,
-          "shapes": [
-            {
-              "enableContactEvents": true,
-              "categoryMask": ["Enemy"],
-              "collisionMask": ["All"],
-              "density": 10,
-              "shape": {
-                "shapeType": "Circle",
-                "radius": 0.25
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "name": "BigAssZombie",
-    "data": {
-      "type": "Entity",
-      "components": [
-        {
-          "type": "TransformComponent",
-          "scale": 2.0
-        },
-        {
-          "type": "SpriteComponent",
-          "scaling": 2.0,
-          "subSprites": [
-            {
-              "layers": [
-                {
-                  "path": "zombie",
-                  "layer": "Top"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "SeekPrimaryTargetTag"
-        },
-        {
-          "type": "HealthComponent",
-          "health": 100
-        },
-        {
-          "type": "ContactDamageComponent",
-          "damage": 5
-        },
-        {
-          "type": "BodyComponent",
-          "bodyType": "dynamic",
-          "linearDamping": 5,
-          "shapes": [
-            {
-              "enableContactEvents": true,
-              "categoryMask": ["Enemy"],
-              "collisionMask": ["All"],
-              "density": 10,
-              "shape": {
-                "shapeType": "Circle",
-                "radius": 1.0
-              }
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "name": "UnknownTile",
-    "data": {
-      "type": "Entity",
-      "components": [
-        {
-          "type": "SpriteComponent",
-          "subSprites": [
-            {
-              "layers": [
-                {
-                  "path": "unknown",
-                  "layer": "Floor"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "TileComponent",
-          "collidable": false
-        }
-      ]
-    }
-  },
-  {
-    "name": "StoneFloorTile",
-    "data": {
-      "type": "Entity",
-      "components": [
-        {
-          "type": "SpriteComponent",
-          "subSprites": [
-            {
-              "layers": [
-                {
-                  "path": "stone",
-                  "layer": "Floor"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "TileComponent",
-          "collidable": false
-        },
-        {
-          "type": "ArrowComponent"
-        }
-      ]
-    }
-  },
-  {
-    "name": "PermaHighStoneTile",
-    "data": {
-      "type": "Entity",
-      "components": [
-        {
-          "type": "SpriteComponent",
-          "subSprites": [
-            {
-              "layers": [
-                {
-                  "path": "permaHighStone",
-                  "layer": "Wall"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "TileComponent",
-          "material": {
-            "friction": 0.0,
-            "restitution": 1.0
+{
+  "$schema": "schema.json",
+  "entities": [
+    {
+      "name": "RootLoader",
+      "data": {
+        "type": "Entity",
+        "components": []
+      }
+    },
+    {
+      "name": "BasicTurretItem",
+      "data": {
+        "type": "Entity",
+        "components": [
+          {
+            "type": "ItemComponent",
+            "description": "A basic turret! Place it wisely -sp A basic turret! Place it wisely -sp A basic turret! Place it wisely -sp A basic turret! Place it wisely -sp A basic turret! Place it wisely -sp",
+            "name": "Basic Turret",
+            "isUnique": false,
+            "maxStackSize": 64,
+            "stackCost": 4,
+            "iconAsset": "res/entities/basicTurretIcon.png"
           }
-        }
-      ]
-    }
-  },
-  {
-    "name": "PlaceableHighStoneTile",
-    "data": {
-      "type": "Entity",
-      "components": [
-        {
-          "type": "SpriteComponent",
-          "subSprites": [
-            {"gridPos": {"x": 0, "y": 0}, "layers": [{"path": "placeableHighStone", "layer": "Wall"}]},
-            {"gridPos": {"x": 1, "y": 0}, "layers": [{"path": "placeableHighStone", "layer": "Wall"}]},
-            {"gridPos": {"x": 2, "y": 0}, "layers": [{"path": "placeableHighStone", "layer": "Wall"}]},
-            {"gridPos": {"x": 0, "y": 1}, "layers": [{"path": "placeableHighStone", "layer": "Wall"}]},
-            {"gridPos": {"x": 1, "y": 1}, "layers": [{"path": "placeableHighStone", "layer": "Wall"}]},
-            {"gridPos": {"x": 2, "y": 1}, "layers": [{"path": "placeableHighStone", "layer": "Wall"}]},
-            {"gridPos": {"x": 0, "y": 2}, "layers": [{"path": "placeableHighStone", "layer": "Wall"}]},
-            {"gridPos": {"x": 1, "y": 2}, "layers": [{"path": "placeableHighStone", "layer": "Wall"}]},
-            {"gridPos": {"x": 2, "y": 2}, "layers": [{"path": "placeableHighStone", "layer": "Wall"}]}
-          ]
-        },
-        {
-          "type": "MultiTileComponent",
-          "occupiedPositions": [
-            {"x": 0, "y": 0, "z": 0},
-            {"x": 1, "y": 0, "z": 0},
-            {"x": 2, "y": 0, "z": 0},
-            {"x": 0, "y": 1, "z": 0},
-            {"x": 1, "y": 1, "z": 0},
-            {"x": 2, "y": 1, "z": 0},
-            {"x": 0, "y": 2, "z": 0},
-            {"x": 1, "y": 2, "z": 0},
-            {"x": 2, "y": 2, "z": 0}
-          ],
-          "anchorPos": {"x": 0, "y": 0, "z": 0}
-        },
-        {
-          "type": "TileComponent",
-          "material": {
-            "friction": 0.0,
-            "restitution": 1.0
+        ]
+      }
+    },
+    {
+      "name": "BigGunTurretItem",
+      "data": {
+        "type": "Entity",
+        "components": [
+          {
+            "type": "ItemComponent",
+            "description": "Big gun turret, seems to be lacking in turn speed... but it shoots faaaassst!",
+            "name": "Big Gun Turret",
+            "isUnique": false,
+            "maxStackSize": 64,
+            "stackCost": 32,
+            "iconAsset": "res/entities/biggun/biggunIcon.png"
           }
-        },
-        {
-          "type": "HealthComponent",
-          "health": 2000
-        },
-        {
-          "type": "ArrowComponent",
-          "tileCost": 100
-        }
-      ]
-    }
-  },
-  {
-    "name": "BasicTurretTile",
-    "data": {
-      "type": "Entity",
-      "components": [
-        {
-          "type": "SpriteComponent",
-          "subSprites": [
-            {
-              "layers": [
-                {
-                  "path": "basicTurretBase",
-                  "layer": "Wall"
-                },
-                {
-                  "path": "basicTurretTop",
-                  "layer": "Wall"
+        ]
+      }
+    },
+    {
+      "name": "WoodItem",
+      "data": {
+        "type": "Entity",
+        "components": [
+          {
+            "type": "ItemComponent",
+            "description": "Wood, a basic building material.",
+            "name": "Wood",
+            "isUnique": false,
+            "maxStackSize": 64,
+            "stackCost": 2,
+            "iconAsset": "res/entities/wood.png"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FenceItem",
+      "data": {
+        "type": "Entity",
+        "components": [
+          {
+            "type": "ItemComponent",
+            "description": "Fence the zombies off, surely more effective then nothing ay?",
+            "name": "Fence",
+            "isUnique": false,
+            "maxStackSize": 64,
+            "stackCost": 1,
+            "iconAsset": "res/entities/fence.png"
+          }
+        ]
+      }
+    },
+    {
+    "name": "PlaceableHighStoneItem",
+      "data": {
+        "type": "Entity",
+        "components": [
+          {
+            "type": "ItemComponent",
+            "description": "BIG STONE BIG HP BIG EVERYTHING. Where did my inventory slots go?",
+            "name": "Placeable High Stone",
+            "isUnique": true,
+            "maxStackSize": 64,
+            "stackCost": 1,
+            "iconAsset": "res/entities/placeableHighStone.png"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ZombieSpawnableItem",
+      "data": {
+        "type": "Entity",
+        "components": [
+          {
+            "type": "ItemComponent",
+            "description": "Little guy says 'erghhh.' don't try placing him down? ok? ",
+            "name": "Zombie Spawnable",
+            "isUnique": true,
+            "maxStackSize": 20,
+            "stackCost": 1,
+            "iconAsset": "res/entities/zombie.png"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BasicPlayer",
+      "data": {
+        "type": "Entity",
+        "components": [
+          { "type": "CameraComponent" },
+          { "type": "PlayerComponent" },
+          { "type": "PrimaryTargetTag" },
+          { 
+            "type": "BodyComponent" ,
+            "bodyType": "dynamic",
+            "linearDamping": 10,
+            "shapes": [
+              {
+                "density": 1000,
+                "restitution": 0,
+                "shape": { 
+                  "shapeType": "Polygon", 
+                  "vertices": [
+                    {"x": -0.12, "y": 0.12}, 
+                    {"x": 0.12, "y": 0.12}, 
+                    {"x": 0.12, "y": -0.12}, 
+                    {"x": -0.12, "y": -0.12}
+                  ]
                 }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "TileComponent"
-        },
-        {
-          "type": "HealthComponent",
-          "health": 1000
-        },
-        {
-          "type": "TurretComponent",
-          "fireRate": 0.5,
-          "radius": 10.0,
-          "turnSpeed": 0.02,
-          "shootRange": 0.3,
-          "stopRange": 0.02,
-          "muzzleVelocity": 10.0,
-          "bulletRadius": 0.025,
-          "bulletDamage": 100.0
-        },
-        {
-          "type": "ArrowComponent",
-          "tileCost": 50
-        }
-      ]
-    }
-  },
-  {
-    "name": "FenceTile",
-    "data": {
-      "type": "Entity",
-      "components": [
-        {
-          "type": "SpriteComponent",
-          "subSprites": [
-            {
-              "layers": [
-                {
-                  "path": "fence",
-                  "layer": "Wall"
+              }
+            ]
+          },
+          { 
+            "type": "RectangleRenderComponent",
+            "color": { "r": 255, "g": 128, "b": 0, "a": 255 },
+            "hw": 0.12,
+            "hh": 0.12
+          },
+          { 
+            "type": "InventoryComponent",
+            "cols": 6,
+            "rows": 6
+          },
+          { 
+            "type": "InventoryViewComponent",
+            "slotSize": 32,
+            "name": "The Coolest Inventory Ever Made!",
+            "isVisible": true
+          },
+          { 
+            "type": "TransformComponent",
+            "pos": {"x": 25.0, "y": 0.0}
+          }
+
+        ]
+      }
+    },
+    {
+      "name": "BasicZombie",
+      "data": {
+        "type": "Entity",
+        "components": [
+          {
+            "type": "TransformComponent"
+          },
+          {
+            "type": "SpriteComponent",
+            "subSprites": [
+              {
+                "layers": [
+                  {
+                    "path": "zombie",
+                    "layer": "Top"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "SeekPrimaryTargetTag"
+          },
+          {
+            "type": "HealthComponent",
+            "health": 100
+          },
+          {
+            "type": "ContactDamageComponent",
+            "damage": 5
+          },
+          {
+            "type": "BodyComponent",
+            "bodyType": "dynamic",
+            "linearDamping": 5,
+            "shapes": [
+              {
+                "enableContactEvents": true,
+                "categoryMask": ["Enemy"],
+                "collisionMask": ["All"],
+                "density": 50,
+                "shape": {
+                  "shapeType": "Circle",
+                  "radius": 0.25
                 }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "TileComponent"
-        }
-      ]
-    }
-  },
-  {
-    "name": "WoodTile",
-    "data": {
-      "type": "Entity",
-      "components": [
-        {
-          "type": "SpriteComponent",
-          "subSprites": [
-            {
-              "layers": [
-                {
-                  "path": "wood",
-                  "layer": "Wall"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "BigAssZombie",
+      "data": {
+        "type": "Entity",
+        "components": [
+          {
+            "type": "TransformComponent",
+            "scale": 2.0
+          },
+          {
+            "type": "SpriteComponent",
+            "scaling": 2.0,
+            "subSprites": [
+              {
+                "layers": [
+                  {
+                    "path": "zombie",
+                    "layer": "Top"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "SeekPrimaryTargetTag"
+          },
+          {
+            "type": "HealthComponent",
+            "health": 100
+          },
+          {
+            "type": "ContactDamageComponent",
+            "damage": 5
+          },
+          {
+            "type": "BodyComponent",
+            "bodyType": "dynamic",
+            "linearDamping": 5,
+            "shapes": [
+              {
+                "enableContactEvents": true,
+                "categoryMask": ["Enemy"],
+                "collisionMask": ["All"],
+                "density": 10,
+                "shape": {
+                  "shapeType": "Circle",
+                  "radius": 1.0
                 }
-              ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "UnknownTile",
+      "data": {
+        "type": "Entity",
+        "components": [
+          {
+            "type": "SpriteComponent",
+            "subSprites": [
+              {
+                "layers": [
+                  {
+                    "path": "unknown",
+                    "layer": "Floor"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "TileComponent",
+            "collidable": false
+          }
+        ]
+      }
+    }, 
+    {
+      "name": "StoneFloorTile",
+      "data": {
+        "type": "Entity",
+        "components": [
+          {
+            "type": "SpriteComponent",
+            "subSprites": [
+              {
+                "layers": [
+                  {
+                    "path": "stone",
+                    "layer": "Floor"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "TileComponent",
+            "collidable": false
+          },
+          {
+            "type": "ArrowComponent"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PermaHighStoneTile",
+      "data": {
+        "type": "Entity",
+        "components": [
+          {
+            "type": "SpriteComponent",
+            "subSprites": [
+              {
+                "layers": [
+                  {
+                    "path": "permaHighStone",
+                    "layer": "Wall"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "TileComponent",
+            "material": {
+              "friction": 0.0,
+              "restitution": 1.0
             }
-          ]
-        },
-        {
-          "type": "TileComponent"
-        },
-        {
-          "type": "HealthComponent",
-          "health": 100
-        },
-        {
-          "type": "ArrowComponent",
-          "tileCost": 25
-        }
-      ]
-    }
-  },
-  {
-    "name": "BigGunTurretTile",
-    "data": {
-      "type": "Entity",
-      "components": [
-        {
-          "type": "SpriteComponent",
-          "subSprites": [
-            {
-              "gridPos": {"x": 0, "y": 0},
-              "layers": [
-                {"path": "biggunBASE00", "layer": "Wall", "offset": {"x": 0, "y": 0}},
-                {"path": "biggunTOP00", "layer": "Turret", "offset": {"x": 0, "y": 0}}
-              ]
-            },
-            {
-              "gridPos": {"x": 1, "y": 0},
-              "layers": [
-                {"path": "biggunBASE10", "layer": "Wall", "offset": {"x": 0.5, "y": 0}},
-                {"path": "biggunTOP10", "layer": "Turret", "offset": {"x": 0.5, "y": 0}}
-              ]
-            },
-            {
-              "gridPos": {"x": 0, "y": 1},
-              "layers": [
-                {"path": "biggunBASE01", "layer": "Wall", "offset": {"x": 0, "y": 0.5}},
-                {"path": "biggunTOP01", "layer": "Turret", "offset": {"x": 0, "y": 0.5}}
-              ]
-            },
-            {
-              "gridPos": {"x": 1, "y": 1},
-              "layers": [
-                {"path": "biggunBASE11", "layer": "Wall", "offset": {"x": 0.5, "y": 0.5}},
-                {"path": "biggunTOP11", "layer": "Turret", "offset": {"x": 0.5, "y": 0.5}}
-              ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlaceableHighStoneTile",
+      "data": {
+        "type": "Entity",
+        "components": [
+          {
+            "type": "SpriteComponent",
+            "subSprites": [
+              {"gridPos": {"x": 0, "y": 0}, "layers": [{"path": "placeableHighStone", "layer": "Wall"}]},
+              {"gridPos": {"x": 1, "y": 0}, "layers": [{"path": "placeableHighStone", "layer": "Wall"}]},
+              {"gridPos": {"x": 2, "y": 0}, "layers": [{"path": "placeableHighStone", "layer": "Wall"}]},
+              {"gridPos": {"x": 0, "y": 1}, "layers": [{"path": "placeableHighStone", "layer": "Wall"}]},
+              {"gridPos": {"x": 1, "y": 1}, "layers": [{"path": "placeableHighStone", "layer": "Wall"}]},
+              {"gridPos": {"x": 2, "y": 1}, "layers": [{"path": "placeableHighStone", "layer": "Wall"}]},
+              {"gridPos": {"x": 0, "y": 2}, "layers": [{"path": "placeableHighStone", "layer": "Wall"}]},
+              {"gridPos": {"x": 1, "y": 2}, "layers": [{"path": "placeableHighStone", "layer": "Wall"}]},
+              {"gridPos": {"x": 2, "y": 2}, "layers": [{"path": "placeableHighStone", "layer": "Wall"}]}
+            ]
+          },
+          {
+            "type": "MultiTileComponent",
+            "occupiedPositions": [
+              {"x": 0, "y": 0, "z": 0},
+              {"x": 1, "y": 0, "z": 0},
+              {"x": 2, "y": 0, "z": 0},
+              {"x": 0, "y": 1, "z": 0},
+              {"x": 1, "y": 1, "z": 0},
+              {"x": 2, "y": 1, "z": 0},
+              {"x": 0, "y": 2, "z": 0},
+              {"x": 1, "y": 2, "z": 0},
+              {"x": 2, "y": 2, "z": 0}
+            ],
+            "anchorPos": {"x": 0, "y": 0, "z": 0}
+          },
+          {
+            "type": "TileComponent",
+            "material": {
+              "friction": 0.0,
+              "restitution": 1.0
             }
-          ]
-        },
-        {
-          "type": "MultiTileComponent",
-          "occupiedPositions": [
-            {"x": 0, "y": 0, "z": 0},
-            {"x": 1, "y": 0, "z": 0},
-            {"x": 0, "y": 1, "z": 0},
-            {"x": 1, "y": 1, "z": 0}
-          ],
-          "anchorPos": {"x": 0, "y": 0, "z": 0}
-        },
-        {
-          "type": "TileComponent"
-        },
-        {
-          "type": "HealthComponent",
-          "health": 1000
-        },
-        {
-          "type": "TurretComponent",
-          "fireRate": 0.0,
-          "radius": 10.0,
-          "turnSpeed": 0.004,
-          "shootRange": 0.5,
-          "stopRange": 0.02,
-          "muzzleVelocity": 10.0,
-          "bulletRadius": 0.05,
-          "bulletDamage": 100.0
-        },
-        {
-          "type": "ArrowComponent",
-          "tileCost": 80
-        }
-      ]
+          },
+          {
+            "type": "HealthComponent",
+            "health": 2000
+          },
+          {
+            "type": "ArrowComponent",
+            "tileCost": 100
+          }
+        ]
+      }
+    },
+    {
+      "name": "BasicTurretTile",
+      "data": {
+        "type": "Entity",
+        "components": [
+          {
+            "type": "SpriteComponent",
+            "subSprites": [
+              {
+                "layers": [
+                  {
+                    "path": "basicTurretBase",
+                    "layer": "Wall"
+                  },
+                  {
+                    "path": "basicTurretTop",
+                    "layer": "Wall"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "TileComponent"
+          },
+          {
+            "type": "HealthComponent",
+            "health": 1000
+          },
+          {
+            "type": "TurretComponent",
+            "fireRate": 0.5,
+            "radius": 10.0,
+            "turnSpeed": 0.02,
+            "shootRange": 0.3,
+            "stopRange": 0.02,
+            "muzzleVelocity": 10.0,
+            "bulletRadius": 0.025,
+            "bulletDamage": 100.0
+          },
+          {
+            "type": "ArrowComponent",
+            "tileCost": 50
+          }
+        ]
+      }
+    },
+    {
+      "name": "FenceTile",
+      "data": {
+        "type": "Entity",
+        "components": [
+          {
+            "type": "SpriteComponent",
+            "subSprites": [
+              {
+                "layers": [
+                  {
+                    "path": "fence",
+                    "layer": "Wall"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "TileComponent"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WoodTile",
+      "data": {
+        "type": "Entity",
+        "components": [
+          {
+            "type": "SpriteComponent",
+            "subSprites": [
+              {
+                "layers": [
+                  {
+                    "path": "wood",
+                    "layer": "Wall"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "TileComponent"
+          },
+          {
+            "type": "HealthComponent",
+            "health": 100
+          },
+          {
+            "type": "ArrowComponent",
+            "tileCost": 25
+          }
+        ]
+      }
+    },
+    {
+      "name": "BigGunTurretTile",
+      "data": {
+        "type": "Entity",
+        "components": [
+          {
+            "type": "SpriteComponent",
+            "subSprites": [
+              {
+                "gridPos": {"x": 0, "y": 0},
+                "layers": [
+                  {"path": "biggunBASE00", "layer": "Wall", "offset": {"x": 0, "y": 0}},
+                  {"path": "biggunTOP00", "layer": "Turret", "offset": {"x": 0, "y": 0}}
+                ]
+              },
+              {
+                "gridPos": {"x": 1, "y": 0},
+                "layers": [
+                  {"path": "biggunBASE10", "layer": "Wall", "offset": {"x": 0.5, "y": 0}},
+                  {"path": "biggunTOP10", "layer": "Turret", "offset": {"x": 0.5, "y": 0}}
+                ]
+              },
+              {
+                "gridPos": {"x": 0, "y": 1},
+                "layers": [
+                  {"path": "biggunBASE01", "layer": "Wall", "offset": {"x": 0, "y": 0.5}},
+                  {"path": "biggunTOP01", "layer": "Turret", "offset": {"x": 0, "y": 0.5}}
+                ]
+              },
+              {
+                "gridPos": {"x": 1, "y": 1},
+                "layers": [
+                  {"path": "biggunBASE11", "layer": "Wall", "offset": {"x": 0.5, "y": 0.5}},
+                  {"path": "biggunTOP11", "layer": "Turret", "offset": {"x": 0.5, "y": 0.5}}
+                ]
+              }
+            ]
+          },
+          {
+            "type": "MultiTileComponent",
+            "occupiedPositions": [
+              {"x": 0, "y": 0, "z": 0},
+              {"x": 1, "y": 0, "z": 0},
+              {"x": 0, "y": 1, "z": 0},
+              {"x": 1, "y": 1, "z": 0}
+            ],
+            "anchorPos": {"x": 0, "y": 0, "z": 0}
+          },
+          {
+            "type": "TileComponent"
+          },
+          {
+            "type": "HealthComponent",
+            "health": 1000
+          },
+          {
+            "type": "TurretComponent",
+            "fireRate": 0.0,
+            "radius": 10.0,
+            "turnSpeed": 0.004,
+            "shootRange": 0.5,
+            "stopRange": 0.02,
+            "muzzleVelocity": 10.0,
+            "bulletRadius": 0.05,
+            "bulletDamage": 100.0
+          },
+          {
+            "type": "ArrowComponent",
+            "tileCost": 80
+          }
+        ]
+      }
     }
-  }
-] 
+  ] 
+}

@@ -65,23 +65,20 @@ public:
       return false;
     }
 
-    for (size_t i = 0; i < jsonAssets.size(); ++i) {
-      auto validationResult = JSchema::Root::validate(jsonAssets[i]);
-      if (!validationResult.valid()) {
-        host.log("<bgRed>Validation failed for entity at index %d:<reset>", (int)i);
-        for (const auto& error : validationResult.errors) {
-            host.log("  %s: %s", error.path.c_str(), error.message.c_str());
-        }
-        return false;
+    auto validation = JSchema::GameAssetLoaderSchema::validate(jsonAssets);
+    if (!validation.valid()) {
+      host.log("<bgRed>Validation failed for %s:<reset>\n", string.c_str());
+      for (const auto& error : validation.errors) {
+          host.log("  %s: %s", error.path.c_str(), error.message.c_str());
       }
+      return false;
     }
 
-    for (size_t i = 0; i < jsonAssets.size(); ++i) {
-      auto root = JSchema::Root::fromJson(jsonAssets[i]);
+    JSchema::GameAssetLoaderSchema rootSchema = JSchema::GameAssetLoaderSchema::fromJson(jsonAssets);
+    for (const auto& entity : rootSchema.getEntities()) {
+      EntityPtr asset = createAsset(world, entity.getName());
 
-      EntityPtr asset = createAsset(world, root.getName());
-
-      const auto& components = root.getData().getComponents();
+      const auto& components = entity.getData().getComponents();
       for (const auto& compItem : components) {
         size_t variantIdx = compItem.variant().index();
         auto handlerIt = m_componentJsonHandlers.find(variantIdx);
