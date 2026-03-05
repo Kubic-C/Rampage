@@ -1,5 +1,8 @@
 #include "inventory.hpp"
 #include "../systems/inventory.hpp"
+#include "../../event/module.hpp"
+#include "../../render/module.hpp"
+#include <SDL3/SDL.h>
 
 RAMPAGE_START
 
@@ -7,6 +10,65 @@ RAMPAGE_START
 bool InventoryViewComponent::isDragging = false;
 glm::u16vec2 InventoryViewComponent::dragStartSlot = {0, 0};
 InventoryViewComponent* InventoryViewComponent::dragSourceView = nullptr;
+bool InventoryViewComponent::wasMouseButtonPressedLastFrame = false;
+
+void ItemUseComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
+  auto itemUseBuilder = builder.initRoot<Schema::ItemUseComponent>();
+  auto self = component.cast<ItemUseComponent>();
+
+  itemUseBuilder.setEntityId(self->entityId);
+  itemUseBuilder.setEffectValue(self->effectValue);
+  itemUseBuilder.setEffectRadius(self->effectRadius);
+  itemUseBuilder.setCooldown(self->cooldown);
+  itemUseBuilder.setRemainingCooldown(self->remainingCooldown);
+  itemUseBuilder.setMaxCharges(self->maxCharges);
+  itemUseBuilder.setCurrentCharges(self->currentCharges);
+  itemUseBuilder.setIsActive(self->isActive);
+}
+
+void ItemUseComponent::deserialize(capnp::MessageReader& reader, const IdMapper& idMapper, Ref component) {
+  auto itemUseReader = reader.getRoot<Schema::ItemUseComponent>();
+  auto self = component.cast<ItemUseComponent>();
+
+  self->entityId = idMapper.resolve(itemUseReader.getEntityId());
+  self->effectValue = itemUseReader.getEffectValue();
+  self->effectRadius = itemUseReader.getEffectRadius();
+  self->cooldown = itemUseReader.getCooldown();
+  self->remainingCooldown = itemUseReader.getRemainingCooldown();
+  self->maxCharges = itemUseReader.getMaxCharges();
+  self->currentCharges = itemUseReader.getCurrentCharges();
+  self->isActive = itemUseReader.getIsActive();
+}
+
+void ItemUseComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
+  auto self = component.cast<ItemUseComponent>();
+  auto compJson = jsonValue.as<JSchema::ItemUseComponent>();
+
+  // Note: entityId reference will be resolved by the entity loader
+  if (compJson->hasEntityId())
+    self->entityId = compJson->getEntityId();
+
+  if (compJson->hasEffectValue())
+    self->effectValue = compJson->getEffectValue();
+
+  if (compJson->hasEffectRadius())
+    self->effectRadius = compJson->getEffectRadius();
+
+  if (compJson->hasCooldown())
+    self->cooldown = compJson->getCooldown();
+
+  if (compJson->hasRemainingCooldown())
+    self->remainingCooldown = compJson->getRemainingCooldown();
+
+  if (compJson->hasMaxCharges())
+    self->maxCharges = compJson->getMaxCharges();
+
+  if (compJson->hasCurrentCharges())
+    self->currentCharges = compJson->getCurrentCharges();
+
+  if (compJson->hasIsActive())
+    self->isActive = compJson->getIsActive();
+}
 
 void ItemComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
   auto itemBuilder = builder.initRoot<Schema::ItemComponent>();
@@ -66,6 +128,33 @@ void ItemComponent::fromJson(Ref component, AssetLoader loader, const JSchema::J
   }
 }
 
+void ItemStackComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
+  auto stackBuilder = builder.initRoot<Schema::ItemStackComponent>();
+  auto self = component.cast<ItemStackComponent>();
+
+  stackBuilder.setCount(self->count);
+  stackBuilder.setItemId(self->itemId);
+}
+
+void ItemStackComponent::deserialize(capnp::MessageReader& reader, const IdMapper& idMapper, Ref component) {
+  auto stackReader = reader.getRoot<Schema::ItemStackComponent>();
+  auto self = component.cast<ItemStackComponent>();
+
+  self->count = stackReader.getCount();
+  self->itemId = idMapper.resolve(stackReader.getItemId());
+}
+
+void ItemStackComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
+  auto self = component.cast<ItemStackComponent>();
+  auto compJson = jsonValue.as<JSchema::ItemStackComponent>();
+
+  if (compJson->hasCount())
+    self->count = compJson->getCount();
+
+  if (compJson->hasItemId())
+    self->itemId = compJson->getItemId();
+}
+
 void InventoryComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
   auto invBuilder = builder.initRoot<Schema::InventoryComponent>();
   auto self = component.cast<InventoryComponent>();
@@ -92,7 +181,7 @@ void InventoryComponent::deserialize(capnp::MessageReader& reader, const IdMappe
   self->items.clear();
   const auto itemsReader = invReader.getItems();
   for (const auto& itemReader : itemsReader) {
-    ItemStack stack;
+    ItemStackComponent stack;
     stack.count = itemReader.getCount();
     stack.itemId = idMapper.resolve(itemReader.getItemId());
     self->items.push_back(stack);
@@ -490,7 +579,7 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
   for (u16 y = 0; y < invComp->rows; ++y) {
     for (u16 x = 0; x < invComp->cols; ++x) {
       size_t index = y * invComp->cols + x;
-      const ItemStack& slot = invComp->getSlot(x, y);
+      const ItemStackComponent& slot = invComp->getSlot(x, y);
 
       auto bg = slotBackgrounds[index];
       auto picture = slotPictures[index];
@@ -527,6 +616,28 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
       }
     }
   }
+
+  // Handle mouse release outside inventory bounds
+  auto& eventModule = world->getContext<EventModule>();
+  Vec2 mousePos = eventModule.getMouseCoords();
+  glm::vec2 mousePosVec(mousePos.x, mousePos.y);
+  
+  // Check if left mouse button is currently pressed
+  Uint32 mouseState = SDL_GetMouseState(nullptr, nullptr);
+  bool isMouseButtonPressed = (mouseState & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)) != 0;
+  
+  if (isDragging && wasMouseButtonPressedLastFrame && !isMouseButtonPressed) {
+    // Mouse was released - check if it's outside the inventory window
+    if (!isPointInWindowBounds(mousePosVec)) {
+      // Mouse released outside inventory - drop the item to the world
+      dropItemToWorld(inventoryEntity);
+      isDragging = false;
+      dragSourceView = nullptr;
+    }
+  }
+  
+  // Update mouse button state for next frame
+  wasMouseButtonPressedLastFrame = isMouseButtonPressed;
 }
 
 void InventoryViewComponent::onSlotMouseDown(EntityPtr inventoryEntity, glm::u16vec2 slotPos) {
@@ -536,7 +647,7 @@ void InventoryViewComponent::onSlotMouseDown(EntityPtr inventoryEntity, glm::u16
   }
 
   auto invComp = inventoryEntity.get<InventoryComponent>();
-  const ItemStack& slot = invComp->getSlot(slotPos.x, slotPos.y);
+  const ItemStackComponent& slot = invComp->getSlot(slotPos.x, slotPos.y);
 
   if (slot.itemId != 0) {
     isDragging = true;
@@ -621,7 +732,7 @@ void InventoryViewComponent::showTooltip(EntityPtr inventoryEntity, size_t slotI
     return;
   }
 
-  const ItemStack& slot = invComp->items[slotIndex];
+  const ItemStackComponent& slot = invComp->items[slotIndex];
   if (slot.itemId == 0) {
     tooltipPanel->setVisible(false);
     return;
@@ -656,6 +767,46 @@ void InventoryViewComponent::hideTooltip() {
   if (tooltipPanel) {
     tooltipPanel->setVisible(false);
   }
+}
+
+bool InventoryViewComponent::isPointInWindowBounds(const glm::vec2& worldPos) const {
+  if (!window) {
+    return false;
+  }
+
+  tgui::Vector2f windowPos = window->getPosition();
+  tgui::Vector2f windowSize = window->getSize();
+
+  return worldPos.x >= windowPos.x && worldPos.x <= windowPos.x + windowSize.x &&
+         worldPos.y >= windowPos.y && worldPos.y <= windowPos.y + windowSize.y;
+}
+
+void InventoryViewComponent::dropItemToWorld(EntityPtr inventoryEntity) {
+  if (!isDragging || !dragSourceView || !inventoryEntity) {
+    return;
+  }
+
+  IWorldPtr world = inventoryEntity.world();
+  // Get the source inventory and item information
+  auto srcEntity = world->getEntity(dragSourceView->inventoryEntityId);
+  if (!srcEntity || !srcEntity.has<InventoryComponent>()) {
+    return;
+  }
+
+  auto srcInvComp = srcEntity.get<InventoryComponent>();
+  const ItemStackComponent& sourceSlot = srcInvComp->getSlot(dragStartSlot.x, dragStartSlot.y);
+
+  if (sourceSlot.itemId == 0) {
+    return; // Empty slot, nothing to drop
+  }
+
+  // Get mouse position from EventModule
+  Vec2 dropPos = world->getContext<RenderModule>().getWorldCoords(world->getContext<EventModule>().getMouseCoords());
+
+  // Use InventoryManager to drop the item
+  InventoryManager invMgr;
+  invMgr.dropItem(world, dragSourceView->inventoryEntityId, 
+                  dragStartSlot.x, dragStartSlot.y, dropPos, sourceSlot.count);
 }
 
 RAMPAGE_END

@@ -145,7 +145,7 @@ bool Deserializer::deserializeState(IWorld& world, Schema::State::Reader stateRe
     EntityId serId = entityReader.getId();
     EntityId newId;
     // Id Conflcit resolution: If the world already has an entity with the same Id as the serialized entity, we generate a new Id for the deserialized entity and keep track of the mapping. Otherwise, we can just use the serialized Id.
-    if(world.exists(serId))
+    if(world.isAlive(serId))
       newId = world.create();
     else
       newId = world.ensure(serId);

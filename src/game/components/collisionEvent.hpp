@@ -8,8 +8,8 @@ struct OnCollisionBeginEvent {};
 struct OnCollisionEndEvent {};
 struct OnContactEvent {};
 
-struct LastCollisionData {
-  EntityId other;
+struct LastCollisionData : SerializableTag, JsonableTag {
+  EntityId other = 0;
 };
 
 RAMPAGE_END

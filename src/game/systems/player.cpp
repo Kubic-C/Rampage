@@ -8,6 +8,7 @@
 #include "../components/player.hpp"
 #include "../components/tilemap.hpp"
 #include "../components/worldMap.hpp"
+#include "../systems/inventory.hpp"
 
 RAMPAGE_START
 
@@ -15,6 +16,7 @@ void updatePlayer(EntityPtr e, float dt) {
   IWorldPtr world = e.world();
   auto& render = world->getContext<RenderModule>();
   auto& eventMgr = world->getContext<EventModule>();
+  auto& invMgr = world->getContext<InventoryManager>();
   auto assetLoader = world->getAssetLoader();
 
   auto body = e.get<BodyComponent>();
@@ -63,6 +65,30 @@ void updatePlayer(EntityPtr e, float dt) {
   player->mouse = render.getWorldCoords(mouseScreen);
   glm::vec2 dir = glm::normalize((Vec2)b2Body_GetPosition(body->id) - player->mouse);
   transform->rot = Rot(atan2(dir.y, dir.x));
+
+  u32 contactCap = b2Body_GetContactCapacity(body->id);
+  std::vector<b2ContactData> contacts(contactCap);
+  int contactCount = b2Body_GetContactData(body->id, contacts.data(), contactCap);
+  contacts.resize(contactCount);
+  for(b2ContactData& contact : contacts) {
+    EntityId otherId = b2RawDataToEntity(b2Shape_GetUserData(contact.shapeIdA));
+    if (otherId == e)
+      otherId = b2RawDataToEntity(b2Shape_GetUserData(contact.shapeIdB));
+    if (otherId == NullEntityId)
+      continue;
+
+    EntityPtr other = world->getEntity(otherId);
+    if(other.has<ItemStackComponent>()) {
+      auto itemStackComp = other.get<ItemStackComponent>();
+
+      u32 amountNotAdded = invMgr.addItem(world, e, itemStackComp->itemId, itemStackComp->count);
+      if(amountNotAdded == 0) {
+        world->destroy(other);
+      } else {
+        itemStackComp->count = amountNotAdded;
+      }
+    }
+  }
 }
 
 int updatePlayers(IWorldPtr world, float dt) {

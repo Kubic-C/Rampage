@@ -147,7 +147,7 @@ void loadPhysicsSystems(IHost& host, int steps) {
       .attachToStage<PhysicsStepStage>(physicsStep)
       .attachToStage<PostPhysicsStepStage>(copyBodiesIntoTransforms);
 
-  world->observe<ComponentRemovedEvent>(world->component<BodyComponent>(), {}, observeDestroyedBody);
+  world->observe<ComponentRemovedEvent>(world->component<BodyComponent>(), world->set<LastCollisionData>(), observeDestroyedBody);
 }
 
 RAMPAGE_END

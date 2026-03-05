@@ -78,7 +78,7 @@ public:
     for (const auto& entity : rootSchema.getEntities()) {
       EntityPtr asset = createAsset(world, entity.getName());
 
-      const auto& components = entity.getData().getComponents();
+      const auto& components = entity.getComponents();
       for (const auto& compItem : components) {
         size_t variantIdx = compItem.variant().index();
         auto handlerIt = m_componentJsonHandlers.find(variantIdx);

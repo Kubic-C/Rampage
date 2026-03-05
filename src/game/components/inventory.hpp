@@ -4,6 +4,32 @@
 
 RAMPAGE_START
 
+struct ItemUsePlaceEvent {
+  Vec2 placePosition; // The world position where the item is being placed
+};
+
+struct ItemUseConsumeEvent {};
+
+/**
+ * ItemUseComponent - Links items to gameplay interactions
+ * Attached to entities that can use/activate items
+ * Stores references to item entities and their usage parameters
+ */
+struct ItemUseComponent {
+  static void serialize(capnp::MessageBuilder& builder, Ref component);
+  static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
+  static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
+
+  EntityId entityId = 0;            // Reference to the entity to use/summon/place/...
+  float effectValue = 0.0f;         // Magnitude of the effect
+  float effectRadius = 0.0f;        // For area-of-effect abilities
+  float cooldown = 0.0f;            // Cooldown between uses (in seconds)
+  float remainingCooldown = 0.0f;   // Time left on current cooldown
+  int maxCharges = 1;               // Max uses before recharge (for limited-use items)
+  int currentCharges = 1;           // Current charges remaining
+  bool isActive = true;             // Whether the item use is currently active
+};
+
 /**
  * ItemComponent - Attached to item entities (stackable or unique)
  * For stackable items: single entity shared across multiple stacks
@@ -31,7 +57,11 @@ struct ItemComponent {
  * References an item entity and holds a count
  * If item has ItemUnique flag, count is always 1
  */
-struct ItemStack {
+struct ItemStackComponent {
+  static void serialize(capnp::MessageBuilder& builder, Ref component);
+  static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
+  static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
+
   u32 count = 0;        // How many of this item in this slot
   EntityId itemId = 0;  // Entity ID of the item type (or unique instance)
 };
@@ -45,7 +75,7 @@ struct InventoryComponent {
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
   static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
 
-  std::vector<ItemStack> items;  // Linear array of slots
+  std::vector<ItemStackComponent> items;  // Linear array of slots
   u16 cols = 3;
   u16 rows = 3;
 
@@ -55,11 +85,11 @@ struct InventoryComponent {
   }
 
   // Get slot at 2D position
-  ItemStack& getSlot(u16 x, u16 y) {
+  ItemStackComponent& getSlot(u16 x, u16 y) {
     return items[getSlotIndex(x, y)];
   }
 
-  const ItemStack& getSlot(u16 x, u16 y) const {
+  const ItemStackComponent& getSlot(u16 x, u16 y) const {
     return items[getSlotIndex(x, y)];
   }
 };
@@ -107,6 +137,7 @@ private:
   static bool isDragging;
   static glm::u16vec2 dragStartSlot;
   static InventoryViewComponent* dragSourceView;  // Pointer to the view we're dragging from
+  static bool wasMouseButtonPressedLastFrame;  // Track previous frame mouse state for outside-release detection
 
   // Checksum is based off visual config and inventory size - if it changes, we need to rebuild the UI
   u32 calculateVisualChecksum(u32 sizeX, u32 sizeY) const;
@@ -123,6 +154,12 @@ private:
   // Helper to perform the actual item move
   void performItemDrop(EntityPtr inventoryEntity, InventoryViewComponent* sourceView, glm::u16vec2 sourceSlot, 
                        glm::u16vec2 targetSlot);
+  
+  // Helper to check if a world position is within the inventory window bounds
+  bool isPointInWindowBounds(const glm::vec2& worldPos) const;
+  
+  // Helper to drop item to world when released outside inventory
+  void dropItemToWorld(EntityPtr inventoryEntity);
 };
 
 RAMPAGE_END

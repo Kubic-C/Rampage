@@ -88,6 +88,23 @@ struct InventoryViewComponent {
     dragHoverSlotColor @13 :UInt32;       # RGBA packed
 }
 
+struct ItemUseComponent {
+    entityId @0 :UInt32;
+    effectType @1 :Text = "";
+    effectValue @2 :Float32 = 0.0;
+    effectRadius @3 :Float32 = 0.0;
+    cooldown @4 :Float32 = 0.0;
+    remainingCooldown @5 :Float32 = 0.0;
+    maxCharges @6 :Int32 = 1;
+    currentCharges @7 :Int32 = 1;
+    isActive @8 :Bool = true;
+}
+
+struct ItemStackComponent {
+    count @0 :UInt32;
+    itemId @1 :UInt32;
+}
+
 struct ItemAttrIcon {
     name @0 :Text;
 }

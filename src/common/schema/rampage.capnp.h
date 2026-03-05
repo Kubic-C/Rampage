@@ -31,6 +31,8 @@ CAPNP_DECLARE_SCHEMA(d384dfc79196c7ad);
 CAPNP_DECLARE_SCHEMA(8f17c18069203e01);
 CAPNP_DECLARE_SCHEMA(d1389ed8f3176caa);
 CAPNP_DECLARE_SCHEMA(853d504be38b2d2c);
+CAPNP_DECLARE_SCHEMA(c7a415a3ea75cdef);
+CAPNP_DECLARE_SCHEMA(94fa2950e963efae);
 CAPNP_DECLARE_SCHEMA(8aca00a572816934);
 CAPNP_DECLARE_SCHEMA(a6300e38d3b75a9e);
 CAPNP_DECLARE_SCHEMA(f4ef1ba59d753bf2);
@@ -267,6 +269,36 @@ struct InventoryViewComponent {
 
   struct _capnpPrivate {
     CAPNP_DECLARE_STRUCT_HEADER(853d504be38b2d2c, 5, 3)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct ItemUseComponent {
+  ItemUseComponent() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(c7a415a3ea75cdef, 4, 1)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct ItemStackComponent {
+  ItemStackComponent() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(94fa2950e963efae, 1, 0)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -1975,6 +2007,208 @@ public:
 
   inline  ::Schema::Vec2F32::Pipeline getPos();
   inline  ::Schema::Vec2F32::Pipeline getPadding();
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class ItemUseComponent::Reader {
+public:
+  typedef ItemUseComponent Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getEntityId() const;
+
+  inline bool hasEffectType() const;
+  inline  ::capnp::Text::Reader getEffectType() const;
+
+  inline float getEffectValue() const;
+
+  inline float getEffectRadius() const;
+
+  inline float getCooldown() const;
+
+  inline float getRemainingCooldown() const;
+
+  inline  ::int32_t getMaxCharges() const;
+
+  inline  ::int32_t getCurrentCharges() const;
+
+  inline bool getIsActive() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class ItemUseComponent::Builder {
+public:
+  typedef ItemUseComponent Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getEntityId();
+  inline void setEntityId( ::uint32_t value);
+
+  inline bool hasEffectType();
+  inline  ::capnp::Text::Builder getEffectType();
+  inline void setEffectType( ::capnp::Text::Reader value);
+  inline  ::capnp::Text::Builder initEffectType(unsigned int size);
+  inline void adoptEffectType(::capnp::Orphan< ::capnp::Text>&& value);
+  inline ::capnp::Orphan< ::capnp::Text> disownEffectType();
+
+  inline float getEffectValue();
+  inline void setEffectValue(float value);
+
+  inline float getEffectRadius();
+  inline void setEffectRadius(float value);
+
+  inline float getCooldown();
+  inline void setCooldown(float value);
+
+  inline float getRemainingCooldown();
+  inline void setRemainingCooldown(float value);
+
+  inline  ::int32_t getMaxCharges();
+  inline void setMaxCharges( ::int32_t value);
+
+  inline  ::int32_t getCurrentCharges();
+  inline void setCurrentCharges( ::int32_t value);
+
+  inline bool getIsActive();
+  inline void setIsActive(bool value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class ItemUseComponent::Pipeline {
+public:
+  typedef ItemUseComponent Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class ItemStackComponent::Reader {
+public:
+  typedef ItemStackComponent Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getCount() const;
+
+  inline  ::uint32_t getItemId() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class ItemStackComponent::Builder {
+public:
+  typedef ItemStackComponent Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getCount();
+  inline void setCount( ::uint32_t value);
+
+  inline  ::uint32_t getItemId();
+  inline void setItemId( ::uint32_t value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class ItemStackComponent::Pipeline {
+public:
+  typedef ItemStackComponent Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
 private:
   ::capnp::AnyPointer::Pipeline _typeless;
   friend class ::capnp::PipelineHook;
@@ -5941,6 +6175,182 @@ inline  ::uint32_t InventoryViewComponent::Builder::getDragHoverSlotColor() {
 inline void InventoryViewComponent::Builder::setDragHoverSlotColor( ::uint32_t value) {
   _builder.setDataField< ::uint32_t>(
       ::capnp::bounded<9>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t ItemUseComponent::Reader::getEntityId() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t ItemUseComponent::Builder::getEntityId() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void ItemUseComponent::Builder::setEntityId( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool ItemUseComponent::Reader::hasEffectType() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool ItemUseComponent::Builder::hasEffectType() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::Text::Reader ItemUseComponent::Reader::getEffectType() const {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS),
+        ::capnp::schemas::bp_c7a415a3ea75cdef + 100);
+}
+inline  ::capnp::Text::Builder ItemUseComponent::Builder::getEffectType() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS),
+        ::capnp::schemas::bp_c7a415a3ea75cdef + 100);
+}
+inline void ItemUseComponent::Builder::setEffectType( ::capnp::Text::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::Text::Builder ItemUseComponent::Builder::initEffectType(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+}
+inline void ItemUseComponent::Builder::adoptEffectType(
+    ::capnp::Orphan< ::capnp::Text>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::Text>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::Text> ItemUseComponent::Builder::disownEffectType() {
+  return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline float ItemUseComponent::Reader::getEffectValue() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+
+inline float ItemUseComponent::Builder::getEffectValue() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+inline void ItemUseComponent::Builder::setEffectValue(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
+}
+
+inline float ItemUseComponent::Reader::getEffectRadius() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+
+inline float ItemUseComponent::Builder::getEffectRadius() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+inline void ItemUseComponent::Builder::setEffectRadius(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS, value);
+}
+
+inline float ItemUseComponent::Reader::getCooldown() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS);
+}
+
+inline float ItemUseComponent::Builder::getCooldown() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS);
+}
+inline void ItemUseComponent::Builder::setCooldown(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS, value);
+}
+
+inline float ItemUseComponent::Reader::getRemainingCooldown() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS);
+}
+
+inline float ItemUseComponent::Builder::getRemainingCooldown() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS);
+}
+inline void ItemUseComponent::Builder::setRemainingCooldown(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::int32_t ItemUseComponent::Reader::getMaxCharges() const {
+  return _reader.getDataField< ::int32_t>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS, 1);
+}
+
+inline  ::int32_t ItemUseComponent::Builder::getMaxCharges() {
+  return _builder.getDataField< ::int32_t>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS, 1);
+}
+inline void ItemUseComponent::Builder::setMaxCharges( ::int32_t value) {
+  _builder.setDataField< ::int32_t>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS, value, 1);
+}
+
+inline  ::int32_t ItemUseComponent::Reader::getCurrentCharges() const {
+  return _reader.getDataField< ::int32_t>(
+      ::capnp::bounded<6>() * ::capnp::ELEMENTS, 1);
+}
+
+inline  ::int32_t ItemUseComponent::Builder::getCurrentCharges() {
+  return _builder.getDataField< ::int32_t>(
+      ::capnp::bounded<6>() * ::capnp::ELEMENTS, 1);
+}
+inline void ItemUseComponent::Builder::setCurrentCharges( ::int32_t value) {
+  _builder.setDataField< ::int32_t>(
+      ::capnp::bounded<6>() * ::capnp::ELEMENTS, value, 1);
+}
+
+inline bool ItemUseComponent::Reader::getIsActive() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<224>() * ::capnp::ELEMENTS, true);
+}
+
+inline bool ItemUseComponent::Builder::getIsActive() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<224>() * ::capnp::ELEMENTS, true);
+}
+inline void ItemUseComponent::Builder::setIsActive(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<224>() * ::capnp::ELEMENTS, value, true);
+}
+
+inline  ::uint32_t ItemStackComponent::Reader::getCount() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t ItemStackComponent::Builder::getCount() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void ItemStackComponent::Builder::setCount( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t ItemStackComponent::Reader::getItemId() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t ItemStackComponent::Builder::getItemId() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+inline void ItemStackComponent::Builder::setItemId( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
 }
 
 inline bool ItemAttrIcon::Reader::hasName() const {

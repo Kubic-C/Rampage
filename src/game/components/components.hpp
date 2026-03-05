@@ -40,6 +40,8 @@ inline void registerGameComponents(IWorldPtr world) {
   world->component<InventoryComponent>(false);
   world->component<ItemComponent>(false);
   world->component<InventoryViewComponent>(false);
+  world->component<ItemUseComponent>(false);
+  world->component<ItemStackComponent>(false);
 }
 
 RAMPAGE_END

@@ -18,6 +18,14 @@ public:
   RefT<InventoryComponent> createInventory(IWorldPtr world, EntityId entityId, u16 cols = 8, u16 rows = 5);
 
   // ========================================================================
+  // ITEM EVENTS
+  // ========================================================================
+
+  void dropItem(IWorldPtr world, EntityId itemId, Vec2 dropPosition, u32 count = 1);
+
+  void dropItem(IWorldPtr world, EntityId invEntityId, u16 x, u16 y, Vec2 dropPosition, u32 count = 1);
+
+  // ========================================================================
   // ITEM ADDITION/REMOVAL
   // ========================================================================
 
@@ -111,7 +119,7 @@ public:
 
 private:
   // Helper to remove items from a slot and return how many were removed
-  u32 removeFromSlot(ItemStack& slot, u32 count);
+  u32 removeFromSlot(ItemStackComponent& slot, u32 count);
 };
 
 void loadInventorySystems(IHost& host);

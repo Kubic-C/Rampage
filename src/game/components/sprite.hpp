@@ -18,6 +18,16 @@ enum class WorldLayer : u8 {
   Top = 0,
 };
 
+static constexpr float WorldLayerInvalidZ = -8;
+static constexpr float WorldLayerBottomZ = -7;
+static constexpr float WorldLayerFloorZ = -6;
+static constexpr float WorldLayerWallZ = -5;
+static constexpr float WorldLayerTurretZ = -4;
+static constexpr float WorldLayerItemZ = -3;
+static constexpr float WorldLayerResZ = -2; // RESERVED
+static constexpr float WorldLayerRes2Z = -1; // RESERVED
+static constexpr float WorldLayerTopZ = 0;
+
 struct SpriteLayer {
   SpriteLayer() = default;
 

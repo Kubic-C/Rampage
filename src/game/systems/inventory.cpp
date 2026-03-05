@@ -1,5 +1,9 @@
 #include "inventory.hpp"
 #include "../../core/module.hpp"
+#include "../components/body.hpp"
+#include "../components/sprite.hpp"
+#include "../../render/render.hpp"
+#include "../components/shapes.hpp"
 
 RAMPAGE_START
 
@@ -13,6 +17,123 @@ RefT<InventoryComponent> InventoryManager::createInventory(IWorldPtr world, Enti
   invComp->items.resize(cols * rows); // Initialize slots
 
   return invComp;
+}
+
+void InventoryManager::dropItem(IWorldPtr world, EntityId itemId, Vec2 dropPosition, u32 count) {
+  auto texMap = world->getFirstWith(world->set<TextureMapInUseTag>()).get<TextureMap3DComponent>();
+
+  EntityPtr itemEntity = world->getEntity(itemId); 
+  auto itemComp = itemEntity.get<ItemComponent>();
+
+  // For unique items, spawn one entity per item (count represents number of unique instances)
+  // For stackable items, spawn entities based on stack size limits
+  u32 itemsPerStack = 1;
+  if (!itemComp->isUnique) {
+    itemsPerStack = itemComp->maxStackSize / itemComp->stackCost;
+    if (itemsPerStack == 0) itemsPerStack = 1; // At least 1 item per stack
+  }
+
+  // Spawn multiple entities if needed
+  u32 remaining = count;
+  float offsetAngle = 0.0f;
+  while (remaining > 0) {
+    u32 countInThisStack = std::min(remaining, itemsPerStack);
+    remaining -= countInThisStack;
+
+    EntityPtr droppedItem = world->create();
+    droppedItem.add<TransformComponent>();
+    droppedItem.add<BodyComponent>();
+    droppedItem.add<SpriteComponent>();
+    droppedItem.add<ItemStackComponent>();
+    droppedItem.add<CircleRenderComponent>();
+    
+    // Offset slightly for multiple spawned items
+    Vec2 offsetPos = dropPosition;
+    if (remaining > 0 || count > itemsPerStack) {
+      offsetPos.x += 0.3f * std::cos(offsetAngle);
+      offsetPos.y += 0.3f * std::sin(offsetAngle);
+      offsetAngle += 1.5708f; // 45 degree increments
+    }
+
+    auto transComp = droppedItem.get<TransformComponent>();
+    transComp->pos = offsetPos;
+    
+    constexpr float radius = 0.125f;
+
+    auto bodyComp = droppedItem.get<BodyComponent>();
+    b2BodyDef bodyDef = b2DefaultBodyDef();
+    bodyDef.type = b2_dynamicBody;
+    bodyDef.position = {offsetPos.x, offsetPos.y};
+    bodyDef.userData = entityToB2Data(droppedItem);
+    bodyDef.linearDamping = 1;
+    bodyDef.angularDamping = 0.5;
+    bodyComp->id = b2CreateBody(world->getContext<b2WorldId>(), &bodyDef);
+    b2Circle circle{0};
+    circle.radius = radius;
+    b2ShapeDef shapeDef = b2DefaultShapeDef();
+    shapeDef.filter.categoryBits = Item | Friendly;
+    shapeDef.filter.maskBits = Friendly | Static;
+    shapeDef.userData = entityToB2Data(droppedItem);
+    b2CreateCircleShape(bodyComp->id, &shapeDef, &circle);  
+    b2Body_EnableContactEvents(bodyComp->id, true);
+
+    auto spriteComp = droppedItem.get<SpriteComponent>();
+    spriteComp->scaling = 0.5f;
+    u32 texIndex = texMap->getSprite(getFilename(std::string(itemComp->icon.getId())));
+    SpriteComponent::SubSprite subSprite;
+    subSprite.addLayer(texIndex, Vec2(0), 0, WorldLayer::Top);
+    spriteComp->subSprites.push_back({subSprite});
+
+    auto circleRenderComp = droppedItem.get<CircleRenderComponent>();
+    float stackFullness = std::min(1.0f, (float)itemComp->getTotalStackCost(countInThisStack) / itemComp->maxStackSize);
+    circleRenderComp->color = glm::vec3(1.0f, 1.0f - stackFullness, 0.0f); // More red as stack gets fuller
+    circleRenderComp->radius = 1.5f * radius + radius * stackFullness; // Larger radius for fuller stacks
+    circleRenderComp->z = WorldLayerTopZ;
+
+    // For unique items, clone the item entity for each drop
+    EntityId itemIdForStack = itemEntity;
+    if (itemComp->isUnique && countInThisStack > 0) {
+      // Clone the item entity
+      EntityPtr clonedItem = world->create();
+      world->copy(itemEntity, clonedItem, world->set<ItemComponent>());
+      itemIdForStack = clonedItem;
+    }
+
+    auto itemStackComp = droppedItem.get<ItemStackComponent>();
+    itemStackComp->count = countInThisStack;
+    itemStackComp->itemId = itemIdForStack;
+  }
+}
+
+
+void InventoryManager::dropItem(IWorldPtr world, EntityId invEntityId, u16 x, u16 y, Vec2 dropPosition, u32 count) {
+  EntityPtr invEntity = world->getEntity(invEntityId);
+  if (!invEntity.has<InventoryComponent>()) {
+    return; // Invalid inventory entity
+  }
+
+  auto invComp = invEntity.get<InventoryComponent>();
+  if (x >= invComp->cols || y >= invComp->rows) {
+    return; // Invalid slot position
+  }
+
+  ItemStackComponent slot = invComp->getSlot(x, y); // copy not reference
+  if (slot.itemId == 0 || slot.count == 0) {
+    return; // Slot is already empty
+  }
+
+  EntityPtr itemEntity = world->getEntity(slot.itemId);
+  if (!itemEntity.has<ItemComponent>()) {
+    return; // Invalid item entity in slot
+  }
+
+  u32 amountDropped = removeItem(world, invEntityId, x, y, count);
+  if(amountDropped < count)
+    count = amountDropped;
+  if(amountDropped == 0)
+    return;
+
+  dropItem(world, slot.itemId, dropPosition, count);
 }
 
 u32 InventoryManager::addItem(IWorldPtr world, EntityId invEntityId, EntityId itemEntityId, u32 count) {
@@ -33,15 +154,12 @@ u32 InventoryManager::addItem(IWorldPtr world, EntityId invEntityId, EntityId it
   auto itemComp = itemEntity.get<ItemComponent>();
   auto invComp = invEntity.get<InventoryComponent>();
 
-  u32 actualMaxStackSize = itemComp->maxStackSize;
-  u32 actualStackCost = itemComp->stackCost;
+  u32 maxStackSize = itemComp->maxStackSize / itemComp->stackCost;
   if(!itemComp->isUnique) {
     // Find slots containing the same item type to stack onto
-    for(ItemStack& slot : invComp->items) {
+    for(ItemStackComponent& slot : invComp->items) {
       if (slot.itemId == itemEntityId) {
-        // This slot has the same item type and is stackable, add to it
-        u32 spaceInStack = actualMaxStackSize - slot.count;
-        u32 toAdd = std::min(spaceInStack, count);
+        u32 toAdd = std::min(maxStackSize - slot.count, count);
         slot.count += toAdd;
         count -= toAdd;
 
@@ -50,15 +168,14 @@ u32 InventoryManager::addItem(IWorldPtr world, EntityId invEntityId, EntityId it
       }
     }
   } else {
-    actualMaxStackSize = 1;
-    actualStackCost = 1;
+    maxStackSize = 1;
     count = 1; 
   }
 
   // Find empty slots to place remaining items
-  for (ItemStack& slot : invComp->items) {
+  for (ItemStackComponent& slot : invComp->items) {
     if (slot.itemId == 0) {
-      u32 toAdd = std::min(actualMaxStackSize / actualStackCost, count);
+      u32 toAdd = std::min(maxStackSize, count);
       slot.itemId = itemEntityId;
       slot.count = toAdd;
       count -= toAdd;
@@ -82,7 +199,7 @@ u32 InventoryManager::removeItem(IWorldPtr world, EntityId invEntityId, u16 x, u
     return 0; // Invalid slot position
   }
 
-  ItemStack& slot = invComp->getSlot(x, y);
+  ItemStackComponent& slot = invComp->getSlot(x, y);
   if (slot.itemId == 0 || slot.count == 0) {
     return 0; // Slot is already empty
   }
@@ -104,7 +221,7 @@ u32 InventoryManager::removeItemByType(IWorldPtr world, EntityId invEntityId, En
   auto invComp = invEntity.get<InventoryComponent>();
   u32 totalRemoved = 0;
 
-  for(ItemStack& slot : invComp->items) {
+  for(ItemStackComponent& slot : invComp->items) {
     if (slot.itemId == itemEntity) {
       u32 removed = removeFromSlot(slot, count);
       totalRemoved += removed;
@@ -117,7 +234,7 @@ u32 InventoryManager::removeItemByType(IWorldPtr world, EntityId invEntityId, En
   return totalRemoved;
 }
 
-u32 InventoryManager::removeFromSlot(ItemStack& slot, u32 count) {
+u32 InventoryManager::removeFromSlot(ItemStackComponent& slot, u32 count) {
   u32 toRemove = std::min(slot.count, count);
   slot.count -= toRemove;
   if (slot.count == 0) {
@@ -144,8 +261,8 @@ bool InventoryManager::moveItems(IWorldPtr world, EntityId srcInvEntityId, u16 s
     return false; // Invalid slot positions
   }
 
-  ItemStack& srcSlot = srcInv->getSlot(srcX, srcY);
-  ItemStack& dstSlot = dstInv->getSlot(dstX, dstY);
+  ItemStackComponent& srcSlot = srcInv->getSlot(srcX, srcY);
+  ItemStackComponent& dstSlot = dstInv->getSlot(dstX, dstY);
 
   if (srcSlot.itemId == 0) {
     return false; // Source slot is empty
@@ -191,8 +308,8 @@ bool InventoryManager::swapSlots(IWorldPtr world, EntityId invEntityIdA, u16 x1,
     return false;
   }
 
-  ItemStack& slotA = invA->getSlot(x1, y1);
-  ItemStack& slotB = invB->getSlot(x2, y2);
+  ItemStackComponent& slotA = invA->getSlot(x1, y1);
+  ItemStackComponent& slotB = invB->getSlot(x2, y2);
 
   // Simple swap
   std::swap(slotA, slotB);
@@ -216,8 +333,8 @@ bool InventoryManager::mergeStacks(IWorldPtr world, EntityId invEntityIdA, u16 x
     return false;
   }
 
-  ItemStack& slotA = invA->getSlot(x1, y1);
-  ItemStack& slotB = invB->getSlot(x2, y2);
+  ItemStackComponent& slotA = invA->getSlot(x1, y1);
+  ItemStackComponent& slotB = invB->getSlot(x2, y2);
 
   // Can't merge if either slot is empty or items don't match
   if (slotA.itemId == 0 || slotB.itemId == 0 || slotA.itemId != slotB.itemId) {
@@ -414,6 +531,8 @@ int updateInventoryViews(IWorldPtr world, float dt) {
 }
 
 void loadInventorySystems(IHost& host) {
+  auto world = host.getWorld();
+
   host.getPipeline().getGroup<GameGroup>().attachToStage<GameGroup::PreTickStage>(updateInventoryViews);
 }
 

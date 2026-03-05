@@ -80,6 +80,7 @@ public:
 
     /* Player */
     EntityPtr player = assetLoader.cloneAsset("BasicPlayer");
+    b2Body_EnableContactEvents(*player.get<BodyComponent>(), true);
     player.add<CameraInUseTag>();
     invMgr.addItem(m_world, player, assetLoader.getAsset("BasicTurretItem"), 64);
     invMgr.addItem(m_world, player, assetLoader.getAsset("BigGunTurretItem"), 4);
@@ -88,7 +89,16 @@ public:
     invMgr.addItem(m_world, player, assetLoader.getAsset("PlaceableHighStoneItem"));
     invMgr.addItem(m_world, player, assetLoader.getAsset("ZombieSpawnableItem"), 21);
 
-    for(int i = 0; i < 20; i++) {
+    for(int i = 0; i < 1; i++) {
+      invMgr.dropItem(m_world, assetLoader.getAsset("BasicTurretItem"), Vec2(0, 0), 10);
+      invMgr.dropItem(m_world, assetLoader.getAsset("BigGunTurretItem"), Vec2(1, 0), 10);
+      invMgr.dropItem(m_world, assetLoader.getAsset("WoodItem"), Vec2(2, 0), 10);
+      invMgr.dropItem(m_world, assetLoader.getAsset("FenceItem"), Vec2(3, 0), 10);
+      invMgr.dropItem(m_world, assetLoader.getAsset("PlaceableHighStoneItem"), Vec2(4, 1), 10);
+      invMgr.dropItem(m_world, assetLoader.getAsset("ZombieSpawnableItem"), Vec2(4, 2), 10);
+    }
+
+    for(int i = 0; i < 0; i++) {
       EntityPtr ptr = assetLoader.cloneAsset("BasicZombie");
       ptr.get<TransformComponent>()->pos = Vec2((i % 100) * 0.5f, (i % 15) * 0.5f);
     }
@@ -108,7 +118,7 @@ public:
       bodyDef.type = b2_staticBody;
       bodyComp->id = b2CreateBody(physicsWorld, &bodyDef);
 
-      int length = 10;
+      int length = 5;
       for(int x = -length; x < length * 10; x++)
         for(int y = -length; y < length; y++)
           tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0), assetLoader.cloneAsset("StoneFloorTile"));

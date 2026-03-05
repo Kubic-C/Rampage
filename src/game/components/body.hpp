@@ -5,7 +5,7 @@
 
 RAMPAGE_START
 
-enum PhysicsCategories { Friendly = 0x01, Enemy = 0x02, Static = 0x04, All = 0xFFFF };
+enum PhysicsCategories { Friendly = 0x01, Enemy = 0x02, Static = 0x04, Item = 0x08, All = 0xFFFF };
 
 struct BodyComponent {
   static void serialize(capnp::MessageBuilder& builder, Ref component);
