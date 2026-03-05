@@ -24,13 +24,14 @@ void PlayerComponent::deserialize(capnp::MessageReader& reader, const IdMapper& 
   player->maxSpeed = playerReader.getMaxSpeed();
 }
 
-void PlayerComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
+void PlayerComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
   auto self = component.cast<PlayerComponent>();
+  auto compJson = jsonValue.as<JSchema::PlayerComponent>();
 
-  if (compJson.contains("accel") && compJson["accel"].is_number())
-    self->accel = compJson["accel"];
-  if (compJson.contains("maxSpeed") && compJson["maxSpeed"].is_number())
-    self->maxSpeed = compJson["maxSpeed"];
+  if (compJson->hasAccel())
+    self->accel = compJson->getAccel();
+  if (compJson->hasMaxSpeed())
+    self->maxSpeed = compJson->getMaxSpeed();
 }
 
 RAMPAGE_END

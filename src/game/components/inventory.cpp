@@ -32,33 +32,28 @@ void ItemComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id
   self->icon = tgui::Texture(itemReader.getIconPath().cStr()); // Load texture from path
 }
 
-void ItemComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
+void ItemComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
   auto self = component.cast<ItemComponent>();
+  auto compJson = jsonValue.as<JSchema::ItemComponent>();
 
-  if (compJson.contains("name") && compJson["name"].is_string()) {
-    self->name = compJson["name"];
-  }
+  if (compJson->hasName())
+    self->name = compJson->getName();
 
-  if (compJson.contains("description") && compJson["description"].is_string()) {
-    self->description = compJson["description"];
-  }
+  if (compJson->hasDescription())
+    self->description = compJson->getDescription();
 
-  if (compJson.contains("maxStackSize") && compJson["maxStackSize"].is_number_unsigned()) {
-    self->maxStackSize = compJson["maxStackSize"];
-  }
+  if (compJson->hasMaxStackSize())
+    self->maxStackSize = compJson->getMaxStackSize();
 
-  if (compJson.contains("stackCost") && compJson["stackCost"].is_number_unsigned()) {
-    self->stackCost = compJson["stackCost"];
-  }
+  if (compJson->hasStackCost())
+    self->stackCost = compJson->getStackCost();
 
-  if (compJson.contains("isUnique") && compJson["isUnique"].is_boolean()) {
-    self->isUnique = compJson["isUnique"];
-  }
+  if (compJson->hasIsUnique())
+    self->isUnique = compJson->getIsUnique();
 
   // Load icon from asset loader if iconAsset is specified
-  if (compJson.contains("iconAsset") && compJson["iconAsset"].is_string()) {
-    std::string iconPath = compJson["iconAsset"];
-    self->icon = tgui::Texture(iconPath);
+  if (compJson->hasIconAsset()) {
+    self->icon = tgui::Texture(compJson->getIconAsset());
   }
 }
 
@@ -95,38 +90,34 @@ void InventoryComponent::deserialize(capnp::MessageReader& reader, const IdMappe
   }
 }
 
-void InventoryComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
+void InventoryComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
   auto self = component.cast<InventoryComponent>();
+  auto compJson = jsonValue.as<JSchema::InventoryComponent>();
 
-  if (compJson.contains("cols") && compJson["cols"].is_number_unsigned()) {
-    self->cols = compJson["cols"];
-  }
+  if (compJson->hasCols())
+    self->cols = compJson->getCols();
 
-  if (compJson.contains("rows") && compJson["rows"].is_number_unsigned()) {
-    self->rows = compJson["rows"];
-  }
+  if (compJson->hasRows())
+    self->rows = compJson->getRows();
 
   // Initialize slots
   self->items.clear();
   self->items.resize(self->cols * self->rows); // Initialize slots
 
   // Optionally load initial items from JSON (for asset definitions)
-  if (compJson.contains("items") && compJson["items"].is_array()) {
-    const auto& itemsJson = compJson["items"];
+  if (compJson->hasItems()) {
+    const auto& itemsJson = compJson->getItems();
     size_t slotIndex = 0;
 
     for (const auto& itemJson : itemsJson) {
       if (slotIndex >= self->items.size()) break;
-      if (!itemJson.is_object()) continue;
 
-      if (itemJson.contains("count") && itemJson["count"].is_number_unsigned()) {
-        self->items[slotIndex].count = itemJson["count"];
-      }
+      if (itemJson.hasCount())
+        self->items[slotIndex].count = itemJson.getCount();
 
-      if (itemJson.contains("itemEntityName") && itemJson["itemEntityName"].is_string()) {
+      if (itemJson.hasItemEntityName()) {
         // Resolve entity by name from asset loader
-        std::string entityName = itemJson["itemEntityName"];
-        self->items[slotIndex].itemId = loader.getAsset(entityName);
+        self->items[slotIndex].itemId = loader.getAsset(itemJson.getItemEntityName());
       }
 
       slotIndex++;
@@ -229,85 +220,66 @@ void InventoryViewComponent::deserialize(capnp::MessageReader& reader, const IdM
   self->dragHoverSlotColor = unpackColor(viewReader.getDragHoverSlotColor());
 }
 
-void InventoryViewComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
+void InventoryViewComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
   auto self = component.cast<InventoryViewComponent>();
+  auto compJson = jsonValue.as<JSchema::InventoryViewComponent>();
 
-  if (compJson.contains("name") && compJson["name"].is_string()) {
-    self->name = compJson["name"];
+  if (compJson->hasName())
+    self->name = compJson->getName();
+
+  if (compJson->hasPos()) {
+    auto posJson = compJson->getPos();
+    if (posJson.hasX())
+      self->pos.x = posJson.getX();
+    if (posJson.hasY())
+      self->pos.y = posJson.getY();
   }
 
-  if (compJson.contains("pos") && compJson["pos"].is_object()) {
-    const auto& posJson = compJson["pos"];
-    if (posJson.contains("x") && posJson["x"].is_number()) {
-      self->pos.x = posJson["x"];
-    }
-    if (posJson.contains("y") && posJson["y"].is_number()) {
-      self->pos.y = posJson["y"];
-    }
+  if (compJson->hasIsVisible())
+    self->isVisible = compJson->getIsVisible();
+
+  if (compJson->hasIsInteractable())
+    self->isInteractable = compJson->getIsInteractable();
+
+  if (compJson->hasPadding()) {
+    auto padJson = compJson->getPadding();
+    if (padJson.hasX())
+      self->padding.x = padJson.getX();
+    if (padJson.hasY())
+      self->padding.y = padJson.getY();
   }
 
-  if (compJson.contains("isVisible") && compJson["isVisible"].is_boolean()) {
-    self->isVisible = compJson["isVisible"];
-  }
+  if (compJson->hasSlotSize())
+    self->slotSize = compJson->getSlotSize();
 
-  if (compJson.contains("isInteractable") && compJson["isInteractable"].is_boolean()) {
-    self->isInteractable = compJson["isInteractable"];
-  }
+  if (compJson->hasRounding())
+    self->rounding = compJson->getRounding();
 
-  if (compJson.contains("padding") && compJson["padding"].is_object()) {
-    const auto& padJson = compJson["padding"];
-    if (padJson.contains("x") && padJson["x"].is_number()) {
-      self->padding.x = padJson["x"];
-    }
-    if (padJson.contains("y") && padJson["y"].is_number()) {
-      self->padding.y = padJson["y"];
-    }
-  }
-
-  if (compJson.contains("slotSize") && compJson["slotSize"].is_number()) {
-    self->slotSize = compJson["slotSize"];
-  }
-
-  if (compJson.contains("rounding") && compJson["rounding"].is_number()) {
-    self->rounding = compJson["rounding"];
-  }
-
-  // Helper lambda to parse color from JSON (expecting array [R,G,B,A] or hex string)
-  auto parseColor = [](const json& colorJson) -> tgui::Color {
-    if (colorJson.is_array() && colorJson.size() == 4) {
-      return tgui::Color(
-        (colorJson[0].is_number() ? (int)colorJson[0] : (int)0),
-        (colorJson[1].is_number() ? (int)colorJson[1] : (int)0),
-        (colorJson[2].is_number() ? (int)colorJson[2] : (int)0),
-        (colorJson[3].is_number() ? (int)colorJson[3] : (int)255)
-      );
+  // Helper lambda to parse color from JSchema [R,G,B,A] int arrays
+  auto parseColor = [](const std::vector<int64_t>& arr) -> tgui::Color {
+    if (arr.size() == 4) {
+      return tgui::Color((int)arr[0], (int)arr[1], (int)arr[2], (int)arr[3]);
     }
     return tgui::Color::Black;
   };
 
-  if (compJson.contains("windowBackgroundColor")) {
-    self->windowBackgroundColor = parseColor(compJson["windowBackgroundColor"]);
-  }
+  if (compJson->hasWindowBackgroundColor())
+    self->windowBackgroundColor = parseColor(compJson->getWindowBackgroundColor());
 
-  if (compJson.contains("borderColor")) {
-    self->borderColor = parseColor(compJson["borderColor"]);
-  }
+  if (compJson->hasBorderColor())
+    self->borderColor = parseColor(compJson->getBorderColor());
 
-  if (compJson.contains("emptySlotColor")) {
-    self->emptySlotColor = parseColor(compJson["emptySlotColor"]);
-  }
+  if (compJson->hasEmptySlotColor())
+    self->emptySlotColor = parseColor(compJson->getEmptySlotColor());
 
-  if (compJson.contains("textColor")) {
-    self->textColor = parseColor(compJson["textColor"]);
-  }
+  if (compJson->hasTextColor())
+    self->textColor = parseColor(compJson->getTextColor());
 
-  if (compJson.contains("hoverSlotColor")) {
-    self->hoverSlotColor = parseColor(compJson["hoverSlotColor"]);
-  }
+  if (compJson->hasHoverSlotColor())
+    self->hoverSlotColor = parseColor(compJson->getHoverSlotColor());
 
-  if (compJson.contains("dragHoverSlotColor")) {
-    self->dragHoverSlotColor = parseColor(compJson["dragHoverSlotColor"]);
-  }
+  if (compJson->hasDragHoverSlotColor())
+    self->dragHoverSlotColor = parseColor(compJson->getDragHoverSlotColor());
 }
 
 InventoryViewComponent::~InventoryViewComponent() {

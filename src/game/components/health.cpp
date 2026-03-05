@@ -15,10 +15,12 @@ void ContactDamageComponent::deserialize(capnp::MessageReader& reader, const IdM
   self->damage = contactDmgReader.getDamage();
 }
 
-void ContactDamageComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
+void ContactDamageComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
   auto self = component.cast<ContactDamageComponent>();
-  if(compJson.contains("damage") && compJson["damage"].is_number())
-    self->damage = compJson["damage"];
+  auto compJson = jsonValue.as<JSchema::ContactDamageComponent>();
+
+  if(compJson->hasDamage())
+    self->damage = compJson->getDamage();
 }
 
 // BulletDamageComponent
@@ -34,10 +36,12 @@ void BulletDamageComponent::deserialize(capnp::MessageReader& reader, const IdMa
   self->damage = bulletDmgReader.getDamage();
 }
 
-void BulletDamageComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
+void BulletDamageComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
   auto self = component.cast<BulletDamageComponent>();
-  if(compJson.contains("damage") && compJson["damage"].is_number())
-    self->damage = compJson["damage"];
+  auto compJson = jsonValue.as<JSchema::BulletDamageComponent>();
+
+  if(compJson->hasDamage())
+    self->damage = compJson->getDamage();
 }
 
 // LifetimeComponent
@@ -53,10 +57,12 @@ void LifetimeComponent::deserialize(capnp::MessageReader& reader, const IdMapper
   self->timeLeft = lifetimeReader.getTimeLeft();
 }
 
-void LifetimeComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
+void LifetimeComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
   auto self = component.cast<LifetimeComponent>();
-  if(compJson.contains("timeLeft") && compJson["timeLeft"].is_number())
-    self->timeLeft = compJson["timeLeft"];
+  auto compJson = jsonValue.as<JSchema::LifetimeComponent>();
+
+  if(compJson->hasTimeLeft())
+    self->timeLeft = compJson->getTimeLeft();
 }
 
 // HealthComponent
@@ -72,10 +78,12 @@ void HealthComponent::deserialize(capnp::MessageReader& reader, const IdMapper& 
   self->health = healthReader.getHealth();
 }
 
-void HealthComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
+void HealthComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
   auto self = component.cast<HealthComponent>();
-  if(compJson.contains("health") && compJson["health"].is_number())
-    self->health = compJson["health"];
+  auto compJson = jsonValue.as<JSchema::HealthComponent>();
+
+  if(compJson->hasHealth())
+    self->health = compJson->getHealth();
 }
 
 RAMPAGE_END

@@ -32,19 +32,19 @@ void TransformComponent::deserialize(capnp::MessageReader& reader, const IdMappe
   transform->pos.y = y;
 }
 
-void TransformComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
+void TransformComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
   auto transform = component.cast<TransformComponent>();
+  auto compJson = jsonValue.as<JSchema::TransformComponent>();
 
-  if(compJson.contains("pos") && compJson["pos"].is_object()) {
-    json posJson = compJson["pos"];
-    if(posJson.contains("x") && posJson["x"].is_number())
-      transform->pos.x = posJson["x"];
-    if(posJson.contains("y") && posJson["y"].is_number())
-      transform->pos.y = posJson["y"];
+  if(compJson->hasPos()) {
+    auto posJson = compJson->getPos();
+    if(posJson.hasX())
+      transform->pos.x = posJson.getX();
+    if(posJson.hasY())
+      transform->pos.y = posJson.getY();
   }
-  if(compJson.contains("rot") && compJson["rot"].is_number()) {
-    transform->rot = compJson["rot"].get<float>();
-  }
+  if(compJson->hasRot())
+    transform->rot = compJson->getRot();
 }
 
 TransformComponent& TransformComponent::operator=(const Transform& transform) {

@@ -12,7 +12,7 @@ RAMPAGE_START
 struct ItemComponent {
   static void serialize(capnp::MessageBuilder& builder, Ref component);
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
-  static void fromJson(Ref component, AssetLoader loader, const json& compJson);
+  static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
 
   std::string name;
   std::string description;
@@ -43,7 +43,7 @@ struct ItemStack {
 struct InventoryComponent {
   static void serialize(capnp::MessageBuilder& builder, Ref component);
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
-  static void fromJson(Ref component, AssetLoader loader, const json& compJson);
+  static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
 
   std::vector<ItemStack> items;  // Linear array of slots
   u16 cols = 3;
@@ -67,7 +67,7 @@ struct InventoryComponent {
 struct InventoryViewComponent {
   static void serialize(capnp::MessageBuilder& builder, Ref component);
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
-  static void fromJson(Ref component, AssetLoader loader, const json& compJson);
+  static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
   ~InventoryViewComponent();
 
   std::string name = "Inventory";

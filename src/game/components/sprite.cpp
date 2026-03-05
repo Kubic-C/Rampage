@@ -76,73 +76,70 @@ void SpriteComponent::deserialize(capnp::MessageReader& reader, const IdMapper& 
   }
 }
 
-void SpriteComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
+void SpriteComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
   auto self = component.cast<SpriteComponent>();
   IWorldPtr world = self.getWorld();
+  auto compJson = jsonValue.as<JSchema::SpriteComponent>();
   
   // Parse scaling if provided
-  if (compJson.contains("scaling") && compJson["scaling"].is_number()) {
-    self->scaling = compJson["scaling"];
+  if (compJson->hasScaling()) {
+    self->scaling = compJson->getScaling();
   }
   
   // Parse subSprites array
-  if (compJson.contains("subSprites") && compJson["subSprites"].is_array()) {
-    const auto& subSpritesJson = compJson["subSprites"];
+  if (compJson->hasSubSprites()) {
+    const auto& subSpritesJson = compJson->getSubSprites();
     
     for (const auto& subSpriteJson : subSpritesJson) {
-      if (!subSpriteJson.is_object()) continue;
-      
       // Parse grid position if provided, otherwise default to (0, 0)
       u16 gridX = 0;
       u16 gridY = 0;
       
-      if (subSpriteJson.contains("gridPos") && subSpriteJson["gridPos"].is_object()) {
-        const auto& gridPosJson = subSpriteJson["gridPos"];
-        if (gridPosJson.contains("x") && gridPosJson["x"].is_number_unsigned())
-          gridX = gridPosJson["x"];
-        if (gridPosJson.contains("y") && gridPosJson["y"].is_number_unsigned())
-          gridY = gridPosJson["y"];
+      if (subSpriteJson.hasGridPos()) {
+        auto gridPosJson = subSpriteJson.getGridPos();
+        if (gridPosJson.hasX())
+          gridX = gridPosJson.getX();
+        if (gridPosJson.hasY())
+          gridY = gridPosJson.getY();
       }
       
       SubSprite subSprite;
       
       // Parse layers array for this subSprite
-      if (subSpriteJson.contains("layers") && subSpriteJson["layers"].is_array()) {
-        const auto& layersJson = subSpriteJson["layers"];
+      if (subSpriteJson.hasLayers()) {
+        const auto& layersJson = subSpriteJson.getLayers();
         
         for (const auto& layerJson : layersJson) {
-          if (!layerJson.is_object()) continue;
-          
           u32 texIndex = 0;
           glm::vec2 offset = Vec2(0);
           float rot = 0.0f;
           WorldLayer layer = WorldLayer::Invalid;
           
           // Load texture by path (get index from TextureMapInUse)
-          if (layerJson.contains("path") && layerJson["path"].is_string()) {
-            std::string texturePath = layerJson["path"];
+          if (layerJson.hasPath()) {
+            const std::string& texturePath = layerJson.getPath();
             EntityPtr texMapEntity = world->getFirstWith({world->component<TextureMapInUseTag>()});
             auto texMap = texMapEntity.get<TextureMap3DComponent>();
             texIndex = texMap->getSprite(texturePath);
           }
           
           // Parse offset if provided
-          if (layerJson.contains("offset") && layerJson["offset"].is_object()) {
-            const auto& offsetJson = layerJson["offset"];
-            if (offsetJson.contains("x") && offsetJson["x"].is_number())
-              offset.x = offsetJson["x"];
-            if (offsetJson.contains("y") && offsetJson["y"].is_number())
-              offset.y = offsetJson["y"];
+          if (layerJson.hasOffset()) {
+            auto offsetJson = layerJson.getOffset();
+            if (offsetJson.hasX())
+              offset.x = offsetJson.getX();
+            if (offsetJson.hasY())
+              offset.y = offsetJson.getY();
           }
           
           // Parse rotation if provided
-          if (layerJson.contains("rot") && layerJson["rot"].is_number()) {
-            rot = layerJson["rot"];
+          if (layerJson.hasRot()) {
+            rot = layerJson.getRot();
           }
           
           // Parse layer name (string to enum conversion)
-          if (layerJson.contains("layer") && layerJson["layer"].is_string()) {
-            std::string layerName = layerJson["layer"];
+          if (layerJson.hasLayer()) {
+            const std::string& layerName = layerJson.getLayer();
             if (layerName == "Bottom") layer = WorldLayer::Bottom;
             else if (layerName == "Floor") layer = WorldLayer::Floor;
             else if (layerName == "Wall") layer = WorldLayer::Wall;

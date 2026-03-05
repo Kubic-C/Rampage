@@ -24,19 +24,19 @@ void SpawnerComponent::deserialize(capnp::MessageReader& reader, const IdMapper&
   spawner->spawnCount = spawnerReader.getSpawnCount();
 }
 
-void SpawnerComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
+void SpawnerComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
   auto self = component.cast<SpawnerComponent>();
+  auto compJson = jsonValue.as<JSchema::SpawnerComponent>();
 
-  if (compJson.contains("spawn") && compJson["spawn"].is_string()) {
-    std::string spawnName = compJson["spawn"];
-    self->spawn = loader.getAsset(spawnName);
+  if (compJson->hasSpawn()) {
+    self->spawn = loader.getAsset(compJson->getSpawn());
   }
-  if (compJson.contains("spawnRate") && compJson["spawnRate"].is_number())
-    self->spawnRate = compJson["spawnRate"];
-  if (compJson.contains("spawnableRadius") && compJson["spawnableRadius"].is_number())
-    self->spawnableRadius = compJson["spawnableRadius"];
-  if (compJson.contains("spawnCount") && compJson["spawnCount"].is_number_unsigned())
-    self->spawnCount = compJson["spawnCount"];
+  if (compJson->hasSpawnRate())
+    self->spawnRate = compJson->getSpawnRate();
+  if (compJson->hasSpawnableRadius())
+    self->spawnableRadius = compJson->getSpawnableRadius();
+  if (compJson->hasSpawnCount())
+    self->spawnCount = compJson->getSpawnCount();
 }
 
 RAMPAGE_END

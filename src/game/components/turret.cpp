@@ -38,33 +38,34 @@ void TurretComponent::deserialize(capnp::MessageReader& reader, const IdMapper& 
   self->bulletHealth = turretReader.getBulletHealth();
 }
 
-void TurretComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
+void TurretComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
   auto self = component.cast<TurretComponent>();
+  auto compJson = jsonValue.as<JSchema::TurretComponent>();
 
-  if (compJson.contains("fireRate") && compJson["fireRate"].is_number())
-    self->fireRate = compJson["fireRate"];
-  if (compJson.contains("timeSinceLastShot") && compJson["timeSinceLastShot"].is_number())
-    self->timeSinceLastShot = compJson["timeSinceLastShot"];
-  if (compJson.contains("radius") && compJson["radius"].is_number())
-    self->radius = compJson["radius"];
-  if (compJson.contains("rot") && compJson["rot"].is_number())
-    self->rot = compJson["rot"];
-  if (compJson.contains("turnSpeed") && compJson["turnSpeed"].is_number())
-    self->turnSpeed = compJson["turnSpeed"];
-  if (compJson.contains("shootRange") && compJson["shootRange"].is_number())
-    self->shootRange = compJson["shootRange"];
-  if (compJson.contains("stopRange") && compJson["stopRange"].is_number())
-    self->stopRange = compJson["stopRange"];
-  if (compJson.contains("muzzleVelocity") && compJson["muzzleVelocity"].is_number())
-    self->muzzleVelocity = compJson["muzzleVelocity"];
-  if (compJson.contains("bulletRadius") && compJson["bulletRadius"].is_number())
-    self->bulletRadius = compJson["bulletRadius"];
-  if (compJson.contains("bulletDamage") && compJson["bulletDamage"].is_number())
-    self->bulletDamage = compJson["bulletDamage"];
-  if (compJson.contains("bulletHealth") && compJson["bulletHealth"].is_number())
-    self->bulletHealth = compJson["bulletHealth"];
-  if (compJson.contains("summon") && compJson["summon"].is_string()) {
-    self->summon = loader.getAsset(compJson["summon"]).id();
+  if (compJson->hasFireRate())
+    self->fireRate = compJson->getFireRate();
+  if (compJson->hasTimeSinceLastShot())
+    self->timeSinceLastShot = compJson->getTimeSinceLastShot();
+  if (compJson->hasRadius())
+    self->radius = compJson->getRadius();
+  if (compJson->hasRot())
+    self->rot = compJson->getRot();
+  if (compJson->hasTurnSpeed())
+    self->turnSpeed = compJson->getTurnSpeed();
+  if (compJson->hasShootRange())
+    self->shootRange = compJson->getShootRange();
+  if (compJson->hasStopRange())
+    self->stopRange = compJson->getStopRange();
+  if (compJson->hasMuzzleVelocity())
+    self->muzzleVelocity = compJson->getMuzzleVelocity();
+  if (compJson->hasBulletRadius())
+    self->bulletRadius = compJson->getBulletRadius();
+  if (compJson->hasBulletDamage())
+    self->bulletDamage = compJson->getBulletDamage();
+  if (compJson->hasBulletHealth())
+    self->bulletHealth = compJson->getBulletHealth();
+  if (compJson->hasSummon()) {
+    self->summon = loader.getAsset(compJson->getSummon()).id();
   }
 }
 

@@ -33,7 +33,7 @@ inline TileDirection getOppositeDirection(TileDirection dir) {
 struct MultiTileComponent {
   static void serialize(capnp::MessageBuilder& builder, Ref component);
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
-  static void fromJson(Ref component, AssetLoader loader, const json& compJson);
+  static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
 
   glm::vec2 calculateCentroid() const {
     glm::vec2 sum(0.0f);
@@ -50,7 +50,7 @@ struct MultiTileComponent {
 struct TileComponent {
   static void serialize(capnp::MessageBuilder& builder, Ref component);
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
-  static void fromJson(Ref component, AssetLoader loader, const json& compJson);
+  static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
 
   bool collidable = true;
   b2ShapeId shapeId;
@@ -70,7 +70,7 @@ struct TilemapComponent {
 
   static void serialize(capnp::MessageBuilder& builder, Ref component);
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
-  static void fromJson(Ref component, AssetLoader loader, const json& compJson);
+  static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
   static void copy(Ref src, Ref dst);
 
   static constexpr int maxTopLayer = 1;

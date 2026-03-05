@@ -8,6 +8,7 @@
 #include <capnp/serialize-packed.h>
 #include <capnp/pretty-print.h>
 #include "../schema/rampage.capnp.h"
+#include "../schema/jsonSchema.hpp"
 
 RAMPAGE_START
 
@@ -48,10 +49,10 @@ concept MovableComponent =
 
 template<typename T>
 concept FromJsonComponent =
-  requires(T t, Ref component, AssetLoader loader, const json& json) {
+  requires(T t, Ref component, AssetLoader loader, const JSchema::JsonValue& json) {
     T::fromJson(component, loader, json);
   };
-using FromJsonFunc = void(*)(Ref component, AssetLoader loader, const json& json);
+using FromJsonFunc = void(*)(Ref component, AssetLoader loader, const JSchema::JsonValue& json);
 
 struct SerializableTag {
   static void serialize(capnp::MessageBuilder& builder, Ref component);
@@ -59,7 +60,7 @@ struct SerializableTag {
 };
 
 struct JsonableTag {
-  static void fromJson(Ref component, AssetLoader loader, const json& compJson);
+  static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
 };
 
 class IEntityIterator {

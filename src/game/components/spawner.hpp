@@ -7,7 +7,7 @@ RAMPAGE_START
 struct SpawnerComponent {
   static void serialize(capnp::MessageBuilder& builder, Ref component);
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
-  static void fromJson(Ref component, AssetLoader loader, const json& compJson);
+  static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
 
   // The entity to summon
   EntityId spawn;

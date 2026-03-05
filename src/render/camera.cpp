@@ -18,13 +18,14 @@ void CameraComponent::deserialize(capnp::MessageReader& reader, const IdMapper& 
   camera->m_rot  = cameraReader.getRot();
 }
 
-void CameraComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
+void CameraComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
   auto camera = component.cast<CameraComponent>();
+  auto compJson = jsonValue.as<JSchema::CameraComponent>();
 
-  if(compJson.contains("zoom") && compJson["zoom"].is_number())
-    camera->m_zoom = compJson["zoom"];
-  if(compJson.contains("rot") && compJson["rot"].is_number())
-    camera->m_rot = compJson["rot"];
+  if(compJson->hasZoom())
+    camera->m_zoom = compJson->getZoom();
+  if(compJson->hasRot())
+    camera->m_rot = compJson->getRot();
 }
 
 CameraComponent::CameraComponent() : m_zoom(100.0f), m_rot(0) {}

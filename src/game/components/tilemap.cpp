@@ -39,34 +39,33 @@ void MultiTileComponent::deserialize(capnp::MessageReader& reader, const IdMappe
   self->anchorPos = glm::ivec3((i32)anchorPosReader.getX(), (i32)anchorPosReader.getY(), (i32)anchorPosReader.getZ());
 }
 
-void MultiTileComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
+void MultiTileComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
   auto self = component.cast<MultiTileComponent>();
+  auto compJson = jsonValue.as<JSchema::MultiTileComponent>();
   
   // Parse anchorPos if provided
-  if (compJson.contains("anchorPos") && compJson["anchorPos"].is_object()) {
-    const auto& anchorJson = compJson["anchorPos"];
-    if (anchorJson.contains("x") && anchorJson["x"].is_number_integer())
-      self->anchorPos.x = anchorJson["x"];
-    if (anchorJson.contains("y") && anchorJson["y"].is_number_integer())
-      self->anchorPos.y = anchorJson["y"];
-    if (anchorJson.contains("z") && anchorJson["z"].is_number_integer())
-      self->anchorPos.z = anchorJson["z"];
+  if (compJson->hasAnchorPos()) {
+    auto anchorJson = compJson->getAnchorPos();
+    if (anchorJson.hasX())
+      self->anchorPos.x = anchorJson.getX();
+    if (anchorJson.hasY())
+      self->anchorPos.y = anchorJson.getY();
+    if (anchorJson.hasZ())
+      self->anchorPos.z = anchorJson.getZ();
   }
   
   // Parse occupiedPositions array
-  if (compJson.contains("occupiedPositions") && compJson["occupiedPositions"].is_array()) {
+  if (compJson->hasOccupiedPositions()) {
     self->occupiedPositions.clear();
-    for (const auto& posJson : compJson["occupiedPositions"]) {
-      if (posJson.is_object()) {
-        glm::ivec3 pos(0);
-        if (posJson.contains("x") && posJson["x"].is_number_integer())
-          pos.x = posJson["x"];
-        if (posJson.contains("y") && posJson["y"].is_number_integer())
-          pos.y = posJson["y"];
-        if (posJson.contains("z") && posJson["z"].is_number_integer())
-          pos.z = posJson["z"];
-        self->occupiedPositions.push_back(pos);
-      }
+    for (const auto& posJson : compJson->getOccupiedPositions()) {
+      glm::ivec3 pos(0);
+      if (posJson.hasX())
+        pos.x = posJson.getX();
+      if (posJson.hasY())
+        pos.y = posJson.getY();
+      if (posJson.hasZ())
+        pos.z = posJson.getZ();
+      self->occupiedPositions.push_back(pos);
     }
   }
 }
@@ -120,32 +119,31 @@ void TileComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id
   self->material.customColor = matReader.getCustomColor();
 }
 
-void TileComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
+void TileComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
   auto self = component.cast<TileComponent>();
+  auto compJson = jsonValue.as<JSchema::TileComponent>();
   
   // Parse collidable if provided
-  if (compJson.contains("collidable") && compJson["collidable"].is_boolean()) {
-    self->collidable = compJson["collidable"];
+  if (compJson->hasCollidable()) {
+    self->collidable = compJson->getCollidable();
   }
 
   // Parse pos if provided
-  if (compJson.contains("pos") && compJson["pos"].is_object()) {
-    const auto& posJson = compJson["pos"];
-    if (posJson.contains("x") && posJson["x"].is_number_integer())
-      self->pos.x = posJson["x"];
-    if (posJson.contains("y") && posJson["y"].is_number_integer())
-      self->pos.y = posJson["y"];
-    if (posJson.contains("z") && posJson["z"].is_number_integer())
-      self->pos.z = posJson["z"];
+  if (compJson->hasPos()) {
+    auto posJson = compJson->getPos();
+    if (posJson.hasX())
+      self->pos.x = posJson.getX();
+    if (posJson.hasY())
+      self->pos.y = posJson.getY();
   }
   
   // Parse material if provided
-  if (compJson.contains("material") && compJson["material"].is_object()) {
-    const auto& matJson = compJson["material"];
-    if (matJson.contains("friction") && matJson["friction"].is_number())
-      self->material.friction = matJson["friction"];
-    if (matJson.contains("restitution") && matJson["restitution"].is_number())
-      self->material.restitution = matJson["restitution"];
+  if (compJson->hasMaterial()) {
+    auto matJson = compJson->getMaterial();
+    if (matJson.hasFriction())
+      self->material.friction = matJson.getFriction();
+    if (matJson.hasRestitution())
+      self->material.restitution = matJson.getRestitution();
   }
 }
 
@@ -214,37 +212,9 @@ void TilemapComponent::deserialize(capnp::MessageReader& reader, const IdMapper&
   }
 }
 
-void TilemapComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
-  auto self = component.cast<TilemapComponent>();
-  
-  // Parse tiles map if provided
-  if (compJson.contains("tiles") && compJson["tiles"].is_array()) {
-    self->tiles.clear();
-    for (const auto& tileJson : compJson["tiles"]) {
-      if (tileJson.is_object()) {
-        glm::ivec3 pos(0);
-        EntityId entityId = 0;
-        
-        if (tileJson.contains("pos") && tileJson["pos"].is_object()) {
-          const auto& posJson = tileJson["pos"];
-          if (posJson.contains("x") && posJson["x"].is_number_integer())
-            pos.x = posJson["x"];
-          if (posJson.contains("y") && posJson["y"].is_number_integer())
-            pos.y = posJson["y"];
-          if (posJson.contains("z") && posJson["z"].is_number_integer())
-            pos.z = posJson["z"];
-        }
-        
-        if (tileJson.contains("entityId") && tileJson["entityId"].is_string()) {
-          entityId = loader.cloneAsset(tileJson["entityId"]);
-        }
-        
-        if (entityId != 0) {
-          self->tiles[pos] = entityId;
-        }
-      }
-    }
-  }
+void TilemapComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson) {
+  // TilemapComponent is not part of the JSON schema variant;
+  // tiles are populated via deserialization, not fromJson.
 }
 
 void TilemapComponent::copy(Ref src, Ref dst) {

@@ -68,33 +68,115 @@ public:
 
 #endif // RAMPSON_TYPES_DEFINED
 
+struct Pos;
 struct TransformComponent;
 struct GridPos;
 struct Offset;
 struct LayersItem;
 struct SubSpritesItem;
 struct SpriteComponent;
+struct CameraComponent;
 struct SeekPrimaryTargetTag;
+struct PrimaryTargetTag;
+struct WorldMapTag;
 struct HealthComponent;
 struct ContactDamageComponent;
+struct BulletDamageComponent;
+struct LifetimeComponent;
+struct PlayerComponent;
+struct VerticesItem;
 struct Shape;
 struct ShapesItem;
 struct BodyComponent;
 struct Material;
 struct TileComponent;
+struct Dir;
 struct ArrowComponent;
 struct AnchorPos;
 struct OccupiedPositionsItem;
 struct MultiTileComponent;
 struct TurretComponent;
+struct SpawnerComponent;
+struct Color;
+struct CircleRenderComponent;
+struct RectangleRenderComponent;
+struct ItemComponent;
+struct ItemsItem;
+struct InventoryComponent;
+struct Padding;
+struct InventoryViewComponent;
 struct ComponentsItem;
 struct Data;
 struct Root;
 
+struct Pos : public JsonValue {
+  struct Properties {
+    struct X {
+      static const char* name() { return "x"; }
+      static constexpr bool required = false;
+    };
+    struct Y {
+      static const char* name() { return "y"; }
+      static constexpr bool required = false;
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (j.contains("x")) {
+      std::string fp = path.empty() ? "x" : path + ".x";
+      if (!j["x"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["x"].get<double>();
+      }
+    }
+    if (j.contains("y")) {
+      std::string fp = path.empty() ? "y" : path + ".y";
+      if (!j["y"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["y"].get<double>();
+      }
+    }
+    return result;
+  }
+
+  static Pos fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    Pos obj;
+    if (j.contains("x")) {
+      obj.setX(j["x"].get<double>());
+    }
+    if (j.contains("y")) {
+      obj.setY(j["y"].get<double>());
+    }
+    return obj;
+  }
+
+  bool hasX() const { return x_.has_value(); }
+  double getX() const { return x_.value(); }
+  void setX(double value) { x_ = value; }
+
+  bool hasY() const { return y_.has_value(); }
+  double getY() const { return y_.value(); }
+  void setY(double value) { y_ = value; }
+
+private:
+  std::optional<double> x_;
+  std::optional<double> y_;
+};
+
 struct TransformComponent : public JsonValue {
   struct Properties {
-    struct Scale {
-      static const char* name() { return "scale"; }
+    struct Pos {
+      static const char* name() { return "pos"; }
+      static constexpr bool required = false;
+    };
+    struct Rot {
+      static const char* name() { return "rot"; }
       static constexpr bool required = false;
     };
     struct Type {
@@ -108,12 +190,20 @@ struct TransformComponent : public JsonValue {
     ValidationResult result;
     if (!j.is_object()) { result.add(path, "Expected object"); return result; }
     if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
-    if (j.contains("scale")) {
-      std::string fp = path.empty() ? "scale" : path + ".scale";
-      if (!j["scale"].is_number()) {
+    if (j.contains("pos")) {
+      std::string fp = path.empty() ? "pos" : path + ".pos";
+      if (!j["pos"].is_object()) {
+        result.add(fp, "Expected object");
+      } else {
+        result.merge(Pos::validate(j["pos"], fp));
+      }
+    }
+    if (j.contains("rot")) {
+      std::string fp = path.empty() ? "rot" : path + ".rot";
+      if (!j["rot"].is_number()) {
         result.add(fp, "Expected number");
       } else {
-        double val = j["scale"].get<double>();
+        double val = j["rot"].get<double>();
       }
     }
     if (j.contains("type")) {
@@ -132,23 +222,32 @@ struct TransformComponent : public JsonValue {
     auto vr = validate(j);
     if (!vr.valid()) throw std::runtime_error(vr.summary());
     TransformComponent obj;
-    if (j.contains("scale")) {
-      obj.setScale(j["scale"].get<double>());
+    if (j.contains("pos")) {
+      obj.setPos(Pos::fromJson(j["pos"]));
+    }
+    if (j.contains("rot")) {
+      obj.setRot(j["rot"].get<double>());
     }
     obj.setType(j.at("type").get<std::string>());
     return obj;
   }
 
-  bool hasScale() const { return scale_.has_value(); }
-  double getScale() const { return scale_.value(); }
-  void setScale(double value) { scale_ = value; }
+  bool hasPos() const { return pos_.has_value(); }
+  const Pos& getPos() const { return pos_.value(); }
+  Pos& getPos() { return pos_.value(); }
+  void setPos(const Pos& value) { pos_ = value; }
+
+  bool hasRot() const { return rot_.has_value(); }
+  double getRot() const { return rot_.value(); }
+  void setRot(double value) { rot_ = value; }
 
   const std::string& getType() const { return type_; }
   std::string& getType() { return type_; }
   void setType(const std::string& value) { type_ = value; }
 
 private:
-  std::optional<double> scale_;
+  std::optional<Pos> pos_;
+  std::optional<double> rot_;
   std::string type_;
 };
 
@@ -156,19 +255,17 @@ struct GridPos : public JsonValue {
   struct Properties {
     struct X {
       static const char* name() { return "x"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
     struct Y {
       static const char* name() { return "y"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
   };
 
   static ValidationResult validate(const json& j, const std::string& path = "") {
     ValidationResult result;
     if (!j.is_object()) { result.add(path, "Expected object"); return result; }
-    if (!j.contains("x")) result.add(path.empty() ? "x" : path + ".x", "Required field missing");
-    if (!j.contains("y")) result.add(path.empty() ? "y" : path + ".y", "Required field missing");
     if (j.contains("x")) {
       std::string fp = path.empty() ? "x" : path + ".x";
       if (!j["x"].is_number()) {
@@ -192,39 +289,43 @@ struct GridPos : public JsonValue {
     auto vr = validate(j);
     if (!vr.valid()) throw std::runtime_error(vr.summary());
     GridPos obj;
-    obj.setX(j.at("x").get<double>());
-    obj.setY(j.at("y").get<double>());
+    if (j.contains("x")) {
+      obj.setX(j["x"].get<double>());
+    }
+    if (j.contains("y")) {
+      obj.setY(j["y"].get<double>());
+    }
     return obj;
   }
 
-  double getX() const { return x_; }
+  bool hasX() const { return x_.has_value(); }
+  double getX() const { return x_.value(); }
   void setX(double value) { x_ = value; }
 
-  double getY() const { return y_; }
+  bool hasY() const { return y_.has_value(); }
+  double getY() const { return y_.value(); }
   void setY(double value) { y_ = value; }
 
 private:
-  double x_{};
-  double y_{};
+  std::optional<double> x_;
+  std::optional<double> y_;
 };
 
 struct Offset : public JsonValue {
   struct Properties {
     struct X {
       static const char* name() { return "x"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
     struct Y {
       static const char* name() { return "y"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
   };
 
   static ValidationResult validate(const json& j, const std::string& path = "") {
     ValidationResult result;
     if (!j.is_object()) { result.add(path, "Expected object"); return result; }
-    if (!j.contains("x")) result.add(path.empty() ? "x" : path + ".x", "Required field missing");
-    if (!j.contains("y")) result.add(path.empty() ? "y" : path + ".y", "Required field missing");
     if (j.contains("x")) {
       std::string fp = path.empty() ? "x" : path + ".x";
       if (!j["x"].is_number()) {
@@ -248,27 +349,33 @@ struct Offset : public JsonValue {
     auto vr = validate(j);
     if (!vr.valid()) throw std::runtime_error(vr.summary());
     Offset obj;
-    obj.setX(j.at("x").get<double>());
-    obj.setY(j.at("y").get<double>());
+    if (j.contains("x")) {
+      obj.setX(j["x"].get<double>());
+    }
+    if (j.contains("y")) {
+      obj.setY(j["y"].get<double>());
+    }
     return obj;
   }
 
-  double getX() const { return x_; }
+  bool hasX() const { return x_.has_value(); }
+  double getX() const { return x_.value(); }
   void setX(double value) { x_ = value; }
 
-  double getY() const { return y_; }
+  bool hasY() const { return y_.has_value(); }
+  double getY() const { return y_.value(); }
   void setY(double value) { y_ = value; }
 
 private:
-  double x_{};
-  double y_{};
+  std::optional<double> x_;
+  std::optional<double> y_;
 };
 
 struct LayersItem : public JsonValue {
   struct Properties {
     struct Layer {
       static const char* name() { return "layer"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
     struct Offset {
       static const char* name() { return "offset"; }
@@ -276,21 +383,24 @@ struct LayersItem : public JsonValue {
     };
     struct Path {
       static const char* name() { return "path"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
+    };
+    struct Rot {
+      static const char* name() { return "rot"; }
+      static constexpr bool required = false;
     };
   };
 
   static ValidationResult validate(const json& j, const std::string& path = "") {
     ValidationResult result;
     if (!j.is_object()) { result.add(path, "Expected object"); return result; }
-    if (!j.contains("path")) result.add(path.empty() ? "path" : path + ".path", "Required field missing");
-    if (!j.contains("layer")) result.add(path.empty() ? "layer" : path + ".layer", "Required field missing");
     if (j.contains("layer")) {
       std::string fp = path.empty() ? "layer" : path + ".layer";
       if (!j["layer"].is_string()) {
         result.add(fp, "Expected string");
       } else {
         const auto& val = j["layer"].get_ref<const std::string&>();
+        { bool ok = val == "Bottom" || val == "Floor" || val == "Wall" || val == "Turret" || val == "Item" || val == "Top"; if (!ok) result.add(fp, "Value not in enum"); }
       }
     }
     if (j.contains("offset")) {
@@ -309,6 +419,14 @@ struct LayersItem : public JsonValue {
         const auto& val = j["path"].get_ref<const std::string&>();
       }
     }
+    if (j.contains("rot")) {
+      std::string fp = path.empty() ? "rot" : path + ".rot";
+      if (!j["rot"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["rot"].get<double>();
+      }
+    }
     return result;
   }
 
@@ -316,16 +434,24 @@ struct LayersItem : public JsonValue {
     auto vr = validate(j);
     if (!vr.valid()) throw std::runtime_error(vr.summary());
     LayersItem obj;
-    obj.setLayer(j.at("layer").get<std::string>());
+    if (j.contains("layer")) {
+      obj.setLayer(j["layer"].get<std::string>());
+    }
     if (j.contains("offset")) {
       obj.setOffset(Offset::fromJson(j["offset"]));
     }
-    obj.setPath(j.at("path").get<std::string>());
+    if (j.contains("path")) {
+      obj.setPath(j["path"].get<std::string>());
+    }
+    if (j.contains("rot")) {
+      obj.setRot(j["rot"].get<double>());
+    }
     return obj;
   }
 
-  const std::string& getLayer() const { return layer_; }
-  std::string& getLayer() { return layer_; }
+  bool hasLayer() const { return layer_.has_value(); }
+  const std::string& getLayer() const { return layer_.value(); }
+  std::string& getLayer() { return layer_.value(); }
   void setLayer(const std::string& value) { layer_ = value; }
 
   bool hasOffset() const { return offset_.has_value(); }
@@ -333,14 +459,20 @@ struct LayersItem : public JsonValue {
   Offset& getOffset() { return offset_.value(); }
   void setOffset(const Offset& value) { offset_ = value; }
 
-  const std::string& getPath() const { return path_; }
-  std::string& getPath() { return path_; }
+  bool hasPath() const { return path_.has_value(); }
+  const std::string& getPath() const { return path_.value(); }
+  std::string& getPath() { return path_.value(); }
   void setPath(const std::string& value) { path_ = value; }
 
+  bool hasRot() const { return rot_.has_value(); }
+  double getRot() const { return rot_.value(); }
+  void setRot(double value) { rot_ = value; }
+
 private:
-  std::string layer_;
+  std::optional<std::string> layer_;
   std::optional<Offset> offset_;
-  std::string path_;
+  std::optional<std::string> path_;
+  std::optional<double> rot_;
 };
 
 struct SubSpritesItem : public JsonValue {
@@ -351,14 +483,13 @@ struct SubSpritesItem : public JsonValue {
     };
     struct Layers {
       static const char* name() { return "layers"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
   };
 
   static ValidationResult validate(const json& j, const std::string& path = "") {
     ValidationResult result;
     if (!j.is_object()) { result.add(path, "Expected object"); return result; }
-    if (!j.contains("layers")) result.add(path.empty() ? "layers" : path + ".layers", "Required field missing");
     if (j.contains("gridPos")) {
       std::string fp = path.empty() ? "gridPos" : path + ".gridPos";
       if (!j["gridPos"].is_object()) {
@@ -390,7 +521,9 @@ struct SubSpritesItem : public JsonValue {
     if (j.contains("gridPos")) {
       obj.setGridPos(GridPos::fromJson(j["gridPos"]));
     }
-    { std::vector<LayersItem> items; for (const auto& e : j.at("layers")) items.push_back(LayersItem::fromJson(e)); obj.setLayers(items); }
+    if (j.contains("layers")) {
+      { std::vector<LayersItem> items; for (const auto& e : j["layers"]) items.push_back(LayersItem::fromJson(e)); obj.setLayers(items); }
+    }
     return obj;
   }
 
@@ -399,13 +532,14 @@ struct SubSpritesItem : public JsonValue {
   GridPos& getGridPos() { return gridPos_.value(); }
   void setGridPos(const GridPos& value) { gridPos_ = value; }
 
-  const std::vector<LayersItem>& getLayers() const { return layers_; }
-  std::vector<LayersItem>& getLayers() { return layers_; }
+  bool hasLayers() const { return layers_.has_value(); }
+  const std::vector<LayersItem>& getLayers() const { return layers_.value(); }
+  std::vector<LayersItem>& getLayers() { return layers_.value(); }
   void setLayers(const std::vector<LayersItem>& value) { layers_ = value; }
 
 private:
   std::optional<GridPos> gridPos_;
-  std::vector<LayersItem> layers_;
+  std::optional<std::vector<LayersItem>> layers_;
 };
 
 struct SpriteComponent : public JsonValue {
@@ -416,7 +550,7 @@ struct SpriteComponent : public JsonValue {
     };
     struct SubSprites {
       static const char* name() { return "subSprites"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
     struct Type {
       static const char* name() { return "type"; }
@@ -429,7 +563,6 @@ struct SpriteComponent : public JsonValue {
     ValidationResult result;
     if (!j.is_object()) { result.add(path, "Expected object"); return result; }
     if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
-    if (!j.contains("subSprites")) result.add(path.empty() ? "subSprites" : path + ".subSprites", "Required field missing");
     if (j.contains("scaling")) {
       std::string fp = path.empty() ? "scaling" : path + ".scaling";
       if (!j["scaling"].is_number()) {
@@ -470,7 +603,9 @@ struct SpriteComponent : public JsonValue {
     if (j.contains("scaling")) {
       obj.setScaling(j["scaling"].get<double>());
     }
-    { std::vector<SubSpritesItem> items; for (const auto& e : j.at("subSprites")) items.push_back(SubSpritesItem::fromJson(e)); obj.setSubSprites(items); }
+    if (j.contains("subSprites")) {
+      { std::vector<SubSpritesItem> items; for (const auto& e : j["subSprites"]) items.push_back(SubSpritesItem::fromJson(e)); obj.setSubSprites(items); }
+    }
     obj.setType(j.at("type").get<std::string>());
     return obj;
   }
@@ -479,8 +614,9 @@ struct SpriteComponent : public JsonValue {
   double getScaling() const { return scaling_.value(); }
   void setScaling(double value) { scaling_ = value; }
 
-  const std::vector<SubSpritesItem>& getSubSprites() const { return subSprites_; }
-  std::vector<SubSpritesItem>& getSubSprites() { return subSprites_; }
+  bool hasSubSprites() const { return subSprites_.has_value(); }
+  const std::vector<SubSpritesItem>& getSubSprites() const { return subSprites_.value(); }
+  std::vector<SubSpritesItem>& getSubSprites() { return subSprites_.value(); }
   void setSubSprites(const std::vector<SubSpritesItem>& value) { subSprites_ = value; }
 
   const std::string& getType() const { return type_; }
@@ -489,8 +625,89 @@ struct SpriteComponent : public JsonValue {
 
 private:
   std::optional<double> scaling_;
-  std::vector<SubSpritesItem> subSprites_;
+  std::optional<std::vector<SubSpritesItem>> subSprites_;
   std::string type_;
+};
+
+struct CameraComponent : public JsonValue {
+  struct Properties {
+    struct Rot {
+      static const char* name() { return "rot"; }
+      static constexpr bool required = false;
+    };
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "CameraComponent"; }
+    };
+    struct Zoom {
+      static const char* name() { return "zoom"; }
+      static constexpr bool required = false;
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("rot")) {
+      std::string fp = path.empty() ? "rot" : path + ".rot";
+      if (!j["rot"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["rot"].get<double>();
+      }
+    }
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "CameraComponent") result.add(fp, "Value does not match const");
+      }
+    }
+    if (j.contains("zoom")) {
+      std::string fp = path.empty() ? "zoom" : path + ".zoom";
+      if (!j["zoom"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["zoom"].get<double>();
+      }
+    }
+    return result;
+  }
+
+  static CameraComponent fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    CameraComponent obj;
+    if (j.contains("rot")) {
+      obj.setRot(j["rot"].get<double>());
+    }
+    obj.setType(j.at("type").get<std::string>());
+    if (j.contains("zoom")) {
+      obj.setZoom(j["zoom"].get<double>());
+    }
+    return obj;
+  }
+
+  bool hasRot() const { return rot_.has_value(); }
+  double getRot() const { return rot_.value(); }
+  void setRot(double value) { rot_ = value; }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+  bool hasZoom() const { return zoom_.has_value(); }
+  double getZoom() const { return zoom_.value(); }
+  void setZoom(double value) { zoom_ = value; }
+
+private:
+  std::optional<double> rot_;
+  std::string type_;
+  std::optional<double> zoom_;
 };
 
 struct SeekPrimaryTargetTag : public JsonValue {
@@ -534,11 +751,93 @@ private:
   std::string type_;
 };
 
+struct PrimaryTargetTag : public JsonValue {
+  struct Properties {
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "PrimaryTargetTag"; }
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "PrimaryTargetTag") result.add(fp, "Value does not match const");
+      }
+    }
+    return result;
+  }
+
+  static PrimaryTargetTag fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    PrimaryTargetTag obj;
+    obj.setType(j.at("type").get<std::string>());
+    return obj;
+  }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+private:
+  std::string type_;
+};
+
+struct WorldMapTag : public JsonValue {
+  struct Properties {
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "WorldMapTag"; }
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "WorldMapTag") result.add(fp, "Value does not match const");
+      }
+    }
+    return result;
+  }
+
+  static WorldMapTag fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    WorldMapTag obj;
+    obj.setType(j.at("type").get<std::string>());
+    return obj;
+  }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+private:
+  std::string type_;
+};
+
 struct HealthComponent : public JsonValue {
   struct Properties {
     struct Health {
       static const char* name() { return "health"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
     struct Type {
       static const char* name() { return "type"; }
@@ -551,7 +850,6 @@ struct HealthComponent : public JsonValue {
     ValidationResult result;
     if (!j.is_object()) { result.add(path, "Expected object"); return result; }
     if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
-    if (!j.contains("health")) result.add(path.empty() ? "health" : path + ".health", "Required field missing");
     if (j.contains("health")) {
       std::string fp = path.empty() ? "health" : path + ".health";
       if (!j["health"].is_number()) {
@@ -576,12 +874,15 @@ struct HealthComponent : public JsonValue {
     auto vr = validate(j);
     if (!vr.valid()) throw std::runtime_error(vr.summary());
     HealthComponent obj;
-    obj.setHealth(j.at("health").get<double>());
+    if (j.contains("health")) {
+      obj.setHealth(j["health"].get<double>());
+    }
     obj.setType(j.at("type").get<std::string>());
     return obj;
   }
 
-  double getHealth() const { return health_; }
+  bool hasHealth() const { return health_.has_value(); }
+  double getHealth() const { return health_.value(); }
   void setHealth(double value) { health_ = value; }
 
   const std::string& getType() const { return type_; }
@@ -589,7 +890,7 @@ struct HealthComponent : public JsonValue {
   void setType(const std::string& value) { type_ = value; }
 
 private:
-  double health_{};
+  std::optional<double> health_;
   std::string type_;
 };
 
@@ -597,7 +898,7 @@ struct ContactDamageComponent : public JsonValue {
   struct Properties {
     struct Damage {
       static const char* name() { return "damage"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
     struct Type {
       static const char* name() { return "type"; }
@@ -610,7 +911,6 @@ struct ContactDamageComponent : public JsonValue {
     ValidationResult result;
     if (!j.is_object()) { result.add(path, "Expected object"); return result; }
     if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
-    if (!j.contains("damage")) result.add(path.empty() ? "damage" : path + ".damage", "Required field missing");
     if (j.contains("damage")) {
       std::string fp = path.empty() ? "damage" : path + ".damage";
       if (!j["damage"].is_number()) {
@@ -635,12 +935,15 @@ struct ContactDamageComponent : public JsonValue {
     auto vr = validate(j);
     if (!vr.valid()) throw std::runtime_error(vr.summary());
     ContactDamageComponent obj;
-    obj.setDamage(j.at("damage").get<double>());
+    if (j.contains("damage")) {
+      obj.setDamage(j["damage"].get<double>());
+    }
     obj.setType(j.at("type").get<std::string>());
     return obj;
   }
 
-  double getDamage() const { return damage_; }
+  bool hasDamage() const { return damage_.has_value(); }
+  double getDamage() const { return damage_.value(); }
   void setDamage(double value) { damage_ = value; }
 
   const std::string& getType() const { return type_; }
@@ -648,16 +951,271 @@ struct ContactDamageComponent : public JsonValue {
   void setType(const std::string& value) { type_ = value; }
 
 private:
-  double damage_{};
+  std::optional<double> damage_;
   std::string type_;
+};
+
+struct BulletDamageComponent : public JsonValue {
+  struct Properties {
+    struct Damage {
+      static const char* name() { return "damage"; }
+      static constexpr bool required = false;
+    };
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "BulletDamageComponent"; }
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("damage")) {
+      std::string fp = path.empty() ? "damage" : path + ".damage";
+      if (!j["damage"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["damage"].get<double>();
+      }
+    }
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "BulletDamageComponent") result.add(fp, "Value does not match const");
+      }
+    }
+    return result;
+  }
+
+  static BulletDamageComponent fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    BulletDamageComponent obj;
+    if (j.contains("damage")) {
+      obj.setDamage(j["damage"].get<double>());
+    }
+    obj.setType(j.at("type").get<std::string>());
+    return obj;
+  }
+
+  bool hasDamage() const { return damage_.has_value(); }
+  double getDamage() const { return damage_.value(); }
+  void setDamage(double value) { damage_ = value; }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+private:
+  std::optional<double> damage_;
+  std::string type_;
+};
+
+struct LifetimeComponent : public JsonValue {
+  struct Properties {
+    struct TimeLeft {
+      static const char* name() { return "timeLeft"; }
+      static constexpr bool required = false;
+    };
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "LifetimeComponent"; }
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("timeLeft")) {
+      std::string fp = path.empty() ? "timeLeft" : path + ".timeLeft";
+      if (!j["timeLeft"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["timeLeft"].get<double>();
+      }
+    }
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "LifetimeComponent") result.add(fp, "Value does not match const");
+      }
+    }
+    return result;
+  }
+
+  static LifetimeComponent fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    LifetimeComponent obj;
+    if (j.contains("timeLeft")) {
+      obj.setTimeLeft(j["timeLeft"].get<double>());
+    }
+    obj.setType(j.at("type").get<std::string>());
+    return obj;
+  }
+
+  bool hasTimeLeft() const { return timeLeft_.has_value(); }
+  double getTimeLeft() const { return timeLeft_.value(); }
+  void setTimeLeft(double value) { timeLeft_ = value; }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+private:
+  std::optional<double> timeLeft_;
+  std::string type_;
+};
+
+struct PlayerComponent : public JsonValue {
+  struct Properties {
+    struct Accel {
+      static const char* name() { return "accel"; }
+      static constexpr bool required = false;
+    };
+    struct MaxSpeed {
+      static const char* name() { return "maxSpeed"; }
+      static constexpr bool required = false;
+    };
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "PlayerComponent"; }
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("accel")) {
+      std::string fp = path.empty() ? "accel" : path + ".accel";
+      if (!j["accel"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["accel"].get<double>();
+      }
+    }
+    if (j.contains("maxSpeed")) {
+      std::string fp = path.empty() ? "maxSpeed" : path + ".maxSpeed";
+      if (!j["maxSpeed"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["maxSpeed"].get<double>();
+      }
+    }
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "PlayerComponent") result.add(fp, "Value does not match const");
+      }
+    }
+    return result;
+  }
+
+  static PlayerComponent fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    PlayerComponent obj;
+    if (j.contains("accel")) {
+      obj.setAccel(j["accel"].get<double>());
+    }
+    if (j.contains("maxSpeed")) {
+      obj.setMaxSpeed(j["maxSpeed"].get<double>());
+    }
+    obj.setType(j.at("type").get<std::string>());
+    return obj;
+  }
+
+  bool hasAccel() const { return accel_.has_value(); }
+  double getAccel() const { return accel_.value(); }
+  void setAccel(double value) { accel_ = value; }
+
+  bool hasMaxSpeed() const { return maxSpeed_.has_value(); }
+  double getMaxSpeed() const { return maxSpeed_.value(); }
+  void setMaxSpeed(double value) { maxSpeed_ = value; }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+private:
+  std::optional<double> accel_;
+  std::optional<double> maxSpeed_;
+  std::string type_;
+};
+
+struct VerticesItem : public JsonValue {
+  struct Properties {
+    struct X {
+      static const char* name() { return "x"; }
+      static constexpr bool required = true;
+    };
+    struct Y {
+      static const char* name() { return "y"; }
+      static constexpr bool required = true;
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("x")) result.add(path.empty() ? "x" : path + ".x", "Required field missing");
+    if (!j.contains("y")) result.add(path.empty() ? "y" : path + ".y", "Required field missing");
+    if (j.contains("x")) {
+      std::string fp = path.empty() ? "x" : path + ".x";
+      if (!j["x"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["x"].get<double>();
+      }
+    }
+    if (j.contains("y")) {
+      std::string fp = path.empty() ? "y" : path + ".y";
+      if (!j["y"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["y"].get<double>();
+      }
+    }
+    return result;
+  }
+
+  static VerticesItem fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    VerticesItem obj;
+    obj.setX(j.at("x").get<double>());
+    obj.setY(j.at("y").get<double>());
+    return obj;
+  }
+
+  double getX() const { return x_; }
+  void setX(double value) { x_ = value; }
+
+  double getY() const { return y_; }
+  void setY(double value) { y_ = value; }
+
+private:
+  double x_{};
+  double y_{};
 };
 
 struct Shape : public JsonValue {
   struct Properties {
-    struct Height {
-      static const char* name() { return "height"; }
-      static constexpr bool required = false;
-    };
     struct Radius {
       static const char* name() { return "radius"; }
       static constexpr bool required = false;
@@ -666,9 +1224,10 @@ struct Shape : public JsonValue {
       static const char* name() { return "shapeType"; }
       static constexpr bool required = true;
     };
-    struct Width {
-      static const char* name() { return "width"; }
+    struct Vertices {
+      static const char* name() { return "vertices"; }
       static constexpr bool required = false;
+      static constexpr size_t maxItems() { return 8; }
     };
   };
 
@@ -676,14 +1235,6 @@ struct Shape : public JsonValue {
     ValidationResult result;
     if (!j.is_object()) { result.add(path, "Expected object"); return result; }
     if (!j.contains("shapeType")) result.add(path.empty() ? "shapeType" : path + ".shapeType", "Required field missing");
-    if (j.contains("height")) {
-      std::string fp = path.empty() ? "height" : path + ".height";
-      if (!j["height"].is_number()) {
-        result.add(fp, "Expected number");
-      } else {
-        double val = j["height"].get<double>();
-      }
-    }
     if (j.contains("radius")) {
       std::string fp = path.empty() ? "radius" : path + ".radius";
       if (!j["radius"].is_number()) {
@@ -698,15 +1249,21 @@ struct Shape : public JsonValue {
         result.add(fp, "Expected string");
       } else {
         const auto& val = j["shapeType"].get_ref<const std::string&>();
-        { bool ok = val == "Circle" || val == "Box"; if (!ok) result.add(fp, "Value not in enum"); }
+        { bool ok = val == "Circle" || val == "Polygon"; if (!ok) result.add(fp, "Value not in enum"); }
       }
     }
-    if (j.contains("width")) {
-      std::string fp = path.empty() ? "width" : path + ".width";
-      if (!j["width"].is_number()) {
-        result.add(fp, "Expected number");
+    if (j.contains("vertices")) {
+      std::string fp = path.empty() ? "vertices" : path + ".vertices";
+      if (!j["vertices"].is_array()) {
+        result.add(fp, "Expected array");
       } else {
-        double val = j["width"].get<double>();
+        const auto& arr = j["vertices"];
+        if (arr.size() > 8) result.add(fp, "Array size above maxItems 8");
+        for (size_t i = 0; i < arr.size(); ++i) {
+          std::string ip = fp + "[" + std::to_string(i) + "]";
+          if (!arr[i].is_object()) result.add(ip, "Expected object");
+          else result.merge(VerticesItem::validate(arr[i], ip));
+        }
       }
     }
     return result;
@@ -716,22 +1273,15 @@ struct Shape : public JsonValue {
     auto vr = validate(j);
     if (!vr.valid()) throw std::runtime_error(vr.summary());
     Shape obj;
-    if (j.contains("height")) {
-      obj.setHeight(j["height"].get<double>());
-    }
     if (j.contains("radius")) {
       obj.setRadius(j["radius"].get<double>());
     }
     obj.setShapeType(j.at("shapeType").get<std::string>());
-    if (j.contains("width")) {
-      obj.setWidth(j["width"].get<double>());
+    if (j.contains("vertices")) {
+      { std::vector<VerticesItem> items; for (const auto& e : j["vertices"]) items.push_back(VerticesItem::fromJson(e)); obj.setVertices(items); }
     }
     return obj;
   }
-
-  bool hasHeight() const { return height_.has_value(); }
-  double getHeight() const { return height_.value(); }
-  void setHeight(double value) { height_ = value; }
 
   bool hasRadius() const { return radius_.has_value(); }
   double getRadius() const { return radius_.value(); }
@@ -741,49 +1291,60 @@ struct Shape : public JsonValue {
   std::string& getShapeType() { return shapeType_; }
   void setShapeType(const std::string& value) { shapeType_ = value; }
 
-  bool hasWidth() const { return width_.has_value(); }
-  double getWidth() const { return width_.value(); }
-  void setWidth(double value) { width_ = value; }
+  bool hasVertices() const { return vertices_.has_value(); }
+  const std::vector<VerticesItem>& getVertices() const { return vertices_.value(); }
+  std::vector<VerticesItem>& getVertices() { return vertices_.value(); }
+  void setVertices(const std::vector<VerticesItem>& value) { vertices_ = value; }
 
 private:
-  std::optional<double> height_;
   std::optional<double> radius_;
   std::string shapeType_;
-  std::optional<double> width_;
+  std::optional<std::vector<VerticesItem>> vertices_;
 };
 
 struct ShapesItem : public JsonValue {
   struct Properties {
     struct CategoryMask {
       static const char* name() { return "categoryMask"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
     struct CollisionMask {
       static const char* name() { return "collisionMask"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
     struct Density {
       static const char* name() { return "density"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
     struct EnableContactEvents {
       static const char* name() { return "enableContactEvents"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
+    };
+    struct EnableSensorEvents {
+      static const char* name() { return "enableSensorEvents"; }
+      static constexpr bool required = false;
+    };
+    struct Friction {
+      static const char* name() { return "friction"; }
+      static constexpr bool required = false;
+    };
+    struct IsSensor {
+      static const char* name() { return "isSensor"; }
+      static constexpr bool required = false;
+    };
+    struct Restitution {
+      static const char* name() { return "restitution"; }
+      static constexpr bool required = false;
     };
     struct Shape {
       static const char* name() { return "shape"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
   };
 
   static ValidationResult validate(const json& j, const std::string& path = "") {
     ValidationResult result;
     if (!j.is_object()) { result.add(path, "Expected object"); return result; }
-    if (!j.contains("enableContactEvents")) result.add(path.empty() ? "enableContactEvents" : path + ".enableContactEvents", "Required field missing");
-    if (!j.contains("categoryMask")) result.add(path.empty() ? "categoryMask" : path + ".categoryMask", "Required field missing");
-    if (!j.contains("collisionMask")) result.add(path.empty() ? "collisionMask" : path + ".collisionMask", "Required field missing");
-    if (!j.contains("density")) result.add(path.empty() ? "density" : path + ".density", "Required field missing");
-    if (!j.contains("shape")) result.add(path.empty() ? "shape" : path + ".shape", "Required field missing");
     if (j.contains("categoryMask")) {
       std::string fp = path.empty() ? "categoryMask" : path + ".categoryMask";
       if (!j["categoryMask"].is_array()) {
@@ -820,6 +1381,34 @@ struct ShapesItem : public JsonValue {
         result.add(fp, "Expected boolean");
       }
     }
+    if (j.contains("enableSensorEvents")) {
+      std::string fp = path.empty() ? "enableSensorEvents" : path + ".enableSensorEvents";
+      if (!j["enableSensorEvents"].is_boolean()) {
+        result.add(fp, "Expected boolean");
+      }
+    }
+    if (j.contains("friction")) {
+      std::string fp = path.empty() ? "friction" : path + ".friction";
+      if (!j["friction"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["friction"].get<double>();
+      }
+    }
+    if (j.contains("isSensor")) {
+      std::string fp = path.empty() ? "isSensor" : path + ".isSensor";
+      if (!j["isSensor"].is_boolean()) {
+        result.add(fp, "Expected boolean");
+      }
+    }
+    if (j.contains("restitution")) {
+      std::string fp = path.empty() ? "restitution" : path + ".restitution";
+      if (!j["restitution"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["restitution"].get<double>();
+      }
+    }
     if (j.contains("shape")) {
       std::string fp = path.empty() ? "shape" : path + ".shape";
       if (!j["shape"].is_object()) {
@@ -835,53 +1424,116 @@ struct ShapesItem : public JsonValue {
     auto vr = validate(j);
     if (!vr.valid()) throw std::runtime_error(vr.summary());
     ShapesItem obj;
-    obj.setCategoryMask(j.at("categoryMask").get<std::vector<std::string>>());
-    obj.setCollisionMask(j.at("collisionMask").get<std::vector<std::string>>());
-    obj.setDensity(j.at("density").get<double>());
-    obj.setEnableContactEvents(j.at("enableContactEvents").get<bool>());
-    obj.setShape(Shape::fromJson(j.at("shape")));
+    if (j.contains("categoryMask")) {
+      obj.setCategoryMask(j["categoryMask"].get<std::vector<std::string>>());
+    }
+    if (j.contains("collisionMask")) {
+      obj.setCollisionMask(j["collisionMask"].get<std::vector<std::string>>());
+    }
+    if (j.contains("density")) {
+      obj.setDensity(j["density"].get<double>());
+    }
+    if (j.contains("enableContactEvents")) {
+      obj.setEnableContactEvents(j["enableContactEvents"].get<bool>());
+    }
+    if (j.contains("enableSensorEvents")) {
+      obj.setEnableSensorEvents(j["enableSensorEvents"].get<bool>());
+    }
+    if (j.contains("friction")) {
+      obj.setFriction(j["friction"].get<double>());
+    }
+    if (j.contains("isSensor")) {
+      obj.setIsSensor(j["isSensor"].get<bool>());
+    }
+    if (j.contains("restitution")) {
+      obj.setRestitution(j["restitution"].get<double>());
+    }
+    if (j.contains("shape")) {
+      obj.setShape(Shape::fromJson(j["shape"]));
+    }
     return obj;
   }
 
-  const std::vector<std::string>& getCategoryMask() const { return categoryMask_; }
-  std::vector<std::string>& getCategoryMask() { return categoryMask_; }
+  bool hasCategoryMask() const { return categoryMask_.has_value(); }
+  const std::vector<std::string>& getCategoryMask() const { return categoryMask_.value(); }
+  std::vector<std::string>& getCategoryMask() { return categoryMask_.value(); }
   void setCategoryMask(const std::vector<std::string>& value) { categoryMask_ = value; }
 
-  const std::vector<std::string>& getCollisionMask() const { return collisionMask_; }
-  std::vector<std::string>& getCollisionMask() { return collisionMask_; }
+  bool hasCollisionMask() const { return collisionMask_.has_value(); }
+  const std::vector<std::string>& getCollisionMask() const { return collisionMask_.value(); }
+  std::vector<std::string>& getCollisionMask() { return collisionMask_.value(); }
   void setCollisionMask(const std::vector<std::string>& value) { collisionMask_ = value; }
 
-  double getDensity() const { return density_; }
+  bool hasDensity() const { return density_.has_value(); }
+  double getDensity() const { return density_.value(); }
   void setDensity(double value) { density_ = value; }
 
-  bool getEnableContactEvents() const { return enableContactEvents_; }
+  bool hasEnableContactEvents() const { return enableContactEvents_.has_value(); }
+  bool getEnableContactEvents() const { return enableContactEvents_.value(); }
   void setEnableContactEvents(bool value) { enableContactEvents_ = value; }
 
-  const Shape& getShape() const { return shape_; }
-  Shape& getShape() { return shape_; }
+  bool hasEnableSensorEvents() const { return enableSensorEvents_.has_value(); }
+  bool getEnableSensorEvents() const { return enableSensorEvents_.value(); }
+  void setEnableSensorEvents(bool value) { enableSensorEvents_ = value; }
+
+  bool hasFriction() const { return friction_.has_value(); }
+  double getFriction() const { return friction_.value(); }
+  void setFriction(double value) { friction_ = value; }
+
+  bool hasIsSensor() const { return isSensor_.has_value(); }
+  bool getIsSensor() const { return isSensor_.value(); }
+  void setIsSensor(bool value) { isSensor_ = value; }
+
+  bool hasRestitution() const { return restitution_.has_value(); }
+  double getRestitution() const { return restitution_.value(); }
+  void setRestitution(double value) { restitution_ = value; }
+
+  bool hasShape() const { return shape_.has_value(); }
+  const Shape& getShape() const { return shape_.value(); }
+  Shape& getShape() { return shape_.value(); }
   void setShape(const Shape& value) { shape_ = value; }
 
 private:
-  std::vector<std::string> categoryMask_;
-  std::vector<std::string> collisionMask_;
-  double density_{};
-  bool enableContactEvents_{};
-  Shape shape_;
+  std::optional<std::vector<std::string>> categoryMask_;
+  std::optional<std::vector<std::string>> collisionMask_;
+  std::optional<double> density_;
+  std::optional<bool> enableContactEvents_;
+  std::optional<bool> enableSensorEvents_;
+  std::optional<double> friction_;
+  std::optional<bool> isSensor_;
+  std::optional<double> restitution_;
+  std::optional<Shape> shape_;
 };
 
 struct BodyComponent : public JsonValue {
   struct Properties {
+    struct AngularDamping {
+      static const char* name() { return "angularDamping"; }
+      static constexpr bool required = false;
+    };
     struct BodyType {
       static const char* name() { return "bodyType"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
+    };
+    struct EnableSleep {
+      static const char* name() { return "enableSleep"; }
+      static constexpr bool required = false;
+    };
+    struct GravityScale {
+      static const char* name() { return "gravityScale"; }
+      static constexpr bool required = false;
+    };
+    struct IsBullet {
+      static const char* name() { return "isBullet"; }
+      static constexpr bool required = false;
     };
     struct LinearDamping {
       static const char* name() { return "linearDamping"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
     struct Shapes {
       static const char* name() { return "shapes"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
     struct Type {
       static const char* name() { return "type"; }
@@ -894,9 +1546,14 @@ struct BodyComponent : public JsonValue {
     ValidationResult result;
     if (!j.is_object()) { result.add(path, "Expected object"); return result; }
     if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
-    if (!j.contains("bodyType")) result.add(path.empty() ? "bodyType" : path + ".bodyType", "Required field missing");
-    if (!j.contains("linearDamping")) result.add(path.empty() ? "linearDamping" : path + ".linearDamping", "Required field missing");
-    if (!j.contains("shapes")) result.add(path.empty() ? "shapes" : path + ".shapes", "Required field missing");
+    if (j.contains("angularDamping")) {
+      std::string fp = path.empty() ? "angularDamping" : path + ".angularDamping";
+      if (!j["angularDamping"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["angularDamping"].get<double>();
+      }
+    }
     if (j.contains("bodyType")) {
       std::string fp = path.empty() ? "bodyType" : path + ".bodyType";
       if (!j["bodyType"].is_string()) {
@@ -904,6 +1561,26 @@ struct BodyComponent : public JsonValue {
       } else {
         const auto& val = j["bodyType"].get_ref<const std::string&>();
         { bool ok = val == "dynamic" || val == "static" || val == "kinematic"; if (!ok) result.add(fp, "Value not in enum"); }
+      }
+    }
+    if (j.contains("enableSleep")) {
+      std::string fp = path.empty() ? "enableSleep" : path + ".enableSleep";
+      if (!j["enableSleep"].is_boolean()) {
+        result.add(fp, "Expected boolean");
+      }
+    }
+    if (j.contains("gravityScale")) {
+      std::string fp = path.empty() ? "gravityScale" : path + ".gravityScale";
+      if (!j["gravityScale"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["gravityScale"].get<double>();
+      }
+    }
+    if (j.contains("isBullet")) {
+      std::string fp = path.empty() ? "isBullet" : path + ".isBullet";
+      if (!j["isBullet"].is_boolean()) {
+        result.add(fp, "Expected boolean");
       }
     }
     if (j.contains("linearDamping")) {
@@ -943,22 +1620,59 @@ struct BodyComponent : public JsonValue {
     auto vr = validate(j);
     if (!vr.valid()) throw std::runtime_error(vr.summary());
     BodyComponent obj;
-    obj.setBodyType(j.at("bodyType").get<std::string>());
-    obj.setLinearDamping(j.at("linearDamping").get<double>());
-    { std::vector<ShapesItem> items; for (const auto& e : j.at("shapes")) items.push_back(ShapesItem::fromJson(e)); obj.setShapes(items); }
+    if (j.contains("angularDamping")) {
+      obj.setAngularDamping(j["angularDamping"].get<double>());
+    }
+    if (j.contains("bodyType")) {
+      obj.setBodyType(j["bodyType"].get<std::string>());
+    }
+    if (j.contains("enableSleep")) {
+      obj.setEnableSleep(j["enableSleep"].get<bool>());
+    }
+    if (j.contains("gravityScale")) {
+      obj.setGravityScale(j["gravityScale"].get<double>());
+    }
+    if (j.contains("isBullet")) {
+      obj.setIsBullet(j["isBullet"].get<bool>());
+    }
+    if (j.contains("linearDamping")) {
+      obj.setLinearDamping(j["linearDamping"].get<double>());
+    }
+    if (j.contains("shapes")) {
+      { std::vector<ShapesItem> items; for (const auto& e : j["shapes"]) items.push_back(ShapesItem::fromJson(e)); obj.setShapes(items); }
+    }
     obj.setType(j.at("type").get<std::string>());
     return obj;
   }
 
-  const std::string& getBodyType() const { return bodyType_; }
-  std::string& getBodyType() { return bodyType_; }
+  bool hasAngularDamping() const { return angularDamping_.has_value(); }
+  double getAngularDamping() const { return angularDamping_.value(); }
+  void setAngularDamping(double value) { angularDamping_ = value; }
+
+  bool hasBodyType() const { return bodyType_.has_value(); }
+  const std::string& getBodyType() const { return bodyType_.value(); }
+  std::string& getBodyType() { return bodyType_.value(); }
   void setBodyType(const std::string& value) { bodyType_ = value; }
 
-  double getLinearDamping() const { return linearDamping_; }
+  bool hasEnableSleep() const { return enableSleep_.has_value(); }
+  bool getEnableSleep() const { return enableSleep_.value(); }
+  void setEnableSleep(bool value) { enableSleep_ = value; }
+
+  bool hasGravityScale() const { return gravityScale_.has_value(); }
+  double getGravityScale() const { return gravityScale_.value(); }
+  void setGravityScale(double value) { gravityScale_ = value; }
+
+  bool hasIsBullet() const { return isBullet_.has_value(); }
+  bool getIsBullet() const { return isBullet_.value(); }
+  void setIsBullet(bool value) { isBullet_ = value; }
+
+  bool hasLinearDamping() const { return linearDamping_.has_value(); }
+  double getLinearDamping() const { return linearDamping_.value(); }
   void setLinearDamping(double value) { linearDamping_ = value; }
 
-  const std::vector<ShapesItem>& getShapes() const { return shapes_; }
-  std::vector<ShapesItem>& getShapes() { return shapes_; }
+  bool hasShapes() const { return shapes_.has_value(); }
+  const std::vector<ShapesItem>& getShapes() const { return shapes_.value(); }
+  std::vector<ShapesItem>& getShapes() { return shapes_.value(); }
   void setShapes(const std::vector<ShapesItem>& value) { shapes_ = value; }
 
   const std::string& getType() const { return type_; }
@@ -966,9 +1680,13 @@ struct BodyComponent : public JsonValue {
   void setType(const std::string& value) { type_ = value; }
 
 private:
-  std::string bodyType_;
-  double linearDamping_{};
-  std::vector<ShapesItem> shapes_;
+  std::optional<double> angularDamping_;
+  std::optional<std::string> bodyType_;
+  std::optional<bool> enableSleep_;
+  std::optional<double> gravityScale_;
+  std::optional<bool> isBullet_;
+  std::optional<double> linearDamping_;
+  std::optional<std::vector<ShapesItem>> shapes_;
   std::string type_;
 };
 
@@ -976,19 +1694,17 @@ struct Material : public JsonValue {
   struct Properties {
     struct Friction {
       static const char* name() { return "friction"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
     struct Restitution {
       static const char* name() { return "restitution"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
   };
 
   static ValidationResult validate(const json& j, const std::string& path = "") {
     ValidationResult result;
     if (!j.is_object()) { result.add(path, "Expected object"); return result; }
-    if (!j.contains("friction")) result.add(path.empty() ? "friction" : path + ".friction", "Required field missing");
-    if (!j.contains("restitution")) result.add(path.empty() ? "restitution" : path + ".restitution", "Required field missing");
     if (j.contains("friction")) {
       std::string fp = path.empty() ? "friction" : path + ".friction";
       if (!j["friction"].is_number()) {
@@ -1012,20 +1728,26 @@ struct Material : public JsonValue {
     auto vr = validate(j);
     if (!vr.valid()) throw std::runtime_error(vr.summary());
     Material obj;
-    obj.setFriction(j.at("friction").get<double>());
-    obj.setRestitution(j.at("restitution").get<double>());
+    if (j.contains("friction")) {
+      obj.setFriction(j["friction"].get<double>());
+    }
+    if (j.contains("restitution")) {
+      obj.setRestitution(j["restitution"].get<double>());
+    }
     return obj;
   }
 
-  double getFriction() const { return friction_; }
+  bool hasFriction() const { return friction_.has_value(); }
+  double getFriction() const { return friction_.value(); }
   void setFriction(double value) { friction_ = value; }
 
-  double getRestitution() const { return restitution_; }
+  bool hasRestitution() const { return restitution_.has_value(); }
+  double getRestitution() const { return restitution_.value(); }
   void setRestitution(double value) { restitution_ = value; }
 
 private:
-  double friction_{};
-  double restitution_{};
+  std::optional<double> friction_;
+  std::optional<double> restitution_;
 };
 
 struct TileComponent : public JsonValue {
@@ -1038,9 +1760,13 @@ struct TileComponent : public JsonValue {
       static const char* name() { return "material"; }
       static constexpr bool required = false;
     };
+    struct Pos {
+      static const char* name() { return "pos"; }
+      static constexpr bool required = false;
+    };
     struct Type {
       static const char* name() { return "type"; }
-      static constexpr bool required = false;
+      static constexpr bool required = true;
       static const char* constValue() { return "TileComponent"; }
     };
   };
@@ -1048,6 +1774,7 @@ struct TileComponent : public JsonValue {
   static ValidationResult validate(const json& j, const std::string& path = "") {
     ValidationResult result;
     if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
     if (j.contains("collidable")) {
       std::string fp = path.empty() ? "collidable" : path + ".collidable";
       if (!j["collidable"].is_boolean()) {
@@ -1060,6 +1787,14 @@ struct TileComponent : public JsonValue {
         result.add(fp, "Expected object");
       } else {
         result.merge(Material::validate(j["material"], fp));
+      }
+    }
+    if (j.contains("pos")) {
+      std::string fp = path.empty() ? "pos" : path + ".pos";
+      if (!j["pos"].is_object()) {
+        result.add(fp, "Expected object");
+      } else {
+        result.merge(Pos::validate(j["pos"], fp));
       }
     }
     if (j.contains("type")) {
@@ -1084,9 +1819,10 @@ struct TileComponent : public JsonValue {
     if (j.contains("material")) {
       obj.setMaterial(Material::fromJson(j["material"]));
     }
-    if (j.contains("type")) {
-      obj.setType(j["type"].get<std::string>());
+    if (j.contains("pos")) {
+      obj.setPos(Pos::fromJson(j["pos"]));
     }
+    obj.setType(j.at("type").get<std::string>());
     return obj;
   }
 
@@ -1099,26 +1835,105 @@ struct TileComponent : public JsonValue {
   Material& getMaterial() { return material_.value(); }
   void setMaterial(const Material& value) { material_ = value; }
 
-  bool hasType() const { return type_.has_value(); }
-  const std::string& getType() const { return type_.value(); }
-  std::string& getType() { return type_.value(); }
+  bool hasPos() const { return pos_.has_value(); }
+  const Pos& getPos() const { return pos_.value(); }
+  Pos& getPos() { return pos_.value(); }
+  void setPos(const Pos& value) { pos_ = value; }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
   void setType(const std::string& value) { type_ = value; }
 
 private:
   std::optional<bool> collidable_;
   std::optional<Material> material_;
-  std::optional<std::string> type_;
+  std::optional<Pos> pos_;
+  std::string type_;
+};
+
+struct Dir : public JsonValue {
+  struct Properties {
+    struct X {
+      static const char* name() { return "x"; }
+      static constexpr bool required = false;
+    };
+    struct Y {
+      static const char* name() { return "y"; }
+      static constexpr bool required = false;
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (j.contains("x")) {
+      std::string fp = path.empty() ? "x" : path + ".x";
+      if (!j["x"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["x"].get<double>();
+      }
+    }
+    if (j.contains("y")) {
+      std::string fp = path.empty() ? "y" : path + ".y";
+      if (!j["y"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["y"].get<double>();
+      }
+    }
+    return result;
+  }
+
+  static Dir fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    Dir obj;
+    if (j.contains("x")) {
+      obj.setX(j["x"].get<double>());
+    }
+    if (j.contains("y")) {
+      obj.setY(j["y"].get<double>());
+    }
+    return obj;
+  }
+
+  bool hasX() const { return x_.has_value(); }
+  double getX() const { return x_.value(); }
+  void setX(double value) { x_ = value; }
+
+  bool hasY() const { return y_.has_value(); }
+  double getY() const { return y_.value(); }
+  void setY(double value) { y_ = value; }
+
+private:
+  std::optional<double> x_;
+  std::optional<double> y_;
 };
 
 struct ArrowComponent : public JsonValue {
   struct Properties {
+    struct Cost {
+      static const char* name() { return "cost"; }
+      static constexpr bool required = false;
+    };
+    struct Dir {
+      static const char* name() { return "dir"; }
+      static constexpr bool required = false;
+    };
+    struct Generation {
+      static const char* name() { return "generation"; }
+      static constexpr bool required = false;
+      static constexpr int64_t minimum() { return 0; }
+    };
     struct TileCost {
       static const char* name() { return "tileCost"; }
       static constexpr bool required = false;
+      static constexpr int64_t minimum() { return 0; }
     };
     struct Type {
       static const char* name() { return "type"; }
-      static constexpr bool required = false;
+      static constexpr bool required = true;
       static const char* constValue() { return "ArrowComponent"; }
     };
   };
@@ -1126,12 +1941,39 @@ struct ArrowComponent : public JsonValue {
   static ValidationResult validate(const json& j, const std::string& path = "") {
     ValidationResult result;
     if (!j.is_object()) { result.add(path, "Expected object"); return result; }
-    if (j.contains("tileCost")) {
-      std::string fp = path.empty() ? "tileCost" : path + ".tileCost";
-      if (!j["tileCost"].is_number()) {
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("cost")) {
+      std::string fp = path.empty() ? "cost" : path + ".cost";
+      if (!j["cost"].is_number()) {
         result.add(fp, "Expected number");
       } else {
-        double val = j["tileCost"].get<double>();
+        double val = j["cost"].get<double>();
+      }
+    }
+    if (j.contains("dir")) {
+      std::string fp = path.empty() ? "dir" : path + ".dir";
+      if (!j["dir"].is_object()) {
+        result.add(fp, "Expected object");
+      } else {
+        result.merge(Dir::validate(j["dir"], fp));
+      }
+    }
+    if (j.contains("generation")) {
+      std::string fp = path.empty() ? "generation" : path + ".generation";
+      if (!j["generation"].is_number_integer()) {
+        result.add(fp, "Expected integer");
+      } else {
+        int64_t val = j["generation"].get<int64_t>();
+        if (val < 0) result.add(fp, "Value below minimum");
+      }
+    }
+    if (j.contains("tileCost")) {
+      std::string fp = path.empty() ? "tileCost" : path + ".tileCost";
+      if (!j["tileCost"].is_number_integer()) {
+        result.add(fp, "Expected integer");
+      } else {
+        int64_t val = j["tileCost"].get<int64_t>();
+        if (val < 0) result.add(fp, "Value below minimum");
       }
     }
     if (j.contains("type")) {
@@ -1150,73 +1992,92 @@ struct ArrowComponent : public JsonValue {
     auto vr = validate(j);
     if (!vr.valid()) throw std::runtime_error(vr.summary());
     ArrowComponent obj;
+    if (j.contains("cost")) {
+      obj.setCost(j["cost"].get<double>());
+    }
+    if (j.contains("dir")) {
+      obj.setDir(Dir::fromJson(j["dir"]));
+    }
+    if (j.contains("generation")) {
+      obj.setGeneration(j["generation"].get<int64_t>());
+    }
     if (j.contains("tileCost")) {
-      obj.setTileCost(j["tileCost"].get<double>());
+      obj.setTileCost(j["tileCost"].get<int64_t>());
     }
-    if (j.contains("type")) {
-      obj.setType(j["type"].get<std::string>());
-    }
+    obj.setType(j.at("type").get<std::string>());
     return obj;
   }
 
-  bool hasTileCost() const { return tileCost_.has_value(); }
-  double getTileCost() const { return tileCost_.value(); }
-  void setTileCost(double value) { tileCost_ = value; }
+  bool hasCost() const { return cost_.has_value(); }
+  double getCost() const { return cost_.value(); }
+  void setCost(double value) { cost_ = value; }
 
-  bool hasType() const { return type_.has_value(); }
-  const std::string& getType() const { return type_.value(); }
-  std::string& getType() { return type_.value(); }
+  bool hasDir() const { return dir_.has_value(); }
+  const Dir& getDir() const { return dir_.value(); }
+  Dir& getDir() { return dir_.value(); }
+  void setDir(const Dir& value) { dir_ = value; }
+
+  bool hasGeneration() const { return generation_.has_value(); }
+  int64_t getGeneration() const { return generation_.value(); }
+  void setGeneration(int64_t value) { generation_ = value; }
+
+  bool hasTileCost() const { return tileCost_.has_value(); }
+  int64_t getTileCost() const { return tileCost_.value(); }
+  void setTileCost(int64_t value) { tileCost_ = value; }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
   void setType(const std::string& value) { type_ = value; }
 
 private:
-  std::optional<double> tileCost_;
-  std::optional<std::string> type_;
+  std::optional<double> cost_;
+  std::optional<Dir> dir_;
+  std::optional<int64_t> generation_;
+  std::optional<int64_t> tileCost_;
+  std::string type_;
 };
 
 struct AnchorPos : public JsonValue {
   struct Properties {
     struct X {
       static const char* name() { return "x"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
     struct Y {
       static const char* name() { return "y"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
     struct Z {
       static const char* name() { return "z"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
   };
 
   static ValidationResult validate(const json& j, const std::string& path = "") {
     ValidationResult result;
     if (!j.is_object()) { result.add(path, "Expected object"); return result; }
-    if (!j.contains("x")) result.add(path.empty() ? "x" : path + ".x", "Required field missing");
-    if (!j.contains("y")) result.add(path.empty() ? "y" : path + ".y", "Required field missing");
-    if (!j.contains("z")) result.add(path.empty() ? "z" : path + ".z", "Required field missing");
     if (j.contains("x")) {
       std::string fp = path.empty() ? "x" : path + ".x";
-      if (!j["x"].is_number()) {
-        result.add(fp, "Expected number");
+      if (!j["x"].is_number_integer()) {
+        result.add(fp, "Expected integer");
       } else {
-        double val = j["x"].get<double>();
+        int64_t val = j["x"].get<int64_t>();
       }
     }
     if (j.contains("y")) {
       std::string fp = path.empty() ? "y" : path + ".y";
-      if (!j["y"].is_number()) {
-        result.add(fp, "Expected number");
+      if (!j["y"].is_number_integer()) {
+        result.add(fp, "Expected integer");
       } else {
-        double val = j["y"].get<double>();
+        int64_t val = j["y"].get<int64_t>();
       }
     }
     if (j.contains("z")) {
       std::string fp = path.empty() ? "z" : path + ".z";
-      if (!j["z"].is_number()) {
-        result.add(fp, "Expected number");
+      if (!j["z"].is_number_integer()) {
+        result.add(fp, "Expected integer");
       } else {
-        double val = j["z"].get<double>();
+        int64_t val = j["z"].get<int64_t>();
       }
     }
     return result;
@@ -1226,71 +2087,77 @@ struct AnchorPos : public JsonValue {
     auto vr = validate(j);
     if (!vr.valid()) throw std::runtime_error(vr.summary());
     AnchorPos obj;
-    obj.setX(j.at("x").get<double>());
-    obj.setY(j.at("y").get<double>());
-    obj.setZ(j.at("z").get<double>());
+    if (j.contains("x")) {
+      obj.setX(j["x"].get<int64_t>());
+    }
+    if (j.contains("y")) {
+      obj.setY(j["y"].get<int64_t>());
+    }
+    if (j.contains("z")) {
+      obj.setZ(j["z"].get<int64_t>());
+    }
     return obj;
   }
 
-  double getX() const { return x_; }
-  void setX(double value) { x_ = value; }
+  bool hasX() const { return x_.has_value(); }
+  int64_t getX() const { return x_.value(); }
+  void setX(int64_t value) { x_ = value; }
 
-  double getY() const { return y_; }
-  void setY(double value) { y_ = value; }
+  bool hasY() const { return y_.has_value(); }
+  int64_t getY() const { return y_.value(); }
+  void setY(int64_t value) { y_ = value; }
 
-  double getZ() const { return z_; }
-  void setZ(double value) { z_ = value; }
+  bool hasZ() const { return z_.has_value(); }
+  int64_t getZ() const { return z_.value(); }
+  void setZ(int64_t value) { z_ = value; }
 
 private:
-  double x_{};
-  double y_{};
-  double z_{};
+  std::optional<int64_t> x_;
+  std::optional<int64_t> y_;
+  std::optional<int64_t> z_;
 };
 
 struct OccupiedPositionsItem : public JsonValue {
   struct Properties {
     struct X {
       static const char* name() { return "x"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
     struct Y {
       static const char* name() { return "y"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
     struct Z {
       static const char* name() { return "z"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
   };
 
   static ValidationResult validate(const json& j, const std::string& path = "") {
     ValidationResult result;
     if (!j.is_object()) { result.add(path, "Expected object"); return result; }
-    if (!j.contains("x")) result.add(path.empty() ? "x" : path + ".x", "Required field missing");
-    if (!j.contains("y")) result.add(path.empty() ? "y" : path + ".y", "Required field missing");
-    if (!j.contains("z")) result.add(path.empty() ? "z" : path + ".z", "Required field missing");
     if (j.contains("x")) {
       std::string fp = path.empty() ? "x" : path + ".x";
-      if (!j["x"].is_number()) {
-        result.add(fp, "Expected number");
+      if (!j["x"].is_number_integer()) {
+        result.add(fp, "Expected integer");
       } else {
-        double val = j["x"].get<double>();
+        int64_t val = j["x"].get<int64_t>();
       }
     }
     if (j.contains("y")) {
       std::string fp = path.empty() ? "y" : path + ".y";
-      if (!j["y"].is_number()) {
-        result.add(fp, "Expected number");
+      if (!j["y"].is_number_integer()) {
+        result.add(fp, "Expected integer");
       } else {
-        double val = j["y"].get<double>();
+        int64_t val = j["y"].get<int64_t>();
       }
     }
     if (j.contains("z")) {
       std::string fp = path.empty() ? "z" : path + ".z";
-      if (!j["z"].is_number()) {
-        result.add(fp, "Expected number");
+      if (!j["z"].is_number_integer()) {
+        result.add(fp, "Expected integer");
       } else {
-        double val = j["z"].get<double>();
+        int64_t val = j["z"].get<int64_t>();
       }
     }
     return result;
@@ -1300,36 +2167,45 @@ struct OccupiedPositionsItem : public JsonValue {
     auto vr = validate(j);
     if (!vr.valid()) throw std::runtime_error(vr.summary());
     OccupiedPositionsItem obj;
-    obj.setX(j.at("x").get<double>());
-    obj.setY(j.at("y").get<double>());
-    obj.setZ(j.at("z").get<double>());
+    if (j.contains("x")) {
+      obj.setX(j["x"].get<int64_t>());
+    }
+    if (j.contains("y")) {
+      obj.setY(j["y"].get<int64_t>());
+    }
+    if (j.contains("z")) {
+      obj.setZ(j["z"].get<int64_t>());
+    }
     return obj;
   }
 
-  double getX() const { return x_; }
-  void setX(double value) { x_ = value; }
+  bool hasX() const { return x_.has_value(); }
+  int64_t getX() const { return x_.value(); }
+  void setX(int64_t value) { x_ = value; }
 
-  double getY() const { return y_; }
-  void setY(double value) { y_ = value; }
+  bool hasY() const { return y_.has_value(); }
+  int64_t getY() const { return y_.value(); }
+  void setY(int64_t value) { y_ = value; }
 
-  double getZ() const { return z_; }
-  void setZ(double value) { z_ = value; }
+  bool hasZ() const { return z_.has_value(); }
+  int64_t getZ() const { return z_.value(); }
+  void setZ(int64_t value) { z_ = value; }
 
 private:
-  double x_{};
-  double y_{};
-  double z_{};
+  std::optional<int64_t> x_;
+  std::optional<int64_t> y_;
+  std::optional<int64_t> z_;
 };
 
 struct MultiTileComponent : public JsonValue {
   struct Properties {
     struct AnchorPos {
       static const char* name() { return "anchorPos"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
     struct OccupiedPositions {
       static const char* name() { return "occupiedPositions"; }
-      static constexpr bool required = true;
+      static constexpr bool required = false;
     };
     struct Type {
       static const char* name() { return "type"; }
@@ -1342,8 +2218,6 @@ struct MultiTileComponent : public JsonValue {
     ValidationResult result;
     if (!j.is_object()) { result.add(path, "Expected object"); return result; }
     if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
-    if (!j.contains("occupiedPositions")) result.add(path.empty() ? "occupiedPositions" : path + ".occupiedPositions", "Required field missing");
-    if (!j.contains("anchorPos")) result.add(path.empty() ? "anchorPos" : path + ".anchorPos", "Required field missing");
     if (j.contains("anchorPos")) {
       std::string fp = path.empty() ? "anchorPos" : path + ".anchorPos";
       if (!j["anchorPos"].is_object()) {
@@ -1381,18 +2255,24 @@ struct MultiTileComponent : public JsonValue {
     auto vr = validate(j);
     if (!vr.valid()) throw std::runtime_error(vr.summary());
     MultiTileComponent obj;
-    obj.setAnchorPos(AnchorPos::fromJson(j.at("anchorPos")));
-    { std::vector<OccupiedPositionsItem> items; for (const auto& e : j.at("occupiedPositions")) items.push_back(OccupiedPositionsItem::fromJson(e)); obj.setOccupiedPositions(items); }
+    if (j.contains("anchorPos")) {
+      obj.setAnchorPos(AnchorPos::fromJson(j["anchorPos"]));
+    }
+    if (j.contains("occupiedPositions")) {
+      { std::vector<OccupiedPositionsItem> items; for (const auto& e : j["occupiedPositions"]) items.push_back(OccupiedPositionsItem::fromJson(e)); obj.setOccupiedPositions(items); }
+    }
     obj.setType(j.at("type").get<std::string>());
     return obj;
   }
 
-  const AnchorPos& getAnchorPos() const { return anchorPos_; }
-  AnchorPos& getAnchorPos() { return anchorPos_; }
+  bool hasAnchorPos() const { return anchorPos_.has_value(); }
+  const AnchorPos& getAnchorPos() const { return anchorPos_.value(); }
+  AnchorPos& getAnchorPos() { return anchorPos_.value(); }
   void setAnchorPos(const AnchorPos& value) { anchorPos_ = value; }
 
-  const std::vector<OccupiedPositionsItem>& getOccupiedPositions() const { return occupiedPositions_; }
-  std::vector<OccupiedPositionsItem>& getOccupiedPositions() { return occupiedPositions_; }
+  bool hasOccupiedPositions() const { return occupiedPositions_.has_value(); }
+  const std::vector<OccupiedPositionsItem>& getOccupiedPositions() const { return occupiedPositions_.value(); }
+  std::vector<OccupiedPositionsItem>& getOccupiedPositions() { return occupiedPositions_.value(); }
   void setOccupiedPositions(const std::vector<OccupiedPositionsItem>& value) { occupiedPositions_ = value; }
 
   const std::string& getType() const { return type_; }
@@ -1400,8 +2280,8 @@ struct MultiTileComponent : public JsonValue {
   void setType(const std::string& value) { type_ = value; }
 
 private:
-  AnchorPos anchorPos_;
-  std::vector<OccupiedPositionsItem> occupiedPositions_;
+  std::optional<AnchorPos> anchorPos_;
+  std::optional<std::vector<OccupiedPositionsItem>> occupiedPositions_;
   std::string type_;
 };
 
@@ -1409,6 +2289,10 @@ struct TurretComponent : public JsonValue {
   struct Properties {
     struct BulletDamage {
       static const char* name() { return "bulletDamage"; }
+      static constexpr bool required = false;
+    };
+    struct BulletHealth {
+      static const char* name() { return "bulletHealth"; }
       static constexpr bool required = false;
     };
     struct BulletRadius {
@@ -1427,12 +2311,24 @@ struct TurretComponent : public JsonValue {
       static const char* name() { return "radius"; }
       static constexpr bool required = false;
     };
+    struct Rot {
+      static const char* name() { return "rot"; }
+      static constexpr bool required = false;
+    };
     struct ShootRange {
       static const char* name() { return "shootRange"; }
       static constexpr bool required = false;
     };
     struct StopRange {
       static const char* name() { return "stopRange"; }
+      static constexpr bool required = false;
+    };
+    struct Summon {
+      static const char* name() { return "summon"; }
+      static constexpr bool required = false;
+    };
+    struct TimeSinceLastShot {
+      static const char* name() { return "timeSinceLastShot"; }
       static constexpr bool required = false;
     };
     struct TurnSpeed {
@@ -1456,6 +2352,14 @@ struct TurretComponent : public JsonValue {
         result.add(fp, "Expected number");
       } else {
         double val = j["bulletDamage"].get<double>();
+      }
+    }
+    if (j.contains("bulletHealth")) {
+      std::string fp = path.empty() ? "bulletHealth" : path + ".bulletHealth";
+      if (!j["bulletHealth"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["bulletHealth"].get<double>();
       }
     }
     if (j.contains("bulletRadius")) {
@@ -1490,6 +2394,14 @@ struct TurretComponent : public JsonValue {
         double val = j["radius"].get<double>();
       }
     }
+    if (j.contains("rot")) {
+      std::string fp = path.empty() ? "rot" : path + ".rot";
+      if (!j["rot"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["rot"].get<double>();
+      }
+    }
     if (j.contains("shootRange")) {
       std::string fp = path.empty() ? "shootRange" : path + ".shootRange";
       if (!j["shootRange"].is_number()) {
@@ -1504,6 +2416,22 @@ struct TurretComponent : public JsonValue {
         result.add(fp, "Expected number");
       } else {
         double val = j["stopRange"].get<double>();
+      }
+    }
+    if (j.contains("summon")) {
+      std::string fp = path.empty() ? "summon" : path + ".summon";
+      if (!j["summon"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["summon"].get_ref<const std::string&>();
+      }
+    }
+    if (j.contains("timeSinceLastShot")) {
+      std::string fp = path.empty() ? "timeSinceLastShot" : path + ".timeSinceLastShot";
+      if (!j["timeSinceLastShot"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["timeSinceLastShot"].get<double>();
       }
     }
     if (j.contains("turnSpeed")) {
@@ -1533,6 +2461,9 @@ struct TurretComponent : public JsonValue {
     if (j.contains("bulletDamage")) {
       obj.setBulletDamage(j["bulletDamage"].get<double>());
     }
+    if (j.contains("bulletHealth")) {
+      obj.setBulletHealth(j["bulletHealth"].get<double>());
+    }
     if (j.contains("bulletRadius")) {
       obj.setBulletRadius(j["bulletRadius"].get<double>());
     }
@@ -1545,11 +2476,20 @@ struct TurretComponent : public JsonValue {
     if (j.contains("radius")) {
       obj.setRadius(j["radius"].get<double>());
     }
+    if (j.contains("rot")) {
+      obj.setRot(j["rot"].get<double>());
+    }
     if (j.contains("shootRange")) {
       obj.setShootRange(j["shootRange"].get<double>());
     }
     if (j.contains("stopRange")) {
       obj.setStopRange(j["stopRange"].get<double>());
+    }
+    if (j.contains("summon")) {
+      obj.setSummon(j["summon"].get<std::string>());
+    }
+    if (j.contains("timeSinceLastShot")) {
+      obj.setTimeSinceLastShot(j["timeSinceLastShot"].get<double>());
     }
     if (j.contains("turnSpeed")) {
       obj.setTurnSpeed(j["turnSpeed"].get<double>());
@@ -1561,6 +2501,10 @@ struct TurretComponent : public JsonValue {
   bool hasBulletDamage() const { return bulletDamage_.has_value(); }
   double getBulletDamage() const { return bulletDamage_.value(); }
   void setBulletDamage(double value) { bulletDamage_ = value; }
+
+  bool hasBulletHealth() const { return bulletHealth_.has_value(); }
+  double getBulletHealth() const { return bulletHealth_.value(); }
+  void setBulletHealth(double value) { bulletHealth_ = value; }
 
   bool hasBulletRadius() const { return bulletRadius_.has_value(); }
   double getBulletRadius() const { return bulletRadius_.value(); }
@@ -1578,6 +2522,10 @@ struct TurretComponent : public JsonValue {
   double getRadius() const { return radius_.value(); }
   void setRadius(double value) { radius_ = value; }
 
+  bool hasRot() const { return rot_.has_value(); }
+  double getRot() const { return rot_.value(); }
+  void setRot(double value) { rot_ = value; }
+
   bool hasShootRange() const { return shootRange_.has_value(); }
   double getShootRange() const { return shootRange_.value(); }
   void setShootRange(double value) { shootRange_ = value; }
@@ -1585,6 +2533,15 @@ struct TurretComponent : public JsonValue {
   bool hasStopRange() const { return stopRange_.has_value(); }
   double getStopRange() const { return stopRange_.value(); }
   void setStopRange(double value) { stopRange_ = value; }
+
+  bool hasSummon() const { return summon_.has_value(); }
+  const std::string& getSummon() const { return summon_.value(); }
+  std::string& getSummon() { return summon_.value(); }
+  void setSummon(const std::string& value) { summon_ = value; }
+
+  bool hasTimeSinceLastShot() const { return timeSinceLastShot_.has_value(); }
+  double getTimeSinceLastShot() const { return timeSinceLastShot_.value(); }
+  void setTimeSinceLastShot(double value) { timeSinceLastShot_ = value; }
 
   bool hasTurnSpeed() const { return turnSpeed_.has_value(); }
   double getTurnSpeed() const { return turnSpeed_.value(); }
@@ -1596,18 +2553,1219 @@ struct TurretComponent : public JsonValue {
 
 private:
   std::optional<double> bulletDamage_;
+  std::optional<double> bulletHealth_;
   std::optional<double> bulletRadius_;
   std::optional<double> fireRate_;
   std::optional<double> muzzleVelocity_;
   std::optional<double> radius_;
+  std::optional<double> rot_;
   std::optional<double> shootRange_;
   std::optional<double> stopRange_;
+  std::optional<std::string> summon_;
+  std::optional<double> timeSinceLastShot_;
   std::optional<double> turnSpeed_;
   std::string type_;
 };
 
+struct SpawnerComponent : public JsonValue {
+  struct Properties {
+    struct Spawn {
+      static const char* name() { return "spawn"; }
+      static constexpr bool required = false;
+    };
+    struct SpawnCount {
+      static const char* name() { return "spawnCount"; }
+      static constexpr bool required = false;
+      static constexpr int64_t minimum() { return 0; }
+    };
+    struct SpawnRate {
+      static const char* name() { return "spawnRate"; }
+      static constexpr bool required = false;
+    };
+    struct SpawnableRadius {
+      static const char* name() { return "spawnableRadius"; }
+      static constexpr bool required = false;
+    };
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "SpawnerComponent"; }
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("spawn")) {
+      std::string fp = path.empty() ? "spawn" : path + ".spawn";
+      if (!j["spawn"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["spawn"].get_ref<const std::string&>();
+      }
+    }
+    if (j.contains("spawnCount")) {
+      std::string fp = path.empty() ? "spawnCount" : path + ".spawnCount";
+      if (!j["spawnCount"].is_number_integer()) {
+        result.add(fp, "Expected integer");
+      } else {
+        int64_t val = j["spawnCount"].get<int64_t>();
+        if (val < 0) result.add(fp, "Value below minimum");
+      }
+    }
+    if (j.contains("spawnRate")) {
+      std::string fp = path.empty() ? "spawnRate" : path + ".spawnRate";
+      if (!j["spawnRate"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["spawnRate"].get<double>();
+      }
+    }
+    if (j.contains("spawnableRadius")) {
+      std::string fp = path.empty() ? "spawnableRadius" : path + ".spawnableRadius";
+      if (!j["spawnableRadius"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["spawnableRadius"].get<double>();
+      }
+    }
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "SpawnerComponent") result.add(fp, "Value does not match const");
+      }
+    }
+    return result;
+  }
+
+  static SpawnerComponent fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    SpawnerComponent obj;
+    if (j.contains("spawn")) {
+      obj.setSpawn(j["spawn"].get<std::string>());
+    }
+    if (j.contains("spawnCount")) {
+      obj.setSpawnCount(j["spawnCount"].get<int64_t>());
+    }
+    if (j.contains("spawnRate")) {
+      obj.setSpawnRate(j["spawnRate"].get<double>());
+    }
+    if (j.contains("spawnableRadius")) {
+      obj.setSpawnableRadius(j["spawnableRadius"].get<double>());
+    }
+    obj.setType(j.at("type").get<std::string>());
+    return obj;
+  }
+
+  bool hasSpawn() const { return spawn_.has_value(); }
+  const std::string& getSpawn() const { return spawn_.value(); }
+  std::string& getSpawn() { return spawn_.value(); }
+  void setSpawn(const std::string& value) { spawn_ = value; }
+
+  bool hasSpawnCount() const { return spawnCount_.has_value(); }
+  int64_t getSpawnCount() const { return spawnCount_.value(); }
+  void setSpawnCount(int64_t value) { spawnCount_ = value; }
+
+  bool hasSpawnRate() const { return spawnRate_.has_value(); }
+  double getSpawnRate() const { return spawnRate_.value(); }
+  void setSpawnRate(double value) { spawnRate_ = value; }
+
+  bool hasSpawnableRadius() const { return spawnableRadius_.has_value(); }
+  double getSpawnableRadius() const { return spawnableRadius_.value(); }
+  void setSpawnableRadius(double value) { spawnableRadius_ = value; }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+private:
+  std::optional<std::string> spawn_;
+  std::optional<int64_t> spawnCount_;
+  std::optional<double> spawnRate_;
+  std::optional<double> spawnableRadius_;
+  std::string type_;
+};
+
+struct Color : public JsonValue {
+  struct Properties {
+    struct B {
+      static const char* name() { return "b"; }
+      static constexpr bool required = false;
+    };
+    struct G {
+      static const char* name() { return "g"; }
+      static constexpr bool required = false;
+    };
+    struct R {
+      static const char* name() { return "r"; }
+      static constexpr bool required = false;
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (j.contains("b")) {
+      std::string fp = path.empty() ? "b" : path + ".b";
+      if (!j["b"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["b"].get<double>();
+      }
+    }
+    if (j.contains("g")) {
+      std::string fp = path.empty() ? "g" : path + ".g";
+      if (!j["g"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["g"].get<double>();
+      }
+    }
+    if (j.contains("r")) {
+      std::string fp = path.empty() ? "r" : path + ".r";
+      if (!j["r"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["r"].get<double>();
+      }
+    }
+    return result;
+  }
+
+  static Color fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    Color obj;
+    if (j.contains("b")) {
+      obj.setB(j["b"].get<double>());
+    }
+    if (j.contains("g")) {
+      obj.setG(j["g"].get<double>());
+    }
+    if (j.contains("r")) {
+      obj.setR(j["r"].get<double>());
+    }
+    return obj;
+  }
+
+  bool hasB() const { return b_.has_value(); }
+  double getB() const { return b_.value(); }
+  void setB(double value) { b_ = value; }
+
+  bool hasG() const { return g_.has_value(); }
+  double getG() const { return g_.value(); }
+  void setG(double value) { g_ = value; }
+
+  bool hasR() const { return r_.has_value(); }
+  double getR() const { return r_.value(); }
+  void setR(double value) { r_ = value; }
+
+private:
+  std::optional<double> b_;
+  std::optional<double> g_;
+  std::optional<double> r_;
+};
+
+struct CircleRenderComponent : public JsonValue {
+  struct Properties {
+    struct Color {
+      static const char* name() { return "color"; }
+      static constexpr bool required = false;
+    };
+    struct Offset {
+      static const char* name() { return "offset"; }
+      static constexpr bool required = false;
+    };
+    struct Radius {
+      static const char* name() { return "radius"; }
+      static constexpr bool required = false;
+    };
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "CircleRenderComponent"; }
+    };
+    struct Z {
+      static const char* name() { return "z"; }
+      static constexpr bool required = false;
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("color")) {
+      std::string fp = path.empty() ? "color" : path + ".color";
+      if (!j["color"].is_object()) {
+        result.add(fp, "Expected object");
+      } else {
+        result.merge(Color::validate(j["color"], fp));
+      }
+    }
+    if (j.contains("offset")) {
+      std::string fp = path.empty() ? "offset" : path + ".offset";
+      if (!j["offset"].is_object()) {
+        result.add(fp, "Expected object");
+      } else {
+        result.merge(Offset::validate(j["offset"], fp));
+      }
+    }
+    if (j.contains("radius")) {
+      std::string fp = path.empty() ? "radius" : path + ".radius";
+      if (!j["radius"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["radius"].get<double>();
+      }
+    }
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "CircleRenderComponent") result.add(fp, "Value does not match const");
+      }
+    }
+    if (j.contains("z")) {
+      std::string fp = path.empty() ? "z" : path + ".z";
+      if (!j["z"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["z"].get<double>();
+      }
+    }
+    return result;
+  }
+
+  static CircleRenderComponent fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    CircleRenderComponent obj;
+    if (j.contains("color")) {
+      obj.setColor(Color::fromJson(j["color"]));
+    }
+    if (j.contains("offset")) {
+      obj.setOffset(Offset::fromJson(j["offset"]));
+    }
+    if (j.contains("radius")) {
+      obj.setRadius(j["radius"].get<double>());
+    }
+    obj.setType(j.at("type").get<std::string>());
+    if (j.contains("z")) {
+      obj.setZ(j["z"].get<double>());
+    }
+    return obj;
+  }
+
+  bool hasColor() const { return color_.has_value(); }
+  const Color& getColor() const { return color_.value(); }
+  Color& getColor() { return color_.value(); }
+  void setColor(const Color& value) { color_ = value; }
+
+  bool hasOffset() const { return offset_.has_value(); }
+  const Offset& getOffset() const { return offset_.value(); }
+  Offset& getOffset() { return offset_.value(); }
+  void setOffset(const Offset& value) { offset_ = value; }
+
+  bool hasRadius() const { return radius_.has_value(); }
+  double getRadius() const { return radius_.value(); }
+  void setRadius(double value) { radius_ = value; }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+  bool hasZ() const { return z_.has_value(); }
+  double getZ() const { return z_.value(); }
+  void setZ(double value) { z_ = value; }
+
+private:
+  std::optional<Color> color_;
+  std::optional<Offset> offset_;
+  std::optional<double> radius_;
+  std::string type_;
+  std::optional<double> z_;
+};
+
+struct RectangleRenderComponent : public JsonValue {
+  struct Properties {
+    struct Color {
+      static const char* name() { return "color"; }
+      static constexpr bool required = false;
+    };
+    struct Hh {
+      static const char* name() { return "hh"; }
+      static constexpr bool required = false;
+    };
+    struct Hw {
+      static const char* name() { return "hw"; }
+      static constexpr bool required = false;
+    };
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "RectangleRenderComponent"; }
+    };
+    struct Z {
+      static const char* name() { return "z"; }
+      static constexpr bool required = false;
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("color")) {
+      std::string fp = path.empty() ? "color" : path + ".color";
+      if (!j["color"].is_object()) {
+        result.add(fp, "Expected object");
+      } else {
+        result.merge(Color::validate(j["color"], fp));
+      }
+    }
+    if (j.contains("hh")) {
+      std::string fp = path.empty() ? "hh" : path + ".hh";
+      if (!j["hh"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["hh"].get<double>();
+      }
+    }
+    if (j.contains("hw")) {
+      std::string fp = path.empty() ? "hw" : path + ".hw";
+      if (!j["hw"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["hw"].get<double>();
+      }
+    }
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "RectangleRenderComponent") result.add(fp, "Value does not match const");
+      }
+    }
+    if (j.contains("z")) {
+      std::string fp = path.empty() ? "z" : path + ".z";
+      if (!j["z"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["z"].get<double>();
+      }
+    }
+    return result;
+  }
+
+  static RectangleRenderComponent fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    RectangleRenderComponent obj;
+    if (j.contains("color")) {
+      obj.setColor(Color::fromJson(j["color"]));
+    }
+    if (j.contains("hh")) {
+      obj.setHh(j["hh"].get<double>());
+    }
+    if (j.contains("hw")) {
+      obj.setHw(j["hw"].get<double>());
+    }
+    obj.setType(j.at("type").get<std::string>());
+    if (j.contains("z")) {
+      obj.setZ(j["z"].get<double>());
+    }
+    return obj;
+  }
+
+  bool hasColor() const { return color_.has_value(); }
+  const Color& getColor() const { return color_.value(); }
+  Color& getColor() { return color_.value(); }
+  void setColor(const Color& value) { color_ = value; }
+
+  bool hasHh() const { return hh_.has_value(); }
+  double getHh() const { return hh_.value(); }
+  void setHh(double value) { hh_ = value; }
+
+  bool hasHw() const { return hw_.has_value(); }
+  double getHw() const { return hw_.value(); }
+  void setHw(double value) { hw_ = value; }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+  bool hasZ() const { return z_.has_value(); }
+  double getZ() const { return z_.value(); }
+  void setZ(double value) { z_ = value; }
+
+private:
+  std::optional<Color> color_;
+  std::optional<double> hh_;
+  std::optional<double> hw_;
+  std::string type_;
+  std::optional<double> z_;
+};
+
+struct ItemComponent : public JsonValue {
+  struct Properties {
+    struct Description {
+      static const char* name() { return "description"; }
+      static constexpr bool required = false;
+    };
+    struct IconAsset {
+      static const char* name() { return "iconAsset"; }
+      static constexpr bool required = false;
+    };
+    struct IsUnique {
+      static const char* name() { return "isUnique"; }
+      static constexpr bool required = false;
+    };
+    struct MaxStackSize {
+      static const char* name() { return "maxStackSize"; }
+      static constexpr bool required = false;
+      static constexpr int64_t minimum() { return 0; }
+    };
+    struct Name {
+      static const char* name() { return "name"; }
+      static constexpr bool required = false;
+    };
+    struct StackCost {
+      static const char* name() { return "stackCost"; }
+      static constexpr bool required = false;
+      static constexpr int64_t minimum() { return 0; }
+    };
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "ItemComponent"; }
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("description")) {
+      std::string fp = path.empty() ? "description" : path + ".description";
+      if (!j["description"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["description"].get_ref<const std::string&>();
+      }
+    }
+    if (j.contains("iconAsset")) {
+      std::string fp = path.empty() ? "iconAsset" : path + ".iconAsset";
+      if (!j["iconAsset"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["iconAsset"].get_ref<const std::string&>();
+      }
+    }
+    if (j.contains("isUnique")) {
+      std::string fp = path.empty() ? "isUnique" : path + ".isUnique";
+      if (!j["isUnique"].is_boolean()) {
+        result.add(fp, "Expected boolean");
+      }
+    }
+    if (j.contains("maxStackSize")) {
+      std::string fp = path.empty() ? "maxStackSize" : path + ".maxStackSize";
+      if (!j["maxStackSize"].is_number_integer()) {
+        result.add(fp, "Expected integer");
+      } else {
+        int64_t val = j["maxStackSize"].get<int64_t>();
+        if (val < 0) result.add(fp, "Value below minimum");
+      }
+    }
+    if (j.contains("name")) {
+      std::string fp = path.empty() ? "name" : path + ".name";
+      if (!j["name"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["name"].get_ref<const std::string&>();
+      }
+    }
+    if (j.contains("stackCost")) {
+      std::string fp = path.empty() ? "stackCost" : path + ".stackCost";
+      if (!j["stackCost"].is_number_integer()) {
+        result.add(fp, "Expected integer");
+      } else {
+        int64_t val = j["stackCost"].get<int64_t>();
+        if (val < 0) result.add(fp, "Value below minimum");
+      }
+    }
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "ItemComponent") result.add(fp, "Value does not match const");
+      }
+    }
+    return result;
+  }
+
+  static ItemComponent fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    ItemComponent obj;
+    if (j.contains("description")) {
+      obj.setDescription(j["description"].get<std::string>());
+    }
+    if (j.contains("iconAsset")) {
+      obj.setIconAsset(j["iconAsset"].get<std::string>());
+    }
+    if (j.contains("isUnique")) {
+      obj.setIsUnique(j["isUnique"].get<bool>());
+    }
+    if (j.contains("maxStackSize")) {
+      obj.setMaxStackSize(j["maxStackSize"].get<int64_t>());
+    }
+    if (j.contains("name")) {
+      obj.setName(j["name"].get<std::string>());
+    }
+    if (j.contains("stackCost")) {
+      obj.setStackCost(j["stackCost"].get<int64_t>());
+    }
+    obj.setType(j.at("type").get<std::string>());
+    return obj;
+  }
+
+  bool hasDescription() const { return description_.has_value(); }
+  const std::string& getDescription() const { return description_.value(); }
+  std::string& getDescription() { return description_.value(); }
+  void setDescription(const std::string& value) { description_ = value; }
+
+  bool hasIconAsset() const { return iconAsset_.has_value(); }
+  const std::string& getIconAsset() const { return iconAsset_.value(); }
+  std::string& getIconAsset() { return iconAsset_.value(); }
+  void setIconAsset(const std::string& value) { iconAsset_ = value; }
+
+  bool hasIsUnique() const { return isUnique_.has_value(); }
+  bool getIsUnique() const { return isUnique_.value(); }
+  void setIsUnique(bool value) { isUnique_ = value; }
+
+  bool hasMaxStackSize() const { return maxStackSize_.has_value(); }
+  int64_t getMaxStackSize() const { return maxStackSize_.value(); }
+  void setMaxStackSize(int64_t value) { maxStackSize_ = value; }
+
+  bool hasName() const { return name_.has_value(); }
+  const std::string& getName() const { return name_.value(); }
+  std::string& getName() { return name_.value(); }
+  void setName(const std::string& value) { name_ = value; }
+
+  bool hasStackCost() const { return stackCost_.has_value(); }
+  int64_t getStackCost() const { return stackCost_.value(); }
+  void setStackCost(int64_t value) { stackCost_ = value; }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+private:
+  std::optional<std::string> description_;
+  std::optional<std::string> iconAsset_;
+  std::optional<bool> isUnique_;
+  std::optional<int64_t> maxStackSize_;
+  std::optional<std::string> name_;
+  std::optional<int64_t> stackCost_;
+  std::string type_;
+};
+
+struct ItemsItem : public JsonValue {
+  struct Properties {
+    struct Count {
+      static const char* name() { return "count"; }
+      static constexpr bool required = false;
+      static constexpr int64_t minimum() { return 0; }
+    };
+    struct ItemEntityName {
+      static const char* name() { return "itemEntityName"; }
+      static constexpr bool required = false;
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (j.contains("count")) {
+      std::string fp = path.empty() ? "count" : path + ".count";
+      if (!j["count"].is_number_integer()) {
+        result.add(fp, "Expected integer");
+      } else {
+        int64_t val = j["count"].get<int64_t>();
+        if (val < 0) result.add(fp, "Value below minimum");
+      }
+    }
+    if (j.contains("itemEntityName")) {
+      std::string fp = path.empty() ? "itemEntityName" : path + ".itemEntityName";
+      if (!j["itemEntityName"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["itemEntityName"].get_ref<const std::string&>();
+      }
+    }
+    return result;
+  }
+
+  static ItemsItem fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    ItemsItem obj;
+    if (j.contains("count")) {
+      obj.setCount(j["count"].get<int64_t>());
+    }
+    if (j.contains("itemEntityName")) {
+      obj.setItemEntityName(j["itemEntityName"].get<std::string>());
+    }
+    return obj;
+  }
+
+  bool hasCount() const { return count_.has_value(); }
+  int64_t getCount() const { return count_.value(); }
+  void setCount(int64_t value) { count_ = value; }
+
+  bool hasItemEntityName() const { return itemEntityName_.has_value(); }
+  const std::string& getItemEntityName() const { return itemEntityName_.value(); }
+  std::string& getItemEntityName() { return itemEntityName_.value(); }
+  void setItemEntityName(const std::string& value) { itemEntityName_ = value; }
+
+private:
+  std::optional<int64_t> count_;
+  std::optional<std::string> itemEntityName_;
+};
+
+struct InventoryComponent : public JsonValue {
+  struct Properties {
+    struct Cols {
+      static const char* name() { return "cols"; }
+      static constexpr bool required = false;
+      static constexpr int64_t minimum() { return 0; }
+    };
+    struct Items {
+      static const char* name() { return "items"; }
+      static constexpr bool required = false;
+    };
+    struct Rows {
+      static const char* name() { return "rows"; }
+      static constexpr bool required = false;
+      static constexpr int64_t minimum() { return 0; }
+    };
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "InventoryComponent"; }
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("cols")) {
+      std::string fp = path.empty() ? "cols" : path + ".cols";
+      if (!j["cols"].is_number_integer()) {
+        result.add(fp, "Expected integer");
+      } else {
+        int64_t val = j["cols"].get<int64_t>();
+        if (val < 0) result.add(fp, "Value below minimum");
+      }
+    }
+    if (j.contains("items")) {
+      std::string fp = path.empty() ? "items" : path + ".items";
+      if (!j["items"].is_array()) {
+        result.add(fp, "Expected array");
+      } else {
+        const auto& arr = j["items"];
+        for (size_t i = 0; i < arr.size(); ++i) {
+          std::string ip = fp + "[" + std::to_string(i) + "]";
+          if (!arr[i].is_object()) result.add(ip, "Expected object");
+          else result.merge(ItemsItem::validate(arr[i], ip));
+        }
+      }
+    }
+    if (j.contains("rows")) {
+      std::string fp = path.empty() ? "rows" : path + ".rows";
+      if (!j["rows"].is_number_integer()) {
+        result.add(fp, "Expected integer");
+      } else {
+        int64_t val = j["rows"].get<int64_t>();
+        if (val < 0) result.add(fp, "Value below minimum");
+      }
+    }
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "InventoryComponent") result.add(fp, "Value does not match const");
+      }
+    }
+    return result;
+  }
+
+  static InventoryComponent fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    InventoryComponent obj;
+    if (j.contains("cols")) {
+      obj.setCols(j["cols"].get<int64_t>());
+    }
+    if (j.contains("items")) {
+      { std::vector<ItemsItem> items; for (const auto& e : j["items"]) items.push_back(ItemsItem::fromJson(e)); obj.setItems(items); }
+    }
+    if (j.contains("rows")) {
+      obj.setRows(j["rows"].get<int64_t>());
+    }
+    obj.setType(j.at("type").get<std::string>());
+    return obj;
+  }
+
+  bool hasCols() const { return cols_.has_value(); }
+  int64_t getCols() const { return cols_.value(); }
+  void setCols(int64_t value) { cols_ = value; }
+
+  bool hasItems() const { return items_.has_value(); }
+  const std::vector<ItemsItem>& getItems() const { return items_.value(); }
+  std::vector<ItemsItem>& getItems() { return items_.value(); }
+  void setItems(const std::vector<ItemsItem>& value) { items_ = value; }
+
+  bool hasRows() const { return rows_.has_value(); }
+  int64_t getRows() const { return rows_.value(); }
+  void setRows(int64_t value) { rows_ = value; }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+private:
+  std::optional<int64_t> cols_;
+  std::optional<std::vector<ItemsItem>> items_;
+  std::optional<int64_t> rows_;
+  std::string type_;
+};
+
+struct Padding : public JsonValue {
+  struct Properties {
+    struct X {
+      static const char* name() { return "x"; }
+      static constexpr bool required = false;
+    };
+    struct Y {
+      static const char* name() { return "y"; }
+      static constexpr bool required = false;
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (j.contains("x")) {
+      std::string fp = path.empty() ? "x" : path + ".x";
+      if (!j["x"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["x"].get<double>();
+      }
+    }
+    if (j.contains("y")) {
+      std::string fp = path.empty() ? "y" : path + ".y";
+      if (!j["y"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["y"].get<double>();
+      }
+    }
+    return result;
+  }
+
+  static Padding fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    Padding obj;
+    if (j.contains("x")) {
+      obj.setX(j["x"].get<double>());
+    }
+    if (j.contains("y")) {
+      obj.setY(j["y"].get<double>());
+    }
+    return obj;
+  }
+
+  bool hasX() const { return x_.has_value(); }
+  double getX() const { return x_.value(); }
+  void setX(double value) { x_ = value; }
+
+  bool hasY() const { return y_.has_value(); }
+  double getY() const { return y_.value(); }
+  void setY(double value) { y_ = value; }
+
+private:
+  std::optional<double> x_;
+  std::optional<double> y_;
+};
+
+struct InventoryViewComponent : public JsonValue {
+  struct Properties {
+    struct BorderColor {
+      static const char* name() { return "borderColor"; }
+      static constexpr bool required = false;
+      static constexpr size_t minItems() { return 4; }
+      static constexpr size_t maxItems() { return 4; }
+    };
+    struct DragHoverSlotColor {
+      static const char* name() { return "dragHoverSlotColor"; }
+      static constexpr bool required = false;
+      static constexpr size_t minItems() { return 4; }
+      static constexpr size_t maxItems() { return 4; }
+    };
+    struct EmptySlotColor {
+      static const char* name() { return "emptySlotColor"; }
+      static constexpr bool required = false;
+      static constexpr size_t minItems() { return 4; }
+      static constexpr size_t maxItems() { return 4; }
+    };
+    struct HoverSlotColor {
+      static const char* name() { return "hoverSlotColor"; }
+      static constexpr bool required = false;
+      static constexpr size_t minItems() { return 4; }
+      static constexpr size_t maxItems() { return 4; }
+    };
+    struct IsInteractable {
+      static const char* name() { return "isInteractable"; }
+      static constexpr bool required = false;
+    };
+    struct IsVisible {
+      static const char* name() { return "isVisible"; }
+      static constexpr bool required = false;
+    };
+    struct Name {
+      static const char* name() { return "name"; }
+      static constexpr bool required = false;
+    };
+    struct Padding {
+      static const char* name() { return "padding"; }
+      static constexpr bool required = false;
+    };
+    struct Pos {
+      static const char* name() { return "pos"; }
+      static constexpr bool required = false;
+    };
+    struct Rounding {
+      static const char* name() { return "rounding"; }
+      static constexpr bool required = false;
+    };
+    struct SlotSize {
+      static const char* name() { return "slotSize"; }
+      static constexpr bool required = false;
+    };
+    struct TextColor {
+      static const char* name() { return "textColor"; }
+      static constexpr bool required = false;
+      static constexpr size_t minItems() { return 4; }
+      static constexpr size_t maxItems() { return 4; }
+    };
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "InventoryViewComponent"; }
+    };
+    struct WindowBackgroundColor {
+      static const char* name() { return "windowBackgroundColor"; }
+      static constexpr bool required = false;
+      static constexpr size_t minItems() { return 4; }
+      static constexpr size_t maxItems() { return 4; }
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("borderColor")) {
+      std::string fp = path.empty() ? "borderColor" : path + ".borderColor";
+      if (!j["borderColor"].is_array()) {
+        result.add(fp, "Expected array");
+      } else {
+        const auto& arr = j["borderColor"];
+        if (arr.size() < 4) result.add(fp, "Array size below minItems 4");
+        if (arr.size() > 4) result.add(fp, "Array size above maxItems 4");
+        for (size_t i = 0; i < arr.size(); ++i) {
+          if (!arr[i].is_number_integer()) result.add(fp + "[" + std::to_string(i) + "]", "Expected integer");
+        }
+      }
+    }
+    if (j.contains("dragHoverSlotColor")) {
+      std::string fp = path.empty() ? "dragHoverSlotColor" : path + ".dragHoverSlotColor";
+      if (!j["dragHoverSlotColor"].is_array()) {
+        result.add(fp, "Expected array");
+      } else {
+        const auto& arr = j["dragHoverSlotColor"];
+        if (arr.size() < 4) result.add(fp, "Array size below minItems 4");
+        if (arr.size() > 4) result.add(fp, "Array size above maxItems 4");
+        for (size_t i = 0; i < arr.size(); ++i) {
+          if (!arr[i].is_number_integer()) result.add(fp + "[" + std::to_string(i) + "]", "Expected integer");
+        }
+      }
+    }
+    if (j.contains("emptySlotColor")) {
+      std::string fp = path.empty() ? "emptySlotColor" : path + ".emptySlotColor";
+      if (!j["emptySlotColor"].is_array()) {
+        result.add(fp, "Expected array");
+      } else {
+        const auto& arr = j["emptySlotColor"];
+        if (arr.size() < 4) result.add(fp, "Array size below minItems 4");
+        if (arr.size() > 4) result.add(fp, "Array size above maxItems 4");
+        for (size_t i = 0; i < arr.size(); ++i) {
+          if (!arr[i].is_number_integer()) result.add(fp + "[" + std::to_string(i) + "]", "Expected integer");
+        }
+      }
+    }
+    if (j.contains("hoverSlotColor")) {
+      std::string fp = path.empty() ? "hoverSlotColor" : path + ".hoverSlotColor";
+      if (!j["hoverSlotColor"].is_array()) {
+        result.add(fp, "Expected array");
+      } else {
+        const auto& arr = j["hoverSlotColor"];
+        if (arr.size() < 4) result.add(fp, "Array size below minItems 4");
+        if (arr.size() > 4) result.add(fp, "Array size above maxItems 4");
+        for (size_t i = 0; i < arr.size(); ++i) {
+          if (!arr[i].is_number_integer()) result.add(fp + "[" + std::to_string(i) + "]", "Expected integer");
+        }
+      }
+    }
+    if (j.contains("isInteractable")) {
+      std::string fp = path.empty() ? "isInteractable" : path + ".isInteractable";
+      if (!j["isInteractable"].is_boolean()) {
+        result.add(fp, "Expected boolean");
+      }
+    }
+    if (j.contains("isVisible")) {
+      std::string fp = path.empty() ? "isVisible" : path + ".isVisible";
+      if (!j["isVisible"].is_boolean()) {
+        result.add(fp, "Expected boolean");
+      }
+    }
+    if (j.contains("name")) {
+      std::string fp = path.empty() ? "name" : path + ".name";
+      if (!j["name"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["name"].get_ref<const std::string&>();
+      }
+    }
+    if (j.contains("padding")) {
+      std::string fp = path.empty() ? "padding" : path + ".padding";
+      if (!j["padding"].is_object()) {
+        result.add(fp, "Expected object");
+      } else {
+        result.merge(Padding::validate(j["padding"], fp));
+      }
+    }
+    if (j.contains("pos")) {
+      std::string fp = path.empty() ? "pos" : path + ".pos";
+      if (!j["pos"].is_object()) {
+        result.add(fp, "Expected object");
+      } else {
+        result.merge(Pos::validate(j["pos"], fp));
+      }
+    }
+    if (j.contains("rounding")) {
+      std::string fp = path.empty() ? "rounding" : path + ".rounding";
+      if (!j["rounding"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["rounding"].get<double>();
+      }
+    }
+    if (j.contains("slotSize")) {
+      std::string fp = path.empty() ? "slotSize" : path + ".slotSize";
+      if (!j["slotSize"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["slotSize"].get<double>();
+      }
+    }
+    if (j.contains("textColor")) {
+      std::string fp = path.empty() ? "textColor" : path + ".textColor";
+      if (!j["textColor"].is_array()) {
+        result.add(fp, "Expected array");
+      } else {
+        const auto& arr = j["textColor"];
+        if (arr.size() < 4) result.add(fp, "Array size below minItems 4");
+        if (arr.size() > 4) result.add(fp, "Array size above maxItems 4");
+        for (size_t i = 0; i < arr.size(); ++i) {
+          if (!arr[i].is_number_integer()) result.add(fp + "[" + std::to_string(i) + "]", "Expected integer");
+        }
+      }
+    }
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "InventoryViewComponent") result.add(fp, "Value does not match const");
+      }
+    }
+    if (j.contains("windowBackgroundColor")) {
+      std::string fp = path.empty() ? "windowBackgroundColor" : path + ".windowBackgroundColor";
+      if (!j["windowBackgroundColor"].is_array()) {
+        result.add(fp, "Expected array");
+      } else {
+        const auto& arr = j["windowBackgroundColor"];
+        if (arr.size() < 4) result.add(fp, "Array size below minItems 4");
+        if (arr.size() > 4) result.add(fp, "Array size above maxItems 4");
+        for (size_t i = 0; i < arr.size(); ++i) {
+          if (!arr[i].is_number_integer()) result.add(fp + "[" + std::to_string(i) + "]", "Expected integer");
+        }
+      }
+    }
+    return result;
+  }
+
+  static InventoryViewComponent fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    InventoryViewComponent obj;
+    if (j.contains("borderColor")) {
+      obj.setBorderColor(j["borderColor"].get<std::vector<int64_t>>());
+    }
+    if (j.contains("dragHoverSlotColor")) {
+      obj.setDragHoverSlotColor(j["dragHoverSlotColor"].get<std::vector<int64_t>>());
+    }
+    if (j.contains("emptySlotColor")) {
+      obj.setEmptySlotColor(j["emptySlotColor"].get<std::vector<int64_t>>());
+    }
+    if (j.contains("hoverSlotColor")) {
+      obj.setHoverSlotColor(j["hoverSlotColor"].get<std::vector<int64_t>>());
+    }
+    if (j.contains("isInteractable")) {
+      obj.setIsInteractable(j["isInteractable"].get<bool>());
+    }
+    if (j.contains("isVisible")) {
+      obj.setIsVisible(j["isVisible"].get<bool>());
+    }
+    if (j.contains("name")) {
+      obj.setName(j["name"].get<std::string>());
+    }
+    if (j.contains("padding")) {
+      obj.setPadding(Padding::fromJson(j["padding"]));
+    }
+    if (j.contains("pos")) {
+      obj.setPos(Pos::fromJson(j["pos"]));
+    }
+    if (j.contains("rounding")) {
+      obj.setRounding(j["rounding"].get<double>());
+    }
+    if (j.contains("slotSize")) {
+      obj.setSlotSize(j["slotSize"].get<double>());
+    }
+    if (j.contains("textColor")) {
+      obj.setTextColor(j["textColor"].get<std::vector<int64_t>>());
+    }
+    obj.setType(j.at("type").get<std::string>());
+    if (j.contains("windowBackgroundColor")) {
+      obj.setWindowBackgroundColor(j["windowBackgroundColor"].get<std::vector<int64_t>>());
+    }
+    return obj;
+  }
+
+  bool hasBorderColor() const { return borderColor_.has_value(); }
+  const std::vector<int64_t>& getBorderColor() const { return borderColor_.value(); }
+  std::vector<int64_t>& getBorderColor() { return borderColor_.value(); }
+  void setBorderColor(const std::vector<int64_t>& value) { borderColor_ = value; }
+
+  bool hasDragHoverSlotColor() const { return dragHoverSlotColor_.has_value(); }
+  const std::vector<int64_t>& getDragHoverSlotColor() const { return dragHoverSlotColor_.value(); }
+  std::vector<int64_t>& getDragHoverSlotColor() { return dragHoverSlotColor_.value(); }
+  void setDragHoverSlotColor(const std::vector<int64_t>& value) { dragHoverSlotColor_ = value; }
+
+  bool hasEmptySlotColor() const { return emptySlotColor_.has_value(); }
+  const std::vector<int64_t>& getEmptySlotColor() const { return emptySlotColor_.value(); }
+  std::vector<int64_t>& getEmptySlotColor() { return emptySlotColor_.value(); }
+  void setEmptySlotColor(const std::vector<int64_t>& value) { emptySlotColor_ = value; }
+
+  bool hasHoverSlotColor() const { return hoverSlotColor_.has_value(); }
+  const std::vector<int64_t>& getHoverSlotColor() const { return hoverSlotColor_.value(); }
+  std::vector<int64_t>& getHoverSlotColor() { return hoverSlotColor_.value(); }
+  void setHoverSlotColor(const std::vector<int64_t>& value) { hoverSlotColor_ = value; }
+
+  bool hasIsInteractable() const { return isInteractable_.has_value(); }
+  bool getIsInteractable() const { return isInteractable_.value(); }
+  void setIsInteractable(bool value) { isInteractable_ = value; }
+
+  bool hasIsVisible() const { return isVisible_.has_value(); }
+  bool getIsVisible() const { return isVisible_.value(); }
+  void setIsVisible(bool value) { isVisible_ = value; }
+
+  bool hasName() const { return name_.has_value(); }
+  const std::string& getName() const { return name_.value(); }
+  std::string& getName() { return name_.value(); }
+  void setName(const std::string& value) { name_ = value; }
+
+  bool hasPadding() const { return padding_.has_value(); }
+  const Padding& getPadding() const { return padding_.value(); }
+  Padding& getPadding() { return padding_.value(); }
+  void setPadding(const Padding& value) { padding_ = value; }
+
+  bool hasPos() const { return pos_.has_value(); }
+  const Pos& getPos() const { return pos_.value(); }
+  Pos& getPos() { return pos_.value(); }
+  void setPos(const Pos& value) { pos_ = value; }
+
+  bool hasRounding() const { return rounding_.has_value(); }
+  double getRounding() const { return rounding_.value(); }
+  void setRounding(double value) { rounding_ = value; }
+
+  bool hasSlotSize() const { return slotSize_.has_value(); }
+  double getSlotSize() const { return slotSize_.value(); }
+  void setSlotSize(double value) { slotSize_ = value; }
+
+  bool hasTextColor() const { return textColor_.has_value(); }
+  const std::vector<int64_t>& getTextColor() const { return textColor_.value(); }
+  std::vector<int64_t>& getTextColor() { return textColor_.value(); }
+  void setTextColor(const std::vector<int64_t>& value) { textColor_ = value; }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+  bool hasWindowBackgroundColor() const { return windowBackgroundColor_.has_value(); }
+  const std::vector<int64_t>& getWindowBackgroundColor() const { return windowBackgroundColor_.value(); }
+  std::vector<int64_t>& getWindowBackgroundColor() { return windowBackgroundColor_.value(); }
+  void setWindowBackgroundColor(const std::vector<int64_t>& value) { windowBackgroundColor_ = value; }
+
+private:
+  std::optional<std::vector<int64_t>> borderColor_;
+  std::optional<std::vector<int64_t>> dragHoverSlotColor_;
+  std::optional<std::vector<int64_t>> emptySlotColor_;
+  std::optional<std::vector<int64_t>> hoverSlotColor_;
+  std::optional<bool> isInteractable_;
+  std::optional<bool> isVisible_;
+  std::optional<std::string> name_;
+  std::optional<Padding> padding_;
+  std::optional<Pos> pos_;
+  std::optional<double> rounding_;
+  std::optional<double> slotSize_;
+  std::optional<std::vector<int64_t>> textColor_;
+  std::string type_;
+  std::optional<std::vector<int64_t>> windowBackgroundColor_;
+};
+
 struct ComponentsItem : public JsonValue {
-  using Variant = std::variant<TransformComponent, SpriteComponent, SeekPrimaryTargetTag, HealthComponent, ContactDamageComponent, BodyComponent, TileComponent, ArrowComponent, MultiTileComponent, TurretComponent>;
+  using Variant = std::variant<TransformComponent, SpriteComponent, CameraComponent, SeekPrimaryTargetTag, PrimaryTargetTag, WorldMapTag, HealthComponent, ContactDamageComponent, BulletDamageComponent, LifetimeComponent, PlayerComponent, BodyComponent, TileComponent, ArrowComponent, MultiTileComponent, TurretComponent, SpawnerComponent, CircleRenderComponent, RectangleRenderComponent, ItemComponent, InventoryComponent, InventoryViewComponent>;
 
   static ValidationResult validate(const json& j, const std::string& path = "") {
     ValidationResult result;
@@ -1623,14 +3781,26 @@ struct ComponentsItem : public JsonValue {
     const auto& disc = j["type"].get_ref<const std::string&>();
     if (disc == "TransformComponent") return TransformComponent::validate(j, path);
     else if (disc == "SpriteComponent") return SpriteComponent::validate(j, path);
+    else if (disc == "CameraComponent") return CameraComponent::validate(j, path);
     else if (disc == "SeekPrimaryTargetTag") return SeekPrimaryTargetTag::validate(j, path);
+    else if (disc == "PrimaryTargetTag") return PrimaryTargetTag::validate(j, path);
+    else if (disc == "WorldMapTag") return WorldMapTag::validate(j, path);
     else if (disc == "HealthComponent") return HealthComponent::validate(j, path);
     else if (disc == "ContactDamageComponent") return ContactDamageComponent::validate(j, path);
+    else if (disc == "BulletDamageComponent") return BulletDamageComponent::validate(j, path);
+    else if (disc == "LifetimeComponent") return LifetimeComponent::validate(j, path);
+    else if (disc == "PlayerComponent") return PlayerComponent::validate(j, path);
     else if (disc == "BodyComponent") return BodyComponent::validate(j, path);
     else if (disc == "TileComponent") return TileComponent::validate(j, path);
     else if (disc == "ArrowComponent") return ArrowComponent::validate(j, path);
     else if (disc == "MultiTileComponent") return MultiTileComponent::validate(j, path);
     else if (disc == "TurretComponent") return TurretComponent::validate(j, path);
+    else if (disc == "SpawnerComponent") return SpawnerComponent::validate(j, path);
+    else if (disc == "CircleRenderComponent") return CircleRenderComponent::validate(j, path);
+    else if (disc == "RectangleRenderComponent") return RectangleRenderComponent::validate(j, path);
+    else if (disc == "ItemComponent") return ItemComponent::validate(j, path);
+    else if (disc == "InventoryComponent") return InventoryComponent::validate(j, path);
+    else if (disc == "InventoryViewComponent") return InventoryViewComponent::validate(j, path);
     else result.add(path.empty() ? "type" : path + ".type", "Unknown discriminator value '" + disc + "'");
     return result;
   }
@@ -1642,14 +3812,26 @@ struct ComponentsItem : public JsonValue {
     const auto& disc = j["type"].get_ref<const std::string&>();
     if (disc == "TransformComponent") obj.variant_ = TransformComponent::fromJson(j);
     else if (disc == "SpriteComponent") obj.variant_ = SpriteComponent::fromJson(j);
+    else if (disc == "CameraComponent") obj.variant_ = CameraComponent::fromJson(j);
     else if (disc == "SeekPrimaryTargetTag") obj.variant_ = SeekPrimaryTargetTag::fromJson(j);
+    else if (disc == "PrimaryTargetTag") obj.variant_ = PrimaryTargetTag::fromJson(j);
+    else if (disc == "WorldMapTag") obj.variant_ = WorldMapTag::fromJson(j);
     else if (disc == "HealthComponent") obj.variant_ = HealthComponent::fromJson(j);
     else if (disc == "ContactDamageComponent") obj.variant_ = ContactDamageComponent::fromJson(j);
+    else if (disc == "BulletDamageComponent") obj.variant_ = BulletDamageComponent::fromJson(j);
+    else if (disc == "LifetimeComponent") obj.variant_ = LifetimeComponent::fromJson(j);
+    else if (disc == "PlayerComponent") obj.variant_ = PlayerComponent::fromJson(j);
     else if (disc == "BodyComponent") obj.variant_ = BodyComponent::fromJson(j);
     else if (disc == "TileComponent") obj.variant_ = TileComponent::fromJson(j);
     else if (disc == "ArrowComponent") obj.variant_ = ArrowComponent::fromJson(j);
     else if (disc == "MultiTileComponent") obj.variant_ = MultiTileComponent::fromJson(j);
     else if (disc == "TurretComponent") obj.variant_ = TurretComponent::fromJson(j);
+    else if (disc == "SpawnerComponent") obj.variant_ = SpawnerComponent::fromJson(j);
+    else if (disc == "CircleRenderComponent") obj.variant_ = CircleRenderComponent::fromJson(j);
+    else if (disc == "RectangleRenderComponent") obj.variant_ = RectangleRenderComponent::fromJson(j);
+    else if (disc == "ItemComponent") obj.variant_ = ItemComponent::fromJson(j);
+    else if (disc == "InventoryComponent") obj.variant_ = InventoryComponent::fromJson(j);
+    else if (disc == "InventoryViewComponent") obj.variant_ = InventoryViewComponent::fromJson(j);
     return obj;
   }
 

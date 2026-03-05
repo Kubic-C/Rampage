@@ -157,17 +157,18 @@ void BodyComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id
   }
 }
 
-b2BodyType convertJSONToBodyType(const json& maskJson) {
+b2BodyType convertJSONToBodyType(const std::string& typeStr) {
   static const std::unordered_map<std::string, b2BodyType> bodyTypeMapping = {
       {"dynamic", b2_dynamicBody}, {"static", b2_staticBody}, {"kinematic", b2_kinematicBody}};
 
-  return bodyTypeMapping.at(maskJson.get<std::string>());
+  return bodyTypeMapping.at(typeStr);
 }
   
-void BodyComponent::fromJson(Ref component, AssetLoader loader, const json& jsonData) {
+void BodyComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
   EntityPtr entity = component.getEntity();
   b2WorldId world = component.getWorld()->getContext<b2WorldId>();
   auto body = component.cast<BodyComponent>();
+  auto compJson = jsonValue.as<JSchema::BodyComponent>();
 
   // Create body definition
   b2BodyDef bodyDef = b2DefaultBodyDef();
@@ -178,23 +179,23 @@ void BodyComponent::fromJson(Ref component, AssetLoader loader, const json& json
   bodyDef.angularVelocity = 0.0f;
   
   // Set body type (dynamic=1, kinematic=2, static=0)
-  if (jsonData.contains("bodyType")) {
-    bodyDef.type = convertJSONToBodyType(jsonData["bodyType"]);
+  if (compJson->hasBodyType()) {
+    bodyDef.type = convertJSONToBodyType(compJson->getBodyType());
   } else {
     bodyDef.type = b2_dynamicBody;
   }
 
   // Set body properties
-  if (jsonData.contains("linearDamping"))
-    bodyDef.linearDamping = jsonData["linearDamping"].get<float>();
-  if (jsonData.contains("angularDamping"))
-    bodyDef.angularDamping = jsonData["angularDamping"].get<float>();
-  if (jsonData.contains("gravityScale"))
-    bodyDef.gravityScale = jsonData["gravityScale"].get<float>();
-  if (jsonData.contains("isBullet"))
-    bodyDef.isBullet = jsonData["isBullet"].get<bool>();
-  if (jsonData.contains("enableSleep"))
-    bodyDef.enableSleep = jsonData["enableSleep"].get<bool>();
+  if (compJson->hasLinearDamping())
+    bodyDef.linearDamping = compJson->getLinearDamping();
+  if (compJson->hasAngularDamping())
+    bodyDef.angularDamping = compJson->getAngularDamping();
+  if (compJson->hasGravityScale())
+    bodyDef.gravityScale = compJson->getGravityScale();
+  if (compJson->hasIsBullet())
+    bodyDef.isBullet = compJson->getIsBullet();
+  if (compJson->hasEnableSleep())
+    bodyDef.enableSleep = compJson->getEnableSleep();
 
   // Position from transform if available
   if (entity.has<TransformComponent>()) {
@@ -207,63 +208,59 @@ void BodyComponent::fromJson(Ref component, AssetLoader loader, const json& json
   body->id = b2CreateBody(world, &bodyDef);
 
   // Add shapes if provided
-  if (jsonData.contains("shapes") && jsonData["shapes"].is_array()) {
-    for (const auto& shapeJson : jsonData["shapes"]) {
-      addShapeFromJson(body->id, shapeJson);
+  if (compJson->hasShapes()) {
+    for (const auto& shapeItem : compJson->getShapes()) {
+      addShapeFromJson(body->id, shapeItem);
     }
   }
 }
 
-void BodyComponent::addShapeFromJson(b2BodyId bodyId, const json& shapeJson) {
+void BodyComponent::addShapeFromJson(b2BodyId bodyId, const JSchema::ShapesItem& shapeJson) {
   b2ShapeDef shapeDef = b2DefaultShapeDef();
 
   // Parse shape definition
-  if (shapeJson.contains("enableContactEvents"))
-    shapeDef.enableContactEvents = shapeJson["enableContactEvents"].get<bool>();
-  if (shapeJson.contains("enableSensorEvents"))
-    shapeDef.enableSensorEvents = shapeJson["enableSensorEvents"].get<bool>();
-  if (shapeJson.contains("density"))
-    shapeDef.density = shapeJson["density"].get<float>();
-  if (shapeJson.contains("friction"))
-    shapeDef.material.friction = shapeJson["friction"].get<float>();
-  if (shapeJson.contains("restitution"))
-    shapeDef.material.restitution = shapeJson["restitution"].get<float>();
-  if (shapeJson.contains("isSensor"))
-    shapeDef.isSensor = shapeJson["isSensor"].get<bool>();
+  if (shapeJson.hasEnableContactEvents())
+    shapeDef.enableContactEvents = shapeJson.getEnableContactEvents();
+  if (shapeJson.hasEnableSensorEvents())
+    shapeDef.enableSensorEvents = shapeJson.getEnableSensorEvents();
+  if (shapeJson.hasDensity())
+    shapeDef.density = shapeJson.getDensity();
+  if (shapeJson.hasFriction())
+    shapeDef.material.friction = shapeJson.getFriction();
+  if (shapeJson.hasRestitution())
+    shapeDef.material.restitution = shapeJson.getRestitution();
+  if (shapeJson.hasIsSensor())
+    shapeDef.isSensor = shapeJson.getIsSensor();
 
   // Convert and apply category/collision masks
-  if (shapeJson.contains("categoryMask")) {
-    shapeDef.filter.categoryBits = convertCategoryMaskToBits(shapeJson["categoryMask"]);
+  if (shapeJson.hasCategoryMask()) {
+    shapeDef.filter.categoryBits = convertCategoryMaskToBits(shapeJson.getCategoryMask());
   }
-  if (shapeJson.contains("collisionMask")) {
-    shapeDef.filter.maskBits = convertCategoryMaskToBits(shapeJson["collisionMask"]);
+  if (shapeJson.hasCollisionMask()) {
+    shapeDef.filter.maskBits = convertCategoryMaskToBits(shapeJson.getCollisionMask());
   }
 
   // Parse and create shape variant
-  if (shapeJson.contains("shape")) {
-    const auto& shapeDefJson = shapeJson["shape"];
-    std::string shapeType = shapeDefJson.value("shapeType", "unknown");
+  if (shapeJson.hasShape()) {
+    const auto& shapeDef2 = shapeJson.getShape();
+    const std::string& shapeType = shapeDef2.getShapeType();
 
     if (shapeType == "Circle") {
       b2Circle circle{0};
-      if (shapeDefJson.contains("radius"))
-        circle.radius = shapeDefJson["radius"].get<float>();
+      if (shapeDef2.hasRadius())
+        circle.radius = shapeDef2.getRadius();
       b2CreateCircleShape(bodyId, &shapeDef, &circle);
     } else if (shapeType == "Polygon") {
       b2Polygon polygon;
-      if (shapeDefJson.contains("vertices")) {
-        const auto& vertices = shapeDefJson["vertices"];
-        if (vertices.is_array() && vertices.size() <= 8) {
-          std::vector<b2Vec2> verts;
-          for (const auto& vert : vertices)
-            verts.push_back(b2Vec2{vert["x"].get<float>(), vert["y"].get<float>()});
-
-          size_t size = std::min((size_t)B2_MAX_POLYGON_VERTICES, verts.size());
-          b2Vec2 vertices[B2_MAX_POLYGON_VERTICES];
+      if (shapeDef2.hasVertices()) {
+        const auto& vertices = shapeDef2.getVertices();
+        if (vertices.size() <= 8) {
+          size_t size = std::min((size_t)B2_MAX_POLYGON_VERTICES, vertices.size());
+          b2Vec2 verts[B2_MAX_POLYGON_VERTICES];
           for (size_t i = 0; i < size; ++i)
-            vertices[i] = verts[i];
+            verts[i] = b2Vec2{(float)vertices[i].getX(), (float)vertices[i].getY()};
 
-          b2Hull hull = b2ComputeHull(vertices, size);
+          b2Hull hull = b2ComputeHull(verts, size);
           b2Polygon poly = b2MakePolygon(&hull, 0.0f); 
         }
       }
@@ -338,18 +335,15 @@ void BodyComponent::copy(Ref src, Ref dst) {
   }
 }
 
-uint64_t BodyComponent::convertCategoryMaskToBits(const json& maskJson) {
+uint64_t BodyComponent::convertCategoryMaskToBits(const std::vector<std::string>& masks) {
   static const std::unordered_map<std::string, uint64_t> categoryMapping{
       {"Friendly", Friendly}, {"Enemy", Enemy}, {"Static", Static}, {"All", All}};
 
   uint64_t bitmask = 0;
-  if (maskJson.is_array()) {
-    for (const auto& category : maskJson) {
-      std::string catStr = category.get<std::string>();
-      auto it = categoryMapping.find(catStr);
-      if (it != categoryMapping.end()) {
-        bitmask |= it->second;
-      }
+  for (const auto& catStr : masks) {
+    auto it = categoryMapping.find(catStr);
+    if (it != categoryMapping.end()) {
+      bitmask |= it->second;
     }
   }
   return bitmask;

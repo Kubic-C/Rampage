@@ -29,29 +29,29 @@ void CircleRenderComponent::deserialize(capnp::MessageReader& reader, const IdMa
   circle->color.b = circleReader.getColor().getZ();
 }
 
-void CircleRenderComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
+void CircleRenderComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
   auto self = component.cast<CircleRenderComponent>();
-  if (compJson.contains("radius") && compJson["radius"].is_number()) {
-    self->radius = compJson["radius"];
+  auto compJson = jsonValue.as<JSchema::CircleRenderComponent>();
+
+  if (compJson->hasRadius())
+    self->radius = compJson->getRadius();
+  if (compJson->hasOffset()) {
+    auto offsetJson = compJson->getOffset();
+    if (offsetJson.hasX())
+      self->offset.x = offsetJson.getX();
+    if (offsetJson.hasY())
+      self->offset.y = offsetJson.getY();
   }
-  if (compJson.contains("offset") && compJson["offset"].is_object()) {
-    json offsetJson = compJson["offset"];
-    if (offsetJson.contains("x") && offsetJson["x"].is_number())
-      self->offset.x = offsetJson["x"];
-    if (offsetJson.contains("y") && offsetJson["y"].is_number())
-      self->offset.y = offsetJson["y"];
-  }
-  if (compJson.contains("z") && compJson["z"].is_number()) {
-    self->z = compJson["z"];
-  }
-  if (compJson.contains("color") && compJson["color"].is_object()) {
-    json colorJson = compJson["color"];
-    if (colorJson.contains("r") && colorJson["r"].is_number())
-      self->color.r = colorJson["r"];
-    if (colorJson.contains("g") && colorJson["g"].is_number())
-      self->color.g = colorJson["g"];
-    if (colorJson.contains("b") && colorJson["b"].is_number())
-      self->color.b = colorJson["b"];
+  if (compJson->hasZ())
+    self->z = compJson->getZ();
+  if (compJson->hasColor()) {
+    auto colorJson = compJson->getColor();
+    if (colorJson.hasR())
+      self->color.r = colorJson.getR();
+    if (colorJson.hasG())
+      self->color.g = colorJson.getG();
+    if (colorJson.hasB())
+      self->color.b = colorJson.getB();
   }
 }
 
@@ -80,25 +80,24 @@ void RectangleRenderComponent::deserialize(capnp::MessageReader& reader, const I
   rect->color.b = rectReader.getColor().getZ();
 }
 
-void RectangleRenderComponent::fromJson(Ref component, AssetLoader loader, const json& compJson) {
+void RectangleRenderComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
   auto self = component.cast<RectangleRenderComponent>();
-  if (compJson.contains("hw") && compJson["hw"].is_number()) {
-    self->hw = compJson["hw"];
-  }
-  if (compJson.contains("hh") && compJson["hh"].is_number()) {
-    self->hh = compJson["hh"];
-  }
-  if (compJson.contains("z") && compJson["z"].is_number()) {
-    self->z = compJson["z"];
-  }
-  if (compJson.contains("color") && compJson["color"].is_object()) {
-    json colorJson = compJson["color"];
-    if (colorJson.contains("r") && colorJson["r"].is_number())
-      self->color.r = colorJson["r"];
-    if (colorJson.contains("g") && colorJson["g"].is_number())
-      self->color.g = colorJson["g"];
-    if (colorJson.contains("b") && colorJson["b"].is_number())
-      self->color.b = colorJson["b"];
+  auto compJson = jsonValue.as<JSchema::RectangleRenderComponent>();
+
+  if (compJson->hasHw())
+    self->hw = compJson->getHw();
+  if (compJson->hasHh())
+    self->hh = compJson->getHh();
+  if (compJson->hasZ())
+    self->z = compJson->getZ();
+  if (compJson->hasColor()) {
+    auto colorJson = compJson->getColor();
+    if (colorJson.hasR())
+      self->color.r = colorJson.getR();
+    if (colorJson.hasG())
+      self->color.g = colorJson.getG();
+    if (colorJson.hasB())
+      self->color.b = colorJson.getB();
   }
 }
 

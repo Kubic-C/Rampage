@@ -96,6 +96,9 @@ void SchemaCompiler::collectTypes(const SchemaType& schema,
     }
     // Add the union wrapper itself
     std::string name = schema.title ? toPascalCase(*schema.title) : toPascalCase(ctx);
+    for (const auto& existing : out) {
+      if (existing.name == name) return;
+    }
     out.push_back({name, obj.get(), &schema});
     return;
   }
@@ -111,6 +114,11 @@ void SchemaCompiler::collectTypes(const SchemaType& schema,
   }
 
   std::string name = schema.title ? toPascalCase(*schema.title) : toPascalCase(ctx);
+
+  // Skip if a type with this name was already collected (shared sub-objects)
+  for (const auto& existing : out) {
+    if (existing.name == name) return;
+  }
   out.push_back({name, obj.get(), &schema});
 }
 

@@ -7,7 +7,7 @@ RAMPAGE_START
 struct TurretComponent {
   static void serialize(capnp::MessageBuilder& builder, Ref component);
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
-  static void fromJson(Ref component, AssetLoader loader, const json& compJson);
+  static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
 
   EntityId summon = 0; /* Currently unused, will be used later. */
   float fireRate = 1; // Per second

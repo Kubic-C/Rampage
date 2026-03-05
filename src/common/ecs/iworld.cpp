@@ -10,6 +10,6 @@ void SerializableTag::serialize(capnp::MessageBuilder& builder, Ref component) {
 
 void SerializableTag::deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component) {}
 
-void JsonableTag::fromJson(Ref component, AssetLoader loader, const json& compJson) {}
+void JsonableTag::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson) {}
 
 RAMPAGE_END

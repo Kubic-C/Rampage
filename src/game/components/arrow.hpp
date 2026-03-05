@@ -27,22 +27,23 @@ struct ArrowComponent {
     arrow->tileCost    = arrowReader.getTileCost();
   }
 
-  static void fromJson(Ref component, AssetLoader loader, const json& compJson) {
+  static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
     auto arrow = component.cast<ArrowComponent>();
+    auto compJson = jsonValue.as<JSchema::ArrowComponent>();
 
-    if(compJson.contains("dir") && compJson["dir"].is_object()) {
-      json dirJson = compJson["dir"];
-      if(dirJson.contains("x") && dirJson["x"].is_number())
-        arrow->dir.x = dirJson["x"];
-      if(dirJson.contains("y") && dirJson["y"].is_number())
-        arrow->dir.y = dirJson["y"];
+    if(compJson->hasDir()) {
+      auto dirJson = compJson->getDir();
+      if(dirJson.hasX())
+        arrow->dir.x = dirJson.getX();
+      if(dirJson.hasY())
+        arrow->dir.y = dirJson.getY();
     }
-    if(compJson.contains("cost") && compJson["cost"].is_number())
-      arrow->cost = compJson["cost"];
-    if(compJson.contains("generation") && compJson["generation"].is_number_unsigned())
-      arrow->generation = compJson["generation"];
-    if(compJson.contains("tileCost") && compJson["tileCost"].is_number_unsigned())
-      arrow->tileCost = compJson["tileCost"];
+    if(compJson->hasCost())
+      arrow->cost = compJson->getCost();
+    if(compJson->hasGeneration())
+      arrow->generation = compJson->getGeneration();
+    if(compJson->hasTileCost())
+      arrow->tileCost = compJson->getTileCost();
   }
 
   // Normalized vector

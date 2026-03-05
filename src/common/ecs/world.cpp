@@ -12,46 +12,22 @@ RAMPAGE_START
 
 class AssetLoaderImpl : public IAssetLoaderImpl {
   using JSONTypeHandlerFunc = std::function<bool(IWorldPtr world, const std::string_view& name, const json& json)>;
-public:
-  AssetLoaderImpl() {
-    m_jsonHandlers["Entity"] = 
-    [&](IWorldPtr world, const std::string_view& name, const json& entityJson) {
-      EntityPtr entity = world->getAssetLoader().createAsset(std::string(name));
 
-      if(!entityJson.contains("components")) {
-        world->getHost().log("<bgRed>Asset '%s' is missing 'components' field or 'components' is not an array in asset string<reset>\n", name.data());
-        return false;
-      }
-      json componentList = entityJson["components"];
-      if(!componentList.is_array()) {
-        world->getHost().log("<bgRed>Asset '%s' has 'components' field that is not an array in asset string<reset>\n", name.data());
-        return false;
-      }
-
-      for(json componentJson : componentList) {
-        if(!componentJson.is_object()) {
-          world->getHost().log("<bgRed>Asset '%s' has non-object entry in 'components' array in asset string<reset>\n", name.data());
-          return false;
-        }
-        if(!componentJson.contains("type") || !componentJson["type"].is_string()) {
-          world->getHost().log("<bgRed>Asset '%s' has component with missing 'type' field or 'type' is not a string in asset string<reset>\n", name.data());
-          return false;
-        }
-        std::string type = componentJson["type"];
-        if(!m_componentJsonHandlers.contains(type)) {
-          world->getHost().log("<bgRed>Asset '%s' has component with unregistered type '%s' in asset string<reset>\n", name.data(), type.c_str());
-          return false;
-        }
-        ComponentId compId = m_componentJsonHandlers[type].compId;
-
-        entity.add(compId);
-        m_componentJsonHandlers[type].fromJsonFunc(entity.get(compId), AssetLoader(world, *this), componentJson);
-      }
-
-      return true;
-    };
+  // Build a compile-time map from JSchema variant type names to their indices.
+  template <typename Variant, size_t... Is>
+  static auto buildNameToIndexMap(std::index_sequence<Is...>) {
+    OpenMap<std::string_view, size_t> map;
+    ((map[std::variant_alternative_t<Is, Variant>::Properties::Type::constValue()] = Is), ...);
+    return map;
   }
 
+  static const OpenMap<std::string_view, size_t>& schemaNameToIndex() {
+    using V = JSchema::ComponentsItem::Variant;
+    static const auto map = buildNameToIndexMap<V>(std::make_index_sequence<std::variant_size_v<V>>{});
+    return map;
+  }
+
+public:
   virtual ~AssetLoaderImpl() = default;
 
   virtual EntityPtr createAsset(IWorldPtr world, const std::string& name) override {
@@ -76,40 +52,48 @@ public:
   }
 
   bool loadAssetsFromString(IWorldPtr world, const std::string& string) override {
-    json assetList = json::parse(string, nullptr, false, true);
-    if (assetList.is_discarded()) {
-      world->getHost().log("<bgRed>Failed to parse JSON from asset string: %s<reset>", string.c_str());
-      return false;
-    }
-    if(!assetList.is_array()) {
-      world->getHost().log("<bgRed>Expected JSON array in asset string: %s<reset>", string.c_str());
+    IHost& host = world->getHost();
+
+    json jsonAssets;
+    try {
+      jsonAssets = json::parse(string, nullptr, false, true);
+      host.log("Successfully parsed JSON\n");
+    } catch (const json::parse_error& e) {
+      host.log("<bgRed>JSON Parse Error:<reset>\n");
+      host.log("  Message: %s\n", e.what());
+      host.log("  Byte: %d\n", e.byte);
       return false;
     }
 
-    for(json object : assetList) {
-      if(!object.is_object()) {
-        world->getHost().log("<bgRed>Expected JSON object in asset array: %s<reset>", string.c_str());
-        continue;
+    for (size_t i = 0; i < jsonAssets.size(); ++i) {
+      auto validationResult = JSchema::Root::validate(jsonAssets[i]);
+      if (!validationResult.valid()) {
+        host.log("<bgRed>Validation failed for entity at index %d:<reset>", (int)i);
+        for (const auto& error : validationResult.errors) {
+            host.log("  %s: %s", error.path.c_str(), error.message.c_str());
+        }
+        return false;
       }
-      if(!object.contains("name") || !object["name"].is_string()) {
-        world->getHost().log("<bgRed>Asset missing 'name' field or 'name' is not a string: %s<reset>", string.c_str());
-        continue;
-      }
-      std::string name = object["name"];
-      if(m_assetsByName.contains(name)) {
-        world->getHost().log("<bgRed>Duplicate asset name '%s' in asset string: %s<reset>", name.c_str(), string.c_str());
-        continue;
-      }
-      json data = object["data"];
-      std::string type = data["type"];
-      if(!m_jsonHandlers.contains(type)) {
-        world->getHost().log("<bgRed>No JSON handler registered for type '%s' in asset string: %s<reset>", type.c_str(), string.c_str());
-        continue;
-      }
+    }
 
-      if(!m_jsonHandlers[type](world, std::string(name), data)) {
-        world->getHost().log("<bgRed>JSON handler for type '%s' failed to load asset '%s' in asset string: %s<reset>", type.c_str(), name.c_str(), string.c_str());
-        continue;
+    for (size_t i = 0; i < jsonAssets.size(); ++i) {
+      auto root = JSchema::Root::fromJson(jsonAssets[i]);
+
+      EntityPtr asset = createAsset(world, root.getName());
+
+      const auto& components = root.getData().getComponents();
+      for (const auto& compItem : components) {
+        size_t variantIdx = compItem.variant().index();
+        auto handlerIt = m_componentJsonHandlers.find(variantIdx);
+        if (handlerIt != m_componentJsonHandlers.end()) {
+          auto& handler = handlerIt->second;
+          std::visit([&](const auto& schemaComp) {
+            asset.add(handler.compId);
+            handler.fromJsonFunc(asset.get(handler.compId), AssetLoader(world, *this), schemaComp);
+          }, compItem.variant());
+        } else {
+          host.log("<bgYellow>Warning: No handler registered for component variant index %zu<reset>", variantIdx);
+        }
       }
     }
 
@@ -133,7 +117,12 @@ public:
   }
   
   void registerComponent(IWorldPtr world, ComponentId compId, FromJsonFunc fromJsonFunc) override {
-    m_componentJsonHandlers[std::string(world->nameOf(compId))] = { compId, fromJsonFunc };
+    std::string_view name = world->nameOf(compId);
+    const auto& nameMap = schemaNameToIndex();
+    auto it = nameMap.find(name);
+    if (it != nameMap.end()) {
+      m_componentJsonHandlers[it->second] = { compId, fromJsonFunc };
+    }
   }
 
 private:
@@ -146,8 +135,8 @@ private:
     FromJsonFunc fromJsonFunc;
   };
 
-  OpenMap<std::string, ComponentJsonHandler> m_componentJsonHandlers;
-  OpenMap<std::string, JSONTypeHandlerFunc> m_jsonHandlers;
+  // Variant index -> Handler
+  OpenMap<size_t, ComponentJsonHandler> m_componentJsonHandlers;
 };
 
 class SetIterator {

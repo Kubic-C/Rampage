@@ -37,7 +37,7 @@ struct SpriteLayer {
 struct SpriteComponent {
   static void serialize(capnp::MessageBuilder& builder, Ref component);
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
-  static void fromJson(Ref component, AssetLoader loader, const json& compJson);
+  static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
 
   struct SubSprite {
     static constexpr size_t MaxSpriteLayers = maxNumberBits(3);
