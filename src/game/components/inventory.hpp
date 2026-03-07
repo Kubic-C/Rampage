@@ -1,56 +1,14 @@
 #pragma once
 
 #include "../../common/common.hpp"
+#include "items.hpp"
 
 RAMPAGE_START
 
+struct ItemRecieverComponent {
 
-struct ItemDroppedTag : SerializableTag, JsonableTag  {};
-struct ItemPlacedTag : SerializableTag, JsonableTag {};
-
-struct ItemPlaceableComponent {
-  static void serialize(capnp::MessageBuilder& builder, Ref component);
-  static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
-  static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
-
-  EntityId entityId = 0; // The entity that will be placed when this item is used
 };
 
-/**
- * ItemComponent - Attached to item entities (stackable or unique)
- * For stackable items: single entity shared across multiple stacks
- * For unique items: each has its own entity with this component
- */
-struct ItemComponent {
-  static void serialize(capnp::MessageBuilder& builder, Ref component);
-  static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
-  static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
-
-  std::string name;
-  std::string description;
-  u32 maxStackSize = 64;      // Max items per stack (only for non-unique)
-  u32 stackCost = 1;          // Weight/cost per item
-  bool isUnique = false;      // If true, each instance is a separate entity
-  tgui::Texture icon;         // UI icon for rendering
-
-  size_t getTotalStackCost(size_t count) const {
-    return stackCost * count;
-  }
-};
-
-/**
- * ItemStack - Represents one slot in an inventory
- * References an item entity and holds a count
- * If item has ItemUnique flag, count is always 1
- */
-struct ItemStackComponent {
-  static void serialize(capnp::MessageBuilder& builder, Ref component);
-  static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
-  static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
-
-  u32 count = 0;        // How many of this item in this slot
-  EntityId itemId = 0;  // Entity ID of the item type (or unique instance)
-};
 
 /**
  * InventoryComponent - Attached to inventory entities
@@ -100,7 +58,7 @@ struct InventoryViewComponent {
   tgui::Color hoverSlotColor = tgui::Color(200, 100, 100, 200);
   tgui::Color dragHoverSlotColor = tgui::Color(100, 200, 100, 200);
 
-  void update(EntityPtr inventoryEntity, tgui::Gui& gui);
+  static void update(EntityPtr inventoryEntity, tgui::Gui& gui);
 
 private:
   tgui::ChildWindow::Ptr window;
@@ -116,8 +74,8 @@ private:
   tgui::Label::Ptr tooltipUnique;
 
   // Track grid size changes to rebuild UI when inventory dimensions change
-  u32 prevVisualChecksum;
-  EntityId inventoryEntityId; // The entity this view is representing (for drag/drop)
+  u32 prevVisualChecksum = 0;
+  EntityId inventoryEntityId = 0; // The entity this view is representing (for drag/drop)
 
   // Drag and drop state (static = global drag state, only one drag at a time)
   static bool isDragging;
@@ -126,29 +84,29 @@ private:
   static bool wasMouseButtonPressedLastFrame;  // Track previous frame mouse state for outside-release detection
 
   // Checksum is based off visual config and inventory size - if it changes, we need to rebuild the UI
-  u32 calculateVisualChecksum(u32 sizeX, u32 sizeY) const;
-  bool hasVisualConfigChanged(u32 sizeX, u32 sizeY, u32 previousChecksum) const;
+  static u32 calculateVisualChecksum(const InventoryViewComponent& self, u32 sizeX, u32 sizeY);
+  static bool hasVisualConfigChanged(const InventoryViewComponent& self, u32 sizeX, u32 sizeY, u32 previousChecksum);
 
   // Slot click/drag callbacks
-  void onSlotMouseDown(EntityPtr inventoryEntity, glm::u16vec2 slotPos);
-  void onSlotMouseUp(EntityPtr inventoryEntity, glm::u16vec2 slotPos);
+  static void onSlotMouseDown(EntityPtr inventoryEntity, glm::u16vec2 slotPos);
+  static void onSlotMouseUp(EntityPtr inventoryEntity, glm::u16vec2 slotPos);
   
   // Tooltip display helpers
-  void showTooltip(EntityPtr inventoryEntity, size_t slotIndex);
-  void hideTooltip();
+  static void showTooltip(EntityPtr inventoryEntity, size_t slotIndex);
+  static void hideTooltip(InventoryViewComponent& self);
   
   // Helper to perform the actual item move
-  void performItemDrop(EntityPtr inventoryEntity, InventoryViewComponent* sourceView, glm::u16vec2 sourceSlot, 
+  static void performItemDrop(EntityPtr inventoryEntity, InventoryViewComponent* sourceView, glm::u16vec2 sourceSlot, 
                        glm::u16vec2 targetSlot);
   
   // Helper to check if a world position is within the inventory window bounds
-  bool isPointInWindowBounds(const glm::vec2& worldPos) const;
+  static bool isPointInWindowBounds(const InventoryViewComponent& self, const glm::vec2& worldPos);
   
   // Helper to place item to world when released outside inventory with Shift pressed
-  void placeItemToWorld(EntityPtr inventoryEntity);
+  static void placeItemToWorld(EntityPtr inventoryEntity);
   
   // Helper to drop item to world when released outside inventory
-  void dropItemToWorld(EntityPtr inventoryEntity);
+  static void dropItemToWorld(EntityPtr inventoryEntity);
 };
 
 RAMPAGE_END

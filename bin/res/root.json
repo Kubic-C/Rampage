@@ -591,6 +591,48 @@
       ]
     },
     {
+      "name": "ChestTile",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "SpriteComponent",
+          "subSprites": [
+            {
+              "layers": [
+                {
+                  "path": "chest",
+                  "layer": "Wall"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "TileComponent"
+        },
+        {
+          "type": "HealthComponent",
+          "health": 100
+        },
+        {
+          "type": "ArrowComponent",
+          "tileCost": 25
+        },
+        {
+          "type": "InventoryComponent",
+          "cols": 3,
+          "rows": 3
+        },
+        {
+          "type": "InventoryViewComponent",
+          "slotSize": 32,
+          "windowBackgroundColor": [74, 27, 10, 200],
+          "name": "Chest Inventory",
+          "isVisible": true
+        }
+      ]
+    },
+    {
       "name": "BigGunTurretTile",
       "type": "Entity",
       "components": [
@@ -860,6 +902,25 @@
         {
           "type": "ItemPlaceableComponent",
           "entityId": "BasicZombie"
+        }
+      ]
+    },
+    {
+      "name": "ChestItem",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "ItemComponent",
+          "description": "A chest to store your items.",
+          "name": "Chest",
+          "isUnique": false,
+          "maxStackSize": 8,
+          "stackCost": 1,
+          "iconAsset": "res/entities/chest.png"
+        },
+        {
+          "type": "ItemPlaceableComponent",
+          "entityId": "ChestTile"
         }
       ]
     }

@@ -606,11 +606,13 @@ u32 InventoryManager::calculateSlotsNeeded(IWorldPtr world, EntityId itemEntity,
 
 int updateInventoryViews(IWorldPtr world, float dt) {
   auto it = world->getWith({world->component<InventoryViewComponent>()});
+  world->beginDefer();
   while(it->hasNext()) {
     EntityPtr entity = it->next();
     auto viewComp = entity.get<InventoryViewComponent>();
     viewComp->update(entity, world->getContext<tgui::Gui>());
   }
+  world->endDefer();
 
   return 0;
 }

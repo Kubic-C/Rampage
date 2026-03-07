@@ -78,12 +78,6 @@ public:
     EntityPtr player = assetLoader.cloneAsset("BasicPlayer");
     b2Body_EnableContactEvents(*player.get<BodyComponent>(), true);
     player.add<CameraInUseTag>();
-    invMgr.addItem(m_world, player, assetLoader.getAsset("BasicTurretItem"), 64);
-    invMgr.addItem(m_world, player, assetLoader.getAsset("BigGunTurretItem"), 4);
-    invMgr.addItem(m_world, player, assetLoader.getAsset("WoodItem"), 43);
-    invMgr.addItem(m_world, player, assetLoader.getAsset("FenceItem"), 27);
-    invMgr.addItem(m_world, player, assetLoader.getAsset("PlaceableHighStoneItem"));
-    invMgr.addItem(m_world, player, assetLoader.getAsset("ZombieSpawnableItem"), 21);
 
     for(int i = 0; i < 1; i++) {
       invMgr.dropItem(m_world, assetLoader.getAsset("BasicTurretItem"), Vec2(0, 0), 10);
@@ -92,11 +86,7 @@ public:
       invMgr.dropItem(m_world, assetLoader.getAsset("FenceItem"), Vec2(3, 0), 10);
       invMgr.dropItem(m_world, assetLoader.getAsset("PlaceableHighStoneItem"), Vec2(4, 1), 10);
       invMgr.dropItem(m_world, assetLoader.getAsset("ZombieSpawnableItem"), Vec2(4, 2), 10);
-    }
-
-    for(int i = 0; i < 0; i++) {
-      EntityPtr ptr = assetLoader.cloneAsset("BasicZombie");
-      ptr.get<TransformComponent>()->pos = Vec2((i % 100) * 0.5f, (i % 15) * 0.5f);
+      invMgr.dropItem(m_world, assetLoader.getAsset("ChestItem"), Vec2(4, -2), 10);
     }
 
     /* WorldMap & Tilemap Component */
@@ -114,7 +104,7 @@ public:
       bodyDef.type = b2_staticBody;
       bodyComp->id = b2CreateBody(physicsWorld, &bodyDef);
 
-      int length = 50;
+      int length = 10;
       for(int x = -length; x < length * 2; x++)
         for(int y = -length; y < length; y++)
           tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(x, y), assetLoader.cloneAsset("StoneFloorTile"));
@@ -126,7 +116,7 @@ public:
       }
       for(int y = -length; y < length; y++) {
         tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(-length - 1, y), assetLoader.cloneAsset("PermaHighStoneTile"));
-        tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(length * 10, y), assetLoader.cloneAsset("PermaHighStoneTile"));
+        tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(length * 2, y), assetLoader.cloneAsset("PermaHighStoneTile"));
       }
 
       m_tm = tm;  
@@ -144,6 +134,7 @@ public:
     auto& physicsWorldId = m_world->getContext<b2WorldId>();
     auto& tmMgr = m_world->getContext<TilemapManager>();
     auto& evtMod = m_world->getContext<EventModule>();
+    auto assetLoader = m_world->getAssetLoader();
     const u32 activeBodies = b2World_GetAwakeBodyCount(physicsWorldId);
 
     m_tickText->setText("Tick: " + std::to_string(tick));
@@ -183,7 +174,21 @@ public:
         auto tileComp = e.get<TileComponent>();
         tileComp->rotation = rotateTileDirection(tileComp->rotation, 1);
       }
+
+      for(int i = 0; i < 1000; i++) {
+        EntityPtr ptr = assetLoader.cloneAsset("BasicZombie");
+        ptr.get<TransformComponent>()->pos = Vec2((i % 100) * 0.5f + evtMod.getMouseWorldPos().x, (i % 50) * 0.5f + evtMod.getMouseWorldPos().y);
+      }
     }
+
+    if(evtMod.isMouseButtonPressed(MouseButton::Middle)) {
+      EntityPtr e = getTileWithComponentAtPos<InventoryViewComponent>(m_world, evtMod.getMouseWorldPos());
+      if(!e.isNull() && e.has<InventoryViewComponent>()) {
+        auto invViewComp = e.get<InventoryViewComponent>();
+        invViewComp->isVisible = true;
+      }
+    }
+
   }
 
   void onLeave() {

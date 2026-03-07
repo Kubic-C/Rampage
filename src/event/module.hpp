@@ -21,6 +21,7 @@ public:
   NODISCARD glm::vec2 getWindowSize() const;
   NODISCARD Vec2 getMouseCoords() const;
   NODISCARD Vec2 getMouseWorldPos() const;
+  NODISCARD bool isMouseButtonPressed(MouseButton button) const;
 
 public:
   int onLoad() override;

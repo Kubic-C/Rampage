@@ -12,113 +12,6 @@ glm::u16vec2 InventoryViewComponent::dragStartSlot = {0, 0};
 InventoryViewComponent* InventoryViewComponent::dragSourceView = nullptr;
 bool InventoryViewComponent::wasMouseButtonPressedLastFrame = false;
 
-void ItemPlaceableComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
-  auto placeableBuilder = builder.initRoot<Schema::ItemPlaceableComponent>();
-  auto self = component.cast<ItemPlaceableComponent>();
-
-  placeableBuilder.setEntityId(self->entityId);
-}
-
-void ItemPlaceableComponent::deserialize(capnp::MessageReader& reader, const IdMapper& idMapper, Ref component) {
-  auto placeableReader = reader.getRoot<Schema::ItemPlaceableComponent>();
-  auto self = component.cast<ItemPlaceableComponent>();
-
-  self->entityId = idMapper.resolve(placeableReader.getEntityId());
-}
-
-void ItemPlaceableComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
-  auto self = component.cast<ItemPlaceableComponent>();
-  auto compJson = jsonValue.as<JSchema::ItemPlaceableComponent>();
-
-  if (compJson->hasEntityId())
-    self->entityId = loader.getAsset(compJson->getEntityId());
-}
-
-void ItemComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
-  auto itemBuilder = builder.initRoot<Schema::ItemComponent>();
-  auto self = component.cast<ItemComponent>();
-
-  itemBuilder.setName(self->name);
-  itemBuilder.setDescription(self->description);
-  itemBuilder.setMaxStackSize(self->maxStackSize);
-  itemBuilder.setStackCost(self->stackCost);
-  itemBuilder.setIsUnique(self->isUnique);
-  itemBuilder.setIconPath((std::string)self->icon.getId()); // Assuming TGUI's Texture has a method to get the original file path
-}
-
-void ItemComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component) {
-  auto itemReader = reader.getRoot<Schema::ItemComponent>();
-  auto self = component.cast<ItemComponent>();
-
-  self->name = itemReader.getName();
-  self->description = itemReader.getDescription();
-  self->maxStackSize = itemReader.getMaxStackSize();
-  self->stackCost = itemReader.getStackCost();
-  self->isUnique = itemReader.getIsUnique();
-  
-  std::string pathStr = itemReader.getIconPath().cStr();
-  if (std::filesystem::exists(pathStr)) {
-    self->icon = tgui::Texture(pathStr); // Load texture from path
-  }
-}
-
-void ItemComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
-  auto self = component.cast<ItemComponent>();
-  auto compJson = jsonValue.as<JSchema::ItemComponent>();
-
-  if (compJson->hasName())
-    self->name = compJson->getName();
-
-  if (compJson->hasDescription())
-    self->description = compJson->getDescription();
-
-  if (compJson->hasMaxStackSize())
-    self->maxStackSize = compJson->getMaxStackSize();
-
-  if (compJson->hasStackCost())
-    self->stackCost = compJson->getStackCost();
-
-  if (compJson->hasIsUnique())
-    self->isUnique = compJson->getIsUnique();
-
-  // Load icon from asset loader if iconAsset is specified
-  if (compJson->hasIconAsset()) {
-    std::string pathStr = compJson->getIconAsset();
-    if (std::filesystem::exists(pathStr)) {
-      self->icon = tgui::Texture(pathStr); // Load texture from path
-    } else {
-      component.getWorld()->getHost().log("Could not load icon asset for ItemComponent: %s for %s", pathStr.c_str(), self->name.c_str());
-    }
-  }
-}
-
-void ItemStackComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
-  auto stackBuilder = builder.initRoot<Schema::ItemStackComponent>();
-  auto self = component.cast<ItemStackComponent>();
-
-  stackBuilder.setCount(self->count);
-  stackBuilder.setItemId(self->itemId);
-}
-
-void ItemStackComponent::deserialize(capnp::MessageReader& reader, const IdMapper& idMapper, Ref component) {
-  auto stackReader = reader.getRoot<Schema::ItemStackComponent>();
-  auto self = component.cast<ItemStackComponent>();
-
-  self->count = stackReader.getCount();
-  self->itemId = idMapper.resolve(stackReader.getItemId());
-}
-
-void ItemStackComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
-  auto self = component.cast<ItemStackComponent>();
-  auto compJson = jsonValue.as<JSchema::ItemStackComponent>();
-
-  if (compJson->hasCount())
-    self->count = compJson->getCount();
-
-  if (compJson->hasItemId())
-    self->itemId = compJson->getItemId();
-}
-
 void InventoryComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
   auto invBuilder = builder.initRoot<Schema::InventoryComponent>();
   auto self = component.cast<InventoryComponent>();
@@ -306,16 +199,16 @@ void InventoryViewComponent::fromJson(Ref component, AssetLoader loader, const J
   if (compJson->hasPadding()) {
     auto padJson = compJson->getPadding();
     if (padJson.hasX())
-      self->padding.x = padJson.getX();
+      self->padding.x = static_cast<float>(padJson.getX());
     if (padJson.hasY())
-      self->padding.y = padJson.getY();
+      self->padding.y = static_cast<float>(padJson.getY());
   }
 
   if (compJson->hasSlotSize())
-    self->slotSize = compJson->getSlotSize();
+    self->slotSize = static_cast<float>(compJson->getSlotSize());
 
   if (compJson->hasRounding())
-    self->rounding = compJson->getRounding();
+    self->rounding = static_cast<float>(compJson->getRounding());
 
   // Helper lambda to parse color from JSchema [R,G,B,A] int arrays
   auto parseColor = [](const std::vector<int64_t>& arr) -> tgui::Color {
@@ -348,12 +241,17 @@ InventoryViewComponent::~InventoryViewComponent() {
   // Ensure we clean up the TGUI window if this component is destroyed
   if (window) {
     window->removeAllWidgets();
-    window->getParent()->remove(window);
+    if (window->getParent())
+      window->getParent()->remove(window);
     window = nullptr;
   }
+  if (tooltipPanel && tooltipPanel->getParent())
+    tooltipPanel->getParent()->remove(tooltipPanel);
 }
 
 void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
+  auto invViewComp = inventoryEntity.get<InventoryViewComponent>();
+
   if (!inventoryEntity || !inventoryEntity.has<InventoryComponent>()) {
     return; // Inventory doesn't exist or doesn't have component
   }
@@ -367,177 +265,195 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
     return;
   }
 
-  inventoryEntityId = inventoryEntity;
+  invViewComp->inventoryEntityId = inventoryEntity;
 
   // Check if inventory checksum changed (rebuild UI if it did)
-  if (hasVisualConfigChanged(invComp->cols, invComp->rows, prevVisualChecksum)) {
-    prevVisualChecksum = calculateVisualChecksum(invComp->cols, invComp->rows);
+  if (InventoryViewComponent::hasVisualConfigChanged(*invViewComp, invComp->cols, invComp->rows, invViewComp->prevVisualChecksum)) {
+    invViewComp->prevVisualChecksum = InventoryViewComponent::calculateVisualChecksum(*invViewComp, invComp->cols, invComp->rows);
     
     // Destroy existing window and UI elements if grid changed
-    if (window) {
-      gui.remove(window);
-      window = nullptr;
-      slotBackgrounds.clear();
-      slotPictures.clear();
-      slotLabels.clear();
+    if (invViewComp->window) {
+      std::cout << "Recreate window\n";
+      gui.remove(invViewComp->window);
+      invViewComp->window = nullptr;
+      invViewComp->slotBackgrounds.clear();
+      invViewComp->slotPictures.clear();
+      invViewComp->slotLabels.clear();
     }
   }
 
   // Create window if it doesn't exist
-  if (!window) {
-    window = tgui::ChildWindow::create();
-    window->setTitle(name);
-    window->setPosition(pos.x, pos.y);
+  if (!invViewComp->window) {
+    std::cout << "Opened window\n";
+    invViewComp->window = tgui::ChildWindow::create();
+    invViewComp->window->setTitle(invViewComp->name);
+    invViewComp->window->setPosition(invViewComp->pos.x, invViewComp->pos.y);
+    invViewComp->window->setCloseBehavior(tgui::ChildWindow::CloseBehavior::Hide);
 
-    window->getRenderer()->setTitleBarHeight(15);
-    window->getRenderer()->setTitleBarColor(windowBackgroundColor); 
-    window->getRenderer()->setTitleColor(getContrastingColor(windowBackgroundColor));
-    window->getRenderer()->setBackgroundColor(windowBackgroundColor);  
-    window->getRenderer()->setBorderColor(getContrastingColor(windowBackgroundColor));   
-    window->getRenderer()->setBorders({1, 1, 1, 1});
-    window->getRenderer()->setBorderBelowTitleBar(0); 
+    invViewComp->window->getRenderer()->setTitleBarHeight(15);
+    invViewComp->window->getRenderer()->setTitleBarColor(invViewComp->windowBackgroundColor); 
+    invViewComp->window->getRenderer()->setTitleColor(getContrastingColor(invViewComp->windowBackgroundColor));
+    invViewComp->window->getRenderer()->setBackgroundColor(invViewComp->windowBackgroundColor);  
+    invViewComp->window->getRenderer()->setBorderColor(getContrastingColor(invViewComp->windowBackgroundColor));   
+    invViewComp->window->getRenderer()->setBorders({1, 1, 1, 1});
+    invViewComp->window->getRenderer()->setBorderBelowTitleBar(0); 
 
-    gui.add(window);
+    gui.add(invViewComp->window);
+    auto widgets = gui.getWidgets();
+    for(auto widget : widgets) {
+      std::cout << "Widget: " << widget->getWidgetType() << "\n";
+    }
 
     // Create slot UI elements using inventory's actual rows/cols
-    slotBackgrounds.resize(invComp->cols * invComp->rows);
-    slotPictures.resize(invComp->cols * invComp->rows);
-    slotLabels.resize(invComp->cols * invComp->rows);
+    invViewComp->slotBackgrounds.resize(invComp->cols * invComp->rows);
+    invViewComp->slotPictures.resize(invComp->cols * invComp->rows);
+    invViewComp-> slotLabels.resize(invComp->cols * invComp->rows);
 
     static constexpr float slotIconPadding = 4.0f; // Padding inside slot for icon
 
     for (u16 y = 0; y < invComp->rows; ++y) {
       for (u16 x = 0; x < invComp->cols; ++x) {
         size_t index = y * invComp->cols + x;
-        float posX = x * slotSize + padding.x;
-        float posY = y * slotSize + padding.y;
+        float posX = x * invViewComp->slotSize + invViewComp->padding.x;
+        float posY = y * invViewComp->slotSize + invViewComp->padding.y;
         glm::u16vec2 slotPos(x, y);
 
         // Create background panel
         auto bg = tgui::Panel::create();
-        bg->setSize(slotSize, slotSize);
+        bg->setSize(invViewComp->slotSize, invViewComp->slotSize);
         bg->setPosition(posX, posY);
         bg->getRenderer()->setBorders(2);
-        bg->getRenderer()->setBorderColor(borderColor);
-        bg->getRenderer()->setBackgroundColor(emptySlotColor);
-        bg->getRenderer()->setRoundedBorderRadius(rounding);
+        bg->getRenderer()->setBorderColor(invViewComp->borderColor);
+        bg->getRenderer()->setBackgroundColor(invViewComp->emptySlotColor);
+        bg->getRenderer()->setRoundedBorderRadius(invViewComp->rounding);
 
-        window->add(bg);
-        slotBackgrounds[index] = bg;
+        invViewComp->window->add(bg);
+        invViewComp->slotBackgrounds[index] = bg;
 
         // Create picture for item icon
         auto picture = tgui::Picture::create();
-        picture->setSize(slotSize - slotIconPadding * 2, slotSize - slotIconPadding * 2);
+        picture->setSize(invViewComp->slotSize - slotIconPadding * 2, invViewComp->slotSize - slotIconPadding * 2);
         picture->setPosition(posX + slotIconPadding, posY + slotIconPadding);
-        window->add(picture);
-        slotPictures[index] = picture;
+        invViewComp->window->add(picture);
+        invViewComp->slotPictures[index] = picture;
 
         // Create label for count/text
         auto label = tgui::Label::create();
-        label->setSize(slotSize, slotSize);
+        label->setSize(invViewComp->slotSize, invViewComp->slotSize);
         label->setPosition(posX, posY);
-        label->getRenderer()->setTextColor(textColor);
-        window->add(label);
-        slotLabels[index] = label;
+        label->getRenderer()->setTextColor(invViewComp->textColor);
+        invViewComp->window->add(label);
+        invViewComp->slotLabels[index] = label;
 
-        label->onMouseEnter([this, inventoryEntity, index]() {
-          if (isInteractable) {
-            slotBackgrounds[index]->getRenderer()->setBackgroundColor(isDragging ? dragHoverSlotColor : hoverSlotColor);
-            showTooltip(inventoryEntity, index);
+        label->onMouseEnter([inv = inventoryEntity, index]() {
+          auto invViewComp = inv.get<InventoryViewComponent>();
+          if (invViewComp->isInteractable) {
+            invViewComp->slotBackgrounds[index]->getRenderer()->setBackgroundColor(isDragging ? invViewComp->dragHoverSlotColor : invViewComp->hoverSlotColor);
+            InventoryViewComponent::showTooltip(inv, index);
           }
         });
 
-        label->onMouseLeave([this, index]() {
-          if (isInteractable) {
-            slotBackgrounds[index]->getRenderer()->setBackgroundColor(emptySlotColor);
-            hideTooltip();
+        label->onMouseLeave([inv = inventoryEntity, index]() {
+          auto invViewComp = inv.get<InventoryViewComponent>();
+          if (invViewComp->isInteractable) {
+            invViewComp->slotBackgrounds[index]->getRenderer()->setBackgroundColor(invViewComp->emptySlotColor);
+            InventoryViewComponent::hideTooltip(*invViewComp);
           }
         });
 
         // Add mouse event handlers for drag and drop
-        label->onMousePress([this, slotPos, inventoryEntity]() {
-          if (isInteractable) {
-            onSlotMouseDown(inventoryEntity, slotPos);
+        label->onMousePress([inv = inventoryEntity, slotPos]() {
+          auto invViewComp = inv.get<InventoryViewComponent>();
+          if (invViewComp->isInteractable) {
+            InventoryViewComponent::onSlotMouseDown(inv, slotPos);
           }
         });
         
-        label->onMouseRelease([this, slotPos, inventoryEntity]() {
-          if (isInteractable) {
-            onSlotMouseUp(inventoryEntity, slotPos);
+        label->onMouseRelease([inv = inventoryEntity, slotPos]() {
+          auto invViewComp = inv.get<InventoryViewComponent>();
+          if (invViewComp->isInteractable) {
+            InventoryViewComponent::onSlotMouseUp(inv, slotPos);
           }
         });
       }
     }
 
     // Set window size
-    tgui::Vector2f windowPadding = window->getSize() - window->getClientSize();
-    window->setSize(
-      invComp->cols * slotSize + windowPadding.x + padding.x * 2,
-      invComp->rows * slotSize + windowPadding.y + padding.y * 2
+    tgui::Vector2f windowPadding = invViewComp->window->getSize() - invViewComp->window->getClientSize();
+    invViewComp->window->setSize(
+      invComp->cols * invViewComp->slotSize + windowPadding.x + invViewComp->padding.x * 2,
+      invComp->rows * invViewComp->slotSize + windowPadding.y + invViewComp->padding.y * 2
     );
 
-    window->setVisible(isVisible);
-    window->onPositionChange([this]() {
-      pos = Vec2(window->getPosition().x, window->getPosition().y);
+    invViewComp->window->setVisible(invViewComp->isVisible);
+    invViewComp->window->onPositionChange([inv = inventoryEntity]() {
+      auto invViewComp = inv.get<InventoryViewComponent>();
+      invViewComp->pos = Vec2(invViewComp->window->getPosition().x, invViewComp->window->getPosition().y);
+    });
+    invViewComp->window->onClose([inv = inventoryEntity]() {
+      auto invViewComp = inv.get<InventoryViewComponent>();
+      invViewComp->isVisible = false;
     });
 
     // Create tooltip panel (initially hidden)
-    if (!tooltipPanel) {
-      tgui::Vector2f windowSize = window->getSize();
+    if (!invViewComp->tooltipPanel) {
+      tgui::Vector2f windowSize = invViewComp->window->getSize();
       float tooltipWidth = windowSize.x;
       float tooltipHeight = windowSize.y * 0.7f; // 70% of window height
 
-      tooltipPanel = tgui::Panel::create();
-      tooltipPanel->setSize(tooltipWidth, tooltipHeight);
-      tooltipPanel->getRenderer()->setBackgroundColor(windowBackgroundColor);
-      tooltipPanel->getRenderer()->setBorderColor(borderColor);
-      tooltipPanel->getRenderer()->setBorders({2, 2, 2, 2});
-      gui.add(tooltipPanel);
+      invViewComp->tooltipPanel = tgui::Panel::create();
+      invViewComp->tooltipPanel->setSize(tooltipWidth, tooltipHeight);
+      invViewComp->tooltipPanel->getRenderer()->setBackgroundColor(invViewComp->windowBackgroundColor);
+      invViewComp->tooltipPanel->getRenderer()->setBorderColor(invViewComp->borderColor);
+      invViewComp->tooltipPanel->getRenderer()->setBorders({2, 2, 2, 2});
+      gui.add(invViewComp->tooltipPanel);
 
       // Tooltip icon (scale with window)
-      float iconSize = slotSize * 0.8f;
-      tooltipIcon = tgui::Picture::create();
-      tooltipIcon->setSize(iconSize, iconSize);
-      tooltipIcon->setPosition(5, 5);
-      tooltipPanel->add(tooltipIcon);
+      float iconSize = invViewComp->slotSize * 0.8f;
+      invViewComp->tooltipIcon = tgui::Picture::create();
+      invViewComp->tooltipIcon->setSize(iconSize, iconSize);
+      invViewComp->tooltipIcon->setPosition(5, 5);
+      invViewComp->tooltipPanel->add(invViewComp->tooltipIcon);
 
       // Tooltip name label
-      tooltipName = tgui::Label::create();
-      tooltipName->setSize(tooltipWidth - iconSize - 15, tooltipHeight * 0.25f);
-      tooltipName->setPosition(iconSize + 10, 5);
-      tooltipName->getRenderer()->setTextColor(textColor);
-      tooltipName->setTextSize(12);
-      tooltipPanel->add(tooltipName);
+      invViewComp->tooltipName = tgui::Label::create();
+      invViewComp->tooltipName->setSize(tooltipWidth - iconSize - 15, tooltipHeight * 0.25f);
+      invViewComp->tooltipName->setPosition(iconSize + 10, 5);
+      invViewComp->tooltipName->getRenderer()->setTextColor(invViewComp->textColor);
+      invViewComp->tooltipName->setTextSize(12);
+      invViewComp->tooltipPanel->add(invViewComp->tooltipName);
 
-      tooltipDescription = tgui::Label::create();
-      tooltipDescription->setSize(tooltipWidth - 10, tooltipHeight * 0.5f);
-      tooltipDescription->setPosition(5, iconSize + 10);
-      tooltipDescription->getRenderer()->setTextColor(textColor);
-      tooltipDescription->getRenderer()->setBorderColor(borderColor);
-      tooltipDescription->getRenderer()->setBorders({1, 1, 1, 1});
-      tooltipDescription->setTextSize(11);
-      tooltipDescription->setScrollbarPolicy(tgui::Scrollbar::Policy::Never);
-      tooltipPanel->add(tooltipDescription);
+      invViewComp->tooltipDescription = tgui::Label::create();
+      invViewComp->tooltipDescription->setSize(tooltipWidth - 10, tooltipHeight * 0.5f);
+      invViewComp->tooltipDescription->setPosition(5, iconSize + 10);
+      invViewComp->tooltipDescription->getRenderer()->setTextColor(invViewComp->textColor);
+      invViewComp->tooltipDescription->getRenderer()->setBorderColor(invViewComp->borderColor);
+      invViewComp->tooltipDescription->getRenderer()->setBorders({1, 1, 1, 1});
+      invViewComp->tooltipDescription->setTextSize(11);
+      invViewComp->tooltipDescription->getScrollbar()->setPolicy(tgui::Scrollbar::Policy::Never);
+      invViewComp->tooltipPanel->add(invViewComp->tooltipDescription);
 
       // Tooltip unique status label
-      tooltipUnique = tgui::Label::create();
-      tooltipUnique->setSize(tooltipWidth - 10, tooltipHeight * 0.15f);
-      tooltipUnique->getRenderer()->setTextColor(textColor);
-      tooltipUnique->setTextSize(11);
-      tooltipUnique->setAutoLayout(tgui::AutoLayout::Bottom);
-      tooltipUnique->setScrollbarPolicy(tgui::Scrollbar::Policy::Never);
-      tooltipPanel->add(tooltipUnique);
+      invViewComp->tooltipUnique = tgui::Label::create();
+      invViewComp->tooltipUnique->setSize(tooltipWidth - 10, tooltipHeight * 0.15f);
+      invViewComp->tooltipUnique->getRenderer()->setTextColor(invViewComp->textColor);
+      invViewComp->tooltipUnique->setTextSize(11);
+      invViewComp->tooltipUnique->setAutoLayout(tgui::AutoLayout::Bottom);
+      invViewComp->tooltipUnique->getScrollbar()->setPolicy(tgui::Scrollbar::Policy::Never);
+      invViewComp->tooltipPanel->add(invViewComp->tooltipUnique);
 
-      tooltipPanel->setVisible(false);
+      invViewComp->tooltipPanel->setVisible(false);
     }
   }
 
-  if(window->isVisible() != isVisible)
-    window->setVisible(isVisible);
-  if(window->getTitle() != name)
-    window->setTitle(name); 
-  if(window->getPosition() != tgui::Vector2f(pos.x, pos.y))
-    window->setPosition(pos.x, pos.y);
+  if(invViewComp->window->isVisible() != invViewComp->isVisible) {
+    invViewComp->window->setVisible(invViewComp->isVisible);
+    std::cout << "IsVisible?" << invViewComp->isVisible << "\n";
+  }
+  if(invViewComp->window->getTitle() != invViewComp->name)
+    invViewComp->window->setTitle(invViewComp->name); 
+  if(invViewComp->window->getPosition() != tgui::Vector2f(invViewComp->pos.x, invViewComp->pos.y))
+    invViewComp->window->setPosition(invViewComp->pos.x, invViewComp->pos.y);
 
   // Update slot contents
   for (u16 y = 0; y < invComp->rows; ++y) {
@@ -545,9 +461,9 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
       size_t index = y * invComp->cols + x;
       const ItemStackComponent& slot = invComp->getSlot(x, y);
 
-      auto bg = slotBackgrounds[index];
-      auto picture = slotPictures[index];
-      auto label = slotLabels[index];
+      auto bg = invViewComp->slotBackgrounds[index];
+      auto picture = invViewComp->slotPictures[index];
+      auto label = invViewComp->slotLabels[index];
 
       if (slot.itemId == 0) {
         // Empty slot
@@ -555,8 +471,8 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
         label->setText("");
 
         tgui::Color curColor = bg->getRenderer()->getBackgroundColor();
-        if(curColor != emptySlotColor && curColor != hoverSlotColor && curColor != dragHoverSlotColor) {
-          bg->getRenderer()->setBackgroundColor(emptySlotColor);
+        if(curColor != invViewComp->emptySlotColor && curColor != invViewComp->hoverSlotColor && curColor != invViewComp->dragHoverSlotColor) {
+          bg->getRenderer()->setBackgroundColor(invViewComp->emptySlotColor);
         }
       } else {
         // Filled slot
@@ -592,13 +508,14 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
   
   if (isDragging && wasMouseButtonPressedLastFrame && !isMouseButtonPressed) {
     // Mouse was released - check if it's outside the inventory window
-    if (!isPointInWindowBounds(mousePosVec)) {
+    if (!InventoryViewComponent::isPointInWindowBounds(*invViewComp, mousePosVec)) {
       // Mouse released outside inventory - drop the item to the world
       if(eventModule.isKeyHeld(Key::LeftShift)) {
         // Place the item
-        placeItemToWorld(inventoryEntity);
+        InventoryViewComponent::placeItemToWorld(inventoryEntity);
+        std::cout << "Window parent: " << invViewComp->window->getParent() << "\n";
       } else {
-        dropItemToWorld(inventoryEntity);
+        InventoryViewComponent::dropItemToWorld(inventoryEntity);
       }
       isDragging = false;
       dragSourceView = nullptr;
@@ -621,7 +538,7 @@ void InventoryViewComponent::onSlotMouseDown(EntityPtr inventoryEntity, glm::u16
   if (slot.itemId != 0) {
     isDragging = true;
     dragStartSlot = slotPos;
-    dragSourceView = this;
+    dragSourceView = &(*inventoryEntity.get<InventoryViewComponent>());
   }
 }
 
@@ -655,14 +572,14 @@ void InventoryViewComponent::performItemDrop(EntityPtr inventoryEntity, Inventor
                    dstInvId, targetSlot.x, targetSlot.y, 0); // 0 = move all
 }
 
-u32 InventoryViewComponent::calculateVisualChecksum(u32 sizeX, u32 sizeY) const {
+u32 InventoryViewComponent::calculateVisualChecksum(const InventoryViewComponent& self, u32 sizeX, u32 sizeY) {
   u32 hash = 0;
   
   // Hash numeric properties
-  hash = ((hash << 5) + hash) ^ std::hash<float>()(padding.x);
-  hash = ((hash << 5) + hash) ^ std::hash<float>()(padding.y);
-  hash = ((hash << 5) + hash) ^ std::hash<float>()(slotSize);
-  hash = ((hash << 5) + hash) ^ std::hash<float>()(rounding);
+  hash = ((hash << 5) + hash) ^ std::hash<float>()(self.padding.x);
+  hash = ((hash << 5) + hash) ^ std::hash<float>()(self.padding.y);
+  hash = ((hash << 5) + hash) ^ std::hash<float>()(self.slotSize);
+  hash = ((hash << 5) + hash) ^ std::hash<float>()(self.rounding);
   
   // Hash color values (RGBA)
   auto hashColor = [](u32& h, const tgui::Color& color) {
@@ -672,12 +589,12 @@ u32 InventoryViewComponent::calculateVisualChecksum(u32 sizeX, u32 sizeY) const 
     h = ((h << 5) + h) ^ static_cast<u32>(color.getAlpha());
   };
   
-  hashColor(hash, windowBackgroundColor);
-  hashColor(hash, borderColor);
-  hashColor(hash, emptySlotColor);
-  hashColor(hash, textColor);
-  hashColor(hash, hoverSlotColor);
-  hashColor(hash, dragHoverSlotColor);
+  hashColor(hash, self.windowBackgroundColor);
+  hashColor(hash, self.borderColor);
+  hashColor(hash, self.emptySlotColor);
+  hashColor(hash, self.textColor);
+  hashColor(hash, self.hoverSlotColor);
+  hashColor(hash, self.dragHoverSlotColor);
   
   // Hash cached grid dimensions (indicates inventory size)
   hash = ((hash << 5) + hash) ^ sizeX;
@@ -686,13 +603,14 @@ u32 InventoryViewComponent::calculateVisualChecksum(u32 sizeX, u32 sizeY) const 
   return hash;
 }
 
-bool InventoryViewComponent::hasVisualConfigChanged(u32 sizeX, u32 sizeY, u32 previousChecksum) const {
-  return calculateVisualChecksum(sizeX, sizeY) != previousChecksum;
+bool InventoryViewComponent::hasVisualConfigChanged(const InventoryViewComponent& self, u32 sizeX, u32 sizeY, u32 previousChecksum) {
+  return calculateVisualChecksum(self, sizeX, sizeY) != previousChecksum;
 }
 
 
 void InventoryViewComponent::showTooltip(EntityPtr inventoryEntity, size_t slotIndex) {
-  if (!inventoryEntity || !inventoryEntity.has<InventoryComponent>() || !tooltipPanel) {
+  auto invViewComp = inventoryEntity.get<InventoryViewComponent>();
+  if (!inventoryEntity || !inventoryEntity.has<InventoryComponent>() || !invViewComp->tooltipPanel) {
     return;
   }
 
@@ -703,48 +621,48 @@ void InventoryViewComponent::showTooltip(EntityPtr inventoryEntity, size_t slotI
 
   const ItemStackComponent& slot = invComp->items[slotIndex];
   if (slot.itemId == 0) {
-    tooltipPanel->setVisible(false);
+    invViewComp->tooltipPanel->setVisible(false);
     return;
   }
 
   IWorldPtr world = inventoryEntity.world();
   auto itemEntity = world->getEntity(slot.itemId);
   if (!itemEntity || !itemEntity.has<ItemComponent>()) {
-    tooltipPanel->setVisible(false);
+    invViewComp->tooltipPanel->setVisible(false);
     return;
   }
 
   auto itemComp = itemEntity.get<ItemComponent>();
 
   // Update tooltip content
-  tooltipIcon->getRenderer()->setTexture(itemComp->icon);
-  tooltipName->setText(itemComp->name + " (" + std::to_string(slot.itemId) + ")");
-  tooltipDescription->setText(itemComp->description.empty() ? "No description" : itemComp->description + " has ItemPlaceable: " + (itemEntity.has<ItemPlaceableComponent>() ? "Yes" : "No") );
-  tooltipUnique->setText(itemComp->isUnique ? "Unique Item" : "Stackable");
+  invViewComp->tooltipIcon->getRenderer()->setTexture(itemComp->icon);
+  invViewComp->tooltipName->setText(itemComp->name + " (" + std::to_string(slot.itemId) + ")");
+  invViewComp->tooltipDescription->setText(itemComp->description.empty() ? "No description" : itemComp->description + " has ItemPlaceable: " + (itemEntity.has<ItemPlaceableComponent>() ? "Yes" : "No") );
+  invViewComp->tooltipUnique->setText(itemComp->isUnique ? "Unique Item" : "Stackable");
 
   // Position tooltip below the inventory window
-  if (window) {
-    tgui::Vector2f windowPos = window->getPosition();
-    tgui::Vector2f windowSize = window->getSize();
-    tooltipPanel->setPosition(windowPos.x, windowPos.y + windowSize.y + 10);
+  if (invViewComp->window) {
+    tgui::Vector2f windowPos = invViewComp->window->getPosition();
+    tgui::Vector2f windowSize = invViewComp->window->getSize();
+    invViewComp->tooltipPanel->setPosition(windowPos.x, windowPos.y + windowSize.y + 10);
   }
 
-  tooltipPanel->setVisible(true);
+  invViewComp->tooltipPanel->setVisible(true);
 }
 
-void InventoryViewComponent::hideTooltip() {
-  if (tooltipPanel) {
-    tooltipPanel->setVisible(false);
+void InventoryViewComponent::hideTooltip(InventoryViewComponent& self) {
+  if (self.tooltipPanel) {
+    self.tooltipPanel->setVisible(false);
   }
 }
 
-bool InventoryViewComponent::isPointInWindowBounds(const glm::vec2& worldPos) const {
-  if (!window) {
+bool InventoryViewComponent::isPointInWindowBounds(const InventoryViewComponent& self, const glm::vec2& worldPos) {
+  if (!self.window) {
     return false;
   }
 
-  tgui::Vector2f windowPos = window->getPosition();
-  tgui::Vector2f windowSize = window->getSize();
+  tgui::Vector2f windowPos = self.window->getPosition();
+  tgui::Vector2f windowSize = self.window->getSize();
 
   return worldPos.x >= windowPos.x && worldPos.x <= windowPos.x + windowSize.x &&
          worldPos.y >= windowPos.y && worldPos.y <= windowPos.y + windowSize.y;

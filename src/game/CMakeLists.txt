@@ -23,6 +23,8 @@ target_sources(
   "components/turret.cpp"   
   "components/shapes.hpp"  
   "components/shapes.cpp"  
+  "components/items.hpp"
+  "components/items.cpp"
   "components/inventory.hpp"
   "components/inventory.cpp"
   "components/worldMap.hpp"

@@ -116,4 +116,8 @@ Vec2 EventModule::getMouseWorldPos() const {
   return renderModule.getWorldCoords(mouseCoords);
 }
 
+NODISCARD bool EventModule::isMouseButtonPressed(MouseButton button) const {
+  return SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(static_cast<u8>(button));
+}
+
 RAMPAGE_END

@@ -4,6 +4,43 @@
 
 RAMPAGE_START
 
+template<typename T>
+struct ObjectData {
+#ifndef NDEBUG
+  bool hasValue = false;
+#endif
+
+  std::array<u8, sizeof(T)> data;
+
+  T* get() {
+    assert(hasValue);
+    return reinterpret_cast<T*>(data.data());
+  }
+
+  T* construct() {
+#ifndef NDEBUG
+    hasValue = true;
+#endif
+    return new (data.data()) T();
+  }
+
+  void destruct() {
+    get()->~T();
+#ifndef NDEBUG
+    hasValue = false;
+#endif
+  }
+
+  void move(ObjectData<T>* dst) {
+    new (dst->data.data()) T(std::move(*get()));
+    get()->~T();
+#ifndef NDEBUG
+    dst->hasValue = true;
+    hasValue = false;
+#endif
+  }
+};
+
 class IPool {
 public:
   virtual ~IPool() = default;
@@ -70,16 +107,14 @@ public:
       m_sparse.resize(newSize, npos);
     }
 
-    if (!m_freed.empty()) {
-      size_t freeIndex = m_freed.back();
-
-      m_dense[freeIndex].emplace();
-      m_sparse[id] = freeIndex;
-      m_freed.pop_back();
-    } else {
-      m_dense.emplace_back(std::in_place);
-      m_sparse[id] = m_dense.size() - 1;
+    if (m_denseSize == m_denseCap) {
+      allocateAdditional((m_denseCap + 1) * 2); // exponential
     }
+
+    m_sparse[id] = m_denseSize;
+    m_denseToEntity.push_back(id);
+    m_dense[m_denseSize].construct();
+    m_denseSize++;
 
     return get(id);
   }
@@ -87,9 +122,20 @@ public:
   void destroy(EntityId id) override {
     assert(exists(id));
 
-    size_t remIndex = m_sparse[id];
-    m_dense[remIndex].reset();
-    m_freed.push_back(remIndex);
+    size_t denseIdx = m_sparse[id];
+    size_t lastIdx = m_denseSize - 1;
+
+    m_dense[denseIdx].destruct();
+
+    if (denseIdx != lastIdx) {
+      m_dense[lastIdx].move(&m_dense[denseIdx]);
+      EntityId lastEntity = m_denseToEntity[lastIdx];
+      m_sparse[lastEntity] = denseIdx;
+      m_denseToEntity[denseIdx] = lastEntity;
+    }
+
+    m_denseToEntity.pop_back();
+    m_denseSize--;
     m_sparse[id] = npos;
   }
 
@@ -99,13 +145,30 @@ public:
 
   u8* get(EntityId id) override {
     assert(exists(id));
-    assert(m_dense[m_sparse[id]].has_value());
-    return reinterpret_cast<u8*>(&m_dense[m_sparse[id]].value());
+    assert(m_dense[m_sparse[id]].hasValue);
+    return reinterpret_cast<u8*>(m_dense[m_sparse[id]].get());
+  }
+
+protected:
+  void allocateAdditional(size_t additionalSize) {
+    size_t totalNewCap = m_denseCap + additionalSize;
+    
+    ObjectData<T>* newDense = static_cast<ObjectData<T>*>(std::malloc(totalNewCap * sizeof(ObjectData<T>)));
+    if (m_dense) {
+      for (size_t i = 0; i < m_denseSize; ++i)
+        m_dense[i].move(newDense + i);
+      std::free(m_dense);
+    }
+
+    m_denseCap = totalNewCap;
+    m_dense = newDense;
   }
 
 private:
-  std::vector<size_t> m_freed;
-  std::vector<std::optional<T>> m_dense;
+  size_t m_denseCap = 0;
+  size_t m_denseSize = 0;
+  ObjectData<T>* m_dense = nullptr;
+  std::vector<EntityId> m_denseToEntity;
   std::vector<size_t> m_sparse;
 };
 

@@ -44,7 +44,7 @@ public:
   }
 
   template <typename T>
-  RefT<T> get() {
+  RefT<T> get() const {
     m_world->exists(m_id);
     return RefT<T>(m_world, m_id);
   }
