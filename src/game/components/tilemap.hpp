@@ -31,6 +31,26 @@ inline TileDirection getOppositeDirection(TileDirection dir) {
   }
 }
 
+inline TileDirection rotateTileDirection(TileDirection dir, int steps) {
+  return static_cast<TileDirection>((static_cast<int>(dir) + steps) & 3);
+}
+
+inline float tileDirectionToRadians(TileDirection dir) {
+  // Up=0, Right=-π/2, Down=π, Left=π/2
+  static constexpr float angles[] = { 0.0f, -glm::half_pi<float>(), glm::pi<float>(), glm::half_pi<float>() };
+  return angles[static_cast<u8>(dir)];
+}
+
+inline glm::ivec2 rotateTileOffset(glm::ivec2 offset, TileDirection rotation) {
+  switch (rotation) {
+    case TileDirection::Up:    return offset;
+    case TileDirection::Right: return { offset.y, -offset.x };
+    case TileDirection::Down:  return { -offset.x, -offset.y };
+    case TileDirection::Left:  return { -offset.y, offset.x };
+  }
+  return offset;
+}
+
 inline Vec2 getLocalTileCenter(const glm::ivec2& tilePos) {
   return static_cast<glm::vec2>(tilePos) * tileSize + tileSize * 0.5f;
 }
@@ -66,6 +86,7 @@ struct TileComponent {
   b2ShapeId shapeId;
   glm::ivec2 pos = {0, 0};
   WorldLayer layer = WorldLayer::Floor;
+  TileDirection rotation = TileDirection::Up;
   EntityId parent = 0;
   b2SurfaceMaterial material = b2DefaultSurfaceMaterial();
 };

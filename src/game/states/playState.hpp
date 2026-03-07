@@ -176,6 +176,14 @@ public:
       EntityPtr tmEntity = it->next();
       tmMgr.checkAndHandleBreakage(m_world, tmEntity);
     }
+
+    if(evtMod.isKeyPressed(Key::P)) {
+      EntityPtr e = getTileAtPos(m_world, evtMod.getMouseWorldPos());
+      if(!e.isNull()) {
+        auto tileComp = e.get<TileComponent>();
+        tileComp->rotation = rotateTileDirection(tileComp->rotation, 1);
+      }
+    }
   }
 
   void onLeave() {

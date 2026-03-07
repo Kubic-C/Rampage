@@ -1773,6 +1773,10 @@ struct TileComponent : public JsonValue {
       static const char* name() { return "pos"; }
       static constexpr bool required = false;
     };
+    struct Rotation {
+      static const char* name() { return "rotation"; }
+      static constexpr bool required = false;
+    };
     struct Type {
       static const char* name() { return "type"; }
       static constexpr bool required = true;
@@ -1815,6 +1819,15 @@ struct TileComponent : public JsonValue {
         result.merge(Pos::validate(j["pos"], fp));
       }
     }
+    if (j.contains("rotation")) {
+      std::string fp = path.empty() ? "rotation" : path + ".rotation";
+      if (!j["rotation"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["rotation"].get_ref<const std::string&>();
+        { bool ok = val == "Up" || val == "Right" || val == "Down" || val == "Left"; if (!ok) result.add(fp, "Value not in enum"); }
+      }
+    }
     if (j.contains("type")) {
       std::string fp = path.empty() ? "type" : path + ".type";
       if (!j["type"].is_string()) {
@@ -1843,6 +1856,9 @@ struct TileComponent : public JsonValue {
     if (j.contains("pos")) {
       obj.setPos(Pos::fromJson(j["pos"]));
     }
+    if (j.contains("rotation")) {
+      obj.setRotation(j["rotation"].get<std::string>());
+    }
     obj.setType(j.at("type").get<std::string>());
     return obj;
   }
@@ -1866,6 +1882,11 @@ struct TileComponent : public JsonValue {
   Pos& getPos() { return pos_.value(); }
   void setPos(const Pos& value) { pos_ = value; }
 
+  bool hasRotation() const { return rotation_.has_value(); }
+  const std::string& getRotation() const { return rotation_.value(); }
+  std::string& getRotation() { return rotation_.value(); }
+  void setRotation(const std::string& value) { rotation_ = value; }
+
   const std::string& getType() const { return type_; }
   std::string& getType() { return type_; }
   void setType(const std::string& value) { type_ = value; }
@@ -1875,6 +1896,7 @@ private:
   std::optional<std::string> layer_;
   std::optional<Material> material_;
   std::optional<Pos> pos_;
+  std::optional<std::string> rotation_;
   std::string type_;
 };
 

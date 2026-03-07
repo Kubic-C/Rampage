@@ -176,6 +176,7 @@ struct TileComponent {
     parent @1 :UInt32 = 0;
     material @2 :SurfaceMaterial;
     collidable @3 :Bool = true;
+    rotation @4 :UInt8 = 0;
 }
 
 struct TileEntry {

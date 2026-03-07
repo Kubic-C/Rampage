@@ -109,4 +109,11 @@ Vec2 EventModule::getMouseCoords() const {
   return Vec2(x, y);
 }
 
+Vec2 EventModule::getMouseWorldPos() const {
+  auto renderModule = m_host->getWorld()->getContext<RenderModule>();
+
+  Vec2 mouseCoords = getMouseCoords();
+  return renderModule.getWorldCoords(mouseCoords);
+}
+
 RAMPAGE_END

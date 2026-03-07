@@ -3340,6 +3340,8 @@ public:
 
   inline bool getCollidable() const;
 
+  inline  ::uint8_t getRotation() const;
+
 private:
   ::capnp::_::StructReader _reader;
   template <typename, ::capnp::Kind>
@@ -3387,6 +3389,9 @@ public:
 
   inline bool getCollidable();
   inline void setCollidable(bool value);
+
+  inline  ::uint8_t getRotation();
+  inline void setRotation( ::uint8_t value);
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -7316,6 +7321,20 @@ inline bool TileComponent::Builder::getCollidable() {
 inline void TileComponent::Builder::setCollidable(bool value) {
   _builder.setDataField<bool>(
       ::capnp::bounded<32>() * ::capnp::ELEMENTS, value, true);
+}
+
+inline  ::uint8_t TileComponent::Reader::getRotation() const {
+  return _reader.getDataField< ::uint8_t>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint8_t TileComponent::Builder::getRotation() {
+  return _builder.getDataField< ::uint8_t>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS);
+}
+inline void TileComponent::Builder::setRotation( ::uint8_t value) {
+  _builder.setDataField< ::uint8_t>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS, value);
 }
 
 inline bool TileEntry::Reader::hasPos() const {

@@ -20,6 +20,7 @@ public:
   NODISCARD bool hasWindowResized() const;
   NODISCARD glm::vec2 getWindowSize() const;
   NODISCARD Vec2 getMouseCoords() const;
+  NODISCARD Vec2 getMouseWorldPos() const;
 
 public:
   int onLoad() override;

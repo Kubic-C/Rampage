@@ -190,7 +190,7 @@ int meshSprites(IWorldPtr world, float dt) {
     b2BodyId bodyId = world->getEntity(tile->parent).get<BodyComponent>()->id;
     Transform transform(
       getWorldTilePosition(entity),
-      b2Body_GetRotation(bodyId));
+      Rot(b2Body_GetRotation(bodyId)) + Rot(tileDirectionToRadians(tile->rotation)));
     if(!cameraViewRect.contains(transform.pos))
       continue;
 

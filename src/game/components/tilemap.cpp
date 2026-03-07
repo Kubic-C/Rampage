@@ -82,6 +82,9 @@ void TileComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
   // Serialize parent
   tileBuilder.setParent(self->parent);
   
+  // Serialize rotation
+  tileBuilder.setRotation(static_cast<u8>(self->rotation));
+
   // Serialize material
   auto matBuilder = tileBuilder.getMaterial();
   matBuilder.setFriction(self->material.friction);
@@ -105,6 +108,9 @@ void TileComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id
   
   // Deserialize parent
   self->parent = idMapper.resolve(tileReader.getParent());
+
+  // Deserialize rotation
+  self->rotation = static_cast<TileDirection>(tileReader.getRotation());
   
   // Deserialize material
   const auto matReader = tileReader.getMaterial();
@@ -144,6 +150,15 @@ void TileComponent::fromJson(Ref component, AssetLoader loader, const JSchema::J
     else self->layer = WorldLayer::Floor;
   }
   
+  // Parse rotation if provided
+  if (compJson->hasRotation()) {
+    const std::string& rotName = compJson->getRotation();
+    if (rotName == "Up") self->rotation = TileDirection::Up;
+    else if (rotName == "Right") self->rotation = TileDirection::Right;
+    else if (rotName == "Down") self->rotation = TileDirection::Down;
+    else if (rotName == "Left") self->rotation = TileDirection::Left;
+  }
+
   // Parse material if provided
   if (compJson->hasMaterial()) {
     auto matJson = compJson->getMaterial();

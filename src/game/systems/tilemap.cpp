@@ -65,7 +65,8 @@ bool TilemapManager::canInsert(IWorldPtr world, EntityId tilemapEntityId, WorldL
     for(const auto& pos : multiTile->occupiedPositions) {
       if(pos == multiTile->anchorPos)
         continue; // Skip the anchor tile since we already added it
-      occupiedPositions.push_back({pos + gridPos, NullEntityId});
+      glm::ivec2 rotatedOffset = rotateTileOffset(pos - multiTile->anchorPos, tile->rotation);
+      occupiedPositions.push_back({rotatedOffset + gridPos, NullEntityId});
     }
   }
 
@@ -108,7 +109,8 @@ bool TilemapManager::insertTile(IWorldPtr world, EntityId tilemapEntityId, World
     for(const auto& pos : multiTile->occupiedPositions) {
       if(pos == multiTile->anchorPos)
         continue; // Skip the anchor tile since we already added it
-      occupiedPositions.push_back({pos + gridPos, NullEntityId});
+      glm::ivec2 rotatedOffset = rotateTileOffset(pos - multiTile->anchorPos, tile->rotation);
+      occupiedPositions.push_back({rotatedOffset + gridPos, NullEntityId});
     }
   }
 

@@ -365,6 +365,10 @@
                       "type": "string",
                       "enum": ["Top", "Item", "Wall", "Floor"]
                     },
+                    "rotation": {
+                      "type": "string",
+                      "enum": ["Up", "Right", "Down", "Left"]
+                    },
                     "material": {
                       "type": "object",
                       "properties": {
