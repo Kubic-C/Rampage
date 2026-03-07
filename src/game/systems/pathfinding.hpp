@@ -1,5 +1,5 @@
 #pragma once
-#include "../../common/common.hpp"
+#include "../components/arrow.hpp"
 
 RAMPAGE_START
 

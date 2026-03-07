@@ -1,8 +1,20 @@
 #pragma once
 
 #include "../../common/common.hpp"
+#include "../../render/render.hpp"
 
 RAMPAGE_START
+
+struct ShapeVertex {
+  glm::vec3 pos;
+  glm::vec3 color;
+};
+
+using ShapeMeshComponent = Mesh<ShapeVertex, 3, 3>;
+
+struct CircleMeshComponent {
+  std::vector<ShapeVertex> vertices;
+};
 
 struct CircleRenderComponent {
   static void serialize(capnp::MessageBuilder& builder, Ref component);

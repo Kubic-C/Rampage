@@ -384,6 +384,7 @@ std::vector<EntityPtr> TilemapManager::checkAndHandleBreakage(IWorldPtr world, E
         shapeDef.userData = entityToB2Data(tileEntity.id());
         shapeDef.material = tile->material;
         shapeDef.updateBodyMass = false;
+        shapeDef.isSensor = !tile->collidable;
         tile->shapeId = b2CreatePolygonShape(newBodyComp->id, &shapeDef, &tilePolygon);
 
         // Update tile parent reference

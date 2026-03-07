@@ -143,36 +143,6 @@ void InventoryManager::dropItem(IWorldPtr world, EntityId invEntityId, u16 x, u1
   dropItem(world, slot.itemId, dropPosition, count);
 }
 
-float isShapeEntityPlaceable(b2ShapeId shapeId, b2Vec2 point, b2Vec2 normal, float fraction, void* context) {
-  std::vector<EntityId>& entitiesAtPlacement = *(std::vector<EntityId>*)context;
-
-  EntityId entityId = b2RawDataToEntity(b2Shape_GetUserData(shapeId));
-  if(entityId != 0) {
-    entitiesAtPlacement.push_back(entityId);
-  }
-
-  return -1.0f;
-}
-
-EntityPtr getTile(IWorldPtr world, Vec2 placePosition) {
-  b2WorldId worldId = world->getContext<b2WorldId>();
-
-  std::vector<EntityId> entitiesAtPlacement;
-  b2QueryFilter filter;
-  filter.categoryBits = Static;
-  filter.maskBits = Static | Friendly;
-  b2World_CastRay(worldId, placePosition, {0}, filter, &isShapeEntityPlaceable, &entitiesAtPlacement);
-
-  for(EntityId entityId : entitiesAtPlacement) {
-    EntityPtr entity = world->getEntity(entityId);
-    if (entity.has<TileComponent>()) {
-      return entity;
-    }
-  }
-
-  return world->getEntity(0); // null entity
-}
-
 bool canPlace(EntityPtr itemEntity, Vec2 placePosition) {
   auto world = itemEntity.world();
 
@@ -180,7 +150,7 @@ bool canPlace(EntityPtr itemEntity, Vec2 placePosition) {
     return false; // Invalid item entity in slot
   }
 
-  return !getTile(world, placePosition).isNull();
+  return !getTileAtPos(world, placePosition).isNull();
 }
 
 bool InventoryManager::placeItem(IWorldPtr world, EntityId itemId, Vec2 placePosition, u32 pickableCount) {
@@ -194,7 +164,7 @@ bool InventoryManager::placeItem(IWorldPtr world, EntityId itemId, Vec2 placePos
   EntityId entityToPlaceId;
   EntityPtr entityToClone = world->getEntity(itemEntity.get<ItemPlaceableComponent>()->entityId);
   if(entityToClone.has<TileComponent>()) {
-    EntityPtr existingTileEntity = getTile(world, placePosition);
+    EntityPtr existingTileEntity = getTileAtPos(world, placePosition);
     WorldLayer layer = getNextLayer(existingTileEntity.get<TileComponent>()->layer);
     EntityPtr tilemapEntity = world->getEntity(existingTileEntity.get<TileComponent>()->parent);
     if(!tmMgr.canInsert(world, tilemapEntity.id(), layer, existingTileEntity.get<TileComponent>()->pos, entityToClone)) {

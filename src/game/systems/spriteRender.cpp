@@ -6,6 +6,8 @@
 #include "../components/sprite.hpp"
 #include "../components/tilemap.hpp"
 #include "../systems/tilemap.hpp"
+#include "shapeRender.hpp"
+#include "pathfinding.hpp"
 
 RAMPAGE_START
 
@@ -161,6 +163,7 @@ int meshSprites(IWorldPtr world, float dt) {
   EntityPtr spriteRender = world->getFirstWith(world->set<SpriteRendererTag>());
   auto va = spriteRender.get<VertexArrayBufferComponent>();
   auto instances = spriteRender.get<InstanceBufferComponent>();
+  auto shapeMeshComp = world->getFirstWith(world->set<ShapeMeshComponent>()).get<ShapeMeshComponent>();
 
   auto it = world->getWith(world->set<TransformComponent, SpriteComponent>());
   while (it->hasNext()) {
@@ -181,6 +184,15 @@ int meshSprites(IWorldPtr world, float dt) {
       getWorldTilePosition(entity),
       b2Body_GetRotation(bodyId));
     meshSprite(transform, *sprite, *va, *instances);
+
+    if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F1]) {
+      if (!entity.has<ArrowComponent>())
+        continue;
+      Vec2 worldPos = transform.pos;
+      auto arrow = entity.get<ArrowComponent>();
+
+      drawLine(*shapeMeshComp, worldPos, worldPos + transform.rot.rotate(arrow->dir) * 0.5f, glm::vec3(1.0f, (float)arrow->generation / 255, 0.0f), 0.01f, 1.0f);
+    }
   }
 
   return 0;

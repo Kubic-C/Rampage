@@ -2,7 +2,6 @@
 
 #include "../../core/transform.hpp"
 #include "../../render/module.hpp"
-#include "../../render/render.hpp"
 #include "../components/shapes.hpp"
 
 RAMPAGE_START
@@ -33,19 +32,8 @@ const char* triangleFragShaderSource = R"###(
             fragColor = vec4(color, 1.0);
         })###";
 
-struct Vertex {
-  glm::vec3 pos;
-  glm::vec3 color;
-};
-
-using ShapeMeshComponent = Mesh<Vertex, 3, 3>;
-
-struct CircleMeshComponent {
-  std::vector<Vertex> vertices;
-};
-
-std::vector<Vertex> generateCircleVertices(int resolution) {
-  std::vector<Vertex> circleMesh;
+std::vector<ShapeVertex> generateCircleVertices(int resolution) {
+  std::vector<ShapeVertex> circleMesh;
 
   int count = 0;
   const float anglePerTriangle = glm::pi<float>() * 2 / resolution;
@@ -55,9 +43,9 @@ std::vector<Vertex> generateCircleVertices(int resolution) {
     float xNext = cos(angle + anglePerTriangle);
     float yNext = sin(angle + anglePerTriangle);
 
-    circleMesh.push_back(Vertex({0, 0, 0}, glm::vec3(0, 0, 0)));
-    circleMesh.push_back(Vertex({x, y, 0}, glm::vec3(0, 0, 0)));
-    circleMesh.push_back(Vertex({xNext, yNext, 0}, glm::vec3(0, 0, 0)));
+    circleMesh.push_back(ShapeVertex({0, 0, 0}, glm::vec3(0, 0, 0)));
+    circleMesh.push_back(ShapeVertex({x, y, 0}, glm::vec3(0, 0, 0)));
+    circleMesh.push_back(ShapeVertex({xNext, yNext, 0}, glm::vec3(0, 0, 0)));
 
     x = xNext;
     y = yNext;
@@ -71,8 +59,8 @@ void drawRectangle(ShapeMeshComponent& mesh, const Transform& transform, glm::ve
   const glm::vec3 rect[4] = {glm::vec3(-hw, -hh, z), glm::vec3(hw, -hh, z), glm::vec3(hw, hh, z),
                              glm::vec3(-hw, hh, z)};
 
-  Vertex vertices[] = {Vertex(rect[0], color), Vertex(rect[1], color), Vertex(rect[2], color),
-                       Vertex(rect[2], color), Vertex(rect[3], color), Vertex(rect[0], color)};
+  ShapeVertex vertices[] = {ShapeVertex(rect[0], color), ShapeVertex(rect[1], color), ShapeVertex(rect[2], color),
+                            ShapeVertex(rect[2], color), ShapeVertex(rect[3], color), ShapeVertex(rect[0], color)};
 
   for (int i = 0; i < 6; i++)
     vertices[i].pos =
@@ -83,7 +71,7 @@ void drawRectangle(ShapeMeshComponent& mesh, const Transform& transform, glm::ve
 }
 
 void drawLine(ShapeMeshComponent& mesh, glm::vec2 from, glm::vec2 to, glm::vec3 color, float hw,
-              float z = -1.0f) {
+              float z) {
   float l = glm::length(to - from);
   glm::vec2 dir = glm::normalize(to - from);
   float angle = atan2(dir.y, dir.x);
@@ -95,15 +83,15 @@ void drawLine(ShapeMeshComponent& mesh, glm::vec2 from, glm::vec2 to, glm::vec3 
     rect[i] += glm::vec3(from, 0.0f);
   }
 
-  Vertex vertices[] = {Vertex(rect[0], color), Vertex(rect[1], color), Vertex(rect[2], color),
-                       Vertex(rect[2], color), Vertex(rect[3], color), Vertex(rect[0], color)};
+  ShapeVertex vertices[] = {ShapeVertex(rect[0], color), ShapeVertex(rect[1], color), ShapeVertex(rect[2], color),
+                            ShapeVertex(rect[2], color), ShapeVertex(rect[3], color), ShapeVertex(rect[0], color)};
 
   mesh.addMesh(vertices);
   mesh.addMesh(&vertices[3]);
 }
 
 void drawHollowCircle(ShapeMeshComponent& mesh, const Transform& transform, glm::vec3 color, float r,
-                      int resolution = 30, float thickness = 0.01f, float z = -1) {
+                      int resolution, float thickness, float z) {
   int count = 0;
   const float anglePerTriangle = glm::pi<float>() * 2 / resolution;
   float x = r;
@@ -119,11 +107,11 @@ void drawHollowCircle(ShapeMeshComponent& mesh, const Transform& transform, glm:
   }
 }
 
-void drawCircle(ShapeMeshComponent& mesh, const std::vector<Vertex>& circleMesh, const Transform& transform,
-                glm::vec3 color, float r, float z = -1) {
+void drawCircle(ShapeMeshComponent& mesh, const std::vector<ShapeVertex>& circleMesh, const Transform& transform,
+                glm::vec3 color, float r, float z) {
   for (int i = 0; i < circleMesh.size(); i += 3) {
-    Vertex copy[3];
-    std::memcpy(copy, &circleMesh[i], sizeof(Vertex) * 3);
+    ShapeVertex copy[3];
+    std::memcpy(copy, &circleMesh[i], sizeof(ShapeVertex) * 3);
 
     for (int i = 0; i < 3; i++) {
       copy[i].pos = glm::vec3(transform.getWorldPoint({copy[i].pos.x * r, copy[i].pos.y * r}), z);
@@ -138,8 +126,6 @@ int meshShapes(IWorldPtr world, float dt) {
   EntityPtr shapeRender = world->getFirstWith(world->set<ShapeRendererTag>());
   auto shapeMesh = shapeRender.get<ShapeMeshComponent>();
   auto circleMesh = shapeRender.get<CircleMeshComponent>();
-
-  shapeMesh->reset();
 
   auto itCircle = world->getWith(world->set<CircleRenderComponent, TransformComponent>());
   while (itCircle->hasNext()) {
@@ -174,6 +160,7 @@ int renderShapes(IWorldPtr world, float dt) {
   shader->setMat4("u_vp", world->getContext<RenderModule>().getViewProj());
   va->bind();
   glDrawArrays(GL_TRIANGLES, 0, mesh->verticesToRender);
+  mesh->reset();
 
   return 0;
 }
@@ -199,8 +186,8 @@ EntityPtr createShapeRender(IHost& host) {
   auto mesh = shapeRender.get<ShapeMeshComponent>();
   auto circleMesh = shapeRender.get<CircleMeshComponent>();
 
-  va->addVertexArrayAttrib(mesh->buffer, 0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
-  va->addVertexArrayAttrib(mesh->buffer, 1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), offsetof(Vertex, color));
+  va->addVertexArrayAttrib(mesh->buffer, 0, 3, GL_FLOAT, GL_FALSE, sizeof(ShapeVertex), 0);
+  va->addVertexArrayAttrib(mesh->buffer, 1, 3, GL_FLOAT, GL_FALSE, sizeof(ShapeVertex), offsetof(ShapeVertex, color));
 
   std::string resultStr;
   if (!shader->loadShaderStr(triangleVertexShaderSource, triangleFragShaderSource, resultStr)) {

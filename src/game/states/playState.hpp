@@ -143,6 +143,7 @@ public:
     auto& appStats = m_world->getContext<AppStats>();
     auto& physicsWorldId = m_world->getContext<b2WorldId>();
     auto& tmMgr = m_world->getContext<TilemapManager>();
+    auto& evtMod = m_world->getContext<EventModule>();
     const u32 activeBodies = b2World_GetAwakeBodyCount(physicsWorldId);
 
     m_tickText->setText("Tick: " + std::to_string(tick));
@@ -164,9 +165,9 @@ public:
       if(entity.isNull() || !entity.alive())
         continue;
 
-      if(entity.has<TileComponent>()) {
+      if(entity.has<TileComponent>() && evtMod.isKeyHeld(Key::LeftControl)) {
         auto tileComp = entity.get<TileComponent>();
-        // tmMgr.removeTile(m_world, tileComp->parent, tileComp->layer, tileComp->pos, true);
+        tmMgr.removeTile(m_world, tileComp->parent, tileComp->layer, tileComp->pos, true);
       }
     }
 

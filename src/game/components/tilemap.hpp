@@ -165,4 +165,34 @@ inline Vec2 getWorldTilePosition(EntityPtr tileEntity) {
 }
 
 
+inline float _getShapeEntity(b2ShapeId shapeId, b2Vec2 point, b2Vec2 normal, float fraction, void* context) {
+  std::vector<EntityId>& entitiesAtPlacement = *(std::vector<EntityId>*)context;
+
+  EntityId entityId = b2RawDataToEntity(b2Shape_GetUserData(shapeId));
+  if(entityId != 0) {
+    entitiesAtPlacement.push_back(entityId);
+  }
+
+  return -1.0f;
+}
+
+inline EntityPtr getTileAtPos(IWorldPtr world, Vec2 worldPos) {
+  b2WorldId worldId = world->getContext<b2WorldId>();
+
+  std::vector<EntityId> entitiesAtPlacement;
+  b2QueryFilter filter;
+  filter.categoryBits = Static;
+  filter.maskBits = Static | Friendly;
+  b2World_CastRay(worldId, worldPos, {0}, filter, &_getShapeEntity, &entitiesAtPlacement);
+
+  for(EntityId entityId : entitiesAtPlacement) {
+    EntityPtr entity = world->getEntity(entityId);
+    if (entity.has<TileComponent>()) {
+      return entity;
+    }
+  }
+
+  return world->getEntity(0); // null entity
+}
+
 RAMPAGE_END
