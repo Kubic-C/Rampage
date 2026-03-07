@@ -19,6 +19,13 @@ struct GameGroup {
   struct PostTickStage {};
 };
 
+// Called once per second
+struct GamePerSecondGroup {
+  struct PreTickStage {};
+  struct TickStage {};
+  struct PostTickStage {};
+};
+
 class CoreModule final : public IStaticModule {
 public:
   std::vector<std::type_index> getDependencies() override {

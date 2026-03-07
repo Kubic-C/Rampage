@@ -2,6 +2,7 @@
 
 #include "../../core/module.hpp"
 #include "../../render/module.hpp"
+#include "../../render/camera.hpp"
 #include "../../render/render.hpp"
 #include "../components/sprite.hpp"
 #include "../components/tilemap.hpp"
@@ -164,12 +165,19 @@ int meshSprites(IWorldPtr world, float dt) {
   auto va = spriteRender.get<VertexArrayBufferComponent>();
   auto instances = spriteRender.get<InstanceBufferComponent>();
   auto shapeMeshComp = world->getFirstWith(world->set<ShapeMeshComponent>()).get<ShapeMeshComponent>();
+  auto& renderMgr = world->getContext<RenderModule>();
+
+  if(!renderMgr.doesCameraExists())
+    return 0;
+  ViewRect cameraViewRect = renderMgr.getViewRect();
 
   auto it = world->getWith(world->set<TransformComponent, SpriteComponent>());
   while (it->hasNext()) {
     EntityPtr entity = it->next();
     auto transform = entity.get<TransformComponent>();
     auto sprite = entity.get<SpriteComponent>();
+    if(!cameraViewRect.contains(transform->pos))
+      continue;
     meshSprite(*transform, *sprite, *va, *instances);
   }
 
@@ -183,6 +191,9 @@ int meshSprites(IWorldPtr world, float dt) {
     Transform transform(
       getWorldTilePosition(entity),
       b2Body_GetRotation(bodyId));
+    if(!cameraViewRect.contains(transform.pos))
+      continue;
+
     meshSprite(transform, *sprite, *va, *instances);
 
     if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F1]) {

@@ -31,6 +31,11 @@ int CoreModule::onLoad() {
     .createStage<GameGroup::TickStage>()
     .createStage<GameGroup::PostTickStage>();
 
+  pipeline.createGroup<GamePerSecondGroup>(1)
+    .createStage<GamePerSecondGroup::PreTickStage>()
+    .createStage<GamePerSecondGroup::TickStage>()
+    .createStage<GamePerSecondGroup::PostTickStage>();
+
   return 0;
 }
 

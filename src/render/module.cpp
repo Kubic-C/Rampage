@@ -161,6 +161,27 @@ glm::ivec2 RenderModule::getWindowSize() const {
   return screenSize;
 }
 
+ViewRect RenderModule::getViewRect() const {
+  IWorldPtr world = m_host->getWorld();
+  EntityPtr cameraEntity = world->getFirstWith(world->set<CameraInUseTag>());
+  glm::ivec2 screenDim = getWindowSize();
+
+  if(!doesCameraExists())
+    return ViewRect{};
+
+  auto camera = cameraEntity.get<CameraComponent>();
+  auto transform = cameraEntity.get<TransformComponent>();
+
+  return camera->getViewRect(Transform(transform->pos, camera->m_rot), static_cast<glm::vec2>(screenDim), 1.0f / camera->m_zoom);
+}
+
+bool RenderModule::doesCameraExists() const {
+  IWorldPtr world = m_host->getWorld();
+  EntityPtr cameraEntity = world->getFirstWith(world->set<CameraInUseTag>());
+
+  return cameraEntity.exists();
+}
+
 glm::vec2 RenderModule::getWorldCoords(const glm::ivec2& _screenCoords) const {
   glm::ivec2 screenSize = getWindowSize();
   glm::vec2 screenCoords = {(float)_screenCoords.x, (float)_screenCoords.y};

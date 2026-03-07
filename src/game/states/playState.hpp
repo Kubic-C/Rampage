@@ -111,16 +111,16 @@ public:
       tm.add<WorldMapTag>();
       auto bodyComp = tm.get<BodyComponent>();
       b2BodyDef bodyDef = b2DefaultBodyDef();
-      bodyDef.type = b2_dynamicBody;
+      bodyDef.type = b2_staticBody;
       bodyComp->id = b2CreateBody(physicsWorld, &bodyDef);
 
-      int length = 5;
-      for(int x = -length; x < length * 10; x++)
+      int length = 50;
+      for(int x = -length; x < length * 2; x++)
         for(int y = -length; y < length; y++)
           tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(x, y), assetLoader.cloneAsset("StoneFloorTile"));
 
       // Stone outline around the tilemap
-      for(int x = -length - 1; x <= length * 10; x++) {
+      for(int x = -length - 1; x <= length * 2; x++) {
         tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(x, length), assetLoader.cloneAsset("PermaHighStoneTile"));
         tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(x, -length - 1), assetLoader.cloneAsset("PermaHighStoneTile"));
       }
@@ -171,7 +171,11 @@ public:
       }
     }
 
-    tmMgr.checkAndHandleBreakage(m_world, m_tm);
+    auto it = m_world->getWith(m_world->set<TilemapComponent>());
+    while(it->hasNext()) {
+      EntityPtr tmEntity = it->next();
+      tmMgr.checkAndHandleBreakage(m_world, tmEntity);
+    }
   }
 
   void onLeave() {

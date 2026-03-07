@@ -64,7 +64,7 @@ void updateFlowField(IWorldPtr world, EntityPtr map, PathfindingContext& context
   auto playerTransform = player.get<TransformComponent>();
 
   // Max tile-space Chebyshev distance for the flow field radius
-  static constexpr int maxTileDistance = 10;
+  static constexpr int maxTileDistance = 1000;
 
   Vec2 localMapPos = mapTransform->getLocalPoint(playerTransform->pos);
   glm::ivec2 localTilePos = getNearestTile(localMapPos);
@@ -146,6 +146,10 @@ int updatePathfinding(IWorldPtr world, float deltaTime) {
     updateFlowField(world, tm, context);
   }
 
+  return 0;
+}
+
+int updatePathfindingMovement(IWorldPtr world, float deltaTime) {
   IEntityIteratorPtr it = world->getWith(world->set<TransformComponent, BodyComponent, SeekPrimaryTargetTag>());
   while (it->hasNext()) {
     EntityPtr seeker = it->next();
@@ -198,7 +202,8 @@ void loadPathfindingSystems(IHost& host) {
   world->observe<OnCollisionBeginEvent>(world->component<LastCollisionData>(),
                 world->set<ContactDamageComponent>(), observeContactDamageCollision);
 
-  pipeline.getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(updatePathfinding);
+  pipeline.getGroup<GamePerSecondGroup>().attachToStage<GamePerSecondGroup::TickStage>(updatePathfinding);
+  pipeline.getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(updatePathfindingMovement);
 }
 
 RAMPAGE_END

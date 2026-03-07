@@ -1,6 +1,7 @@
 #pragma once
 #include "../core/module.hpp"
 #include "../log/module.hpp"
+#include "camera.hpp"
 
 RAMPAGE_START
 
@@ -30,6 +31,8 @@ public:
   glm::mat4 getView() const;
   glm::mat4 getViewProj() const;
   glm::ivec2 getWindowSize() const;
+  ViewRect getViewRect() const;
+  bool doesCameraExists() const;
   glm::vec2 getWorldCoords(const glm::ivec2& screenCoords) const;
   glm::vec2 getScreenCoords(const glm::ivec2& worldCoords) const;
 };
