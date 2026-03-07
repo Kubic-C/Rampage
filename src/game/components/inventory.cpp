@@ -23,11 +23,7 @@ void ItemPlaceableComponent::deserialize(capnp::MessageReader& reader, const IdM
   auto placeableReader = reader.getRoot<Schema::ItemPlaceableComponent>();
   auto self = component.cast<ItemPlaceableComponent>();
 
-  EntityId id = idMapper.resolve(placeableReader.getEntityId());
-  if(id == placeableReader.getEntityId()) {
-    std::cout << "Warning: Entity ID " << placeableReader.getEntityId() << " not found in IdMapper during deserialization of ItemPlaceableComponent. This may indicate a missing entity or an error in the ID mapping.\n";
-  }
-  self->entityId = id;
+  self->entityId = idMapper.resolve(placeableReader.getEntityId());
 }
 
 void ItemPlaceableComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {

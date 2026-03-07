@@ -65,13 +65,19 @@ void updateTurret(EntityPtr e, float dt, TurretContext& context) {
 
   Vec2 turretPos = getWorldTilePosition(e);
 
-  // Get parent body rotation if it exists
+  // Get parent body rotation + tile rotation
   float parentRot = 0.0f;
-  auto parent = e.world()->getEntity(e.get<TileComponent>()->parent);
+  auto tileComp = e.get<TileComponent>();
+  float tileRot = tileDirectionToRadians(tileComp->rotation);
+  auto parent = e.world()->getEntity(tileComp->parent);
   auto bodyComp = parent.get<BodyComponent>();
   if (b2Body_IsValid(bodyComp->id)) {
-    parentRot = b2Rot_GetAngle(b2Body_GetRotation(bodyComp->id));
+    parentRot = b2Rot_GetAngle(b2Body_GetRotation(bodyComp->id)) + tileRot;
   }
+
+  float parentDelta = signedAngleDiff(turret->cachedParentRot, parentRot);
+  turret->rot += parentDelta;
+  turret->cachedParentRot = parentRot;
 
   ClosestShape closestShape;
   closestShape.center = turretPos;

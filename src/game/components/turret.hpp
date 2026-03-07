@@ -15,6 +15,7 @@ struct TurretComponent {
   float radius = 2.0f; // search radius
 
   float rot = 0; // When 0, the turret is facing right
+  float cachedParentRot = 0.0f;
   float turnSpeed = 0.1f;
   float shootRange = 0.04f; // + or -
   float stopRange = 0.02f;
