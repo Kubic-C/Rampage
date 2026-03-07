@@ -33,8 +33,7 @@ public:
 
     if (m_enableRangeCheck) {
       if (!m_oldLocalIds.empty()) {
-        newId = m_oldLocalIds.back();
-        m_oldLocalIds.pop_back();
+        newId = *m_oldLocalIds.begin();
       } else {
         newId = ++m_lastLocalId;
       }
@@ -42,8 +41,7 @@ public:
       assert(newId >= m_startingLocalRange && "Global Ids overlapping with local ones!");
     } else {
       if (!m_oldIds.empty()) {
-        newId = m_oldIds.back();
-        m_oldIds.pop_back();
+        newId = *m_oldIds.begin();
       } else {
         newId = ++m_lastId;
       }
@@ -71,6 +69,12 @@ public:
       m_lastId = id;
     }
 
+    // Remove from recycle lists so generate() won't hand out this ID again
+    if(m_oldIds.contains(id))
+      m_oldIds.erase(id);
+    if(m_oldLocalIds.contains(id))
+      m_oldLocalIds.erase(id);
+
     return false;
   }
 
@@ -88,9 +92,9 @@ public:
     m_ids.erase(id);
 
     if (id >= m_startingLocalRange) {
-      m_oldLocalIds.push_back(id);
+      m_oldLocalIds.insert(id);
     } else {
-      m_oldIds.push_back(id);
+      m_oldIds.insert(id);
     }
   }
 
@@ -122,9 +126,8 @@ private:
   IdType m_lastId = IdType(0);
 
   Set<IdType> m_ids;
-
-  std::vector<IdType> m_oldIds;
-  std::vector<IdType> m_oldLocalIds;
+  Set<IdType> m_oldIds;
+  Set<IdType> m_oldLocalIds;
 };
 
 using EntityId = u32;

@@ -78,7 +78,7 @@ void updatePlayer(EntityPtr e, float dt) {
       continue;
 
     EntityPtr other = world->getEntity(otherId);
-    if(other.has<ItemStackComponent>()) {
+    if(other.has<ItemStackComponent>() && !other.has<ItemPlacedTag>()) {
       auto itemStackComp = other.get<ItemStackComponent>();
 
       u32 amountNotAdded = invMgr.addItem(world, e, itemStackComp->itemId, itemStackComp->count);

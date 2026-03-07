@@ -106,7 +106,9 @@ struct InventoryComponent;
 struct Padding;
 struct InventoryViewComponent;
 struct ItemUseComponent;
+struct ItemPlaceableComponent;
 struct ItemStackComponent;
+struct OwnedByComponent;
 struct ComponentsItem;
 struct EntitiesItem;
 struct GameAssetLoaderSchema;
@@ -402,7 +404,7 @@ struct LayersItem : public JsonValue {
         result.add(fp, "Expected string");
       } else {
         const auto& val = j["layer"].get_ref<const std::string&>();
-        { bool ok = val == "Bottom" || val == "Floor" || val == "Wall" || val == "Turret" || val == "Item" || val == "Top"; if (!ok) result.add(fp, "Value not in enum"); }
+        { bool ok = val == "Floor" || val == "Wall" || val == "Item" || val == "Top"; if (!ok) result.add(fp, "Value not in enum"); }
       }
     }
     if (j.contains("offset")) {
@@ -1759,6 +1761,10 @@ struct TileComponent : public JsonValue {
       static const char* name() { return "collidable"; }
       static constexpr bool required = false;
     };
+    struct Layer {
+      static const char* name() { return "layer"; }
+      static constexpr bool required = false;
+    };
     struct Material {
       static const char* name() { return "material"; }
       static constexpr bool required = false;
@@ -1782,6 +1788,15 @@ struct TileComponent : public JsonValue {
       std::string fp = path.empty() ? "collidable" : path + ".collidable";
       if (!j["collidable"].is_boolean()) {
         result.add(fp, "Expected boolean");
+      }
+    }
+    if (j.contains("layer")) {
+      std::string fp = path.empty() ? "layer" : path + ".layer";
+      if (!j["layer"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["layer"].get_ref<const std::string&>();
+        { bool ok = val == "Top" || val == "Item" || val == "Wall" || val == "Floor"; if (!ok) result.add(fp, "Value not in enum"); }
       }
     }
     if (j.contains("material")) {
@@ -1819,6 +1834,9 @@ struct TileComponent : public JsonValue {
     if (j.contains("collidable")) {
       obj.setCollidable(j["collidable"].get<bool>());
     }
+    if (j.contains("layer")) {
+      obj.setLayer(j["layer"].get<std::string>());
+    }
     if (j.contains("material")) {
       obj.setMaterial(Material::fromJson(j["material"]));
     }
@@ -1832,6 +1850,11 @@ struct TileComponent : public JsonValue {
   bool hasCollidable() const { return collidable_.has_value(); }
   bool getCollidable() const { return collidable_.value(); }
   void setCollidable(bool value) { collidable_ = value; }
+
+  bool hasLayer() const { return layer_.has_value(); }
+  const std::string& getLayer() const { return layer_.value(); }
+  std::string& getLayer() { return layer_.value(); }
+  void setLayer(const std::string& value) { layer_ = value; }
 
   bool hasMaterial() const { return material_.has_value(); }
   const Material& getMaterial() const { return material_.value(); }
@@ -1849,6 +1872,7 @@ struct TileComponent : public JsonValue {
 
 private:
   std::optional<bool> collidable_;
+  std::optional<std::string> layer_;
   std::optional<Material> material_;
   std::optional<Pos> pos_;
   std::string type_;
@@ -2050,10 +2074,6 @@ struct AnchorPos : public JsonValue {
       static const char* name() { return "y"; }
       static constexpr bool required = false;
     };
-    struct Z {
-      static const char* name() { return "z"; }
-      static constexpr bool required = false;
-    };
   };
 
   static ValidationResult validate(const json& j, const std::string& path = "") {
@@ -2073,14 +2093,6 @@ struct AnchorPos : public JsonValue {
         result.add(fp, "Expected integer");
       } else {
         int64_t val = j["y"].get<int64_t>();
-      }
-    }
-    if (j.contains("z")) {
-      std::string fp = path.empty() ? "z" : path + ".z";
-      if (!j["z"].is_number_integer()) {
-        result.add(fp, "Expected integer");
-      } else {
-        int64_t val = j["z"].get<int64_t>();
       }
     }
     return result;
@@ -2096,9 +2108,6 @@ struct AnchorPos : public JsonValue {
     if (j.contains("y")) {
       obj.setY(j["y"].get<int64_t>());
     }
-    if (j.contains("z")) {
-      obj.setZ(j["z"].get<int64_t>());
-    }
     return obj;
   }
 
@@ -2110,14 +2119,9 @@ struct AnchorPos : public JsonValue {
   int64_t getY() const { return y_.value(); }
   void setY(int64_t value) { y_ = value; }
 
-  bool hasZ() const { return z_.has_value(); }
-  int64_t getZ() const { return z_.value(); }
-  void setZ(int64_t value) { z_ = value; }
-
 private:
   std::optional<int64_t> x_;
   std::optional<int64_t> y_;
-  std::optional<int64_t> z_;
 };
 
 struct OccupiedPositionsItem : public JsonValue {
@@ -2128,10 +2132,6 @@ struct OccupiedPositionsItem : public JsonValue {
     };
     struct Y {
       static const char* name() { return "y"; }
-      static constexpr bool required = false;
-    };
-    struct Z {
-      static const char* name() { return "z"; }
       static constexpr bool required = false;
     };
   };
@@ -2155,14 +2155,6 @@ struct OccupiedPositionsItem : public JsonValue {
         int64_t val = j["y"].get<int64_t>();
       }
     }
-    if (j.contains("z")) {
-      std::string fp = path.empty() ? "z" : path + ".z";
-      if (!j["z"].is_number_integer()) {
-        result.add(fp, "Expected integer");
-      } else {
-        int64_t val = j["z"].get<int64_t>();
-      }
-    }
     return result;
   }
 
@@ -2176,9 +2168,6 @@ struct OccupiedPositionsItem : public JsonValue {
     if (j.contains("y")) {
       obj.setY(j["y"].get<int64_t>());
     }
-    if (j.contains("z")) {
-      obj.setZ(j["z"].get<int64_t>());
-    }
     return obj;
   }
 
@@ -2190,14 +2179,9 @@ struct OccupiedPositionsItem : public JsonValue {
   int64_t getY() const { return y_.value(); }
   void setY(int64_t value) { y_ = value; }
 
-  bool hasZ() const { return z_.has_value(); }
-  int64_t getZ() const { return z_.value(); }
-  void setZ(int64_t value) { z_ = value; }
-
 private:
   std::optional<int64_t> x_;
   std::optional<int64_t> y_;
-  std::optional<int64_t> z_;
 };
 
 struct MultiTileComponent : public JsonValue {
@@ -3792,7 +3776,6 @@ struct ItemUseComponent : public JsonValue {
     struct EntityId {
       static const char* name() { return "entityId"; }
       static constexpr bool required = false;
-      static constexpr int64_t minimum() { return 0; }
     };
     struct IsActive {
       static const char* name() { return "isActive"; }
@@ -3859,11 +3842,10 @@ struct ItemUseComponent : public JsonValue {
     }
     if (j.contains("entityId")) {
       std::string fp = path.empty() ? "entityId" : path + ".entityId";
-      if (!j["entityId"].is_number_integer()) {
-        result.add(fp, "Expected integer");
+      if (!j["entityId"].is_string()) {
+        result.add(fp, "Expected string");
       } else {
-        int64_t val = j["entityId"].get<int64_t>();
-        if (val < 0) result.add(fp, "Value below minimum");
+        const auto& val = j["entityId"].get_ref<const std::string&>();
       }
     }
     if (j.contains("isActive")) {
@@ -3920,7 +3902,7 @@ struct ItemUseComponent : public JsonValue {
       obj.setEffectValue(j["effectValue"].get<double>());
     }
     if (j.contains("entityId")) {
-      obj.setEntityId(j["entityId"].get<int64_t>());
+      obj.setEntityId(j["entityId"].get<std::string>());
     }
     if (j.contains("isActive")) {
       obj.setIsActive(j["isActive"].get<bool>());
@@ -3957,8 +3939,9 @@ struct ItemUseComponent : public JsonValue {
   void setEffectValue(double value) { effectValue_ = value; }
 
   bool hasEntityId() const { return entityId_.has_value(); }
-  int64_t getEntityId() const { return entityId_.value(); }
-  void setEntityId(int64_t value) { entityId_ = value; }
+  const std::string& getEntityId() const { return entityId_.value(); }
+  std::string& getEntityId() { return entityId_.value(); }
+  void setEntityId(const std::string& value) { entityId_ = value; }
 
   bool hasIsActive() const { return isActive_.has_value(); }
   bool getIsActive() const { return isActive_.value(); }
@@ -3982,10 +3965,72 @@ private:
   std::optional<double> effectRadius_;
   std::optional<std::string> effectType_;
   std::optional<double> effectValue_;
-  std::optional<int64_t> entityId_;
+  std::optional<std::string> entityId_;
   std::optional<bool> isActive_;
   std::optional<int64_t> maxCharges_;
   std::optional<double> remainingCooldown_;
+  std::string type_;
+};
+
+struct ItemPlaceableComponent : public JsonValue {
+  struct Properties {
+    struct EntityId {
+      static const char* name() { return "entityId"; }
+      static constexpr bool required = false;
+    };
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "ItemPlaceableComponent"; }
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("entityId")) {
+      std::string fp = path.empty() ? "entityId" : path + ".entityId";
+      if (!j["entityId"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["entityId"].get_ref<const std::string&>();
+      }
+    }
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "ItemPlaceableComponent") result.add(fp, "Value does not match const");
+      }
+    }
+    return result;
+  }
+
+  static ItemPlaceableComponent fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    ItemPlaceableComponent obj;
+    if (j.contains("entityId")) {
+      obj.setEntityId(j["entityId"].get<std::string>());
+    }
+    obj.setType(j.at("type").get<std::string>());
+    return obj;
+  }
+
+  bool hasEntityId() const { return entityId_.has_value(); }
+  const std::string& getEntityId() const { return entityId_.value(); }
+  std::string& getEntityId() { return entityId_.value(); }
+  void setEntityId(const std::string& value) { entityId_ = value; }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+private:
+  std::optional<std::string> entityId_;
   std::string type_;
 };
 
@@ -4074,8 +4119,70 @@ private:
   std::string type_;
 };
 
+struct OwnedByComponent : public JsonValue {
+  struct Properties {
+    struct Owner {
+      static const char* name() { return "owner"; }
+      static constexpr bool required = false;
+    };
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "OwnedByComponent"; }
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("owner")) {
+      std::string fp = path.empty() ? "owner" : path + ".owner";
+      if (!j["owner"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["owner"].get_ref<const std::string&>();
+      }
+    }
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "OwnedByComponent") result.add(fp, "Value does not match const");
+      }
+    }
+    return result;
+  }
+
+  static OwnedByComponent fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    OwnedByComponent obj;
+    if (j.contains("owner")) {
+      obj.setOwner(j["owner"].get<std::string>());
+    }
+    obj.setType(j.at("type").get<std::string>());
+    return obj;
+  }
+
+  bool hasOwner() const { return owner_.has_value(); }
+  const std::string& getOwner() const { return owner_.value(); }
+  std::string& getOwner() { return owner_.value(); }
+  void setOwner(const std::string& value) { owner_ = value; }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+private:
+  std::optional<std::string> owner_;
+  std::string type_;
+};
+
 struct ComponentsItem : public JsonValue {
-  using Variant = std::variant<TransformComponent, SpriteComponent, CameraComponent, SeekPrimaryTargetTag, PrimaryTargetTag, WorldMapTag, HealthComponent, ContactDamageComponent, BulletDamageComponent, LifetimeComponent, PlayerComponent, BodyComponent, TileComponent, ArrowComponent, MultiTileComponent, TurretComponent, SpawnerComponent, CircleRenderComponent, RectangleRenderComponent, ItemComponent, InventoryComponent, InventoryViewComponent, ItemUseComponent, ItemStackComponent>;
+  using Variant = std::variant<TransformComponent, SpriteComponent, CameraComponent, SeekPrimaryTargetTag, PrimaryTargetTag, WorldMapTag, HealthComponent, ContactDamageComponent, BulletDamageComponent, LifetimeComponent, PlayerComponent, BodyComponent, TileComponent, ArrowComponent, MultiTileComponent, TurretComponent, SpawnerComponent, CircleRenderComponent, RectangleRenderComponent, ItemComponent, InventoryComponent, InventoryViewComponent, ItemUseComponent, ItemPlaceableComponent, ItemStackComponent, OwnedByComponent>;
 
   static ValidationResult validate(const json& j, const std::string& path = "") {
     ValidationResult result;
@@ -4112,7 +4219,9 @@ struct ComponentsItem : public JsonValue {
     else if (disc == "InventoryComponent") return InventoryComponent::validate(j, path);
     else if (disc == "InventoryViewComponent") return InventoryViewComponent::validate(j, path);
     else if (disc == "ItemUseComponent") return ItemUseComponent::validate(j, path);
+    else if (disc == "ItemPlaceableComponent") return ItemPlaceableComponent::validate(j, path);
     else if (disc == "ItemStackComponent") return ItemStackComponent::validate(j, path);
+    else if (disc == "OwnedByComponent") return OwnedByComponent::validate(j, path);
     else result.add(path.empty() ? "type" : path + ".type", "Unknown discriminator value '" + disc + "'");
     return result;
   }
@@ -4145,7 +4254,9 @@ struct ComponentsItem : public JsonValue {
     else if (disc == "InventoryComponent") obj.variant_ = InventoryComponent::fromJson(j);
     else if (disc == "InventoryViewComponent") obj.variant_ = InventoryViewComponent::fromJson(j);
     else if (disc == "ItemUseComponent") obj.variant_ = ItemUseComponent::fromJson(j);
+    else if (disc == "ItemPlaceableComponent") obj.variant_ = ItemPlaceableComponent::fromJson(j);
     else if (disc == "ItemStackComponent") obj.variant_ = ItemStackComponent::fromJson(j);
+    else if (disc == "OwnedByComponent") obj.variant_ = OwnedByComponent::fromJson(j);
     return obj;
   }
 

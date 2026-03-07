@@ -36,6 +36,7 @@ public:
     m_assetToEntity[assetId] = entity.id();
     m_assetsByName[name] = assetId;
     entity.disable();
+    entity.add<AssetTag>();
     return entity;
   }
 
@@ -92,6 +93,8 @@ public:
           host.log("<bgYellow>Warning: No handler registered for component variant index %zu<reset>", variantIdx);
         }
       }
+      
+      host.log("Loaded asset: %s @ %u\n", entity.getName().c_str(), asset.id());
     }
 
     return true;
@@ -142,12 +145,13 @@ public:
     m_base = other.m_base;
     m_next = other.m_next;
     m_world = other.m_world;
+    m_bottomWorld = other.m_bottomWorld;
 
     return *this;
   }
 
   SetIterator(EntityWorld& world, const ComponentSet* match) :
-      m_world(&world), m_base(match), m_next(Set<const ComponentSet*>::const_iterator()) {}
+      m_world(&world), m_bottomWorld(&world), m_base(match), m_next(Set<const ComponentSet*>::const_iterator()) {}
 
   void reset() {
     m_next = Set<const ComponentSet*>::const_iterator();
@@ -180,11 +184,16 @@ public:
     return m_world->m_sets.find(*m_next)->second;
   }
 
-  EntityWorld& getWorld() {
-    return *m_world;
+  IWorld& getWorld() {
+    return *m_bottomWorld;
+  }
+
+  void _setWorld(IWorld& world) {
+    m_bottomWorld = &world;
   }
 
 private:
+  IWorld* m_bottomWorld;
   EntityWorld* m_world;
   const ComponentSet* m_base;
   Set<const ComponentSet*>::const_iterator m_next;
@@ -237,6 +246,10 @@ public:
     return m_setIt.getWorld();
   }
 
+  void _setWorld(IWorld& world) {
+    m_setIt._setWorld(world);
+  }
+
 private:
   EntityWorld::EntityList* m_list;
   EntityWorld::EntityListIterator m_next;
@@ -251,6 +264,7 @@ EntityWorld::EntityWorld(IHost& host, PrivateConstructorTag) : m_host(host), m_a
   component<Destroy>(false);
   component<ComponentAddedEvent>(false);
   component<ComponentRemovedEvent>(false);
+  component<AssetTag>(false);
 }
 
 EntityWorld::~EntityWorld() noexcept {
@@ -269,8 +283,8 @@ IHost& EntityWorld::getHost() {
   return m_host;
 }
 
-IWorld& EntityWorld::getTopWorld() {
-  return *this;
+IWorldPtr EntityWorld::getTopWorld() {
+  return m_self;
 }
 
 void EntityWorld::addContext(ContextId id, u8* bytes, std::function<void(u8*)> destroy) noexcept {
@@ -291,6 +305,7 @@ EntityPtr EntityWorld::create(EntityId explicitId) {
   EntityId id;
   if (explicitId == NullEntityId) {
     id = m_idMgr.generate();
+    assert(!(m_entities.size() > id && m_entities[id].has_value()) && "generate() returned an ID with existing entity data");
   } else {
     if (exists(explicitId))
       return getEntity(explicitId);
@@ -359,8 +374,8 @@ void EntityWorld::disable(EntityId entity) {
   remove<IWorld::Enabled>(entity);
 }
 
-EntityPtr EntityWorld::clone(EntityId entity) {
-  EntityPtr cloned = create();
+EntityPtr EntityWorld::clone(EntityId entity, EntityId explicitId) {
+  EntityPtr cloned = create(explicitId);
 
   copy(entity, cloned);
 
@@ -529,6 +544,11 @@ void EntityWorld::remove(EntityId entity, const ComponentSet& remComps, bool emi
 bool EntityWorld::has(EntityId entity, ComponentId comp) {
   assert(exists(entity));
   return setOf(entity).has(comp);
+}
+
+bool EntityWorld::has(EntityId entity, const ComponentSet& comps) {
+  assert(exists(entity));
+  return setOf(entity).superset(comps);
 }
 
 void EntityWorld::copy(EntityId src, EntityId dst, const ComponentSet& copySet) {

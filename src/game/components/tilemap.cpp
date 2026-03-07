@@ -12,14 +12,14 @@ void MultiTileComponent::serialize(capnp::MessageBuilder& builder, Ref component
     const auto& pos = self->occupiedPositions[i];
     positionsBuilder[i].setX((i32)pos.x);
     positionsBuilder[i].setY((i32)pos.y);
-    positionsBuilder[i].setZ((i32)pos.z);
+    positionsBuilder[i].setZ(0);
   }
   
   // Serialize anchorPos
   auto anchorPosBuilder = multiTileBuilder.getAnchorPos();
   anchorPosBuilder.setX((i32)self->anchorPos.x);
   anchorPosBuilder.setY((i32)self->anchorPos.y);
-  anchorPosBuilder.setZ((i32)self->anchorPos.z);
+  anchorPosBuilder.setZ(0);
 }
 
 void MultiTileComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component) {
@@ -30,13 +30,13 @@ void MultiTileComponent::deserialize(capnp::MessageReader& reader, const IdMappe
   self->occupiedPositions.clear();
   const auto positionsReader = multiTileReader.getOccupiedPositions();
   for (auto posReader : positionsReader) {
-    glm::ivec3 pos((i32)posReader.getX(), (i32)posReader.getY(), (i32)posReader.getZ());
+    glm::ivec2 pos((i32)posReader.getX(), (i32)posReader.getY());
     self->occupiedPositions.push_back(pos);
   }
   
   // Deserialize anchorPos
   const auto anchorPosReader = multiTileReader.getAnchorPos();
-  self->anchorPos = glm::ivec3((i32)anchorPosReader.getX(), (i32)anchorPosReader.getY(), (i32)anchorPosReader.getZ());
+  self->anchorPos = glm::ivec2((i32)anchorPosReader.getX(), (i32)anchorPosReader.getY());
 }
 
 void MultiTileComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
@@ -50,21 +50,17 @@ void MultiTileComponent::fromJson(Ref component, AssetLoader loader, const JSche
       self->anchorPos.x = anchorJson.getX();
     if (anchorJson.hasY())
       self->anchorPos.y = anchorJson.getY();
-    if (anchorJson.hasZ())
-      self->anchorPos.z = anchorJson.getZ();
   }
   
   // Parse occupiedPositions array
   if (compJson->hasOccupiedPositions()) {
     self->occupiedPositions.clear();
     for (const auto& posJson : compJson->getOccupiedPositions()) {
-      glm::ivec3 pos(0);
+      glm::ivec2 pos(0);
       if (posJson.hasX())
         pos.x = posJson.getX();
       if (posJson.hasY())
         pos.y = posJson.getY();
-      if (posJson.hasZ())
-        pos.z = posJson.getZ();
       self->occupiedPositions.push_back(pos);
     }
   }
@@ -77,11 +73,11 @@ void TileComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
   // Serialize collidable
   tileBuilder.setCollidable(self->collidable);
 
-  // Serialize pos
+  // Serialize pos and layer
   auto posBuilder = tileBuilder.getPos();
   posBuilder.setX((i32)self->pos.x);
   posBuilder.setY((i32)self->pos.y);
-  posBuilder.setZ((i32)self->pos.z);
+  posBuilder.setZ((i32)self->layer);
   
   // Serialize parent
   tileBuilder.setParent(self->parent);
@@ -102,9 +98,10 @@ void TileComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id
   // Deserialize collidable
   self->collidable = tileReader.getCollidable();
 
-  // Deserialize pos
+  // Deserialize pos and layer
   const auto posReader = tileReader.getPos();
-  self->pos = glm::ivec3(posReader.getX(), posReader.getY(), posReader.getZ());
+  self->pos = glm::ivec2(posReader.getX(), posReader.getY());
+  self->layer = static_cast<WorldLayer>(posReader.getZ());
   
   // Deserialize parent
   self->parent = idMapper.resolve(tileReader.getParent());
@@ -136,6 +133,16 @@ void TileComponent::fromJson(Ref component, AssetLoader loader, const JSchema::J
     if (posJson.hasY())
       self->pos.y = posJson.getY();
   }
+
+  // Parse layer if provided (string to enum conversion)
+  if (compJson->hasLayer()) {
+    const std::string& layerName = compJson->getLayer();
+    if (layerName == "Floor") self->layer = WorldLayer::Floor;
+    else if (layerName == "Wall") self->layer = WorldLayer::Wall;
+    else if (layerName == "Item") self->layer = WorldLayer::Item;
+    else if (layerName == "Top") self->layer = WorldLayer::Top;
+    else self->layer = WorldLayer::Floor;
+  }
   
   // Parse material if provided
   if (compJson->hasMaterial()) {
@@ -152,16 +159,19 @@ void TilemapComponent::serialize(capnp::MessageBuilder& builder, Ref component) 
   auto self = component.cast<TilemapComponent>();
   
   // Serialize tiles map as list of TileEntry key-value pairs
-  auto tilesBuilder = tilemapBuilder.initTiles((u32)self->tiles.size());
+  auto tilesBuilder = tilemapBuilder.initTiles((u32)self->size());
   
   u32 i = 0;
-  for (const auto& [pos, entityId] : self->tiles) {
-    auto tileEntryBuilder = tilesBuilder[i++];
-    auto posBuilder = tileEntryBuilder.getPos();
-    posBuilder.setX((i32)pos.x);
-    posBuilder.setY((i32)pos.y);
-    posBuilder.setZ((i32)pos.z);
-    tileEntryBuilder.setEntityId(entityId);
+  for (size_t l = 0; l < TilemapComponent::LayerCount; ++l) {
+    WorldLayer layer = static_cast<WorldLayer>(l);
+    for (const auto& [pos, entityId] : self->getLayer(layer)) {
+      auto tileEntryBuilder = tilesBuilder[i++];
+      auto posBuilder = tileEntryBuilder.getPos();
+      posBuilder.setX((i32)pos.x);
+      posBuilder.setY((i32)pos.y);
+      posBuilder.setZ((i32)l);
+      tileEntryBuilder.setEntityId(entityId);
+    }
   }
 }
 
@@ -187,14 +197,19 @@ void TilemapComponent::deserialize(capnp::MessageReader& reader, const IdMapper&
   auto self = component.cast<TilemapComponent>();
   auto body = self.getEntity().get<BodyComponent>()->id;
   
-  // Deserialize tiles list back into map
-  self->tiles.clear();
+  // Clear all layers
+  for (size_t l = 0; l < TilemapComponent::LayerCount; ++l)
+    self->getLayer(static_cast<WorldLayer>(l)).clear();
+
+  // Deserialize tiles list back into layered maps
   const auto tilesReader = tilemapReader.getTiles();
   for (auto tileEntryReader : tilesReader) {
     const auto posReader = tileEntryReader.getPos();
-    glm::ivec3 pos(posReader.getX(), posReader.getY(), posReader.getZ());
+    glm::ivec2 pos(posReader.getX(), posReader.getY());
+    WorldLayer layer = static_cast<WorldLayer>(posReader.getZ());
     EntityId entityId = idMapper.resolve(tileEntryReader.getEntityId());
-    self->tiles[pos] = entityId;
+    self->setTile(layer, pos, entityId);
+    // std::cout << "DESerializing tile at pos (" << pos.x << ", " << pos.y << ") on layer " << layer << " with entityId " << entityId << "\n";
 
     // If the entity has not yet already been deserialized, ensure its existence and add a TileComponent.
     // This will have no effect on the entity if it has not already been deserialized as
@@ -208,7 +223,17 @@ void TilemapComponent::deserialize(capnp::MessageReader& reader, const IdMapper&
   for (u32 i = 0; i < shapeCount; i++) {
     b2ShapeId shapeId = shapeIds[i];
     Vec2 pos = getCenterOfShape(shapeId); // Get the position of the shape's center
-    world->getEntity(self->tiles[TilemapComponent::getNearestTile(pos)]).get<TileComponent>()->shapeId = shapeId;
+    glm::ivec2 tilePos = getNearestTile(pos);
+    for (size_t l = 0; l < TilemapComponent::LayerCount; ++l) {
+      WorldLayer layer = static_cast<WorldLayer>(l);
+      if (!self->containsTile(layer, tilePos)) continue;
+      auto tileComp = world->getEntity(self->getTile(layer, tilePos)).get<TileComponent>();
+      if (!b2Shape_IsValid(tileComp->shapeId)) {
+        tileComp->shapeId = shapeId;
+        b2Shape_SetUserData(shapeId, entityToB2Data(self->getTile(layer, tilePos))); // Associate shape with tilemap entity for collision handling
+        break;
+      }
+    }
   }
 }
 
@@ -222,8 +247,11 @@ void TilemapComponent::copy(Ref src, Ref dst) {
   auto srcTilemap = src.cast<TilemapComponent>();
   auto dstTilemap = dst.cast<TilemapComponent>();
 
-  for(const auto& [pos, entityId] : srcTilemap->tiles) {
-    dstTilemap->tiles[pos] = world->clone(entityId);
+  for (size_t l = 0; l < TilemapComponent::LayerCount; ++l) {
+    WorldLayer layer = static_cast<WorldLayer>(l);
+    for (const auto& [pos, entityId] : srcTilemap->getLayer(layer)) {
+      dstTilemap->setTile(layer, pos, world->clone(entityId));
+    }
   }
 
   auto body = dst.getEntity().get<BodyComponent>()->id;
@@ -233,7 +261,17 @@ void TilemapComponent::copy(Ref src, Ref dst) {
   for (u32 i = 0; i < shapeCount; i++) {
     b2ShapeId shapeId = shapeIds[i];
     Vec2 pos = getCenterOfShape(shapeId); // Get the position of the shape's center
-    world->getEntity(dstTilemap->tiles[TilemapComponent::getNearestTile(pos)]).get<TileComponent>()->shapeId = shapeId;
+    glm::ivec2 tilePos = getNearestTile(pos);
+    for (size_t l = 0; l < TilemapComponent::LayerCount; ++l) {
+      WorldLayer layer = static_cast<WorldLayer>(l);
+      if (!dstTilemap->containsTile(layer, tilePos)) continue;
+      auto tileComp = world->getEntity(dstTilemap->getTile(layer, tilePos)).get<TileComponent>();
+      if (!b2Shape_IsValid(tileComp->shapeId)) {
+        tileComp->shapeId = shapeId;
+        b2Shape_SetUserData(shapeId, entityToB2Data(dstTilemap->getTile(layer, tilePos))); // Associate shape with tilemap entity for collision handling
+        break;
+      }
+    }
   }
 }
 

@@ -12,62 +12,30 @@ glm::u16vec2 InventoryViewComponent::dragStartSlot = {0, 0};
 InventoryViewComponent* InventoryViewComponent::dragSourceView = nullptr;
 bool InventoryViewComponent::wasMouseButtonPressedLastFrame = false;
 
-void ItemUseComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
-  auto itemUseBuilder = builder.initRoot<Schema::ItemUseComponent>();
-  auto self = component.cast<ItemUseComponent>();
+void ItemPlaceableComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
+  auto placeableBuilder = builder.initRoot<Schema::ItemPlaceableComponent>();
+  auto self = component.cast<ItemPlaceableComponent>();
 
-  itemUseBuilder.setEntityId(self->entityId);
-  itemUseBuilder.setEffectValue(self->effectValue);
-  itemUseBuilder.setEffectRadius(self->effectRadius);
-  itemUseBuilder.setCooldown(self->cooldown);
-  itemUseBuilder.setRemainingCooldown(self->remainingCooldown);
-  itemUseBuilder.setMaxCharges(self->maxCharges);
-  itemUseBuilder.setCurrentCharges(self->currentCharges);
-  itemUseBuilder.setIsActive(self->isActive);
+  placeableBuilder.setEntityId(self->entityId);
 }
 
-void ItemUseComponent::deserialize(capnp::MessageReader& reader, const IdMapper& idMapper, Ref component) {
-  auto itemUseReader = reader.getRoot<Schema::ItemUseComponent>();
-  auto self = component.cast<ItemUseComponent>();
+void ItemPlaceableComponent::deserialize(capnp::MessageReader& reader, const IdMapper& idMapper, Ref component) {
+  auto placeableReader = reader.getRoot<Schema::ItemPlaceableComponent>();
+  auto self = component.cast<ItemPlaceableComponent>();
 
-  self->entityId = idMapper.resolve(itemUseReader.getEntityId());
-  self->effectValue = itemUseReader.getEffectValue();
-  self->effectRadius = itemUseReader.getEffectRadius();
-  self->cooldown = itemUseReader.getCooldown();
-  self->remainingCooldown = itemUseReader.getRemainingCooldown();
-  self->maxCharges = itemUseReader.getMaxCharges();
-  self->currentCharges = itemUseReader.getCurrentCharges();
-  self->isActive = itemUseReader.getIsActive();
+  EntityId id = idMapper.resolve(placeableReader.getEntityId());
+  if(id == placeableReader.getEntityId()) {
+    std::cout << "Warning: Entity ID " << placeableReader.getEntityId() << " not found in IdMapper during deserialization of ItemPlaceableComponent. This may indicate a missing entity or an error in the ID mapping.\n";
+  }
+  self->entityId = id;
 }
 
-void ItemUseComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
-  auto self = component.cast<ItemUseComponent>();
-  auto compJson = jsonValue.as<JSchema::ItemUseComponent>();
+void ItemPlaceableComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
+  auto self = component.cast<ItemPlaceableComponent>();
+  auto compJson = jsonValue.as<JSchema::ItemPlaceableComponent>();
 
-  // Note: entityId reference will be resolved by the entity loader
   if (compJson->hasEntityId())
-    self->entityId = compJson->getEntityId();
-
-  if (compJson->hasEffectValue())
-    self->effectValue = compJson->getEffectValue();
-
-  if (compJson->hasEffectRadius())
-    self->effectRadius = compJson->getEffectRadius();
-
-  if (compJson->hasCooldown())
-    self->cooldown = compJson->getCooldown();
-
-  if (compJson->hasRemainingCooldown())
-    self->remainingCooldown = compJson->getRemainingCooldown();
-
-  if (compJson->hasMaxCharges())
-    self->maxCharges = compJson->getMaxCharges();
-
-  if (compJson->hasCurrentCharges())
-    self->currentCharges = compJson->getCurrentCharges();
-
-  if (compJson->hasIsActive())
-    self->isActive = compJson->getIsActive();
+    self->entityId = loader.getAsset(compJson->getEntityId());
 }
 
 void ItemComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
@@ -630,7 +598,12 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
     // Mouse was released - check if it's outside the inventory window
     if (!isPointInWindowBounds(mousePosVec)) {
       // Mouse released outside inventory - drop the item to the world
-      dropItemToWorld(inventoryEntity);
+      if(eventModule.isKeyHeld(Key::LeftShift)) {
+        // Place the item
+        placeItemToWorld(inventoryEntity);
+      } else {
+        dropItemToWorld(inventoryEntity);
+      }
       isDragging = false;
       dragSourceView = nullptr;
     }
@@ -749,8 +722,8 @@ void InventoryViewComponent::showTooltip(EntityPtr inventoryEntity, size_t slotI
 
   // Update tooltip content
   tooltipIcon->getRenderer()->setTexture(itemComp->icon);
-  tooltipName->setText(itemComp->name);
-  tooltipDescription->setText(itemComp->description.empty() ? "No description" : itemComp->description);
+  tooltipName->setText(itemComp->name + " (" + std::to_string(slot.itemId) + ")");
+  tooltipDescription->setText(itemComp->description.empty() ? "No description" : itemComp->description + " has ItemPlaceable: " + (itemEntity.has<ItemPlaceableComponent>() ? "Yes" : "No") );
   tooltipUnique->setText(itemComp->isUnique ? "Unique Item" : "Stackable");
 
   // Position tooltip below the inventory window
@@ -779,6 +752,41 @@ bool InventoryViewComponent::isPointInWindowBounds(const glm::vec2& worldPos) co
 
   return worldPos.x >= windowPos.x && worldPos.x <= windowPos.x + windowSize.x &&
          worldPos.y >= windowPos.y && worldPos.y <= windowPos.y + windowSize.y;
+}
+
+void InventoryViewComponent::placeItemToWorld(EntityPtr inventoryEntity) {
+  if (!isDragging || !dragSourceView || !inventoryEntity) {
+    return;
+  }
+
+  IWorldPtr world = inventoryEntity.world();
+  // Get the source inventory and item information
+  auto srcEntity = world->getEntity(dragSourceView->inventoryEntityId);
+  if (!srcEntity || !srcEntity.has<InventoryComponent>()) {
+    return;
+  }
+
+  auto srcInvComp = srcEntity.get<InventoryComponent>();
+  const ItemStackComponent& sourceSlot = srcInvComp->getSlot(dragStartSlot.x, dragStartSlot.y);
+
+  if (sourceSlot.itemId == 0) {
+    return; // Empty slot, nothing to place
+  }
+
+  // Get the item entity and check if it's placeable
+  auto itemEntity = world->getEntity(sourceSlot.itemId);
+  std::cout << "Try placing entity " << itemEntity.id() << "\n";
+  if (!itemEntity || !itemEntity.has<ItemPlaceableComponent>()) {
+    return; // Item is not placeable
+  }
+
+  // Get mouse position to place at
+  Vec2 placePos = world->getContext<RenderModule>().getWorldCoords(world->getContext<EventModule>().getMouseCoords());
+
+  // Remove the item from inventory after placing
+  InventoryManager invMgr;
+  invMgr.placeItem(world, dragSourceView->inventoryEntityId, 
+                  dragStartSlot.x, dragStartSlot.y, placePos);
 }
 
 void InventoryViewComponent::dropItemToWorld(EntityPtr inventoryEntity) {

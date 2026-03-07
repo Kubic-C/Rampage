@@ -43,7 +43,7 @@ const char* tileVertexShaderSource = R"###(
         void main() {
             vec2 dim = vec2(dimByte & 15, (dimByte & 240) >> 4);
 
-            gl_Position = uVP * vec4(worldPos + rotate(pos * uTileSideLength * dim + localPos, localRot) * scaling, -z, 1.0);
+            gl_Position = uVP * vec4(worldPos + rotate(pos * uTileSideLength * dim + localPos, localRot) * scaling, z, 1.0);
             vTexCoords = vec3(texCoords * dim, layer);
         })###";
 
@@ -178,7 +178,7 @@ int meshSprites(IWorldPtr world, float dt) {
 
     b2BodyId bodyId = world->getEntity(tile->parent).get<BodyComponent>()->id;
     Transform transform(
-      b2Body_GetWorldPoint(bodyId, TilemapComponent::getLocalTileCenter(glm::ivec2(tile->pos))),
+      getWorldTilePosition(entity),
       b2Body_GetRotation(bodyId));
     meshSprite(transform, *sprite, *va, *instances);
   }

@@ -4,6 +4,7 @@
 #include "../components/sprite.hpp"
 #include "../../render/render.hpp"
 #include "../components/shapes.hpp"
+#include "tilemap.hpp"
 
 RAMPAGE_START
 
@@ -24,6 +25,12 @@ void InventoryManager::dropItem(IWorldPtr world, EntityId itemId, Vec2 dropPosit
 
   EntityPtr itemEntity = world->getEntity(itemId); 
   auto itemComp = itemEntity.get<ItemComponent>();
+  
+  if(itemComp->isUnique && itemEntity.has<AssetTag>()) {
+    itemEntity = world->clone(itemEntity);
+    itemEntity.remove<AssetTag>();
+    itemComp = itemEntity.get<ItemComponent>();
+  }
 
   // For unique items, spawn one entity per item (count represents number of unique instances)
   // For stackable items, spawn entities based on stack size limits
@@ -46,6 +53,7 @@ void InventoryManager::dropItem(IWorldPtr world, EntityId itemId, Vec2 dropPosit
     droppedItem.add<SpriteComponent>();
     droppedItem.add<ItemStackComponent>();
     droppedItem.add<CircleRenderComponent>();
+    droppedItem.add<ItemDroppedTag>();
     
     // Offset slightly for multiple spawned items
     Vec2 offsetPos = dropPosition;
@@ -81,21 +89,20 @@ void InventoryManager::dropItem(IWorldPtr world, EntityId itemId, Vec2 dropPosit
     spriteComp->scaling = 0.5f;
     u32 texIndex = texMap->getSprite(getFilename(std::string(itemComp->icon.getId())));
     SpriteComponent::SubSprite subSprite;
-    subSprite.addLayer(texIndex, Vec2(0), 0, WorldLayer::Top);
+    subSprite.addLayer(texIndex, Vec2(0), 0, WorldLayer::Item);
     spriteComp->subSprites.push_back({subSprite});
 
     auto circleRenderComp = droppedItem.get<CircleRenderComponent>();
     float stackFullness = std::min(1.0f, (float)itemComp->getTotalStackCost(countInThisStack) / itemComp->maxStackSize);
     circleRenderComp->color = glm::vec3(1.0f, 1.0f - stackFullness, 0.0f); // More red as stack gets fuller
     circleRenderComp->radius = 1.5f * radius + radius * stackFullness; // Larger radius for fuller stacks
-    circleRenderComp->z = WorldLayerTopZ;
+    circleRenderComp->z = WorldLayerItemZ;
 
     // For unique items, clone the item entity for each drop
     EntityId itemIdForStack = itemEntity;
     if (itemComp->isUnique && countInThisStack > 0) {
       // Clone the item entity
-      EntityPtr clonedItem = world->create();
-      world->copy(itemEntity, clonedItem, world->set<ItemComponent>());
+      EntityPtr clonedItem = world->clone(itemEntity);
       itemIdForStack = clonedItem;
     }
 
@@ -136,8 +143,110 @@ void InventoryManager::dropItem(IWorldPtr world, EntityId invEntityId, u16 x, u1
   dropItem(world, slot.itemId, dropPosition, count);
 }
 
-u32 InventoryManager::addItem(IWorldPtr world, EntityId invEntityId, EntityId itemEntityId, u32 count) {
-  EntityPtr itemEntity = world->getEntity(itemEntityId);
+float isShapeEntityPlaceable(b2ShapeId shapeId, b2Vec2 point, b2Vec2 normal, float fraction, void* context) {
+  std::vector<EntityId>& entitiesAtPlacement = *(std::vector<EntityId>*)context;
+
+  EntityId entityId = b2RawDataToEntity(b2Shape_GetUserData(shapeId));
+  if(entityId != 0) {
+    entitiesAtPlacement.push_back(entityId);
+  }
+
+  return -1.0f;
+}
+
+EntityPtr getTile(IWorldPtr world, Vec2 placePosition) {
+  b2WorldId worldId = world->getContext<b2WorldId>();
+
+  std::vector<EntityId> entitiesAtPlacement;
+  b2QueryFilter filter;
+  filter.categoryBits = Static;
+  filter.maskBits = Static | Friendly;
+  b2World_CastRay(worldId, placePosition, {0}, filter, &isShapeEntityPlaceable, &entitiesAtPlacement);
+
+  for(EntityId entityId : entitiesAtPlacement) {
+    EntityPtr entity = world->getEntity(entityId);
+    if (entity.has<TileComponent>()) {
+      return entity;
+    }
+  }
+
+  return world->getEntity(0); // null entity
+}
+
+bool canPlace(EntityPtr itemEntity, Vec2 placePosition) {
+  auto world = itemEntity.world();
+
+  if (!itemEntity.has<ItemComponent>() || !itemEntity.has<ItemPlaceableComponent>()) {
+    return false; // Invalid item entity in slot
+  }
+
+  return !getTile(world, placePosition).isNull();
+}
+
+bool InventoryManager::placeItem(IWorldPtr world, EntityId itemId, Vec2 placePosition, u32 pickableCount) {
+  auto tmMgr = world->getContext<TilemapManager>();
+
+  EntityPtr itemEntity = world->getEntity(itemId);
+  if (!canPlace(itemEntity, placePosition)) {
+    return false; // Invalid item entity or placement position
+  }
+
+  EntityId entityToPlaceId;
+  EntityPtr entityToClone = world->getEntity(itemEntity.get<ItemPlaceableComponent>()->entityId);
+  if(entityToClone.has<TileComponent>()) {
+    EntityPtr existingTileEntity = getTile(world, placePosition);
+    WorldLayer layer = getNextLayer(existingTileEntity.get<TileComponent>()->layer);
+    EntityPtr tilemapEntity = world->getEntity(existingTileEntity.get<TileComponent>()->parent);
+    if(!tmMgr.canInsert(world, tilemapEntity.id(), layer, existingTileEntity.get<TileComponent>()->pos, entityToClone)) {
+      return false; // Can't place on this tile
+    }
+  
+    entityToPlaceId = world->clone(entityToClone).id();
+    tmMgr.insertTile(world, tilemapEntity.id(), layer, existingTileEntity.get<TileComponent>()->pos, entityToPlaceId);
+  } else {
+    entityToPlaceId = world->clone(entityToClone).id();
+    EntityPtr entityToPlace = world->getEntity(entityToPlaceId);
+    entityToPlace.add<TransformComponent>();
+    auto transComp = entityToPlace.get<TransformComponent>();
+    transComp->pos = placePosition;
+  }
+
+  EntityPtr entityToPlace = world->getEntity(entityToPlaceId);
+  entityToPlace.remove<AssetTag>(); // Asset tag is usually in placeable componetns
+  entityToPlace.add<ItemPlacedTag>();
+  entityToPlace.add<ItemStackComponent>();
+  auto stackComp = entityToPlace.get<ItemStackComponent>();
+  stackComp->itemId = itemId;
+  stackComp->count = pickableCount;
+
+  std::cout << "Placed entity " << entityToPlaceId << " at position (" << placePosition.x << ", " << placePosition.y << ")\n";
+
+  return true;
+}
+
+void InventoryManager::placeItem(IWorldPtr world, EntityId invEntityId, u16 x, u16 y, Vec2 placePosition) {
+  EntityPtr invEntity = world->getEntity(invEntityId);
+  if (!invEntity.has<InventoryComponent>()) {
+    return; // Invalid inventory entity
+  }
+
+  auto invComp = invEntity.get<InventoryComponent>();
+  if (x >= invComp->cols || y >= invComp->rows) {
+    return; // Invalid slot position
+  }
+
+  ItemStackComponent slot = invComp->getSlot(x, y); // copy not reference
+  if (slot.itemId == 0 || slot.count == 0) {
+    return; // Slot is already empty
+  }
+
+  if(placeItem(world, slot.itemId, placePosition)) {
+    removeItem(world, invEntityId, x, y);
+  }
+}
+
+u32 InventoryManager::addItem(IWorldPtr world, EntityId invEntityId, EntityId itemEntityId__, u32 count) {
+  EntityPtr itemEntity = world->getEntity(itemEntityId__);
   EntityPtr invEntity = world->getEntity(invEntityId);
 
   // Failure Conditions
@@ -154,11 +263,17 @@ u32 InventoryManager::addItem(IWorldPtr world, EntityId invEntityId, EntityId it
   auto itemComp = itemEntity.get<ItemComponent>();
   auto invComp = invEntity.get<InventoryComponent>();
 
+  if(itemComp->isUnique && itemEntity.has<AssetTag>()) {
+    itemEntity = world->clone(itemEntity);
+    itemEntity.remove<AssetTag>();
+    itemComp = itemEntity.get<ItemComponent>();
+  }
+
   u32 maxStackSize = itemComp->maxStackSize / itemComp->stackCost;
   if(!itemComp->isUnique) {
     // Find slots containing the same item type to stack onto
     for(ItemStackComponent& slot : invComp->items) {
-      if (slot.itemId == itemEntityId) {
+      if (slot.itemId == itemEntity) {
         u32 toAdd = std::min(maxStackSize - slot.count, count);
         slot.count += toAdd;
         count -= toAdd;
@@ -176,7 +291,7 @@ u32 InventoryManager::addItem(IWorldPtr world, EntityId invEntityId, EntityId it
   for (ItemStackComponent& slot : invComp->items) {
     if (slot.itemId == 0) {
       u32 toAdd = std::min(maxStackSize, count);
-      slot.itemId = itemEntityId;
+      slot.itemId = itemEntity;
       slot.count = toAdd;
       count -= toAdd;
 

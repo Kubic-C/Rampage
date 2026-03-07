@@ -147,7 +147,7 @@ glm::mat4 RenderModule::getView() const {
   auto camera = cameraEntity.get<CameraComponent>();
   auto transform = cameraEntity.get<TransformComponent>();
 
-  return camera->view(Transform(transform->pos, camera->m_rot), static_cast<glm::vec2>(screenDim));
+  return camera->view(Transform(transform->pos, camera->m_rot), static_cast<glm::vec2>(screenDim), 10);
 }
 
 glm::mat4 RenderModule::getViewProj() const {

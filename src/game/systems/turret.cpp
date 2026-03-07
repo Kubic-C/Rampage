@@ -6,6 +6,7 @@
 #include "../components/shapes.hpp"
 #include "../components/sprite.hpp"
 #include "../components/turret.hpp"
+#include "../components/tilemap.hpp"
 #include "../module.hpp"
 
 RAMPAGE_START
@@ -23,6 +24,7 @@ struct SummonBullet {
   float radius = 0.25f;
   float health;
   float damage;
+  float z = WorldLayerWallZ;
 };
 
 static bool queryClosest(b2ShapeId shape, void* ctx) {
@@ -58,15 +60,24 @@ struct TurretContext {
 
 void updateTurret(EntityPtr e, float dt, TurretContext& context) {
   b2WorldId physicsWorld = e.world()->getContext<b2WorldId>();
-  auto transform = e.get<TransformComponent>();
   auto turret = e.get<TurretComponent>();
   auto sprite = e.get<SpriteComponent>();
 
+  Vec2 turretPos = getWorldTilePosition(e);
+
+  // Get parent body rotation if it exists
+  float parentRot = 0.0f;
+  auto parent = e.world()->getEntity(e.get<TileComponent>()->parent);
+  auto bodyComp = parent.get<BodyComponent>();
+  if (b2Body_IsValid(bodyComp->id)) {
+    parentRot = b2Rot_GetAngle(b2Body_GetRotation(bodyComp->id));
+  }
+
   ClosestShape closestShape;
-  closestShape.center = transform->pos;
+  closestShape.center = turretPos;
   b2ShapeProxy proxy;
   proxy.count = 1;
-  proxy.points[0] = transform->pos;
+  proxy.points[0] = turretPos;
   proxy.radius = turret->radius;
   b2QueryFilter filter;
   filter.maskBits = Enemy;
@@ -77,28 +88,12 @@ void updateTurret(EntityPtr e, float dt, TurretContext& context) {
 
   b2BodyId targetBody = b2Shape_GetBody(closestShape.shape);
   Vec2 targetPos = b2Body_GetPosition(targetBody);
-  Vec2 targetDir = glm::normalize(targetPos - transform->pos);
+  Vec2 targetDir = glm::normalize(targetPos - turretPos);
   float targetRot = atan2f(targetDir.y, targetDir.x);
 
   float closestDistToRotate = signedAngleDiff(turret->rot, targetRot);
   float distToRotate = glm::abs(closestDistToRotate);
-  if (distToRotate < turret->shootRange) {
-    turret->timeSinceLastShot += dt;
-
-    if (turret->timeSinceLastShot >= turret->fireRate) {
-      SummonBullet bullet;
-      bullet.id = turret->summon;
-      bullet.pos = transform->pos;
-      bullet.shootVelocity = fast2DRotate(right, turret->rot) * turret->muzzleVelocity;
-      bullet.radius = turret->bulletRadius;
-      bullet.health = turret->bulletHealth;
-      bullet.damage = turret->bulletDamage;
-      context.summonBullets.push_back(bullet);
-
-      turret->timeSinceLastShot = 0.0f;
-    }
-  }
-
+  float zLayerForBullets = -5.0f;
   if (distToRotate > turret->stopRange) {
     float dir = turret->turnSpeed;
     if (closestDistToRotate < 0)
@@ -112,14 +107,37 @@ void updateTurret(EntityPtr e, float dt, TurretContext& context) {
 
   for (auto& row : sprite->subSprites)
     for (auto& col : row) {
-      col.getLast().rot = turret->rot;
+      col.getLast().rot = turret->rot - parentRot; 
+
+      float z = getLayerZ(col.getLast().layer);
+      if(z > zLayerForBullets)
+        zLayerForBullets = z;
     }
+
+  if (distToRotate < turret->shootRange) {
+    turret->timeSinceLastShot += dt;
+
+    if (turret->timeSinceLastShot >= turret->fireRate) {
+      SummonBullet bullet;
+      bullet.id = turret->summon;
+      float totalRot = turret->rot;
+      bullet.pos = turretPos + fast2DRotate(right, totalRot) * tileSize.x; // Spawn bullet at the end of the turret's barrel
+      bullet.shootVelocity = fast2DRotate(right, totalRot) * turret->muzzleVelocity;
+      bullet.radius = turret->bulletRadius;
+      bullet.health = turret->bulletHealth;
+      bullet.damage = turret->bulletDamage;
+      bullet.z = zLayerForBullets - 0.01f;
+      context.summonBullets.push_back(bullet);
+
+      turret->timeSinceLastShot = 0.0f;
+    }
+  }
 }
 
 int updateTurrets(IWorldPtr world, float deltaTime) {
   auto& context = world->getContext<TurretContext>();
 
-  auto it = world->getWith(world->set<TransformComponent, TurretComponent>());
+  auto it = world->getWith(world->set<TileComponent, TurretComponent>());
   while (it->hasNext())
     updateTurret(it->next(), deltaTime, context);
 
@@ -134,6 +152,7 @@ int updateTurrets(IWorldPtr world, float deltaTime) {
     auto circleRender = bulletEntity.get<CircleRenderComponent>();
     circleRender->radius = bullet.radius;
     circleRender->color = glm::vec3(1.0f, 1.0f, 0.0f);
+    circleRender->z = bullet.z;
 
     bulletEntity.get<HealthComponent>()->health = bullet.health;
     bulletEntity.get<BulletDamageComponent>()->damage = bullet.damage;

@@ -6,7 +6,7 @@
 RAMPAGE_START
 
 /**
- * A GameWorld is a proxy for another world that automatically adds component tags 
+ * A GameWorld is a proxy for another world that automatically adds component data 
  * to all created entities. Any entity created through this GameWorld will be tagged 
  * with a unique component ID, allowing for easy querying and management of entities 
  * belonging to this specific game world, while still leveraging the core functionality 
@@ -14,18 +14,18 @@ RAMPAGE_START
  */
 class TaggedEntityWorld : public IWorld {
 public:
-  TaggedEntityWorld(IWorldPtr realWorld, ComponentId worldTagComponentId, PrivateConstructorTag);
+  TaggedEntityWorld(IWorldPtr realWorld, ComponentId componentId, PrivateConstructorTag);
   virtual ~TaggedEntityWorld() = default;
   
-  static IWorldPtr create(IWorldPtr realWorld, ComponentId worldTagComponentId) {
-    IWorldPtr world = std::make_shared<TaggedEntityWorld>(realWorld, worldTagComponentId, PrivateConstructorTag{});
+  static IWorldPtr create(IWorldPtr realWorld, ComponentId componentId) {
+    IWorldPtr world = std::make_shared<TaggedEntityWorld>(realWorld, componentId, PrivateConstructorTag{});
     std::static_pointer_cast<TaggedEntityWorld>(world)->m_self = world;
     return world;
   }
 
   // Passthrough methods
   virtual IHost& getHost() override;
-  virtual IWorld& getTopWorld() override;
+  virtual IWorldPtr getTopWorld() override;
   virtual void addContext(ContextId id, u8* bytes, std::function<void(u8*)> destroy) noexcept override;
   virtual u8* getContext(ContextId id) override;
 
@@ -38,7 +38,7 @@ public:
   virtual void destroy(EntityId id) override;
   virtual void enable(EntityId entity) override;
   virtual void disable(EntityId entity) override;
-  virtual EntityPtr clone(EntityId entity) override;
+  virtual EntityPtr clone(EntityId entity, EntityId explicitId = NullEntityId) override;
   virtual size_t getEntityCount() const override;
   virtual size_t getSetCount() const override;
 
@@ -61,6 +61,7 @@ public:
   virtual void add(EntityId entity, const ComponentSet& addComps, bool emit = true) override;
   virtual void remove(EntityId entity, const ComponentSet& remComps, bool emit = true) override;
   virtual bool has(EntityId entity, ComponentId compId) override;
+  virtual bool has(EntityId entity, const ComponentSet& comps) override;
   virtual void copy(EntityId src, EntityId dst, const ComponentSet& comps = {}) override;
   virtual void move(EntityId src, EntityId dst, const ComponentSet& comps = {}) override;
   virtual const ComponentSet& setOf(EntityId entity) override;
@@ -80,7 +81,7 @@ public:
 private:
   IWorldPtr m_self;
   IWorldPtr m_realWorld;
-  ComponentId m_worldTagComponentId;
+  ComponentId m_componentIdToAdd;
 };
 
 RAMPAGE_END

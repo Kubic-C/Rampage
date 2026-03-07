@@ -66,7 +66,9 @@ public:
   }
 
   EntityPtr cloneAsset(AssetId assetId) {
-    return m_world->clone(m_impl.getEntityIdByAssetId(assetId));
+    EntityPtr e =  m_world->clone(m_impl.getEntityIdByAssetId(assetId));
+    e.remove<AssetTag>();
+    return e;
   }
 
   EntityPtr cloneAsset(const std::string& name) {

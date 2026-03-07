@@ -92,7 +92,7 @@ void registerStatsSystems(Pipeline& pipeline) {
   });
 }
 
-Host::Host() : m_status(Status::Ok), m_world(EntityWorld::createWorld(*this)) {
+Host::Host() : m_status(Status::Ok), m_world(EntityWorld::createWorld(*this)), m_gameWorld(m_world) {
   addModule<CoreModule>();
   addModule<LogModule>();
   addModule<RenderModule>();

@@ -24,7 +24,7 @@ void TurretComponent::deserialize(capnp::MessageReader& reader, const IdMapper& 
   auto turretReader = reader.getRoot<Schema::TurretComponent>();
   auto self = component.cast<TurretComponent>();
 
-  self->summon = turretReader.getSummon();
+  self->summon = id.resolve(turretReader.getSummon());
   self->fireRate = turretReader.getFireRate();
   self->timeSinceLastShot = turretReader.getTimeSinceLastShot();
   self->radius = turretReader.getRadius();

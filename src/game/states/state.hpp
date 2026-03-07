@@ -22,9 +22,6 @@ class UnknownState : public State {};
 
 class PlayState;
 
-template <typename T>
-struct OwnedBy : SerializableTag, JsonableTag {};
-
 class StateManager {
 public:
   template <typename T, typename... Params>

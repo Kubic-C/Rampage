@@ -7,26 +7,52 @@ RAMPAGE_START
 constexpr float baseSpriteScale = 0.5f;
 
 enum class WorldLayer : u8 {
-  Invalid = 8,
-  Bottom = 7,
-  Floor = 6,
-  Wall = 5,
-  Turret = 4,
-  Item = 3,
-  Res = 2, // RESERVED
-  Res2 = 1, // RESERVED
-  Top = 0,
+  Floor = 0,
+  Wall = 1,
+  Item = 2,
+  Top = 3,
+  Invalid = 4,
 };
 
-static constexpr float WorldLayerInvalidZ = -8;
-static constexpr float WorldLayerBottomZ = -7;
-static constexpr float WorldLayerFloorZ = -6;
-static constexpr float WorldLayerWallZ = -5;
-static constexpr float WorldLayerTurretZ = -4;
-static constexpr float WorldLayerItemZ = -3;
-static constexpr float WorldLayerResZ = -2; // RESERVED
-static constexpr float WorldLayerRes2Z = -1; // RESERVED
-static constexpr float WorldLayerTopZ = 0;
+static constexpr size_t maxSpriteLayers = static_cast<size_t>(WorldLayer::Invalid);
+
+inline WorldLayer getNextLayer(WorldLayer layer) {
+  switch (layer) {
+    case WorldLayer::Floor:
+      return WorldLayer::Wall;
+    case WorldLayer::Wall:
+      return WorldLayer::Item;
+    case WorldLayer::Item:
+      return WorldLayer::Top;
+    case WorldLayer::Top:
+      return WorldLayer::Invalid;
+    default:
+      assert(false && "Invalid world layer!");
+      return WorldLayer::Invalid;
+  }
+}
+
+static constexpr float WorldLayerInvalidZ = -1;
+static constexpr float WorldLayerFloorZ = 0;
+static constexpr float WorldLayerWallZ = 1;
+static constexpr float WorldLayerItemZ = 2;
+static constexpr float WorldLayerTopZ = 3;
+
+inline float getLayerZ(WorldLayer layer) {
+  switch (layer) {
+    case WorldLayer::Floor:
+      return WorldLayerFloorZ;
+    case WorldLayer::Wall:
+      return WorldLayerWallZ;
+    case WorldLayer::Item:
+      return WorldLayerItemZ;
+    case WorldLayer::Top:
+      return WorldLayerTopZ;
+    default:
+      assert(false && "Invalid world layer!");
+      return WorldLayerInvalidZ;
+  }
+}
 
 struct SpriteLayer {
   SpriteLayer() = default;
@@ -50,23 +76,22 @@ struct SpriteComponent {
   static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
 
   struct SubSprite {
-    static constexpr size_t MaxSpriteLayers = maxNumberBits(3);
-    SpriteLayer layers[MaxSpriteLayers];
+    SpriteLayer layers[maxSpriteLayers];
     u8 layerCount = 0;
 
     void addLayer(const SpriteLayer& layer) {
-      assert(layerCount < MaxSpriteLayers && "Too many sprite layers!");
+      assert(layerCount < maxSpriteLayers && "Too many sprite layers!");
       layers[layerCount++] = layer;
       if (layer.layer == WorldLayer::Invalid) {
-        layers[layerCount - 1].layer = (WorldLayer)(MaxSpriteLayers - layerCount);
+        layers[layerCount - 1].layer = (WorldLayer)(maxSpriteLayers - layerCount);
       }
     }
 
     void addLayer(u32 texIndex, glm::vec2 offset = Vec2(0), float rot = 0,
                   WorldLayer layer = WorldLayer::Invalid) {
-      assert(layerCount < MaxSpriteLayers && "Too many sprite layers!");
+      assert(layerCount < maxSpriteLayers && "Too many sprite layers!");
       if (layer == WorldLayer::Invalid) {
-        layer = (WorldLayer)(MaxSpriteLayers - layerCount);
+        layer = (WorldLayer)(maxSpriteLayers - layerCount);
       }
       layers[layerCount++] = SpriteLayer(texIndex, offset, rot, layer);
     }

@@ -7,11 +7,14 @@ RAMPAGE_START
 
 class TilemapManager {
 public:
-  // Insert a tile entity into a tilemap at grid position
-  bool insertTile(IWorldPtr world, EntityId tilemapId, glm::ivec3 gridPos, EntityId tileEntity);
+  // Check if a tile can be inserted into a tilemap at grid position on the specified layer
+  bool canInsert(IWorldPtr world, EntityId tilemapId, WorldLayer layer, glm::ivec2 gridPos, EntityId tileEntity);
+
+  // Insert a tile entity into a tilemap at grid position on the specified layer
+  bool insertTile(IWorldPtr world, EntityId tilemapId, WorldLayer layer, glm::ivec2 gridPos, EntityId tileEntity);
   
   // Remove a tile and break its joints
-  EntityPtr removeTile(IWorldPtr world, EntityId tilemapId, glm::ivec3 gridPos);
+  EntityPtr removeTile(IWorldPtr world, EntityId tilemapId, WorldLayer layer, glm::ivec2 gridPos, bool autoDestroyEntity);
 
   // Is the tile an anchor tile?
   bool isAnchorTile(IWorldPtr world, EntityId tileId);
@@ -23,9 +26,9 @@ public:
   std::vector<EntityPtr> checkAndHandleBreakage(IWorldPtr world, EntityId tilemapId);
 
 private:
-  // Flood fill helper to find all connected tiles starting from a position
-  Vec2 floodFillTiles(RefT<TilemapComponent> tilemap, glm::ivec3 startPos, 
-                      Set<glm::ivec3>& visited);
+  // Flood fill helper to find all connected tiles starting from a position (2D across all layers)
+  Vec2 floodFillTiles(RefT<TilemapComponent> tilemap, glm::ivec2 startPos, 
+                      Set<glm::ivec2>& visited);
 };
 
 void loadTilemapSystems(IHost& host);

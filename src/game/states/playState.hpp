@@ -9,6 +9,8 @@
 
 RAMPAGE_START
 
+struct PlayStateTag : SerializableTag, JsonableTag {};
+
 class PlayState : public State {
   const std::string menuName = "PlayMenu";
   const std::string returnBtnName = "PlayReturn";
@@ -22,8 +24,8 @@ class PlayState : public State {
 
 public:
   explicit PlayState(IWorldPtr _world) {  
-    _world->component<OwnedBy<PlayState>>(false);
-    m_world = TaggedEntityWorld::create(_world, _world->component<OwnedBy<PlayState>>());
+    _world->component<PlayStateTag>(false);
+    m_world = TaggedEntityWorld::create(_world, _world->component<PlayStateTag>());
 
     auto& gui = m_world->getContext<tgui::Gui>();
     m_menu = m_world->getContext<tgui::Gui>().get(menuName);
@@ -40,23 +42,17 @@ public:
         auto& serializer = m_world->getSerializer();
         
         serializer.begin(m_world);
-        serializer.queueAllWith(m_world->set<OwnedBy<PlayState>>());
+        serializer.queueAllWith(m_world->set<PlayStateTag>());
         serializer.end("saveFile.rampage");
     });
 
     tgui::Button::Ptr loadStateBtn = gui.get(playLoadStateTextName)->cast<tgui::Button>();
     loadStateBtn->onMousePress([=]() {
         auto& deserializer = m_world->getDeserializer();
-        auto& serializer = m_world->getSerializer();
 
         // Testing serialization and deserialization stability.
-        for(size_t i = 0; i < 5; i++) {
-          serializer.begin(m_world);
-          m_world->destroyAllEntitiesWith(m_world->set<OwnedBy<PlayState>, IWorld::Enabled>());
-          deserializer.deserializeFromFile(*m_world, "saveFile.rampage");
-          serializer.queueAllWith(m_world->set<OwnedBy<PlayState>>());
-          serializer.end("saveFile.rampage");
-        }
+        m_world->destroyAllEntitiesWith(m_world->set<PlayStateTag, IWorld::Enabled>());
+        deserializer.deserializeFromFile(*m_world, "saveFile.rampage");
     });
 
     m_tickText = gui.get(tickTextName)->cast<tgui::Label>();
@@ -64,9 +60,6 @@ public:
     m_fpsText = gui.get(fpsTextName)->cast<tgui::Label>();
     m_activeBodiesText = gui.get(activeBodiesTextName)->cast<tgui::Label>();
     m_entityCountText = gui.get(playEntityCountTextName)->cast<tgui::Label>();
-
-    EntityPtr base = m_world->create();
-    base.disable();
   }
 
   void onEntry() {
@@ -74,6 +67,9 @@ public:
     auto& stateMgr = m_world->getContext<StateManager>();
     auto& invMgr = m_world->getContext<InventoryManager>();
     auto assetLoader = m_world->getAssetLoader();
+
+    m_world->getHost().setGameWorld(m_world);
+    std::cout << m_world << std::endl;
 
     m_menu->setEnabled(true);
     m_menu->setVisible(true);
@@ -115,22 +111,22 @@ public:
       tm.add<WorldMapTag>();
       auto bodyComp = tm.get<BodyComponent>();
       b2BodyDef bodyDef = b2DefaultBodyDef();
-      bodyDef.type = b2_staticBody;
+      bodyDef.type = b2_dynamicBody;
       bodyComp->id = b2CreateBody(physicsWorld, &bodyDef);
 
       int length = 5;
       for(int x = -length; x < length * 10; x++)
         for(int y = -length; y < length; y++)
-          tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, y, 0), assetLoader.cloneAsset("StoneFloorTile"));
+          tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(x, y), assetLoader.cloneAsset("StoneFloorTile"));
 
       // Stone outline around the tilemap
       for(int x = -length - 1; x <= length * 10; x++) {
-        tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, length, 0), assetLoader.cloneAsset("PermaHighStoneTile"));
-        tmMgr.insertTile(m_world, tm.id(), glm::ivec3(x, -length - 1, 0), assetLoader.cloneAsset("PermaHighStoneTile"));
+        tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(x, length), assetLoader.cloneAsset("PermaHighStoneTile"));
+        tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(x, -length - 1), assetLoader.cloneAsset("PermaHighStoneTile"));
       }
       for(int y = -length; y < length; y++) {
-        tmMgr.insertTile(m_world, tm.id(), glm::ivec3(-length - 1, y, 0), assetLoader.cloneAsset("PermaHighStoneTile"));
-        tmMgr.insertTile(m_world, tm.id(), glm::ivec3(length * 10, y, 0), assetLoader.cloneAsset("PermaHighStoneTile"));
+        tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(-length - 1, y), assetLoader.cloneAsset("PermaHighStoneTile"));
+        tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(length * 10, y), assetLoader.cloneAsset("PermaHighStoneTile"));
       }
 
       m_tm = tm;  
@@ -170,7 +166,7 @@ public:
 
       if(entity.has<TileComponent>()) {
         auto tileComp = entity.get<TileComponent>();
-        // m_world->destroy(tmMgr.removeTile(m_world, tileComp->parent, tileComp->pos));
+        // tmMgr.removeTile(m_world, tileComp->parent, tileComp->layer, tileComp->pos, true);
       }
     }
 
@@ -178,7 +174,9 @@ public:
   }
 
   void onLeave() {
-    m_world->destroyAllEntitiesWith(m_world->set<OwnedBy<PlayState>, IWorld::Enabled>());
+    m_world->getHost().setGameWorld(m_world->getTopWorld());
+
+    m_world->destroyAllEntitiesWith(m_world->set<PlayStateTag, IWorld::Enabled>());
 
     m_menu->setEnabled(false);
     m_menu->setVisible(false);

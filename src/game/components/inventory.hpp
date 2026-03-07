@@ -4,30 +4,16 @@
 
 RAMPAGE_START
 
-struct ItemUsePlaceEvent {
-  Vec2 placePosition; // The world position where the item is being placed
-};
 
-struct ItemUseConsumeEvent {};
+struct ItemDroppedTag : SerializableTag, JsonableTag  {};
+struct ItemPlacedTag : SerializableTag, JsonableTag {};
 
-/**
- * ItemUseComponent - Links items to gameplay interactions
- * Attached to entities that can use/activate items
- * Stores references to item entities and their usage parameters
- */
-struct ItemUseComponent {
+struct ItemPlaceableComponent {
   static void serialize(capnp::MessageBuilder& builder, Ref component);
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
   static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
 
-  EntityId entityId = 0;            // Reference to the entity to use/summon/place/...
-  float effectValue = 0.0f;         // Magnitude of the effect
-  float effectRadius = 0.0f;        // For area-of-effect abilities
-  float cooldown = 0.0f;            // Cooldown between uses (in seconds)
-  float remainingCooldown = 0.0f;   // Time left on current cooldown
-  int maxCharges = 1;               // Max uses before recharge (for limited-use items)
-  int currentCharges = 1;           // Current charges remaining
-  bool isActive = true;             // Whether the item use is currently active
+  EntityId entityId = 0; // The entity that will be placed when this item is used
 };
 
 /**
@@ -157,6 +143,9 @@ private:
   
   // Helper to check if a world position is within the inventory window bounds
   bool isPointInWindowBounds(const glm::vec2& worldPos) const;
+  
+  // Helper to place item to world when released outside inventory with Shift pressed
+  void placeItemToWorld(EntityPtr inventoryEntity);
   
   // Helper to drop item to world when released outside inventory
   void dropItemToWorld(EntityPtr inventoryEntity);

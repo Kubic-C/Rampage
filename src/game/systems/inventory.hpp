@@ -25,6 +25,10 @@ public:
 
   void dropItem(IWorldPtr world, EntityId invEntityId, u16 x, u16 y, Vec2 dropPosition, u32 count = 1);
 
+  bool placeItem(IWorldPtr world, EntityId itemId, Vec2 placePosition, u32 pickableCount = 1);
+
+  void placeItem(IWorldPtr world, EntityId invEntityId, u16 x, u16 y, Vec2 placePosition);
+
   // ========================================================================
   // ITEM ADDITION/REMOVAL
   // ========================================================================

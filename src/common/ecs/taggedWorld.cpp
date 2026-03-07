@@ -3,14 +3,14 @@
 
 RAMPAGE_START
 
-TaggedEntityWorld::TaggedEntityWorld(IWorldPtr realWorld, ComponentId worldTagComponentId, PrivateConstructorTag)
-  : m_realWorld(realWorld), m_worldTagComponentId(worldTagComponentId) {}
+TaggedEntityWorld::TaggedEntityWorld(IWorldPtr realWorld, ComponentId componentIdToAdd, PrivateConstructorTag)
+  : m_realWorld(realWorld), m_componentIdToAdd(componentIdToAdd) {}
 
 IHost& TaggedEntityWorld::getHost() {
   return m_realWorld->getHost(); 
 }
 
-IWorld& TaggedEntityWorld::getTopWorld() {
+IWorldPtr TaggedEntityWorld::getTopWorld() {
   return m_realWorld->getTopWorld();
 }
 
@@ -24,7 +24,7 @@ u8* TaggedEntityWorld::getContext(ContextId id) {
 
 EntityPtr TaggedEntityWorld::create(EntityId explicitId) {
   EntityId eid = m_realWorld->create(explicitId);
-  m_realWorld->add(eid, ComponentSet{m_worldTagComponentId});
+  m_realWorld->add(eid, ComponentSet({m_componentIdToAdd}));
   return EntityPtr(m_self, eid);
 }
 
@@ -34,8 +34,8 @@ EntityPtr TaggedEntityWorld::getEntity(EntityId id) {
 
 EntityPtr TaggedEntityWorld::ensure(EntityId eid) {
   m_realWorld->ensure(eid);
-  if (!m_realWorld->has(eid, m_worldTagComponentId)) {
-    m_realWorld->add(eid, ComponentSet{m_worldTagComponentId});
+  if (!m_realWorld->has(eid, m_componentIdToAdd)) {
+    m_realWorld->add(eid, ComponentSet({m_componentIdToAdd}));
   }
   return EntityPtr(m_self, eid);
 }
@@ -60,11 +60,11 @@ void TaggedEntityWorld::disable(EntityId entity) {
   m_realWorld->disable(entity);
 }
 
-EntityPtr TaggedEntityWorld::clone(EntityId entity) {
-  EntityId clonedId = m_realWorld->clone(entity).id();
+EntityPtr TaggedEntityWorld::clone(EntityId entity, EntityId explicitId) {
+  EntityId clonedId = m_realWorld->clone(entity, explicitId).id();
   // Tag is automatically copied during clone, but ensure it's present
-  if (!m_realWorld->has(clonedId, m_worldTagComponentId)) {
-    m_realWorld->add(clonedId, ComponentSet{m_worldTagComponentId});
+  if (!m_realWorld->has(clonedId, m_componentIdToAdd)) {
+    m_realWorld->add(clonedId, ComponentSet({m_componentIdToAdd}));
   }
   return EntityPtr(m_self, clonedId);;
 }
@@ -86,11 +86,15 @@ void TaggedEntityWorld::destroyAllEntitiesWith(const ComponentSet& components, b
 }
 
 IEntityIteratorPtr TaggedEntityWorld::getWith(const ComponentSet& components) {
-  return m_realWorld->getWith(components);
+  IEntityIteratorPtr it = m_realWorld->getWith(components);
+  it->_setWorld(*this);
+  return it;
 }
 
 IEntityIteratorPtr TaggedEntityWorld::getWithDisabled(const ComponentSet& components) {
-  return m_realWorld->getWithDisabled(components);
+  IEntityIteratorPtr it = m_realWorld->getWithDisabled(components);
+  it->_setWorld(*this);
+  return it;
 }
 
 EntityPtr TaggedEntityWorld::getFirstWith(const ComponentSet& components) {
@@ -138,13 +142,15 @@ void TaggedEntityWorld::add(EntityId entity, const ComponentSet& addComps, bool 
 }
 
 void TaggedEntityWorld::remove(EntityId entity, const ComponentSet& remComps, bool emit) {
-  // Prevent removal of the world tag component
-  ComponentSet filtered = remComps.remove(m_worldTagComponentId);
-  m_realWorld->remove(entity, filtered, emit);
+  m_realWorld->remove(entity, remComps, emit);
 }
-
+  
 bool TaggedEntityWorld::has(EntityId entity, ComponentId compId) {
   return m_realWorld->has(entity, compId);
+}
+
+bool TaggedEntityWorld::has(EntityId entity, const ComponentSet& comps) {
+  return m_realWorld->has(entity, comps);
 }
 
 void TaggedEntityWorld::copy(EntityId src, EntityId dst, const ComponentSet& comps) {

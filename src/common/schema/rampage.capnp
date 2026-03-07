@@ -100,6 +100,10 @@ struct ItemUseComponent {
     isActive @8 :Bool = true;
 }
 
+struct ItemPlaceableComponent {
+    entityId @0 :UInt32;
+}
+
 struct ItemStackComponent {
     count @0 :UInt32;
     itemId @1 :UInt32;
@@ -288,6 +292,10 @@ struct TurretComponent {
   bulletRadius @9 :Float32 = 0.25;
   bulletDamage @10 :Float32 = 10.0;
   bulletHealth @11 :Float32 = 1.0;
+}
+
+struct OwnedByComponent {
+  owner @0 :UInt32 = 0;
 }
 
 # Meant for tags.

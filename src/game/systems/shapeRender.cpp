@@ -126,7 +126,7 @@ void drawCircle(ShapeMeshComponent& mesh, const std::vector<Vertex>& circleMesh,
     std::memcpy(copy, &circleMesh[i], sizeof(Vertex) * 3);
 
     for (int i = 0; i < 3; i++) {
-      copy[i].pos = glm::vec3(transform.getWorldPoint({copy[i].pos.x * r, copy[i].pos.y * r}), copy[i].pos.z);
+      copy[i].pos = glm::vec3(transform.getWorldPoint({copy[i].pos.x * r, copy[i].pos.y * r}), z);
       copy[i].color = color;
     }
 

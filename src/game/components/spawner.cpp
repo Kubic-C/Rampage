@@ -17,7 +17,7 @@ void SpawnerComponent::deserialize(capnp::MessageReader& reader, const IdMapper&
   auto spawnerReader = reader.getRoot<Schema::SpawnerComponent>();
   auto spawner = component.cast<SpawnerComponent>();
 
-  spawner->spawn = spawnerReader.getSpawn();
+  spawner->spawn = id.resolve(spawnerReader.getSpawn());
   spawner->spawnRate = spawnerReader.getSpawnRate();
   spawner->timeSinceLastSpawn = spawnerReader.getTimeSinceLastSpawn();
   spawner->spawnableRadius = spawnerReader.getSpawnableRadius();

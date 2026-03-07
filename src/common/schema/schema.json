@@ -88,10 +88,8 @@
                                 "layer": {
                                   "type": "string",
                                   "enum": [
-                                    "Bottom",
                                     "Floor",
                                     "Wall",
-                                    "Turret",
                                     "Item",
                                     "Top"
                                   ]
@@ -360,11 +358,12 @@
                         },
                         "y": {
                           "type": "integer"
-                        },
-                        "z": {
-                          "type": "integer"
                         }
                       }
+                    },
+                    "layer": {
+                      "type": "string",
+                      "enum": ["Top", "Item", "Wall", "Floor"]
                     },
                     "material": {
                       "type": "object",
@@ -429,9 +428,6 @@
                           },
                           "y": {
                             "type": "integer"
-                          },
-                          "z": {
-                            "type": "integer"
                           }
                         }
                       }
@@ -443,9 +439,6 @@
                           "type": "integer"
                         },
                         "y": {
-                          "type": "integer"
-                        },
-                        "z": {
                           "type": "integer"
                         }
                       }
@@ -762,8 +755,7 @@
                       "const": "ItemUseComponent"
                     },
                     "entityId": {
-                      "type": "integer",
-                      "minimum": 0
+                      "type": "string"
                     },
                     "effectType": {
                       "type": "string"
@@ -797,6 +789,19 @@
                 {
                   "properties": {
                     "type": {
+                      "const": "ItemPlaceableComponent"
+                    },
+                    "entityId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                },
+                {
+                  "properties": {
+                    "type": {
                       "const": "ItemStackComponent"
                     },
                     "count": {
@@ -806,6 +811,19 @@
                     "itemId": {
                       "type": "integer",
                       "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                },
+                {
+                  "properties": {
+                    "type": {
+                      "const": "OwnedByComponent"
+                    },
+                    "owner": {
+                      "type": "string"
                     }
                   },
                   "required": [

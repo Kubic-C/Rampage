@@ -360,11 +360,12 @@
                         },
                         "y": {
                           "type": "integer"
-                        },
-                        "z": {
-                          "type": "integer"
                         }
                       }
+                    },
+                    "layer": {
+                      "type": "string",
+                      "enum": ["Top", "Item", "Wall", "Floor"]
                     },
                     "material": {
                       "type": "object",
@@ -429,9 +430,6 @@
                           },
                           "y": {
                             "type": "integer"
-                          },
-                          "z": {
-                            "type": "integer"
                           }
                         }
                       }
@@ -443,9 +441,6 @@
                           "type": "integer"
                         },
                         "y": {
-                          "type": "integer"
-                        },
-                        "z": {
                           "type": "integer"
                         }
                       }
@@ -750,6 +745,87 @@
                       },
                       "minItems": 4,
                       "maxItems": 4
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                },
+                {
+                  "properties": {
+                    "type": {
+                      "const": "ItemUseComponent"
+                    },
+                    "entityId": {
+                      "type": "string"
+                    },
+                    "effectType": {
+                      "type": "string"
+                    },
+                    "effectValue": {
+                      "type": "number"
+                    },
+                    "effectRadius": {
+                      "type": "number"
+                    },
+                    "cooldown": {
+                      "type": "number"
+                    },
+                    "remainingCooldown": {
+                      "type": "number"
+                    },
+                    "maxCharges": {
+                      "type": "integer"
+                    },
+                    "currentCharges": {
+                      "type": "integer"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                },
+                {
+                  "properties": {
+                    "type": {
+                      "const": "ItemPlaceableComponent"
+                    },
+                    "entityId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                },
+                {
+                  "properties": {
+                    "type": {
+                      "const": "ItemStackComponent"
+                    },
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "itemId": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                },
+                {
+                  "properties": {
+                    "type": {
+                      "const": "OwnedByComponent"
+                    },
+                    "owner": {
+                      "type": "string"
                     }
                   },
                   "required": [

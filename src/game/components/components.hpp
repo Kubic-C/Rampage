@@ -11,7 +11,8 @@
 #include "tilemap.hpp"
 #include "turret.hpp"
 #include "worldMap.hpp"
-#include "inventory.hpp"
+#include "inventory.hpp"    
+#include "ownedBy.hpp"
 
 RAMPAGE_START
 
@@ -40,8 +41,11 @@ inline void registerGameComponents(IWorldPtr world) {
   world->component<InventoryComponent>(false);
   world->component<ItemComponent>(false);
   world->component<InventoryViewComponent>(false);
-  world->component<ItemUseComponent>(false);
   world->component<ItemStackComponent>(false);
+  world->component<ItemPlaceableComponent>(false);
+  world->component<ItemPlacedTag>(false);
+  world->component<ItemDroppedTag>(false);
+  world->component<OwnedByComponent>(false);
 }
 
 RAMPAGE_END

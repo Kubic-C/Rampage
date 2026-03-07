@@ -140,10 +140,8 @@ void SpriteComponent::fromJson(Ref component, AssetLoader loader, const JSchema:
           // Parse layer name (string to enum conversion)
           if (layerJson.hasLayer()) {
             const std::string& layerName = layerJson.getLayer();
-            if (layerName == "Bottom") layer = WorldLayer::Bottom;
-            else if (layerName == "Floor") layer = WorldLayer::Floor;
+            if (layerName == "Floor") layer = WorldLayer::Floor;
             else if (layerName == "Wall") layer = WorldLayer::Wall;
-            else if (layerName == "Turret") layer = WorldLayer::Turret;
             else if (layerName == "Item") layer = WorldLayer::Item;
             else if (layerName == "Top") layer = WorldLayer::Top;
             else layer = WorldLayer::Invalid;

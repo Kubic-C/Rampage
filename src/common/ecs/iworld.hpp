@@ -23,6 +23,7 @@ class IAssetLoaderImpl;
 class Serializer;
 class Deserializer;
 
+struct AssetTag {};
 struct ComponentAddedEvent {};
 struct ComponentRemovedEvent {};
 
@@ -71,6 +72,7 @@ public:
   virtual bool hasNext() const = 0;
   virtual EntityPtr next() = 0;
   virtual IWorld& getWorld() = 0;
+  virtual void _setWorld(IWorld& world) = 0;
 };
 
 using IEntityIteratorPtr = std::unique_ptr<IEntityIterator>;
@@ -99,7 +101,7 @@ public:
   virtual ~IWorld() = default;
 
   virtual IHost& getHost() = 0;
-  virtual IWorld& getTopWorld() = 0;
+  virtual std::shared_ptr<IWorld> getTopWorld() = 0;
 
   virtual void addContext(ContextId id, u8* bytes, std::function<void(u8*)> destroy) noexcept = 0;
   virtual u8* getContext(ContextId id) = 0;
@@ -112,7 +114,7 @@ public:
   virtual void destroy(EntityId id) = 0;
   virtual void enable(EntityId entity) = 0;
   virtual void disable(EntityId entity) = 0;
-  virtual EntityPtr clone(EntityId entity) = 0;
+  virtual EntityPtr clone(EntityId entity, EntityId explicitId = NullEntityId) = 0;
   virtual size_t getEntityCount() const = 0;
   virtual size_t getSetCount() const = 0;
 
@@ -135,6 +137,7 @@ public:
   virtual void add(EntityId entity, const ComponentSet& addComps, bool emit = true) = 0;
   virtual void remove(EntityId entity, const ComponentSet& remComps, bool emit = true) = 0;
   virtual bool has(EntityId entity, ComponentId compId) = 0;
+  virtual bool has(EntityId entity, const ComponentSet& comps) = 0;
   virtual void copy(EntityId src, EntityId dst, const ComponentSet& comps = {}) = 0;
   virtual void move(EntityId src, EntityId dst, const ComponentSet& comps = {}) = 0;
   virtual const ComponentSet& setOf(EntityId entity) = 0;

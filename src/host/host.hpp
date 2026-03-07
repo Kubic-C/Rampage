@@ -46,6 +46,14 @@ public:
     m_funcs.traceError = traceErr;
   }
 
+  void setGameWorld(IWorldPtr world) override {
+    m_gameWorld = world;
+  }
+
+  IWorldPtr getGameWorld() override {
+    return m_gameWorld;
+  }
+
   IWorldPtr getWorld() override {
     return m_world;
   }
@@ -82,6 +90,7 @@ private:
   volatile bool m_exit = false;
 
   IWorldPtr m_world;
+  IWorldPtr m_gameWorld;
   HostFuncs m_funcs;
   Pipeline m_pipeline;
 

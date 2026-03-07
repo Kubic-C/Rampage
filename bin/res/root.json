@@ -7,96 +7,6 @@
       "components": []
     },
     {
-      "name": "BasicTurretItem",
-      "type": "Entity",
-      "components": [
-        {
-          "type": "ItemComponent",
-          "description": "A basic turret! Place it wisely -sp A basic turret! Place it wisely -sp A basic turret! Place it wisely -sp A basic turret! Place it wisely -sp A basic turret! Place it wisely -sp",
-          "name": "Basic Turret",
-          "isUnique": false,
-          "maxStackSize": 64,
-          "stackCost": 4,
-          "iconAsset": "res/entities/basicTurretIcon.png"
-        }
-      ]
-    },
-    {
-      "name": "BigGunTurretItem",
-      "type": "Entity",
-      "components": [
-        {
-          "type": "ItemComponent",
-          "description": "Big gun turret, seems to be lacking in turn speed... but it shoots faaaassst!",
-          "name": "Big Gun Turret",
-          "isUnique": false,
-          "maxStackSize": 64,
-          "stackCost": 32,
-          "iconAsset": "res/entities/biggun/biggunIcon.png"
-        }
-      ]
-    },
-    {
-      "name": "WoodItem",
-      "type": "Entity",
-      "components": [
-        {
-          "type": "ItemComponent",
-          "description": "Wood, a basic building material.",
-          "name": "Wood",
-          "isUnique": false,
-          "maxStackSize": 64,
-          "stackCost": 2,
-          "iconAsset": "res/entities/wood.png"
-        }
-      ]
-    },
-    {
-      "name": "FenceItem",
-      "type": "Entity",
-      "components": [
-        {
-          "type": "ItemComponent",
-          "description": "Fence the zombies off, surely more effective then nothing ay?",
-          "name": "Fence",
-          "isUnique": false,
-          "maxStackSize": 64,
-          "stackCost": 1,
-          "iconAsset": "res/entities/fence.png"
-        }
-      ]
-    },
-    {
-      "name": "PlaceableHighStoneItem",
-      "type": "Entity",
-      "components": [
-        {
-          "type": "ItemComponent",
-          "description": "BIG STONE BIG HP BIG EVERYTHING. Where did my inventory slots go?",
-          "name": "Placeable High Stone",
-          "isUnique": true,
-          "maxStackSize": 64,
-          "stackCost": 1,
-          "iconAsset": "res/entities/placeableHighStone.png"
-        }
-      ]
-    },
-    {
-      "name": "ZombieSpawnableItem",
-      "type": "Entity",
-      "components": [
-        {
-          "type": "ItemComponent",
-          "description": "Little guy says 'erghhh.' don't try placing him down? ok? ",
-          "name": "Zombie Spawnable",
-          "isUnique": true,
-          "maxStackSize": 20,
-          "stackCost": 1,
-          "iconAsset": "res/entities/zombie.png"
-        }
-      ]
-    },
-    {
       "name": "BasicPlayer",
       "type": "Entity",
       "components": [
@@ -372,7 +282,11 @@
               "layers": [
                 {
                   "path": "placeableHighStone",
-                  "layer": "Wall"
+                  "layer": "Wall",
+                  "offset": {
+                    "x": -0.5,
+                    "y": -0.5
+                  }
                 }
               ]
             },
@@ -384,7 +298,11 @@
               "layers": [
                 {
                   "path": "placeableHighStone",
-                  "layer": "Wall"
+                  "layer": "Wall",
+                  "offset": {
+                    "x": 0,
+                    "y": -0.5
+                  }
                 }
               ]
             },
@@ -396,7 +314,11 @@
               "layers": [
                 {
                   "path": "placeableHighStone",
-                  "layer": "Wall"
+                  "layer": "Wall",
+                  "offset": {
+                    "x": 0.5,
+                    "y": -0.5
+                  }
                 }
               ]
             },
@@ -408,7 +330,11 @@
               "layers": [
                 {
                   "path": "placeableHighStone",
-                  "layer": "Wall"
+                  "layer": "Wall",
+                  "offset": {
+                    "x": -0.5,
+                    "y": 0
+                  }
                 }
               ]
             },
@@ -420,7 +346,11 @@
               "layers": [
                 {
                   "path": "placeableHighStone",
-                  "layer": "Wall"
+                  "layer": "Wall",
+                  "offset": {
+                    "x": 0,
+                    "y": 0
+                  }
                 }
               ]
             },
@@ -432,7 +362,11 @@
               "layers": [
                 {
                   "path": "placeableHighStone",
-                  "layer": "Wall"
+                  "layer": "Wall",
+                  "offset": {
+                    "x": 0.5,
+                    "y": 0
+                  }
                 }
               ]
             },
@@ -444,7 +378,11 @@
               "layers": [
                 {
                   "path": "placeableHighStone",
-                  "layer": "Wall"
+                  "layer": "Wall",
+                  "offset": {
+                    "x": -0.5,
+                    "y": 0.5
+                  }
                 }
               ]
             },
@@ -456,7 +394,11 @@
               "layers": [
                 {
                   "path": "placeableHighStone",
-                  "layer": "Wall"
+                  "layer": "Wall",
+                  "offset": {
+                    "x": 0,
+                    "y": 0.5
+                  }
                 }
               ]
             },
@@ -468,7 +410,11 @@
               "layers": [
                 {
                   "path": "placeableHighStone",
-                  "layer": "Wall"
+                  "layer": "Wall",
+                  "offset": {
+                    "x": 0.5,
+                    "y": 0.5
+                  }
                 }
               ]
             }
@@ -561,14 +507,15 @@
                 },
                 {
                   "path": "basicTurretTop",
-                  "layer": "Wall"
+                  "layer": "Top"
                 }
               ]
             }
           ]
         },
         {
-          "type": "TileComponent"
+          "type": "TileComponent",
+          "layer": "Wall"
         },
         {
           "type": "HealthComponent",
@@ -660,16 +607,16 @@
                   "path": "biggunBASE00",
                   "layer": "Wall",
                   "offset": {
-                    "x": 0,
-                    "y": 0
+                    "x": -0.25,
+                    "y": -0.25
                   }
                 },
                 {
                   "path": "biggunTOP00",
-                  "layer": "Turret",
+                  "layer": "Top",
                   "offset": {
-                    "x": 0,
-                    "y": 0
+                    "x": -0.25,
+                    "y": -0.25
                   }
                 }
               ]
@@ -684,16 +631,16 @@
                   "path": "biggunBASE10",
                   "layer": "Wall",
                   "offset": {
-                    "x": 0.5,
-                    "y": 0
+                    "x": 0.25,
+                    "y": -0.25
                   }
                 },
                 {
                   "path": "biggunTOP10",
-                  "layer": "Turret",
+                  "layer": "Top",
                   "offset": {
-                    "x": 0.5,
-                    "y": 0
+                    "x": 0.25,
+                    "y": -0.25
                   }
                 }
               ]
@@ -708,16 +655,16 @@
                   "path": "biggunBASE01",
                   "layer": "Wall",
                   "offset": {
-                    "x": 0,
-                    "y": 0.5
+                    "x": -0.25,
+                    "y": 0.25
                   }
                 },
                 {
                   "path": "biggunTOP01",
-                  "layer": "Turret",
+                  "layer": "Top",
                   "offset": {
-                    "x": 0,
-                    "y": 0.5
+                    "x": -0.25,
+                    "y": 0.25
                   }
                 }
               ]
@@ -732,16 +679,16 @@
                   "path": "biggunBASE11",
                   "layer": "Wall",
                   "offset": {
-                    "x": 0.5,
-                    "y": 0.5
+                    "x": 0.25,
+                    "y": 0.25
                   }
                 },
                 {
                   "path": "biggunTOP11",
-                  "layer": "Turret",
+                  "layer": "Top",
                   "offset": {
-                    "x": 0.5,
-                    "y": 0.5
+                    "x": 0.25,
+                    "y": 0.25
                   }
                 }
               ]
@@ -799,6 +746,120 @@
         {
           "type": "ArrowComponent",
           "tileCost": 80
+        }
+      ]
+    },
+    {
+      "name": "BasicTurretItem",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "ItemComponent",
+          "description": "A basic turret! Place it wisely -sp A basic turret! Place it wisely -sp A basic turret! Place it wisely -sp A basic turret! Place it wisely -sp A basic turret! Place it wisely -sp",
+          "name": "Basic Turret",
+          "isUnique": false,
+          "maxStackSize": 64,
+          "stackCost": 4,
+          "iconAsset": "res/entities/basicTurretIcon.png"
+        },
+        {
+          "type": "ItemPlaceableComponent",
+          "entityId": "BasicTurretTile"
+        }
+      ]
+    },
+    {
+      "name": "BigGunTurretItem",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "ItemComponent",
+          "description": "Big gun turret, seems to be lacking in turn speed... but it shoots faaaassst!",
+          "name": "Big Gun Turret",
+          "isUnique": false,
+          "maxStackSize": 64,
+          "stackCost": 32,
+          "iconAsset": "res/entities/biggun/biggunIcon.png"
+        },
+        {
+          "type": "ItemPlaceableComponent",
+          "entityId": "BigGunTurretTile"
+        }
+      ]
+    },
+    {
+      "name": "WoodItem",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "ItemComponent",
+          "description": "Wood, a basic building material.",
+          "name": "Wood",
+          "isUnique": false,
+          "maxStackSize": 64,
+          "stackCost": 2,
+          "iconAsset": "res/entities/wood.png"
+        },
+        {
+          "type": "ItemPlaceableComponent",
+          "entityId": "WoodTile"
+        }
+      ]
+    },
+    {
+      "name": "FenceItem",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "ItemComponent",
+          "description": "Fence the zombies off, surely more effective then nothing ay?",
+          "name": "Fence",
+          "isUnique": false,
+          "maxStackSize": 64,
+          "stackCost": 1,
+          "iconAsset": "res/entities/fence.png"
+        },
+        {
+          "type": "ItemPlaceableComponent",
+          "entityId": "FenceTile"
+        }
+      ]
+    },
+    {
+      "name": "PlaceableHighStoneItem",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "ItemComponent",
+          "description": "BIG STONE BIG HP BIG EVERYTHING. Where did my inventory slots go?",
+          "name": "Placeable High Stone",
+          "isUnique": true,
+          "maxStackSize": 64,
+          "stackCost": 1,
+          "iconAsset": "res/entities/placeableHighStone.png"
+        },
+        {
+          "type": "ItemPlaceableComponent",
+          "entityId": "PlaceableHighStoneTile"
+        }
+      ]
+    },
+    {
+      "name": "ZombieSpawnableItem",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "ItemComponent",
+          "description": "Little guy says 'erghhh.' don't try placing him down? ok? ",
+          "name": "Zombie Spawnable",
+          "isUnique": true,
+          "maxStackSize": 20,
+          "stackCost": 1,
+          "iconAsset": "res/entities/zombie.png"
+        },
+        {
+          "type": "ItemPlaceableComponent",
+          "entityId": "BasicZombie"
         }
       ]
     }

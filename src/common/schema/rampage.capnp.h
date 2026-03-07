@@ -32,6 +32,7 @@ CAPNP_DECLARE_SCHEMA(8f17c18069203e01);
 CAPNP_DECLARE_SCHEMA(d1389ed8f3176caa);
 CAPNP_DECLARE_SCHEMA(853d504be38b2d2c);
 CAPNP_DECLARE_SCHEMA(c7a415a3ea75cdef);
+CAPNP_DECLARE_SCHEMA(dc8f40043f5e9cf9);
 CAPNP_DECLARE_SCHEMA(94fa2950e963efae);
 CAPNP_DECLARE_SCHEMA(8aca00a572816934);
 CAPNP_DECLARE_SCHEMA(a6300e38d3b75a9e);
@@ -68,6 +69,7 @@ CAPNP_DECLARE_SCHEMA(87e6b6a9f05e0bb9);
 CAPNP_DECLARE_SCHEMA(fa1f8c54fe78e560);
 CAPNP_DECLARE_SCHEMA(b433e9be32e79c94);
 CAPNP_DECLARE_SCHEMA(fc1c3f8f378390eb);
+CAPNP_DECLARE_SCHEMA(e6aa9630b1b3732a);
 CAPNP_DECLARE_SCHEMA(eed9d9743adb7221);
 CAPNP_DECLARE_SCHEMA(c8d41821c1f3f50a);
 CAPNP_DECLARE_SCHEMA(9707a9a138c3d8f1);
@@ -284,6 +286,21 @@ struct ItemUseComponent {
 
   struct _capnpPrivate {
     CAPNP_DECLARE_STRUCT_HEADER(c7a415a3ea75cdef, 4, 1)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct ItemPlaceableComponent {
+  ItemPlaceableComponent() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(dc8f40043f5e9cf9, 1, 0)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -710,6 +727,21 @@ struct TurretComponent {
 
   struct _capnpPrivate {
     CAPNP_DECLARE_STRUCT_HEADER(fc1c3f8f378390eb, 6, 0)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct OwnedByComponent {
+  OwnedByComponent() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(e6aa9630b1b3732a, 1, 0)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -2123,6 +2155,82 @@ private:
 class ItemUseComponent::Pipeline {
 public:
   typedef ItemUseComponent Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class ItemPlaceableComponent::Reader {
+public:
+  typedef ItemPlaceableComponent Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getEntityId() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class ItemPlaceableComponent::Builder {
+public:
+  typedef ItemPlaceableComponent Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getEntityId();
+  inline void setEntityId( ::uint32_t value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class ItemPlaceableComponent::Pipeline {
+public:
+  typedef ItemPlaceableComponent Pipelines;
 
   inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
@@ -4756,6 +4864,82 @@ private:
 };
 #endif  // !CAPNP_LITE
 
+class OwnedByComponent::Reader {
+public:
+  typedef OwnedByComponent Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getOwner() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class OwnedByComponent::Builder {
+public:
+  typedef OwnedByComponent Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getOwner();
+  inline void setOwner( ::uint32_t value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class OwnedByComponent::Pipeline {
+public:
+  typedef OwnedByComponent Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
 class Void::Reader {
 public:
   typedef Void Reads;
@@ -6323,6 +6507,20 @@ inline bool ItemUseComponent::Builder::getIsActive() {
 inline void ItemUseComponent::Builder::setIsActive(bool value) {
   _builder.setDataField<bool>(
       ::capnp::bounded<224>() * ::capnp::ELEMENTS, value, true);
+}
+
+inline  ::uint32_t ItemPlaceableComponent::Reader::getEntityId() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t ItemPlaceableComponent::Builder::getEntityId() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void ItemPlaceableComponent::Builder::setEntityId( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
 }
 
 inline  ::uint32_t ItemStackComponent::Reader::getCount() const {
@@ -8316,6 +8514,20 @@ inline float TurretComponent::Builder::getBulletHealth() {
 inline void TurretComponent::Builder::setBulletHealth(float value) {
   _builder.setDataField<float>(
       ::capnp::bounded<11>() * ::capnp::ELEMENTS, value, 1065353216u);
+}
+
+inline  ::uint32_t OwnedByComponent::Reader::getOwner() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t OwnedByComponent::Builder::getOwner() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void OwnedByComponent::Builder::setOwner( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
 }
 
 inline  ::uint32_t Entity::Reader::getId() const {

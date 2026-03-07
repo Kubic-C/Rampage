@@ -19,6 +19,8 @@ public:
 
   virtual std::mutex& getHostMutex() = 0;
   virtual IWorldPtr getWorld() = 0;
+  virtual void setGameWorld(IWorldPtr world) = 0;
+  virtual IWorldPtr getGameWorld() = 0;
   virtual std::string getTitle() = 0;
   virtual Pipeline& getPipeline() = 0;
   virtual bool shouldExit() const = 0;

@@ -26,6 +26,8 @@ target_sources(
   "components/inventory.hpp"
   "components/inventory.cpp"
   "components/worldMap.hpp"
+  "components/ownedBy.hpp"
+  "components/ownedBy.cpp"
   "components/components.hpp")
 
 target_sources(

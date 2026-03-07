@@ -43,7 +43,7 @@ public:
   virtual ~EntityWorld() noexcept override;
 
   virtual IHost& getHost() override;
-  virtual IWorld& getTopWorld() override;
+  virtual IWorldPtr getTopWorld() override;
 
   virtual void addContext(ContextId id, u8* bytes, std::function<void(u8*)> destroy) noexcept override;
   virtual u8* getContext(ContextId id) override;
@@ -56,7 +56,7 @@ public:
   virtual void destroy(EntityId id) override;
   virtual void enable(EntityId entity) override;
   virtual void disable(EntityId entity) override;
-  virtual EntityPtr clone(EntityId entity) override;
+  virtual EntityPtr clone(EntityId entity, EntityId explicitId = NullEntityId) override;
   virtual size_t getEntityCount() const override;
   virtual size_t getSetCount() const override;
 
@@ -79,6 +79,7 @@ public:
   virtual void add(EntityId entity, const ComponentSet& addComps, bool emit = true) override;
   virtual void remove(EntityId entity, const ComponentSet& remComps, bool emit = true) override;
   virtual bool has(EntityId entity, ComponentId comp) override;
+  virtual bool has(EntityId entity, const ComponentSet& comps) override;
   virtual void copy(EntityId src, EntityId dst, const ComponentSet& comps = {}) override;
   virtual void move(EntityId src, EntityId dst, const ComponentSet& comps = {}) override;
   virtual const ComponentSet& setOf(EntityId entity) override;
