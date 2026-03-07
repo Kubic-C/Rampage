@@ -86,7 +86,6 @@ void registerStatsSystems(Pipeline& pipeline) {
     stats.cumTicks = stats.cumFrames = 0;
 
     auto& host = world->getHost();
-    host.log("FPS/TPS: %4.1f/%4.1f\n", stats.fps, stats.tps);
 
     return 0;
   });

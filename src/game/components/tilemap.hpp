@@ -9,17 +9,17 @@ RAMPAGE_START
 constexpr glm::vec2 tileSize = glm::vec2(0.5f, 0.5f);
 
 constexpr std::array<glm::ivec2, 4> tileDirectionPos = {
-  glm::ivec2(0, 1), 
   glm::ivec2(1, 0), 
   glm::ivec2(0, -1), 
-  glm::ivec2(-1, 0)
+  glm::ivec2(-1, 0), 
+  glm::ivec2(0, 1)
 };
 
 enum TileDirection: u8 {
-  Up = 0,
-  Right = 1,
-  Down = 2,
-  Left = 3,
+  Right = 0,
+  Down = 1,
+  Left = 2,
+  Up = 3
 };
 
 inline TileDirection getOppositeDirection(TileDirection dir) {
@@ -86,7 +86,7 @@ struct TileComponent {
   b2ShapeId shapeId;
   glm::ivec2 pos = {0, 0};
   WorldLayer layer = WorldLayer::Floor;
-  TileDirection rotation = TileDirection::Up;
+  TileDirection rotation = TileDirection::Right;
   EntityId parent = 0;
   b2SurfaceMaterial material = b2DefaultSurfaceMaterial();
 };
@@ -121,8 +121,9 @@ public:
   }
 
   WorldLayer getLayerOfTopTile(glm::ivec2 pos) const {
-    for (size_t l = 0; l < LayerCount; ++l)
+    for (size_t l = LayerCount; l-- > 0;) {
       if (m_layers[l].contains(pos)) return static_cast<WorldLayer>(l);
+    }
     return WorldLayer::Invalid;
   }
 

@@ -189,7 +189,10 @@ bool InventoryManager::placeItem(IWorldPtr world, EntityId itemId, Vec2 placePos
   stackComp->itemId = itemId;
   stackComp->count = pickableCount;
 
-  std::cout << "Placed entity " << entityToPlaceId << " at position (" << placePosition.x << ", " << placePosition.y << ")\n";
+  if(entityToPlace.has<TileComponent>()) {
+    auto tileComp = entityToPlace.get<TileComponent>();
+    std::cout << "Placed entity " << entityToPlaceId << " at position (" << tileComp->pos.x << ", " << tileComp->pos.y << ")" << std::endl;
+  }
 
   return true;
 }
@@ -317,6 +320,32 @@ u32 InventoryManager::removeItemByType(IWorldPtr world, EntityId invEntityId, En
   }
 
   return totalRemoved;
+}
+
+ItemStackComponent InventoryManager::removeAnyItem(IWorldPtr world, EntityId invEntityId, u32 count) {
+    EntityPtr invEntity = world->getEntity(invEntityId);
+  if (!invEntity.has<InventoryComponent>()) {
+    return {}; // Invalid inventory entity
+  }
+
+  auto invComp = invEntity.get<InventoryComponent>();
+
+  ItemStackComponent returning;
+  for(ItemStackComponent& slot : invComp->items) {
+    if(slot.itemId == 0)
+      continue;
+    if(returning.itemId == 0)
+      returning.itemId = slot.itemId; 
+    if (slot.itemId == returning.itemId) {
+      u32 removed = removeFromSlot(slot, count);
+      returning.count += removed;
+      count -= removed;
+      if (count == 0)
+        return returning; // Removed requested amount
+    }
+  }
+
+  return returning;
 }
 
 u32 InventoryManager::removeFromSlot(ItemStackComponent& slot, u32 count) {
@@ -617,10 +646,364 @@ int updateInventoryViews(IWorldPtr world, float dt) {
   return 0;
 }
 
+// Helper: check if a part accepts input from a world-space direction
+bool acceptsInputFrom(EntityPtr partEntity, TileDirection worldDir) {
+  auto part = partEntity.get<ConveyorPartComponent>();
+  auto tile = partEntity.get<TileComponent>();
+  for(TileDirection localDir : part->inputDirections) {
+    if(rotateTileDirection(localDir, static_cast<int>(tile->rotation)) == worldDir)
+      return true;
+  }
+  return false;
+}
+
+void updateConveyorPart(IWorldPtr world, EntityPtr entity) {
+  auto tmMgr = world->getContext<TilemapManager>();
+  auto invMgr = world->getContext<InventoryManager>();
+
+  auto conveyorPart = entity.get<ConveyorPartComponent>();
+  if(conveyorPart->conveyorId != 0)
+    return;
+
+  auto tileComp = entity.get<TileComponent>();
+  auto tilemapComp = world->getEntity(tileComp->parent).get<TilemapComponent>();
+
+  // BFS to find all connected conveyor parts
+  std::vector<EntityId> parts;
+  Set<EntityId> visited;
+  size_t queueIdx = 0;
+
+  parts.push_back(entity.id());
+  visited.insert(entity.id());
+
+  while(queueIdx < parts.size()) {
+    EntityPtr cur = world->getEntity(parts[queueIdx++]);
+    auto curTile = cur.get<TileComponent>();
+    TileDirection curOutput = curTile->rotation;
+
+    for(int i = 0; i < 4; ++i) {
+      TileDirection dir = static_cast<TileDirection>(i);
+      glm::ivec2 neighborPos = curTile->pos + tileDirectionPos[dir];
+
+      if(!tilemapComp->containsTileAtAnyLayer(neighborPos))
+        continue;
+
+      WorldLayer layer = tilemapComp->getLayerOfTopTile(neighborPos);
+      EntityPtr neighborEntity = world->getEntity(tilemapComp->getTile(layer, neighborPos));
+      EntityPtr neighborAnchor = tmMgr.getAnchorTile(world, neighborEntity);
+
+      if(!neighborAnchor.has<ConveyorPartComponent>() || visited.count(neighborAnchor.id()))
+        continue;
+
+      auto neighborTile = neighborAnchor.get<TileComponent>();
+      TileDirection neighborOutput = neighborTile->rotation;
+
+      // Connected if: current outputs to neighbor's input, or neighbor outputs to current's input
+      bool connected =
+        (curOutput == dir && acceptsInputFrom(neighborAnchor, getOppositeDirection(dir))) ||
+        (neighborOutput == getOppositeDirection(dir) && acceptsInputFrom(cur, dir));
+
+      if(connected) {
+        visited.insert(neighborAnchor.id());
+        parts.push_back(neighborAnchor.id());
+      }
+    }
+  }
+
+  // Create conveyor entity and assign to all parts
+  EntityPtr conveyorEntity = world->create();
+  conveyorEntity.add<ConveyorComponent>();
+  auto conveyor = conveyorEntity.get<ConveyorComponent>();
+
+  for(EntityId partId : parts) {
+    world->getEntity(partId).get<ConveyorPartComponent>()->conveyorId = conveyorEntity.id();
+  }
+
+  // Find the start of the chain: a part with no group member feeding into its inputs
+  EntityId startId = parts[0];
+  for(EntityId partId : parts) {
+    EntityPtr part = world->getEntity(partId);
+    auto partTile = part.get<TileComponent>();
+    auto partComp = part.get<ConveyorPartComponent>();
+
+    bool hasGroupInput = false;
+    for(TileDirection localDir : partComp->inputDirections) {
+      TileDirection worldDir = rotateTileDirection(localDir, static_cast<int>(partTile->rotation));
+      glm::ivec2 inputPos = partTile->pos + tileDirectionPos[worldDir];
+
+      for(EntityId otherId : parts) {
+        if(otherId == partId) continue;
+        auto otherTile = world->getEntity(otherId).get<TileComponent>();
+        if(otherTile->pos == inputPos && otherTile->rotation == getOppositeDirection(worldDir)) {
+          hasGroupInput = true;
+          break;
+        }
+      }
+      if(hasGroupInput) break;
+    }
+
+    if(!hasGroupInput) {
+      startId = partId;
+      break;
+    }
+  }
+
+  // Walk from start following output direction, accumulating virtual distance
+  // and discovering adjacent inventories
+  float accumulatedDistance = 0.0f;
+  EntityId walkId = startId;
+  Set<EntityId> walked;
+
+  while(walkId != 0 && !walked.count(walkId)) {
+    walked.insert(walkId);
+    EntityPtr walkEntity = world->getEntity(walkId);
+    auto walkPart = walkEntity.get<ConveyorPartComponent>();
+    auto walkTile = walkEntity.get<TileComponent>();
+
+    accumulatedDistance += walkPart->virtualDistanceIncrease + 0.5f;
+
+    // Check all neighbors for inventories
+    for(int i = 0; i < 4; ++i) {
+      TileDirection dir = static_cast<TileDirection>(i);
+      glm::ivec2 neighborPos = walkTile->pos + tileDirectionPos[dir];
+
+      if(!tilemapComp->containsTileAtAnyLayer(neighborPos))
+        continue;
+
+      WorldLayer layer = tilemapComp->getLayerOfTopTile(neighborPos);
+      EntityPtr neighborEntity = world->getEntity(tilemapComp->getTile(layer, neighborPos));
+      EntityPtr neighborAnchor = tmMgr.getAnchorTile(world, neighborEntity);
+
+      if(!neighborAnchor.has<InventoryComponent>()) continue;
+
+      bool alreadyRegistered = false;
+      for(auto& inv : conveyor->inventories) {
+        if(inv.inventoryId == neighborAnchor.id()) {
+          alreadyRegistered = true;
+          break;
+        }
+      }
+      if(!alreadyRegistered) {
+        conveyor->inventories.push_back({neighborAnchor.id(), accumulatedDistance});
+      }
+    }
+
+    // Follow output direction to next part in the group
+    glm::ivec2 nextPos = walkTile->pos + tileDirectionPos[walkTile->rotation];
+    walkId = 0;
+
+    if(tilemapComp->containsTileAtAnyLayer(nextPos)) {
+      WorldLayer nextLayer = tilemapComp->getLayerOfTopTile(nextPos);
+      EntityPtr nextEntity = world->getEntity(tilemapComp->getTile(nextLayer, nextPos));
+      EntityPtr nextAnchor = tmMgr.getAnchorTile(world, nextEntity);
+      if(nextAnchor.has<ConveyorPartComponent>() && visited.count(nextAnchor.id())) {
+        walkId = nextAnchor.id();
+      }
+    }
+  }
+}
+
+int updateConveyors(IWorldPtr world, float dt) {
+  auto tmMgr = world->getContext<TilemapManager>();
+  auto invMgr = world->getContext<InventoryManager>();
+
+  // Phase 1: Initialize conveyors for unassigned parts
+  auto it = world->getWith(world->set<TileComponent, ConveyorPartComponent>());
+  while(it->hasNext()) {
+    EntityPtr entity = it->next();
+    updateConveyorPart(world, entity);
+  }
+
+  // Phase 2: Advance items in transit and deliver to destination inventories
+  auto convIt = world->getWith({world->component<ConveyorComponent>()});
+  while(convIt->hasNext()) {
+    EntityPtr convEntity = convIt->next();
+    auto conveyor = convEntity.get<ConveyorComponent>();
+
+    for(size_t i = 0; i < conveyor->itemsInTransit.size(); ) {
+      auto& transit = conveyor->itemsInTransit[i];
+      transit.curVirtualDistance += dt;
+
+      if(transit.invIndex < conveyor->inventories.size() &&
+         transit.curVirtualDistance >= conveyor->inventories[transit.invIndex].virtualDistance) {
+        EntityId invId = conveyor->inventories[transit.invIndex].inventoryId;
+        u32 remaining = invMgr.addItem(world, invId, transit.stack.itemId, transit.stack.count);
+        if(remaining == 0) {
+          conveyor->itemsInTransit.erase(conveyor->itemsInTransit.begin() + i);
+          continue;
+        }
+        // Inventory full, keep remaining items in transit until space opens
+        transit.stack.count = remaining;
+        ++i;
+        continue;
+      }
+      ++i;
+    }
+  }
+
+  return 0;
+}
+
+void updatePort(IWorldPtr world, EntityPtr entity) {
+  auto tmMgr = world->getContext<TilemapManager>();
+  auto invMgr = world->getContext<InventoryManager>();
+
+  auto port = entity.get<PortComponent>();
+  auto tileComp = entity.get<TileComponent>();
+  auto tilemapComp = world->getEntity(tileComp->parent).get<TilemapComponent>();
+
+  if(!port->isOn)
+    return;
+  port->tickCounter += 1;
+  if(port->tickCounter < port->ticksPerUpdate)
+    return;
+
+  // 1) find or update the importing inventory, if any.
+  glm::ivec2 portPos = tileComp->pos;
+  glm::ivec2 behindPort = tileComp->pos - tileDirectionPos[tileComp->rotation];
+  if(!tilemapComp->containsTileAtAnyLayer(behindPort))
+    return;
+  EntityPtr tileBehind = world->getEntity(tilemapComp->getTile(tilemapComp->getLayerOfTopTile(behindPort), behindPort));
+  EntityPtr importTile = tmMgr.getAnchorTile(world, tileBehind);
+  if(importTile.has<InventoryComponent>()) {
+    port->importingInventory = importTile;
+  } else
+    return;
+
+  // 2) find or update the exporting conveyor.
+  glm::ivec2 inFrontOfPort = tileComp->pos + tileDirectionPos[tileComp->rotation];
+  if(!tilemapComp->containsTileAtAnyLayer(inFrontOfPort))
+    return;
+  EntityPtr tileInFront = world->getEntity(tilemapComp->getTile(tilemapComp->getLayerOfTopTile(inFrontOfPort), inFrontOfPort));
+  EntityPtr exportTile = tmMgr.getAnchorTile(world, tileInFront);
+  if(exportTile.has<ConveyorPartComponent>()) {
+    EntityId partConveyorId = exportTile.get<ConveyorPartComponent>()->conveyorId;
+    if(partConveyorId != NullEntityId) {
+      port->exportingConveyor = partConveyorId;
+    }
+  }
+  if(port->exportingConveyor == NullEntityId)
+    return;
+
+  // Validate the conveyor entity is still alive
+  EntityPtr conveyorEntity = world->getEntity(port->exportingConveyor);
+  if(!conveyorEntity.alive() || !conveyorEntity.has<ConveyorComponent>()) {
+    port->exportingConveyor = NullEntityId;
+    return;
+  }
+
+  // 3) Find and remove items.
+  auto conveyor = conveyorEntity.get<ConveyorComponent>();
+  if(conveyor->maxItemsInTransit == conveyor->itemsInTransit.size() ||
+      conveyor->inventories.empty())
+    return; // Can't move items if conveyor is full
+
+  // 3a) find items in import inventory, if any.
+  if(port->importingInventory == NullEntityId)
+    return; // No inventory behind port
+
+  ItemStackComponent itemToMove;
+  if(port->filter.empty()) {
+      itemToMove = invMgr.removeAnyItem(world, port->importingInventory);
+      if(itemToMove.itemId == 0)
+      return; // No items to move
+  } else {
+    bool found = false;
+    for(EntityId filterItem : port->filter) {
+      itemToMove.count = invMgr.removeItemByType(world, port->importingInventory, filterItem, 1);
+      if(itemToMove.count != 0) {
+        itemToMove.itemId = filterItem;
+        found = true;
+        break;
+      }
+    }
+    if(!found)
+      return; // No items matching filter to move
+  }
+  
+  // 3b) move items to exporting conveyor.
+  size_t exportingInvIndex = 0;
+  switch(port->distribution) {
+  case PortDistribution::RoundRobin: {
+    port->exportingIndex = (port->exportingIndex + 1) % conveyor->inventories.size();
+    exportingInvIndex = port->exportingIndex;
+  } break;
+  case PortDistribution::Priority: {
+    exportingInvIndex = port->exportingIndex;
+  } break;
+  case PortDistribution::First: {
+    exportingInvIndex = 0;
+  } break;
+  default:
+    assert(false && "Invalid port distribution type");
+    break;
+  };
+
+  assert(exportingInvIndex < conveyor->inventories.size());
+  ConveyorComponent::ItemInTransit& transit = conveyor->itemsInTransit.emplace_back();
+  transit.stack = itemToMove;
+  transit.invIndex = static_cast<u32>(exportingInvIndex);
+  transit.curVirtualDistance = 0.0f;
+
+  std::cout << "Sent item to conveyor" << port->exportingConveyor << std::endl;
+
+  // tick may now be reset
+  port->tickCounter = 0;
+}
+
+int updatePorts(IWorldPtr world, float dt) {
+  auto tmMgr = world->getContext<TilemapManager>();
+  auto invMgr = world->getContext<InventoryManager>();
+
+  auto it = world->getWith(world->set<TileComponent, PortComponent>());
+  while(it->hasNext()) {
+    EntityPtr entity = it->next();
+
+    updatePort(world, entity);
+  }
+
+  return 0;
+}
+
+void observeConveyorPartRemoved(EntityPtr entity) {
+  IWorldPtr world = entity.world();
+  auto conveyorPart = entity.get<ConveyorPartComponent>();
+  EntityId conveyorId = conveyorPart->conveyorId;
+  if(conveyorId == NullEntityId)
+    return;
+
+  EntityPtr conveyorEntity = world->getEntity(conveyorId);
+  if(!conveyorEntity.alive())
+    return;
+
+  // Drop all in-transit items at the removed part's position (or discard)
+  if(conveyorEntity.has<ConveyorComponent>()) {
+    auto conveyor = conveyorEntity.get<ConveyorComponent>();
+    conveyor->itemsInTransit.clear();
+  }
+
+  // Reset conveyorId on all sibling parts so they get re-grouped next tick
+  auto it = world->getWith(world->set<ConveyorPartComponent>());
+  while(it->hasNext()) {
+    EntityPtr sibling = it->next();
+    auto siblingPart = sibling.get<ConveyorPartComponent>();
+    if(siblingPart->conveyorId == conveyorId) {
+      siblingPart->conveyorId = NullEntityId;
+    }
+  }
+
+  // Destroy the old conveyor entity
+  world->destroy(conveyorId);
+}
+
 void loadInventorySystems(IHost& host) {
   auto world = host.getWorld();
 
+  world->observe<ComponentRemovedEvent>(world->component<ConveyorPartComponent>(), {}, observeConveyorPartRemoved);
+
   host.getPipeline().getGroup<GameGroup>().attachToStage<GameGroup::PreTickStage>(updateInventoryViews);
+  host.getPipeline().getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(updateConveyors);
+  host.getPipeline().getGroup<GameGroup>().attachToStage<GameGroup::TickStage>(updatePorts);
 }
 
 RAMPAGE_END

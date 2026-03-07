@@ -627,8 +627,7 @@
           "type": "InventoryViewComponent",
           "slotSize": 32,
           "windowBackgroundColor": [74, 27, 10, 200],
-          "name": "Chest Inventory",
-          "isVisible": true
+          "name": "Chest Inventory"
         }
       ]
     },
@@ -921,6 +920,276 @@
         {
           "type": "ItemPlaceableComponent",
           "entityId": "ChestTile"
+        }
+      ]
+    },
+    {
+      "name": "PortTile",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "SpriteComponent",
+          "subSprites": [
+            {
+              "layers": [
+                {
+                  "path": "port",
+                  "layer": "Wall"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "TileComponent"
+        },
+        {
+          "type": "HealthComponent",
+          "health": 200
+        },
+        {
+          "type": "ArrowComponent",
+          "tileCost": 30
+        },
+        {
+          "type": "PortComponent",
+          "ticksPerUpdate": 20,
+          "isOn": true
+        }
+      ]
+    },
+    {
+      "name": "Conveyor2WayCornerTile",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "SpriteComponent",
+          "subSprites": [
+            {
+              "layers": [
+                {
+                  "path": "conveyor2waycorner",
+                  "layer": "Wall"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "TileComponent"
+        },
+        {
+          "type": "HealthComponent",
+          "health": 100
+        },
+        {
+          "type": "ArrowComponent",
+          "tileCost": 20
+        },
+        {
+          "type": "ConveyorPartComponent",
+          "inputDirections": ["Up", "Left"],
+          "virtualDistanceIncrease": 0.5
+        }
+      ]
+    },
+    {
+      "name": "Conveyor2WayTile",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "SpriteComponent",
+          "subSprites": [
+            {
+              "layers": [
+                {
+                  "path": "conveyor2way",
+                  "layer": "Wall"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "TileComponent"
+        },
+        {
+          "type": "HealthComponent",
+          "health": 100
+        },
+        {
+          "type": "ArrowComponent",
+          "tileCost": 20
+        },
+        {
+          "type": "ConveyorPartComponent",
+          "inputDirections": ["Left", "Right"],
+          "virtualDistanceIncrease": 0.5
+        }
+      ]
+    },
+    {
+      "name": "Conveyor3WayTile",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "SpriteComponent",
+          "subSprites": [
+            {
+              "layers": [
+                {
+                  "path": "conveyor3way",
+                  "layer": "Wall"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "TileComponent"
+        },
+        {
+          "type": "HealthComponent",
+          "health": 100
+        },
+        {
+          "type": "ArrowComponent",
+          "tileCost": 20
+        },
+        {
+          "type": "ConveyorPartComponent",
+          "inputDirections": ["Left", "Right", "Up"],
+          "virtualDistanceIncrease": 0.5
+        }
+      ]
+    },
+    {
+      "name": "Conveyor4WayTile",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "SpriteComponent",
+          "subSprites": [
+            {
+              "layers": [
+                {
+                  "path": "conveyor4way",
+                  "layer": "Wall"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "TileComponent"
+        },
+        {
+          "type": "HealthComponent",
+          "health": 100
+        },
+        {
+          "type": "ArrowComponent",
+          "tileCost": 20
+        },
+        {
+          "type": "ConveyorPartComponent",
+          "inputDirections": ["Up", "Right", "Down", "Left"],
+          "virtualDistanceIncrease": 0.5
+        }
+      ]
+    },
+    {
+      "name": "PortItem",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "ItemComponent",
+          "description": "A port connects inventories to conveyors. Routes items in and out.",
+          "name": "Port",
+          "isUnique": false,
+          "maxStackSize": 128,
+          "stackCost": 2,
+          "iconAsset": "res/entities/port.png"
+        },
+        {
+          "type": "ItemPlaceableComponent",
+          "entityId": "PortTile"
+        }
+      ]
+    },
+    {
+      "name": "Conveyor2WayCornerItem",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "ItemComponent",
+          "description": "A corner conveyor. Items can enter from two adjacent sides.",
+          "name": "Conveyor (2-Way Corner)",
+          "isUnique": false,
+          "maxStackSize": 128,
+          "stackCost": 1,
+          "iconAsset": "res/entities/conveyor2waycorner.png"
+        },
+        {
+          "type": "ItemPlaceableComponent",
+          "entityId": "Conveyor2WayCornerTile"
+        }
+      ]
+    },
+    {
+      "name": "Conveyor2WayItem",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "ItemComponent",
+          "description": "A two-way conveyor. Items can enter from opposite sides.",
+          "name": "Conveyor (2-Way)",
+          "isUnique": false,
+          "maxStackSize": 128,
+          "stackCost": 1,
+          "iconAsset": "res/entities/conveyor2way.png"
+        },
+        {
+          "type": "ItemPlaceableComponent",
+          "entityId": "Conveyor2WayTile"
+        }
+      ]
+    },
+    {
+      "name": "Conveyor3WayItem",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "ItemComponent",
+          "description": "A T-junction conveyor. Items can enter from three sides.",
+          "name": "Conveyor (3-Way)",
+          "isUnique": false,
+          "maxStackSize": 128,
+          "stackCost": 1,
+          "iconAsset": "res/entities/conveyor3way.png"
+        },
+        {
+          "type": "ItemPlaceableComponent",
+          "entityId": "Conveyor3WayTile"
+        }
+      ]
+    },
+    {
+      "name": "Conveyor4WayItem",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "ItemComponent",
+          "description": "A crossroads conveyor. Items can enter from all four sides.",
+          "name": "Conveyor (4-Way)",
+          "isUnique": false,
+          "maxStackSize": 128,
+          "stackCost": 1,
+          "iconAsset": "res/entities/conveyor4way.png"
+        },
+        {
+          "type": "ItemPlaceableComponent",
+          "entityId": "Conveyor4WayTile"
         }
       ]
     }

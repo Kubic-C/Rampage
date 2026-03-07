@@ -54,6 +54,12 @@ public:
    */
   u32 removeItemByType(IWorldPtr world, EntityId invEntityId, EntityId itemEntity, u32 count = 1);
 
+    /**
+   * Find and remove any item of the same type.
+   * @return (number of items removed, type of item removed)
+   */
+  ItemStackComponent removeAnyItem(IWorldPtr world, EntityId invEntityId, u32 count = 1);
+
   // ========================================================================
   // ITEM MOVEMENT / REORGANIZATION
   // ========================================================================

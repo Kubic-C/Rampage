@@ -833,6 +833,71 @@
                   "required": [
                     "type"
                   ]
+                },
+                {
+                  "properties": {
+                    "type": {
+                      "const": "PortComponent"
+                    },
+                    "importingInventory": {
+                      "type": "string"
+                    },
+                    "distribution": {
+                      "type": "string",
+                      "enum": [
+                        "RoundRobin",
+                        "Priority",
+                        "First"
+                      ]
+                    },
+                    "ticksPerUpdate": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "filter": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "isOn": {
+                      "type": "boolean"
+                    },
+                    "exportingConveyor": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                },
+                {
+                  "properties": {
+                    "type": {
+                      "const": "ConveyorPartComponent"
+                    },
+                    "conveyorId": {
+                      "type": "string"
+                    },
+                    "inputDirections": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "Up",
+                          "Right",
+                          "Down",
+                          "Left"
+                        ]
+                      }
+                    },
+                    "virtualDistanceIncrease": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
                 }
               ],
               "discriminator": {

@@ -76,6 +76,18 @@ CAPNP_DECLARE_SCHEMA(9707a9a138c3d8f1);
 CAPNP_DECLARE_SCHEMA(e9a986a1c0f08f71);
 CAPNP_DECLARE_SCHEMA(d49e55acd79e9157);
 CAPNP_DECLARE_SCHEMA(de61ec457e943252);
+CAPNP_DECLARE_SCHEMA(e65aef5f8d3a2ba3);
+enum class PortDistribution_e65aef5f8d3a2ba3: uint16_t {
+  ROUND_ROBIN,
+  PRIORITY,
+  FIRST,
+};
+CAPNP_DECLARE_ENUM(PortDistribution, e65aef5f8d3a2ba3);
+CAPNP_DECLARE_SCHEMA(a042b9706e79f25e);
+CAPNP_DECLARE_SCHEMA(d36e161b93e25198);
+CAPNP_DECLARE_SCHEMA(ae26b6bfd7ecd59d);
+CAPNP_DECLARE_SCHEMA(f4f1232bf45d6e70);
+CAPNP_DECLARE_SCHEMA(cfe5b72c429c184c);
 
 }  // namespace schemas
 }  // namespace capnp
@@ -832,6 +844,83 @@ struct AssetState {
 
   struct _capnpPrivate {
     CAPNP_DECLARE_STRUCT_HEADER(de61ec457e943252, 0, 3)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+typedef ::capnp::schemas::PortDistribution_e65aef5f8d3a2ba3 PortDistribution;
+
+struct PortComponent {
+  PortComponent() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(a042b9706e79f25e, 3, 1)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct ConveyorInventoryDistance {
+  ConveyorInventoryDistance() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(d36e161b93e25198, 1, 0)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct ConveyorItemInTransit {
+  ConveyorItemInTransit() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(ae26b6bfd7ecd59d, 2, 0)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct ConveyorComponent {
+  ConveyorComponent() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(f4f1232bf45d6e70, 1, 2)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct ConveyorPartComponent {
+  ConveyorPartComponent() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(cfe5b72c429c184c, 1, 1)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -5500,6 +5589,483 @@ private:
 };
 #endif  // !CAPNP_LITE
 
+class PortComponent::Reader {
+public:
+  typedef PortComponent Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getImportingInventory() const;
+
+  inline  ::Schema::PortDistribution getDistribution() const;
+
+  inline  ::uint32_t getExportingIndex() const;
+
+  inline  ::uint32_t getTicksPerUpdate() const;
+
+  inline  ::uint32_t getTickCounter() const;
+
+  inline bool hasFilter() const;
+  inline  ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>::Reader getFilter() const;
+
+  inline bool getIsOn() const;
+
+  inline  ::uint32_t getExportingConveyor() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class PortComponent::Builder {
+public:
+  typedef PortComponent Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getImportingInventory();
+  inline void setImportingInventory( ::uint32_t value);
+
+  inline  ::Schema::PortDistribution getDistribution();
+  inline void setDistribution( ::Schema::PortDistribution value);
+
+  inline  ::uint32_t getExportingIndex();
+  inline void setExportingIndex( ::uint32_t value);
+
+  inline  ::uint32_t getTicksPerUpdate();
+  inline void setTicksPerUpdate( ::uint32_t value);
+
+  inline  ::uint32_t getTickCounter();
+  inline void setTickCounter( ::uint32_t value);
+
+  inline bool hasFilter();
+  inline  ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>::Builder getFilter();
+  inline void setFilter( ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>::Reader value);
+  inline void setFilter(::kj::ArrayPtr<const  ::uint32_t> value);
+  inline  ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>::Builder initFilter(unsigned int size);
+  inline void adoptFilter(::capnp::Orphan< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>> disownFilter();
+
+  inline bool getIsOn();
+  inline void setIsOn(bool value);
+
+  inline  ::uint32_t getExportingConveyor();
+  inline void setExportingConveyor( ::uint32_t value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class PortComponent::Pipeline {
+public:
+  typedef PortComponent Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class ConveyorInventoryDistance::Reader {
+public:
+  typedef ConveyorInventoryDistance Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getInventoryId() const;
+
+  inline float getVirtualDistance() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class ConveyorInventoryDistance::Builder {
+public:
+  typedef ConveyorInventoryDistance Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getInventoryId();
+  inline void setInventoryId( ::uint32_t value);
+
+  inline float getVirtualDistance();
+  inline void setVirtualDistance(float value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class ConveyorInventoryDistance::Pipeline {
+public:
+  typedef ConveyorInventoryDistance Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class ConveyorItemInTransit::Reader {
+public:
+  typedef ConveyorItemInTransit Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getCount() const;
+
+  inline  ::uint32_t getItemId() const;
+
+  inline  ::uint32_t getInvIndex() const;
+
+  inline float getCurVirtualDistance() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class ConveyorItemInTransit::Builder {
+public:
+  typedef ConveyorItemInTransit Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getCount();
+  inline void setCount( ::uint32_t value);
+
+  inline  ::uint32_t getItemId();
+  inline void setItemId( ::uint32_t value);
+
+  inline  ::uint32_t getInvIndex();
+  inline void setInvIndex( ::uint32_t value);
+
+  inline float getCurVirtualDistance();
+  inline void setCurVirtualDistance(float value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class ConveyorItemInTransit::Pipeline {
+public:
+  typedef ConveyorItemInTransit Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class ConveyorComponent::Reader {
+public:
+  typedef ConveyorComponent Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline bool hasItemsInTransit() const;
+  inline  ::capnp::List< ::Schema::ConveyorItemInTransit,  ::capnp::Kind::STRUCT>::Reader getItemsInTransit() const;
+
+  inline  ::uint32_t getMaxItemsInTransit() const;
+
+  inline bool hasInventories() const;
+  inline  ::capnp::List< ::Schema::ConveyorInventoryDistance,  ::capnp::Kind::STRUCT>::Reader getInventories() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class ConveyorComponent::Builder {
+public:
+  typedef ConveyorComponent Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline bool hasItemsInTransit();
+  inline  ::capnp::List< ::Schema::ConveyorItemInTransit,  ::capnp::Kind::STRUCT>::Builder getItemsInTransit();
+  inline void setItemsInTransit( ::capnp::List< ::Schema::ConveyorItemInTransit,  ::capnp::Kind::STRUCT>::Reader value);
+  inline  ::capnp::List< ::Schema::ConveyorItemInTransit,  ::capnp::Kind::STRUCT>::Builder initItemsInTransit(unsigned int size);
+  inline void adoptItemsInTransit(::capnp::Orphan< ::capnp::List< ::Schema::ConveyorItemInTransit,  ::capnp::Kind::STRUCT>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::Schema::ConveyorItemInTransit,  ::capnp::Kind::STRUCT>> disownItemsInTransit();
+
+  inline  ::uint32_t getMaxItemsInTransit();
+  inline void setMaxItemsInTransit( ::uint32_t value);
+
+  inline bool hasInventories();
+  inline  ::capnp::List< ::Schema::ConveyorInventoryDistance,  ::capnp::Kind::STRUCT>::Builder getInventories();
+  inline void setInventories( ::capnp::List< ::Schema::ConveyorInventoryDistance,  ::capnp::Kind::STRUCT>::Reader value);
+  inline  ::capnp::List< ::Schema::ConveyorInventoryDistance,  ::capnp::Kind::STRUCT>::Builder initInventories(unsigned int size);
+  inline void adoptInventories(::capnp::Orphan< ::capnp::List< ::Schema::ConveyorInventoryDistance,  ::capnp::Kind::STRUCT>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::Schema::ConveyorInventoryDistance,  ::capnp::Kind::STRUCT>> disownInventories();
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class ConveyorComponent::Pipeline {
+public:
+  typedef ConveyorComponent Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class ConveyorPartComponent::Reader {
+public:
+  typedef ConveyorPartComponent Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getConveyorId() const;
+
+  inline bool hasInputDirections() const;
+  inline  ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>::Reader getInputDirections() const;
+
+  inline float getVirtualDistanceIncrease() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class ConveyorPartComponent::Builder {
+public:
+  typedef ConveyorPartComponent Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::uint32_t getConveyorId();
+  inline void setConveyorId( ::uint32_t value);
+
+  inline bool hasInputDirections();
+  inline  ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>::Builder getInputDirections();
+  inline void setInputDirections( ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>::Reader value);
+  inline void setInputDirections(::kj::ArrayPtr<const  ::uint8_t> value);
+  inline  ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>::Builder initInputDirections(unsigned int size);
+  inline void adoptInputDirections(::capnp::Orphan< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>> disownInputDirections();
+
+  inline float getVirtualDistanceIncrease();
+  inline void setVirtualDistanceIncrease(float value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class ConveyorPartComponent::Pipeline {
+public:
+  typedef ConveyorPartComponent Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
 // =======================================================================================
 
 inline float Vec2F32::Reader::getX() const {
@@ -8979,6 +9545,374 @@ inline void AssetState::Builder::adoptEntities(
 inline ::capnp::Orphan< ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>> AssetState::Builder::disownEntities() {
   return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::AssetEntity,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
       ::capnp::bounded<2>() * ::capnp::POINTERS));
+}
+
+inline  ::uint32_t PortComponent::Reader::getImportingInventory() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t PortComponent::Builder::getImportingInventory() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void PortComponent::Builder::setImportingInventory( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::Schema::PortDistribution PortComponent::Reader::getDistribution() const {
+  return _reader.getDataField< ::Schema::PortDistribution>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+
+inline  ::Schema::PortDistribution PortComponent::Builder::getDistribution() {
+  return _builder.getDataField< ::Schema::PortDistribution>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+inline void PortComponent::Builder::setDistribution( ::Schema::PortDistribution value) {
+  _builder.setDataField< ::Schema::PortDistribution>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t PortComponent::Reader::getExportingIndex() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t PortComponent::Builder::getExportingIndex() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+inline void PortComponent::Builder::setExportingIndex( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t PortComponent::Reader::getTicksPerUpdate() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS, 20u);
+}
+
+inline  ::uint32_t PortComponent::Builder::getTicksPerUpdate() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS, 20u);
+}
+inline void PortComponent::Builder::setTicksPerUpdate( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS, value, 20u);
+}
+
+inline  ::uint32_t PortComponent::Reader::getTickCounter() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t PortComponent::Builder::getTickCounter() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS);
+}
+inline void PortComponent::Builder::setTickCounter( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool PortComponent::Reader::hasFilter() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool PortComponent::Builder::hasFilter() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>::Reader PortComponent::Reader::getFilter() const {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>::Builder PortComponent::Builder::getFilter() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void PortComponent::Builder::setFilter( ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline void PortComponent::Builder::setFilter(::kj::ArrayPtr<const  ::uint32_t> value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>::Builder PortComponent::Builder::initFilter(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+}
+inline void PortComponent::Builder::adoptFilter(
+    ::capnp::Orphan< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>> PortComponent::Builder::disownFilter() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool PortComponent::Reader::getIsOn() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<48>() * ::capnp::ELEMENTS, true);
+}
+
+inline bool PortComponent::Builder::getIsOn() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<48>() * ::capnp::ELEMENTS, true);
+}
+inline void PortComponent::Builder::setIsOn(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<48>() * ::capnp::ELEMENTS, value, true);
+}
+
+inline  ::uint32_t PortComponent::Reader::getExportingConveyor() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t PortComponent::Builder::getExportingConveyor() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS);
+}
+inline void PortComponent::Builder::setExportingConveyor( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t ConveyorInventoryDistance::Reader::getInventoryId() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t ConveyorInventoryDistance::Builder::getInventoryId() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void ConveyorInventoryDistance::Builder::setInventoryId( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline float ConveyorInventoryDistance::Reader::getVirtualDistance() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+
+inline float ConveyorInventoryDistance::Builder::getVirtualDistance() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+inline void ConveyorInventoryDistance::Builder::setVirtualDistance(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t ConveyorItemInTransit::Reader::getCount() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t ConveyorItemInTransit::Builder::getCount() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void ConveyorItemInTransit::Builder::setCount( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t ConveyorItemInTransit::Reader::getItemId() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t ConveyorItemInTransit::Builder::getItemId() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+inline void ConveyorItemInTransit::Builder::setItemId( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t ConveyorItemInTransit::Reader::getInvIndex() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t ConveyorItemInTransit::Builder::getInvIndex() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS);
+}
+inline void ConveyorItemInTransit::Builder::setInvIndex( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<2>() * ::capnp::ELEMENTS, value);
+}
+
+inline float ConveyorItemInTransit::Reader::getCurVirtualDistance() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS);
+}
+
+inline float ConveyorItemInTransit::Builder::getCurVirtualDistance() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS);
+}
+inline void ConveyorItemInTransit::Builder::setCurVirtualDistance(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<3>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool ConveyorComponent::Reader::hasItemsInTransit() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool ConveyorComponent::Builder::hasItemsInTransit() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::List< ::Schema::ConveyorItemInTransit,  ::capnp::Kind::STRUCT>::Reader ConveyorComponent::Reader::getItemsInTransit() const {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ConveyorItemInTransit,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::capnp::List< ::Schema::ConveyorItemInTransit,  ::capnp::Kind::STRUCT>::Builder ConveyorComponent::Builder::getItemsInTransit() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ConveyorItemInTransit,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void ConveyorComponent::Builder::setItemsInTransit( ::capnp::List< ::Schema::ConveyorItemInTransit,  ::capnp::Kind::STRUCT>::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ConveyorItemInTransit,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::List< ::Schema::ConveyorItemInTransit,  ::capnp::Kind::STRUCT>::Builder ConveyorComponent::Builder::initItemsInTransit(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ConveyorItemInTransit,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+}
+inline void ConveyorComponent::Builder::adoptItemsInTransit(
+    ::capnp::Orphan< ::capnp::List< ::Schema::ConveyorItemInTransit,  ::capnp::Kind::STRUCT>>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ConveyorItemInTransit,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::List< ::Schema::ConveyorItemInTransit,  ::capnp::Kind::STRUCT>> ConveyorComponent::Builder::disownItemsInTransit() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ConveyorItemInTransit,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline  ::uint32_t ConveyorComponent::Reader::getMaxItemsInTransit() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, 5u);
+}
+
+inline  ::uint32_t ConveyorComponent::Builder::getMaxItemsInTransit() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, 5u);
+}
+inline void ConveyorComponent::Builder::setMaxItemsInTransit( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value, 5u);
+}
+
+inline bool ConveyorComponent::Reader::hasInventories() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline bool ConveyorComponent::Builder::hasInventories() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::List< ::Schema::ConveyorInventoryDistance,  ::capnp::Kind::STRUCT>::Reader ConveyorComponent::Reader::getInventories() const {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ConveyorInventoryDistance,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline  ::capnp::List< ::Schema::ConveyorInventoryDistance,  ::capnp::Kind::STRUCT>::Builder ConveyorComponent::Builder::getInventories() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ConveyorInventoryDistance,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline void ConveyorComponent::Builder::setInventories( ::capnp::List< ::Schema::ConveyorInventoryDistance,  ::capnp::Kind::STRUCT>::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ConveyorInventoryDistance,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::List< ::Schema::ConveyorInventoryDistance,  ::capnp::Kind::STRUCT>::Builder ConveyorComponent::Builder::initInventories(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ConveyorInventoryDistance,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), size);
+}
+inline void ConveyorComponent::Builder::adoptInventories(
+    ::capnp::Orphan< ::capnp::List< ::Schema::ConveyorInventoryDistance,  ::capnp::Kind::STRUCT>>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ConveyorInventoryDistance,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::List< ::Schema::ConveyorInventoryDistance,  ::capnp::Kind::STRUCT>> ConveyorComponent::Builder::disownInventories() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::ConveyorInventoryDistance,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline  ::uint32_t ConveyorPartComponent::Reader::getConveyorId() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t ConveyorPartComponent::Builder::getConveyorId() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void ConveyorPartComponent::Builder::setConveyorId( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool ConveyorPartComponent::Reader::hasInputDirections() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool ConveyorPartComponent::Builder::hasInputDirections() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>::Reader ConveyorPartComponent::Reader::getInputDirections() const {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>::Builder ConveyorPartComponent::Builder::getInputDirections() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void ConveyorPartComponent::Builder::setInputDirections( ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline void ConveyorPartComponent::Builder::setInputDirections(::kj::ArrayPtr<const  ::uint8_t> value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>::Builder ConveyorPartComponent::Builder::initInputDirections(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
+}
+inline void ConveyorPartComponent::Builder::adoptInputDirections(
+    ::capnp::Orphan< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>> ConveyorPartComponent::Builder::disownInputDirections() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint8_t,  ::capnp::Kind::PRIMITIVE>>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline float ConveyorPartComponent::Reader::getVirtualDistanceIncrease() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, 1056964608u);
+}
+
+inline float ConveyorPartComponent::Builder::getVirtualDistanceIncrease() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, 1056964608u);
+}
+inline void ConveyorPartComponent::Builder::setVirtualDistanceIncrease(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value, 1056964608u);
 }
 
 }  // namespace

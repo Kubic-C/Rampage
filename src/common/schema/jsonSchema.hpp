@@ -109,6 +109,8 @@ struct ItemUseComponent;
 struct ItemPlaceableComponent;
 struct ItemStackComponent;
 struct OwnedByComponent;
+struct PortComponent;
+struct ConveyorPartComponent;
 struct ComponentsItem;
 struct EntitiesItem;
 struct GameAssetLoaderSchema;
@@ -4203,8 +4205,283 @@ private:
   std::string type_;
 };
 
+struct PortComponent : public JsonValue {
+  struct Properties {
+    struct Distribution {
+      static const char* name() { return "distribution"; }
+      static constexpr bool required = false;
+    };
+    struct ExportingConveyor {
+      static const char* name() { return "exportingConveyor"; }
+      static constexpr bool required = false;
+    };
+    struct Filter {
+      static const char* name() { return "filter"; }
+      static constexpr bool required = false;
+    };
+    struct ImportingInventory {
+      static const char* name() { return "importingInventory"; }
+      static constexpr bool required = false;
+    };
+    struct IsOn {
+      static const char* name() { return "isOn"; }
+      static constexpr bool required = false;
+    };
+    struct TicksPerUpdate {
+      static const char* name() { return "ticksPerUpdate"; }
+      static constexpr bool required = false;
+      static constexpr int64_t minimum() { return 0; }
+    };
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "PortComponent"; }
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("distribution")) {
+      std::string fp = path.empty() ? "distribution" : path + ".distribution";
+      if (!j["distribution"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["distribution"].get_ref<const std::string&>();
+        { bool ok = val == "RoundRobin" || val == "Priority" || val == "First"; if (!ok) result.add(fp, "Value not in enum"); }
+      }
+    }
+    if (j.contains("exportingConveyor")) {
+      std::string fp = path.empty() ? "exportingConveyor" : path + ".exportingConveyor";
+      if (!j["exportingConveyor"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["exportingConveyor"].get_ref<const std::string&>();
+      }
+    }
+    if (j.contains("filter")) {
+      std::string fp = path.empty() ? "filter" : path + ".filter";
+      if (!j["filter"].is_array()) {
+        result.add(fp, "Expected array");
+      } else {
+        const auto& arr = j["filter"];
+        for (size_t i = 0; i < arr.size(); ++i) {
+          if (!arr[i].is_string()) result.add(fp + "[" + std::to_string(i) + "]", "Expected string");
+        }
+      }
+    }
+    if (j.contains("importingInventory")) {
+      std::string fp = path.empty() ? "importingInventory" : path + ".importingInventory";
+      if (!j["importingInventory"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["importingInventory"].get_ref<const std::string&>();
+      }
+    }
+    if (j.contains("isOn")) {
+      std::string fp = path.empty() ? "isOn" : path + ".isOn";
+      if (!j["isOn"].is_boolean()) {
+        result.add(fp, "Expected boolean");
+      }
+    }
+    if (j.contains("ticksPerUpdate")) {
+      std::string fp = path.empty() ? "ticksPerUpdate" : path + ".ticksPerUpdate";
+      if (!j["ticksPerUpdate"].is_number_integer()) {
+        result.add(fp, "Expected integer");
+      } else {
+        int64_t val = j["ticksPerUpdate"].get<int64_t>();
+        if (val < 0) result.add(fp, "Value below minimum");
+      }
+    }
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "PortComponent") result.add(fp, "Value does not match const");
+      }
+    }
+    return result;
+  }
+
+  static PortComponent fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    PortComponent obj;
+    if (j.contains("distribution")) {
+      obj.setDistribution(j["distribution"].get<std::string>());
+    }
+    if (j.contains("exportingConveyor")) {
+      obj.setExportingConveyor(j["exportingConveyor"].get<std::string>());
+    }
+    if (j.contains("filter")) {
+      obj.setFilter(j["filter"].get<std::vector<std::string>>());
+    }
+    if (j.contains("importingInventory")) {
+      obj.setImportingInventory(j["importingInventory"].get<std::string>());
+    }
+    if (j.contains("isOn")) {
+      obj.setIsOn(j["isOn"].get<bool>());
+    }
+    if (j.contains("ticksPerUpdate")) {
+      obj.setTicksPerUpdate(j["ticksPerUpdate"].get<int64_t>());
+    }
+    obj.setType(j.at("type").get<std::string>());
+    return obj;
+  }
+
+  bool hasDistribution() const { return distribution_.has_value(); }
+  const std::string& getDistribution() const { return distribution_.value(); }
+  std::string& getDistribution() { return distribution_.value(); }
+  void setDistribution(const std::string& value) { distribution_ = value; }
+
+  bool hasExportingConveyor() const { return exportingConveyor_.has_value(); }
+  const std::string& getExportingConveyor() const { return exportingConveyor_.value(); }
+  std::string& getExportingConveyor() { return exportingConveyor_.value(); }
+  void setExportingConveyor(const std::string& value) { exportingConveyor_ = value; }
+
+  bool hasFilter() const { return filter_.has_value(); }
+  const std::vector<std::string>& getFilter() const { return filter_.value(); }
+  std::vector<std::string>& getFilter() { return filter_.value(); }
+  void setFilter(const std::vector<std::string>& value) { filter_ = value; }
+
+  bool hasImportingInventory() const { return importingInventory_.has_value(); }
+  const std::string& getImportingInventory() const { return importingInventory_.value(); }
+  std::string& getImportingInventory() { return importingInventory_.value(); }
+  void setImportingInventory(const std::string& value) { importingInventory_ = value; }
+
+  bool hasIsOn() const { return isOn_.has_value(); }
+  bool getIsOn() const { return isOn_.value(); }
+  void setIsOn(bool value) { isOn_ = value; }
+
+  bool hasTicksPerUpdate() const { return ticksPerUpdate_.has_value(); }
+  int64_t getTicksPerUpdate() const { return ticksPerUpdate_.value(); }
+  void setTicksPerUpdate(int64_t value) { ticksPerUpdate_ = value; }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+private:
+  std::optional<std::string> distribution_;
+  std::optional<std::string> exportingConveyor_;
+  std::optional<std::vector<std::string>> filter_;
+  std::optional<std::string> importingInventory_;
+  std::optional<bool> isOn_;
+  std::optional<int64_t> ticksPerUpdate_;
+  std::string type_;
+};
+
+struct ConveyorPartComponent : public JsonValue {
+  struct Properties {
+    struct ConveyorId {
+      static const char* name() { return "conveyorId"; }
+      static constexpr bool required = false;
+    };
+    struct InputDirections {
+      static const char* name() { return "inputDirections"; }
+      static constexpr bool required = false;
+    };
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "ConveyorPartComponent"; }
+    };
+    struct VirtualDistanceIncrease {
+      static const char* name() { return "virtualDistanceIncrease"; }
+      static constexpr bool required = false;
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("conveyorId")) {
+      std::string fp = path.empty() ? "conveyorId" : path + ".conveyorId";
+      if (!j["conveyorId"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["conveyorId"].get_ref<const std::string&>();
+      }
+    }
+    if (j.contains("inputDirections")) {
+      std::string fp = path.empty() ? "inputDirections" : path + ".inputDirections";
+      if (!j["inputDirections"].is_array()) {
+        result.add(fp, "Expected array");
+      } else {
+        const auto& arr = j["inputDirections"];
+        for (size_t i = 0; i < arr.size(); ++i) {
+          if (!arr[i].is_string()) result.add(fp + "[" + std::to_string(i) + "]", "Expected string");
+        }
+      }
+    }
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "ConveyorPartComponent") result.add(fp, "Value does not match const");
+      }
+    }
+    if (j.contains("virtualDistanceIncrease")) {
+      std::string fp = path.empty() ? "virtualDistanceIncrease" : path + ".virtualDistanceIncrease";
+      if (!j["virtualDistanceIncrease"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["virtualDistanceIncrease"].get<double>();
+      }
+    }
+    return result;
+  }
+
+  static ConveyorPartComponent fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    ConveyorPartComponent obj;
+    if (j.contains("conveyorId")) {
+      obj.setConveyorId(j["conveyorId"].get<std::string>());
+    }
+    if (j.contains("inputDirections")) {
+      obj.setInputDirections(j["inputDirections"].get<std::vector<std::string>>());
+    }
+    obj.setType(j.at("type").get<std::string>());
+    if (j.contains("virtualDistanceIncrease")) {
+      obj.setVirtualDistanceIncrease(j["virtualDistanceIncrease"].get<double>());
+    }
+    return obj;
+  }
+
+  bool hasConveyorId() const { return conveyorId_.has_value(); }
+  const std::string& getConveyorId() const { return conveyorId_.value(); }
+  std::string& getConveyorId() { return conveyorId_.value(); }
+  void setConveyorId(const std::string& value) { conveyorId_ = value; }
+
+  bool hasInputDirections() const { return inputDirections_.has_value(); }
+  const std::vector<std::string>& getInputDirections() const { return inputDirections_.value(); }
+  std::vector<std::string>& getInputDirections() { return inputDirections_.value(); }
+  void setInputDirections(const std::vector<std::string>& value) { inputDirections_ = value; }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+  bool hasVirtualDistanceIncrease() const { return virtualDistanceIncrease_.has_value(); }
+  double getVirtualDistanceIncrease() const { return virtualDistanceIncrease_.value(); }
+  void setVirtualDistanceIncrease(double value) { virtualDistanceIncrease_ = value; }
+
+private:
+  std::optional<std::string> conveyorId_;
+  std::optional<std::vector<std::string>> inputDirections_;
+  std::string type_;
+  std::optional<double> virtualDistanceIncrease_;
+};
+
 struct ComponentsItem : public JsonValue {
-  using Variant = std::variant<TransformComponent, SpriteComponent, CameraComponent, SeekPrimaryTargetTag, PrimaryTargetTag, WorldMapTag, HealthComponent, ContactDamageComponent, BulletDamageComponent, LifetimeComponent, PlayerComponent, BodyComponent, TileComponent, ArrowComponent, MultiTileComponent, TurretComponent, SpawnerComponent, CircleRenderComponent, RectangleRenderComponent, ItemComponent, InventoryComponent, InventoryViewComponent, ItemUseComponent, ItemPlaceableComponent, ItemStackComponent, OwnedByComponent>;
+  using Variant = std::variant<TransformComponent, SpriteComponent, CameraComponent, SeekPrimaryTargetTag, PrimaryTargetTag, WorldMapTag, HealthComponent, ContactDamageComponent, BulletDamageComponent, LifetimeComponent, PlayerComponent, BodyComponent, TileComponent, ArrowComponent, MultiTileComponent, TurretComponent, SpawnerComponent, CircleRenderComponent, RectangleRenderComponent, ItemComponent, InventoryComponent, InventoryViewComponent, ItemUseComponent, ItemPlaceableComponent, ItemStackComponent, OwnedByComponent, PortComponent, ConveyorPartComponent>;
 
   static ValidationResult validate(const json& j, const std::string& path = "") {
     ValidationResult result;
@@ -4244,6 +4521,8 @@ struct ComponentsItem : public JsonValue {
     else if (disc == "ItemPlaceableComponent") return ItemPlaceableComponent::validate(j, path);
     else if (disc == "ItemStackComponent") return ItemStackComponent::validate(j, path);
     else if (disc == "OwnedByComponent") return OwnedByComponent::validate(j, path);
+    else if (disc == "PortComponent") return PortComponent::validate(j, path);
+    else if (disc == "ConveyorPartComponent") return ConveyorPartComponent::validate(j, path);
     else result.add(path.empty() ? "type" : path + ".type", "Unknown discriminator value '" + disc + "'");
     return result;
   }
@@ -4279,6 +4558,8 @@ struct ComponentsItem : public JsonValue {
     else if (disc == "ItemPlaceableComponent") obj.variant_ = ItemPlaceableComponent::fromJson(j);
     else if (disc == "ItemStackComponent") obj.variant_ = ItemStackComponent::fromJson(j);
     else if (disc == "OwnedByComponent") obj.variant_ = OwnedByComponent::fromJson(j);
+    else if (disc == "PortComponent") obj.variant_ = PortComponent::fromJson(j);
+    else if (disc == "ConveyorPartComponent") obj.variant_ = ConveyorPartComponent::fromJson(j);
     return obj;
   }
 

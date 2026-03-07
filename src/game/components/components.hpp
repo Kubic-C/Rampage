@@ -46,6 +46,12 @@ inline void registerGameComponents(IWorldPtr world) {
   world->component<ItemPlacedTag>(false);
   world->component<ItemDroppedTag>(false);
   world->component<OwnedByComponent>(false);
+  world->component<ConveyorPartComponent>(false);
+  world->component<PortComponent>(false);
+  world->component<PortViewComponent>(false);
+  world->component<ConveyorComponent>(false);
+  world->component<ConveyorViewComponent>(false);
+
 }
 
 RAMPAGE_END

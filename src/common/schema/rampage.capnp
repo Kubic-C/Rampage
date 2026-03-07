@@ -334,3 +334,44 @@ struct AssetState {
     entities @2 :List(AssetEntity);
 }
 
+enum PortDistribution {
+    roundRobin @0;
+    priority @1;
+    first @2;
+}
+
+struct PortComponent {
+    importingInventory @0 :UInt32;
+    distribution @1 :PortDistribution;
+    exportingIndex @2 :UInt32;
+    ticksPerUpdate @3 :UInt32 = 20;
+    tickCounter @4 :UInt32 = 0;
+    filter @5 :List(UInt32);
+    isOn @6 :Bool = true;
+    exportingConveyor @7 :UInt32;
+}
+
+struct ConveyorInventoryDistance {
+    inventoryId @0 :UInt32;
+    virtualDistance @1 :Float32;
+}
+
+struct ConveyorItemInTransit {
+    count @0 :UInt32;
+    itemId @1 :UInt32;
+    invIndex @2 :UInt32;
+    curVirtualDistance @3 :Float32 = 0.0;
+}
+
+struct ConveyorComponent {
+    itemsInTransit @0 :List(ConveyorItemInTransit);
+    maxItemsInTransit @1 :UInt32 = 5;
+    inventories @2 :List(ConveyorInventoryDistance);
+}
+
+struct ConveyorPartComponent {
+    conveyorId @0 :UInt32;
+    inputDirections @1 :List(UInt8);
+    virtualDistanceIncrease @2 :Float32 = 0.5;
+}
+

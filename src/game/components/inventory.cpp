@@ -273,7 +273,6 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
     
     // Destroy existing window and UI elements if grid changed
     if (invViewComp->window) {
-      std::cout << "Recreate window\n";
       gui.remove(invViewComp->window);
       invViewComp->window = nullptr;
       invViewComp->slotBackgrounds.clear();
@@ -284,7 +283,6 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
 
   // Create window if it doesn't exist
   if (!invViewComp->window) {
-    std::cout << "Opened window\n";
     invViewComp->window = tgui::ChildWindow::create();
     invViewComp->window->setTitle(invViewComp->name);
     invViewComp->window->setPosition(invViewComp->pos.x, invViewComp->pos.y);
@@ -299,10 +297,6 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
     invViewComp->window->getRenderer()->setBorderBelowTitleBar(0); 
 
     gui.add(invViewComp->window);
-    auto widgets = gui.getWidgets();
-    for(auto widget : widgets) {
-      std::cout << "Widget: " << widget->getWidgetType() << "\n";
-    }
 
     // Create slot UI elements using inventory's actual rows/cols
     invViewComp->slotBackgrounds.resize(invComp->cols * invComp->rows);
@@ -446,10 +440,8 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
     }
   }
 
-  if(invViewComp->window->isVisible() != invViewComp->isVisible) {
+  if(invViewComp->window->isVisible() != invViewComp->isVisible)
     invViewComp->window->setVisible(invViewComp->isVisible);
-    std::cout << "IsVisible?" << invViewComp->isVisible << "\n";
-  }
   if(invViewComp->window->getTitle() != invViewComp->name)
     invViewComp->window->setTitle(invViewComp->name); 
   if(invViewComp->window->getPosition() != tgui::Vector2f(invViewComp->pos.x, invViewComp->pos.y))
@@ -513,7 +505,6 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
       if(eventModule.isKeyHeld(Key::LeftShift)) {
         // Place the item
         InventoryViewComponent::placeItemToWorld(inventoryEntity);
-        std::cout << "Window parent: " << invViewComp->window->getParent() << "\n";
       } else {
         InventoryViewComponent::dropItemToWorld(inventoryEntity);
       }
@@ -689,7 +680,6 @@ void InventoryViewComponent::placeItemToWorld(EntityPtr inventoryEntity) {
 
   // Get the item entity and check if it's placeable
   auto itemEntity = world->getEntity(sourceSlot.itemId);
-  std::cout << "Try placing entity " << itemEntity.id() << "\n";
   if (!itemEntity || !itemEntity.has<ItemPlaceableComponent>()) {
     return; // Item is not placeable
   }

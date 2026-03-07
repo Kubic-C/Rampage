@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../common/common.hpp"
+#include "tilemap.hpp"
 
 RAMPAGE_START
 
@@ -63,35 +63,62 @@ struct ItemRecipeComponent {
   u32 amountProduced = 1; // The amount of produced items
 };
 
-enum class PortDirection : u8 { In, Out };
 enum class PortDistribution : u8 { RoundRobin, Priority, First };
 
-struct PortComponent {
-  PortDirection direction = PortDirection::In;
-  PortDistribution distribution = PortDistribution::RoundRobin;
-  glm::ivec2 tileOffset = {0, 0};     // offset from factory origin tile
-  u8 side = 0;                          // 0=N,1=E,2=S,3=W
-  std::vector<EntityId> connections;    // connected conveyor IDs
-  u32 currentConnectionIndex = 0;       // for round-robin
-};
-
-struct ConveyorItem {
-  EntityId itemId = 0;
-  u32 count = 0;
-  float progress = 0.0f;  // 0.0 = at source, 1.0 = arrived
-};
-
 struct ConveyorComponent {
-  EntityId sourcePortId = 0;
-  EntityId destPortId = 0;
-  float speed = 1.0f;              // progress per second (precomputed from distance + belt speed)
-  float tileDistance = 1.0f;       // cached distance in tiles
-  std::vector<ConveyorItem> items; // items in transit
-  u8 maxInFlight = 4;             // capacity cap
+  static void serialize(capnp::MessageBuilder& builder, Ref component);
+  static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
+
+  struct InventoryDistance {
+    EntityId inventoryId;
+    float virtualDistance; // Distance from the port to the inventory (used for timing item transfers)
+  };
+
+  struct ItemInTransit {
+    ItemStackComponent stack;
+    u32 invIndex;
+    float curVirtualDistance = 0.0f; 
+  };
+
+  std::vector<ItemInTransit> itemsInTransit; // Items currently being transferred through this port
+  size_t maxItemsInTransit = 5; // Maximum number of items that can be in transit at once
+  std::vector<InventoryDistance> inventories;
+};
+
+// GUI representation of a conveyor.
+struct ConveyorViewComponent {
+
+};
+
+struct PortComponent {
+  static void serialize(capnp::MessageBuilder& builder, Ref component);
+  static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
+  static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
+
+  EntityId importingInventory = 0;
+  PortDistribution distribution = PortDistribution::RoundRobin;
+  size_t exportingIndex = 0; // For priority distribution, use in tandem with exportingInventories.
+  u32 ticksPerUpdate = 20; // Cooldown between updates in ticks
+  u32 tickCounter = 0; // Internal counter to track ticks for update cooldown
+  Set<EntityId> filter; // Optional filter for allowed item types (empty means allow all)
+  bool isOn = true;
+
+  EntityId exportingConveyor = 0; // The conveyor entity this port is connected to (if any)
+};
+
+// GUI representation of a port.
+struct PortViewComponent {
+
 };
 
 struct ConveyorPartComponent {
+  static void serialize(capnp::MessageBuilder& builder, Ref component);
+  static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
+  static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
+
   EntityId conveyorId = 0;
+  std::vector<TileDirection> inputDirections;
+  float virtualDistanceIncrease = 0.5f; 
 };
 
 RAMPAGE_END
