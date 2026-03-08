@@ -224,7 +224,6 @@ void TilemapComponent::deserialize(capnp::MessageReader& reader, const IdMapper&
     WorldLayer layer = static_cast<WorldLayer>(posReader.getZ());
     EntityId entityId = idMapper.resolve(tileEntryReader.getEntityId());
     self->setTile(layer, pos, entityId);
-    // std::cout << "DESerializing tile at pos (" << pos.x << ", " << pos.y << ") on layer " << layer << " with entityId " << entityId << "\n";
 
     // If the entity has not yet already been deserialized, ensure its existence and add a TileComponent.
     // This will have no effect on the entity if it has not already been deserialized as

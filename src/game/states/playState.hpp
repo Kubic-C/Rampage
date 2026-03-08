@@ -69,7 +69,6 @@ public:
     auto assetLoader = m_world->getAssetLoader();
 
     m_world->getHost().setGameWorld(m_world);
-    std::cout << m_world << std::endl;
 
     m_menu->setEnabled(true);
     m_menu->setVisible(true);

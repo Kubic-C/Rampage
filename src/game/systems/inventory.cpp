@@ -829,18 +829,16 @@ int updateConveyors(IWorldPtr world, float dt) {
   auto tmMgr = world->getContext<TilemapManager>();
   auto invMgr = world->getContext<InventoryManager>();
 
-  // Phase 0: Invalidate conveyors whose parts have been rotated
-  {
-    auto rotIt = world->getWith(world->set<TileComponent, ConveyorPartComponent>());
-    while(rotIt->hasNext()) {
-      EntityPtr entity = rotIt->next();
-      auto part = entity.get<ConveyorPartComponent>();
-      auto tile = entity.get<TileComponent>();
-      if(part->conveyorId != NullEntityId && part->cachedRotation != tile->rotation) {
-        observeConveyorPartRemoved(entity);
-      }
-      part->cachedRotation = tile->rotation;
+  // Phase 0: Invalidate conveyors whose parts have been rotated or where no inventories have been found.
+  auto rotIt = world->getWith(world->set<TileComponent, ConveyorPartComponent>());
+  while(rotIt->hasNext()) {
+    EntityPtr entity = rotIt->next();
+    auto part = entity.get<ConveyorPartComponent>();
+    auto tile = entity.get<TileComponent>();
+    if(part->conveyorId != NullEntityId && (part->cachedRotation != tile->rotation || world->getEntity(part->conveyorId).get<ConveyorComponent>()->inventories.empty())) {
+      observeConveyorPartRemoved(entity);
     }
+    part->cachedRotation = tile->rotation;
   }
 
   // Phase 1: Initialize conveyors for unassigned parts
@@ -981,8 +979,6 @@ void updatePort(IWorldPtr world, EntityPtr entity) {
   transit.stack = itemToMove;
   transit.invIndex = static_cast<u32>(exportingInvIndex);
   transit.curVirtualDistance = 0.0f;
-
-  std::cout << "Sent item to conveyor" << port->exportingConveyor << std::endl;
 
   // tick may now be reset
   port->tickCounter = 0;
