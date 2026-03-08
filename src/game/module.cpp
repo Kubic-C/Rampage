@@ -17,6 +17,7 @@
 #include "states/menuState.hpp"
 #include "states/playState.hpp"
 #include "states/state.hpp"
+#include "states/lostState.hpp"
 #include "systems/player.hpp"
 #include "systems/inventory.hpp"
 
@@ -80,6 +81,7 @@ int GameModule::onLoad() {
   auto& stateMgr = world->getContext<StateManager>();
   stateMgr.createState<PlayState>("PlayState", world);
   stateMgr.createState<MenuState>("MenuState", world);
+  stateMgr.createState<LostState>("LostState", world);
   stateMgr.enableState("MenuState");
 
 

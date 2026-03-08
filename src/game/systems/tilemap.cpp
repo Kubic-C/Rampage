@@ -197,13 +197,13 @@ EntityPtr TilemapManager::removeTile(IWorldPtr world, EntityId tilemapEntityId, 
   if(tileEntity.has<MultiTileComponent>()) {
     auto multiTile = tileEntity.get<MultiTileComponent>();
     auto prevMultiTile = tileEntity.get<PreviousMultiTileComponent>();
-    multiTile->occupiedPositions = prevMultiTile->mt.occupiedPositions; // Restore previous state in case we need to undo/rollback
-    multiTile->anchorPos = prevMultiTile->mt.anchorPos;
     for(const auto& pos : multiTile->occupiedPositions) {
       if(pos == multiTile->anchorPos)
         continue; // Skip the anchor tile since we already added it
       occupiedPositions.push_back({pos, world->getEntity(tilemap->getTile(layer, pos))});
     }
+    multiTile->occupiedPositions = prevMultiTile->mt.occupiedPositions; // Restore previous state in case we need to undo/rollback
+    multiTile->anchorPos = prevMultiTile->mt.anchorPos;
   }
 
   for (const auto& [pos, entity] : occupiedPositions) {
@@ -416,6 +416,18 @@ void loadTilemapSystems(IHost& host) {
   world->component<PreviousMultiTileComponent>(false);
 
   world->addContext<TilemapManager>();
+  world->observe<ComponentRemovedEvent>(world->component<TileComponent>(), {}, [=](EntityPtr tile) {
+    if(tile.has<TileComponent>()) {
+      auto tileComp = tile.get<TileComponent>();
+      if(tileComp->parent != 0 && world->isAlive(tileComp->parent)) {
+        EntityPtr tilemapEntity = world->getEntity(tileComp->parent);
+        if(tilemapEntity.has<TilemapComponent>()) {
+          TilemapManager& manager = world->getContext<TilemapManager>();
+          manager.removeTile(world, tileComp->parent, tileComp->layer, tileComp->pos, false);
+        }
+      }
+    }
+  });
 }
 
 RAMPAGE_END

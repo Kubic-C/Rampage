@@ -36,6 +36,7 @@ target_sources(
   RGame PUBLIC
   "states/menuState.hpp"
   "states/playState.hpp"
+  "states/lostState.hpp"
   "states/state.hpp")
 
 target_sources(

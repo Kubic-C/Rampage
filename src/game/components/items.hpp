@@ -85,11 +85,6 @@ struct ConveyorComponent {
   std::vector<InventoryDistance> inventories;
 };
 
-// GUI representation of a conveyor.
-struct ConveyorViewComponent {
-
-};
-
 struct PortComponent {
   static void serialize(capnp::MessageBuilder& builder, Ref component);
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
@@ -106,11 +101,6 @@ struct PortComponent {
   EntityId exportingConveyor = 0; // The conveyor entity this port is connected to (if any)
 };
 
-// GUI representation of a port.
-struct PortViewComponent {
-
-};
-
 struct ConveyorPartComponent {
   static void serialize(capnp::MessageBuilder& builder, Ref component);
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
@@ -120,6 +110,14 @@ struct ConveyorPartComponent {
   std::vector<TileDirection> inputDirections;
   float virtualDistanceIncrease = 0.5f;
   TileDirection cachedRotation = TileDirection::Right; // tracks last-known tile rotation for revalidation
+};
+
+struct FactoryComponent {
+  static void serialize(capnp::MessageBuilder& builder, Ref component);
+  static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
+  static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
+
+  Set<EntityId> recipeIds; // Set of ItemRecipeComponent entity IDs that this factory can produce
 };
 
 RAMPAGE_END

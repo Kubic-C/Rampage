@@ -42,6 +42,27 @@ Renderer.3 {
     TextureHover = "themes/Black.png" Part(140, 1, 45, 50) Middle(10, 0) Smooth;
 }
 
+Renderer.4 {
+    BorderColor = Black;
+    TextColor = rgb(190, 190, 190);
+    TextureBackground = None;
+
+    Scrollbar {
+        ArrowBackgroundColor = rgb(80, 80, 80);
+        ArrowColor = rgb(190, 190, 190);
+        TextureArrowDown = "themes/Black.png" Part(1, 230, 20, 20) Middle(0, 1, 20, 19) Smooth;
+        TextureArrowDownHover = "themes/Black.png" Part(306, 225, 20, 20) Middle(0, 1, 20, 19) Smooth;
+        TextureArrowUp = "themes/Black.png" Part(284, 225, 20, 20) Middle(0, 0, 20, 19) Smooth;
+        TextureArrowUpHover = "themes/Black.png" Part(285, 171, 20, 20) Middle(0, 0, 20, 19) Smooth;
+        TextureThumb = "themes/Black.png" Part(23, 230, 20, 20) Smooth;
+        TextureThumbHover = "themes/Black.png" Part(306, 193, 20, 20) Smooth;
+        TextureTrack = "themes/Black.png" Part(255, 1, 20, 20) Smooth;
+        TextureTrackHover = "themes/Black.png" Part(284, 203, 20, 20) Smooth;
+        ThumbColor = rgb(190, 190, 190);
+        TrackColor = rgb(80, 80, 80);
+    }
+}
+
 Group.PlayMenu {
     Enabled = false;
     Size = (100%, 100%);
@@ -141,32 +162,12 @@ VerticalLayout.MainMenu {
 
     Label.MainRampage {
         HorizontalAlignment = Center;
+        Renderer = &4;
         ScrollbarPolicy = Automatic;
         Size = (800, 300);
         Text = Rampage;
         TextSize = 80;
         VerticalAlignment = Center;
-
-        Renderer {
-            BorderColor = Black;
-            TextColor = rgb(190, 190, 190);
-            TextureBackground = None;
-
-            Scrollbar {
-                ArrowBackgroundColor = rgb(80, 80, 80);
-                ArrowColor = rgb(190, 190, 190);
-                TextureArrowDown = "themes/Black.png" Part(1, 230, 20, 20) Middle(0, 1, 20, 19) Smooth;
-                TextureArrowDownHover = "themes/Black.png" Part(306, 225, 20, 20) Middle(0, 1, 20, 19) Smooth;
-                TextureArrowUp = "themes/Black.png" Part(284, 225, 20, 20) Middle(0, 0, 20, 19) Smooth;
-                TextureArrowUpHover = "themes/Black.png" Part(285, 171, 20, 20) Middle(0, 0, 20, 19) Smooth;
-                TextureThumb = "themes/Black.png" Part(23, 230, 20, 20) Smooth;
-                TextureThumbHover = "themes/Black.png" Part(306, 193, 20, 20) Smooth;
-                TextureTrack = "themes/Black.png" Part(255, 1, 20, 20) Smooth;
-                TextureTrackHover = "themes/Black.png" Part(284, 203, 20, 20) Smooth;
-                ThumbColor = rgb(190, 190, 190);
-                TrackColor = rgb(80, 80, 80);
-            }
-        }
     }
 
     VerticalLayout.VerticalLayout1 {
@@ -196,6 +197,47 @@ VerticalLayout.MainMenu {
             Renderer = &3;
             Size = (800, 100);
             Text = Exit;
+            TextSize = 20;
+        }
+    }
+}
+
+VerticalLayout.LostMenu {
+    Enabled = false;
+    Ratios = [1, 1];
+    Renderer = &1;
+    Size = (100%, 100%);
+    Visible = false;
+
+    Label.LostMenuLabel {
+        HorizontalAlignment = Center;
+        Renderer = &4;
+        ScrollbarPolicy = Automatic;
+        Size = (800, 300);
+        Text = "You lost :(";
+        TextSize = 80;
+        VerticalAlignment = Center;
+    }
+
+    VerticalLayout.VerticalLayout5 {
+        Position = (0, 300);
+        Ratios = [1, 1];
+        Renderer = &1;
+        Size = (800, 300);
+        TextSize = 20;
+
+        Button.LostExitToMenu {
+            Renderer = &3;
+            Size = (800, 150);
+            Text = "Exit to menu";
+            TextSize = 20;
+        }
+
+        Button.LostExit {
+            Position = (0, 150);
+            Renderer = &3;
+            Size = (800, 150);
+            Text = "Exit to desktop";
             TextSize = 20;
         }
     }

@@ -23,12 +23,22 @@ class PlayState : public State {
   const std::string playEntityCountTextName = "PlayEntityCount";
 
 public:
+  static void observePlayerDeath(EntityPtr player) {
+    IWorldPtr world = player.world();
+
+    if(player.has<HealthComponent>() && player.get<HealthComponent>()->health <= 0) {
+      auto& stateMgr = world->getContext<StateManager>();
+      stateMgr.disableState("PlayState");
+      stateMgr.enableState("LostState");
+    }
+  }
+
   explicit PlayState(IWorldPtr _world) {  
     _world->component<PlayStateTag>(false);
     m_world = TaggedEntityWorld::create(_world, _world->component<PlayStateTag>());
 
     auto& gui = m_world->getContext<tgui::Gui>();
-    m_menu = m_world->getContext<tgui::Gui>().get(menuName);
+    m_menu = gui.get(menuName);
 
     tgui::Button::Ptr returnBtn = gui.get(returnBtnName)->cast<tgui::Button>();
     returnBtn->onMousePress([=]() {
@@ -60,6 +70,8 @@ public:
     m_fpsText = gui.get(fpsTextName)->cast<tgui::Label>();
     m_activeBodiesText = gui.get(activeBodiesTextName)->cast<tgui::Label>();
     m_entityCountText = gui.get(playEntityCountTextName)->cast<tgui::Label>();
+
+    m_world->observe<ComponentRemovedEvent>(m_world->component<PlayerComponent>(), {}, observePlayerDeath);
   }
 
   void onEntry() {
@@ -79,18 +91,18 @@ public:
     player.add<CameraInUseTag>();
 
     for(int i = 0; i < 1; i++) {
-      // invMgr.dropItem(m_world, assetLoader.getAsset("BasicTurretItem"), Vec2(0, 0), 10);
-      // invMgr.dropItem(m_world, assetLoader.getAsset("BigGunTurretItem"), Vec2(1, 0), 10);
-      // invMgr.dropItem(m_world, assetLoader.getAsset("FenceItem"), Vec2(3, 0), 10);
-      // invMgr.dropItem(m_world, assetLoader.getAsset("PlaceableHighStoneItem"), Vec2(4, 1), 10);
-      // invMgr.dropItem(m_world, assetLoader.getAsset("ZombieSpawnableItem"), Vec2(4, 2), 10);
+      invMgr.dropItem(m_world, assetLoader.getAsset("BasicTurretItem"), Vec2(0, 0), 10);
+      invMgr.dropItem(m_world, assetLoader.getAsset("BigGunTurretItem"), Vec2(1, 0), 10);
+      invMgr.dropItem(m_world, assetLoader.getAsset("FenceItem"), Vec2(2, 0), 10);
+      invMgr.dropItem(m_world, assetLoader.getAsset("PlaceableHighStoneItem"), Vec2(3, 1), 10);
+      invMgr.dropItem(m_world, assetLoader.getAsset("ZombieSpawnableItem"), Vec2(4, 2), 10);
       invMgr.dropItem(m_world, assetLoader.getAsset("WoodItem"), Vec2(2, 0), 10);
       invMgr.dropItem(m_world, assetLoader.getAsset("ChestItem"), Vec2(4, -2), 10);
-      invMgr.dropItem(m_world, assetLoader.getAsset("Conveyor2WayItem"), Vec2(4, -2), 64);
-      invMgr.dropItem(m_world, assetLoader.getAsset("Conveyor2WayCornerItem"), Vec2(4, -2), 64);
-      invMgr.dropItem(m_world, assetLoader.getAsset("Conveyor3WayItem"), Vec2(4, -2), 64);
-      invMgr.dropItem(m_world, assetLoader.getAsset("Conveyor4WayItem"), Vec2(4, -2), 64);
-      invMgr.dropItem(m_world, assetLoader.getAsset("PortItem"), Vec2(4, -2), 64);
+      invMgr.dropItem(m_world, assetLoader.getAsset("Conveyor2WayItem"), Vec2(5, -2), 64);
+      invMgr.dropItem(m_world, assetLoader.getAsset("Conveyor2WayCornerItem"), Vec2(6, -2), 64);
+      invMgr.dropItem(m_world, assetLoader.getAsset("Conveyor3WayItem"), Vec2(7, -2), 64);
+      invMgr.dropItem(m_world, assetLoader.getAsset("Conveyor4WayItem"), Vec2(8, -2), 64);
+      invMgr.dropItem(m_world, assetLoader.getAsset("PortItem"), Vec2(9, -2), 64);
     }
 
     /* WorldMap & Tilemap Component */

@@ -48,9 +48,7 @@ inline void registerGameComponents(IWorldPtr world) {
   world->component<OwnedByComponent>(false);
   world->component<ConveyorPartComponent>(false);
   world->component<PortComponent>(false);
-  world->component<PortViewComponent>(false);
   world->component<ConveyorComponent>(false);
-  world->component<ConveyorViewComponent>(false);
 
 }
 

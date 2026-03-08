@@ -79,6 +79,10 @@
             "x": 0.0,
             "y": 0.0
           }
+        },
+        {
+          "type": "HealthComponent",
+          "health": 100
         }
       ]
     },
@@ -111,7 +115,7 @@
         },
         {
           "type": "ContactDamageComponent",
-          "damage": 5
+          "damage": 100
         },
         {
           "type": "BodyComponent",
