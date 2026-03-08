@@ -92,10 +92,45 @@ public:
   using ObserverCallback = std::function<void(EntityPtr)>;
 
   template<typename T>
-  ComponentCopyCtor getCopyCtor();
+  consteval ComponentCopyCtor getCopyCtor();
 
   template<typename T>
-  ComponentMoveCtor getMoveCtor();
+  consteval ComponentMoveCtor getMoveCtor();
+
+  template<typename T>
+  consteval size_t getComponentSize() {
+    if constexpr (std::is_empty_v<T>)
+      return 0;
+    else
+      return sizeof(T);
+  }
+
+  template<typename T>
+  consteval FromJsonFunc getFromJsonFunc() {
+    if constexpr (FromJsonComponent<T>) {
+      return &T::fromJson;
+    } else {
+      return nullptr;
+    }
+  }
+
+  template<typename T>
+  consteval SerializeFunc getSerializeFunc() {
+    if constexpr (SerializableComponent<T>) {
+      return &T::serialize;
+    } else {
+      return nullptr;
+    }
+  }
+
+  template<typename T>
+  consteval DeserializeFunc getDeserializeFunc() {
+    if constexpr (SerializableComponent<T>) {
+      return &T::deserialize;
+    } else {
+      return nullptr;
+    }
+  }
 
 public:  
   virtual ~IWorld() = default;
@@ -156,23 +191,15 @@ public:
 
   template <typename T>
   ComponentId component(bool isRegistered = true) noexcept {
-    size_t size = sizeof(T);
-    if constexpr (std::is_empty_v<T>)
-      size = 0; 
+    constexpr size_t size = getComponentSize<T>();
+    constexpr FromJsonFunc fromJsonFunc = getFromJsonFunc<T>();
+    constexpr ComponentCopyCtor copyCtor = getCopyCtor<T>();
+    constexpr ComponentMoveCtor moveCtor = getMoveCtor<T>();
+    constexpr SerializeFunc serializeFunc = getSerializeFunc<T>();
+    constexpr DeserializeFunc deserializeFunc = getDeserializeFunc<T>();
 
-    FromJsonFunc fromJsonFunc = nullptr;
-    if constexpr (FromJsonComponent<T>) 
-      fromJsonFunc = &T::fromJson;
-
-    ComponentCopyCtor copyCtor = getCopyCtor<T>();
-    ComponentMoveCtor moveCtor = getMoveCtor<T>();
-
-    SerializeFunc serializeFunc = nullptr;
-    DeserializeFunc deserializeFunc = nullptr;
-    if constexpr (SerializableComponent<T>) {
-      serializeFunc = &T::serialize;
-      deserializeFunc = &T::deserialize; 
-    }
+    static_assert(size == 0 || (copyCtor != nullptr && moveCtor != nullptr), 
+      "Components with data must be copyable and movable");
 
     return component(m_componentIdMgr.id<T>(), isRegistered, getTypeName<T>(), size, &SparsePool<T>::createPool, fromJsonFunc, copyCtor, moveCtor, serializeFunc, deserializeFunc);
   }

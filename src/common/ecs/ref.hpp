@@ -57,33 +57,34 @@ RefT<T> Ref::cast() {
 }
 
 template<typename T>
-IWorld::ComponentCopyCtor IWorld::getCopyCtor() {
+consteval IWorld::ComponentCopyCtor IWorld::getCopyCtor() {
   ComponentCopyCtor copyCtor = nullptr;
-  if constexpr (CopyableComponent<T>)
+  if constexpr (CopyableComponent<T>) {
     copyCtor = &T::copy;
-  else if constexpr (std::is_copy_assignable_v<T>)
+  } else if constexpr (std::is_copy_assignable_v<T>) {
     copyCtor = [](Ref src, Ref dst) { 
       T* srcPtr = (T*)src.get();
       T* dstPtr = (T*)dst.get();
-
       *dstPtr = *srcPtr;
     };
+  }
 
   return copyCtor;
 }
 
 template<typename T>
-IWorld::ComponentMoveCtor IWorld::getMoveCtor() {
+consteval IWorld::ComponentMoveCtor IWorld::getMoveCtor() {
   ComponentMoveCtor moveCtor = nullptr;
-  if constexpr (MovableComponent<T>) 
+  if constexpr (MovableComponent<T>) {
     moveCtor = &T::move;
-  else if constexpr (std::is_move_assignable_v<T>)
+  } else if constexpr (std::is_move_assignable_v<T>) {
     moveCtor = [](Ref src, Ref dst) { 
       T* srcPtr = (T*)src.get();
       T* dstPtr = (T*)dst.get();
 
       *dstPtr = std::move(*srcPtr); 
     };
+  }
 
   return moveCtor;
 }

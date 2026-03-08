@@ -15,6 +15,11 @@ public:
     glCreateVertexArrays(1, &m_id);
   }
 
+  VertexArrayBuffer& operator=(const VertexArrayBuffer& other) noexcept {
+    m_id = other.m_id;
+    return *this;
+  }
+
   VertexArrayBuffer(VertexArrayBuffer&& other) noexcept {
     m_id = other.m_id;
     other.m_id = 0;

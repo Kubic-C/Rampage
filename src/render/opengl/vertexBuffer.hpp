@@ -15,6 +15,11 @@ public:
     glCreateBuffers(1, &m_id);
   }
 
+  VertexBuffer& operator=(const VertexBuffer& other) noexcept {
+    m_id = other.m_id;
+    return *this;
+  }
+
   VertexBuffer(VertexBuffer&& other) noexcept {
     m_id = other.m_id;
     other.m_id = 0;

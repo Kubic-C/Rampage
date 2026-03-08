@@ -2,6 +2,7 @@
 
 #include "opengl/opengl.hpp"
 #include <filesystem>
+#include "../common/ecs/ecs.hpp"
 
 RAMPAGE_START
 

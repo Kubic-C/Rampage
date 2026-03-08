@@ -6,6 +6,8 @@ RAMPAGE_START
 
 template <typename VertexType, size_t verticePerRender, size_t verticesPerSubdata>
 struct Mesh {
+  using ThisMeshType = Mesh<VertexType, verticePerRender, verticesPerSubdata>;
+
   VertexBuffer buffer;
   uint32_t verticesToRender = 0;
   uint32_t verticesOnBuffer = 0;
@@ -14,7 +16,14 @@ struct Mesh {
     buffer.resize(GL_ARRAY_BUFFER, sizeof(VertexType) * 1024);
   }
 
-  Mesh(Mesh<VertexType, verticePerRender, verticesPerSubdata>&& other) noexcept {
+  Mesh& operator=(const ThisMeshType& other) noexcept {
+    buffer = other.buffer;
+    verticesToRender = other.verticesToRender;
+    verticesOnBuffer = other.verticesOnBuffer;
+    return *this;
+  }
+
+  Mesh(ThisMeshType&& other) noexcept {
     buffer = std::move(other.buffer);
     verticesToRender = other.verticesToRender;
     verticesOnBuffer = other.verticesOnBuffer;

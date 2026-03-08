@@ -8,6 +8,11 @@ class Shader {
 public:
   Shader() : m_id(glCreateProgram()) {}
 
+  Shader& operator=(const Shader& other) noexcept {
+    m_id = other.m_id;
+    return *this;
+  }
+
   Shader(Shader&& shader) noexcept : m_id(shader.m_id) {
     shader.m_id = 0;
   }
