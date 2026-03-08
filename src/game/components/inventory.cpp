@@ -9,8 +9,11 @@ RAMPAGE_START
 // Static member definitions for global drag state
 bool InventoryViewComponent::isDragging = false;
 glm::u16vec2 InventoryViewComponent::dragStartSlot = {0, 0};
-InventoryViewComponent* InventoryViewComponent::dragSourceView = nullptr;
+EntityId InventoryViewComponent::dragSourceEntity = 0;
 bool InventoryViewComponent::wasMouseButtonPressedLastFrame = false;
+bool InventoryViewComponent::isPlacementMode = false;
+glm::u16vec2 InventoryViewComponent::activePlacementSlot = {0, 0};
+EntityId InventoryViewComponent::activePlacementEntity = 0;
 
 void InventoryComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
   auto invBuilder = builder.initRoot<Schema::InventoryComponent>();
@@ -268,8 +271,8 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
   invViewComp->inventoryEntityId = inventoryEntity;
 
   // Check if inventory checksum changed (rebuild UI if it did)
-  if (InventoryViewComponent::hasVisualConfigChanged(*invViewComp, invComp->cols, invComp->rows, invViewComp->prevVisualChecksum)) {
-    invViewComp->prevVisualChecksum = InventoryViewComponent::calculateVisualChecksum(*invViewComp, invComp->cols, invComp->rows);
+  if (InventoryViewComponent::hasVisualConfigChanged(invViewComp, invComp->cols, invComp->rows, invViewComp->prevVisualChecksum)) {
+    invViewComp->prevVisualChecksum = InventoryViewComponent::calculateVisualChecksum(invViewComp, invComp->cols, invComp->rows);
     
     // Destroy existing window and UI elements if grid changed
     if (invViewComp->window) {
@@ -351,7 +354,7 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
           auto invViewComp = inv.get<InventoryViewComponent>();
           if (invViewComp->isInteractable) {
             invViewComp->slotBackgrounds[index]->getRenderer()->setBackgroundColor(invViewComp->emptySlotColor);
-            InventoryViewComponent::hideTooltip(*invViewComp);
+            InventoryViewComponent::hideTooltip(invViewComp);
           }
         });
 
@@ -367,6 +370,13 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
           auto invViewComp = inv.get<InventoryViewComponent>();
           if (invViewComp->isInteractable) {
             InventoryViewComponent::onSlotMouseUp(inv, slotPos);
+          }
+        });
+
+        label->onDoubleClick([inv = inventoryEntity, slotPos]() {
+          auto invViewComp = inv.get<InventoryViewComponent>();
+          if (invViewComp->isInteractable) {
+            InventoryViewComponent::onSlotDoubleClick(inv, slotPos);
           }
         });
       }
@@ -486,6 +496,17 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
           bg->getRenderer()->setBackgroundColor(tgui::Color(60, 60, 60));
         }
       }
+
+      // Active placement slot handling
+      if (isPlacementMode && activePlacementEntity == invViewComp->inventoryEntityId &&
+          activePlacementSlot.x == x && activePlacementSlot.y == y) {
+        if (slot.itemId == 0) {
+          isPlacementMode = false;
+          activePlacementEntity = 0;
+        } else {
+          bg->getRenderer()->setBackgroundColor(tgui::Color(0, 180, 80));
+        }
+      }
     }
   }
 
@@ -500,7 +521,7 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
   
   if (isDragging && wasMouseButtonPressedLastFrame && !isMouseButtonPressed) {
     // Mouse was released - check if it's outside the inventory window
-    if (!InventoryViewComponent::isPointInWindowBounds(*invViewComp, mousePosVec)) {
+    if (!InventoryViewComponent::isPointInWindowBounds(invViewComp, mousePosVec)) {
       // Mouse released outside inventory - drop the item to the world
       if(eventModule.isKeyHeld(Key::LeftShift)) {
         // Place the item
@@ -509,7 +530,18 @@ void InventoryViewComponent::update(EntityPtr inventoryEntity, tgui::Gui& gui) {
         InventoryViewComponent::dropItemToWorld(inventoryEntity);
       }
       isDragging = false;
-      dragSourceView = nullptr;
+      dragSourceEntity = 0;
+    }
+  }
+
+  // Handle active placement mode (click/drag to place tiles in world)
+  if (isPlacementMode && activePlacementEntity == invViewComp->inventoryEntityId && isMouseButtonPressed) {
+    if (!InventoryViewComponent::isPointInWindowBounds(invViewComp, mousePosVec)) {
+      Vec2 placePos = world->getContext<RenderModule>().getWorldCoords(mousePos);
+
+      InventoryManager invMgr;
+      invMgr.placeItem(world, activePlacementEntity,
+                       activePlacementSlot.x, activePlacementSlot.y, placePos);
     }
   }
   
@@ -529,7 +561,7 @@ void InventoryViewComponent::onSlotMouseDown(EntityPtr inventoryEntity, glm::u16
   if (slot.itemId != 0) {
     isDragging = true;
     dragStartSlot = slotPos;
-    dragSourceView = &(*inventoryEntity.get<InventoryViewComponent>());
+    dragSourceEntity = inventoryEntity;
   }
 }
 
@@ -540,21 +572,59 @@ void InventoryViewComponent::onSlotMouseUp(EntityPtr inventoryEntity, glm::u16ve
 
   isDragging = false;
 
-  // Only perform drop if we have a valid source view
-  if (dragSourceView != nullptr) {
-    performItemDrop(inventoryEntity, dragSourceView, dragStartSlot, dropSlot);
+  // Only perform drop if we have a valid source
+  if (dragSourceEntity != 0) {
+    performItemDrop(inventoryEntity, dragSourceEntity, dragStartSlot, dropSlot);
   }
 
-  dragSourceView = nullptr;
+  dragSourceEntity = 0;
 }
 
-void InventoryViewComponent::performItemDrop(EntityPtr inventoryEntity, InventoryViewComponent* sourceView, 
+void InventoryViewComponent::onSlotDoubleClick(EntityPtr inventoryEntity, glm::u16vec2 slotPos) {
+  if (!inventoryEntity || !inventoryEntity.has<InventoryComponent>()) {
+    return;
+  }
+
+  auto invComp = inventoryEntity.get<InventoryComponent>();
+  const ItemStackComponent& slot = invComp->getSlot(slotPos.x, slotPos.y);
+
+  if (slot.itemId == 0) {
+    return;
+  }
+
+  // Check if item is placeable
+  IWorldPtr world = inventoryEntity.world();
+  auto itemEntity = world->getEntity(slot.itemId);
+  if (!itemEntity || !itemEntity.has<ItemPlaceableComponent>()) {
+    return;
+  }
+
+  auto invViewComp = inventoryEntity.get<InventoryViewComponent>();
+
+  // Toggle: if already active on this slot, deactivate
+  if (isPlacementMode && activePlacementEntity == invViewComp->inventoryEntityId && activePlacementSlot == slotPos) {
+    isPlacementMode = false;
+    activePlacementEntity = 0;
+    return;
+  }
+
+  // Activate placement mode
+  isPlacementMode = true;
+  activePlacementSlot = slotPos;
+  activePlacementEntity = invViewComp->inventoryEntityId;
+
+  // Cancel any ongoing drag
+  isDragging = false;
+  dragSourceEntity = 0;
+}
+
+void InventoryViewComponent::performItemDrop(EntityPtr inventoryEntity, EntityId sourceEntity, 
                                              glm::u16vec2 sourceSlot, glm::u16vec2 targetSlot) {
   // Use InventoryManager to perform the move
   InventoryManager invMgr;
 
   // Source and target inventory entity IDs
-  EntityId srcInvId = sourceView->inventoryEntityId;
+  EntityId srcInvId = sourceEntity;
   EntityId dstInvId = inventoryEntity;
 
   // Perform the move operation
@@ -563,14 +633,14 @@ void InventoryViewComponent::performItemDrop(EntityPtr inventoryEntity, Inventor
                    dstInvId, targetSlot.x, targetSlot.y, 0); // 0 = move all
 }
 
-u32 InventoryViewComponent::calculateVisualChecksum(const InventoryViewComponent& self, u32 sizeX, u32 sizeY) {
+u32 InventoryViewComponent::calculateVisualChecksum(RefT<InventoryViewComponent> self, u32 sizeX, u32 sizeY) {
   u32 hash = 0;
   
   // Hash numeric properties
-  hash = ((hash << 5) + hash) ^ std::hash<float>()(self.padding.x);
-  hash = ((hash << 5) + hash) ^ std::hash<float>()(self.padding.y);
-  hash = ((hash << 5) + hash) ^ std::hash<float>()(self.slotSize);
-  hash = ((hash << 5) + hash) ^ std::hash<float>()(self.rounding);
+  hash = ((hash << 5) + hash) ^ std::hash<float>()(self->padding.x);
+  hash = ((hash << 5) + hash) ^ std::hash<float>()(self->padding.y);
+  hash = ((hash << 5) + hash) ^ std::hash<float>()(self->slotSize);
+  hash = ((hash << 5) + hash) ^ std::hash<float>()(self->rounding);
   
   // Hash color values (RGBA)
   auto hashColor = [](u32& h, const tgui::Color& color) {
@@ -580,12 +650,12 @@ u32 InventoryViewComponent::calculateVisualChecksum(const InventoryViewComponent
     h = ((h << 5) + h) ^ static_cast<u32>(color.getAlpha());
   };
   
-  hashColor(hash, self.windowBackgroundColor);
-  hashColor(hash, self.borderColor);
-  hashColor(hash, self.emptySlotColor);
-  hashColor(hash, self.textColor);
-  hashColor(hash, self.hoverSlotColor);
-  hashColor(hash, self.dragHoverSlotColor);
+  hashColor(hash, self->windowBackgroundColor);
+  hashColor(hash, self->borderColor);
+  hashColor(hash, self->emptySlotColor);
+  hashColor(hash, self->textColor);
+  hashColor(hash, self->hoverSlotColor);
+  hashColor(hash, self->dragHoverSlotColor);
   
   // Hash cached grid dimensions (indicates inventory size)
   hash = ((hash << 5) + hash) ^ sizeX;
@@ -594,7 +664,7 @@ u32 InventoryViewComponent::calculateVisualChecksum(const InventoryViewComponent
   return hash;
 }
 
-bool InventoryViewComponent::hasVisualConfigChanged(const InventoryViewComponent& self, u32 sizeX, u32 sizeY, u32 previousChecksum) {
+bool InventoryViewComponent::hasVisualConfigChanged(RefT<InventoryViewComponent> self, u32 sizeX, u32 sizeY, u32 previousChecksum) {
   return calculateVisualChecksum(self, sizeX, sizeY) != previousChecksum;
 }
 
@@ -641,32 +711,32 @@ void InventoryViewComponent::showTooltip(EntityPtr inventoryEntity, size_t slotI
   invViewComp->tooltipPanel->setVisible(true);
 }
 
-void InventoryViewComponent::hideTooltip(InventoryViewComponent& self) {
-  if (self.tooltipPanel) {
-    self.tooltipPanel->setVisible(false);
+void InventoryViewComponent::hideTooltip(RefT<InventoryViewComponent> self) {
+  if (self->tooltipPanel) {
+    self->tooltipPanel->setVisible(false);
   }
 }
 
-bool InventoryViewComponent::isPointInWindowBounds(const InventoryViewComponent& self, const glm::vec2& worldPos) {
-  if (!self.window) {
+bool InventoryViewComponent::isPointInWindowBounds(RefT<InventoryViewComponent> self, const glm::vec2& worldPos) {
+  if (!self->window) {
     return false;
   }
 
-  tgui::Vector2f windowPos = self.window->getPosition();
-  tgui::Vector2f windowSize = self.window->getSize();
+  tgui::Vector2f windowPos = self->window->getPosition();
+  tgui::Vector2f windowSize = self->window->getSize();
 
   return worldPos.x >= windowPos.x && worldPos.x <= windowPos.x + windowSize.x &&
          worldPos.y >= windowPos.y && worldPos.y <= windowPos.y + windowSize.y;
 }
 
 void InventoryViewComponent::placeItemToWorld(EntityPtr inventoryEntity) {
-  if (!isDragging || !dragSourceView || !inventoryEntity) {
+  if (!isDragging || dragSourceEntity == 0 || !inventoryEntity) {
     return;
   }
 
   IWorldPtr world = inventoryEntity.world();
   // Get the source inventory and item information
-  auto srcEntity = world->getEntity(dragSourceView->inventoryEntityId);
+  auto srcEntity = world->getEntity(dragSourceEntity);
   if (!srcEntity || !srcEntity.has<InventoryComponent>()) {
     return;
   }
@@ -689,18 +759,18 @@ void InventoryViewComponent::placeItemToWorld(EntityPtr inventoryEntity) {
 
   // Remove the item from inventory after placing
   InventoryManager invMgr;
-  invMgr.placeItem(world, dragSourceView->inventoryEntityId, 
+  invMgr.placeItem(world, dragSourceEntity, 
                   dragStartSlot.x, dragStartSlot.y, placePos);
 }
 
 void InventoryViewComponent::dropItemToWorld(EntityPtr inventoryEntity) {
-  if (!isDragging || !dragSourceView || !inventoryEntity) {
+  if (!isDragging || dragSourceEntity == 0 || !inventoryEntity) {
     return;
   }
 
   IWorldPtr world = inventoryEntity.world();
   // Get the source inventory and item information
-  auto srcEntity = world->getEntity(dragSourceView->inventoryEntityId);
+  auto srcEntity = world->getEntity(dragSourceEntity);
   if (!srcEntity || !srcEntity.has<InventoryComponent>()) {
     return;
   }
@@ -717,7 +787,7 @@ void InventoryViewComponent::dropItemToWorld(EntityPtr inventoryEntity) {
 
   // Use InventoryManager to drop the item
   InventoryManager invMgr;
-  invMgr.dropItem(world, dragSourceView->inventoryEntityId, 
+  invMgr.dropItem(world, dragSourceEntity, 
                   dragStartSlot.x, dragStartSlot.y, dropPos, sourceSlot.count);
 }
 

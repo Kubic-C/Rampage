@@ -42,7 +42,58 @@ struct InventoryViewComponent {
   static void serialize(capnp::MessageBuilder& builder, Ref component);
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
   static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
+  InventoryViewComponent() = default;
   ~InventoryViewComponent();
+
+  InventoryViewComponent& operator=(const InventoryViewComponent& other) noexcept {
+    name = other.name;
+    pos = other.pos;
+    isVisible = other.isVisible;
+    isInteractable = other.isInteractable;
+    padding = other.padding;
+    slotSize = other.slotSize;
+    rounding = other.rounding;
+    windowBackgroundColor = other.windowBackgroundColor;
+    borderColor = other.borderColor;
+    emptySlotColor = other.emptySlotColor;
+    textColor = other.textColor;
+    hoverSlotColor = other.hoverSlotColor;
+    dragHoverSlotColor = other.dragHoverSlotColor;
+
+    prevVisualChecksum = other.prevVisualChecksum;
+    inventoryEntityId = other.inventoryEntityId;
+
+    return *this;
+  };
+
+  // Move constructor
+  InventoryViewComponent(InventoryViewComponent&& other) noexcept
+    : name(std::move(other.name)),
+      window(std::move(other.window)),
+      slotBackgrounds(std::move(other.slotBackgrounds)),
+      slotPictures(std::move(other.slotPictures)),
+      slotLabels(std::move(other.slotLabels)),
+      tooltipPanel(std::move(other.tooltipPanel)),
+      tooltipIcon(std::move(other.tooltipIcon)),
+      tooltipName(std::move(other.tooltipName)),
+      tooltipDescription(std::move(other.tooltipDescription)),
+      tooltipUnique(std::move(other.tooltipUnique)) {
+    pos = other.pos;
+    isVisible = other.isVisible;
+    isInteractable = other.isInteractable;
+    padding = other.padding;
+    slotSize = other.slotSize;
+    rounding = other.rounding;
+    windowBackgroundColor = other.windowBackgroundColor;
+    borderColor = other.borderColor;
+    emptySlotColor = other.emptySlotColor;
+    textColor = other.textColor;
+    hoverSlotColor = other.hoverSlotColor;
+    dragHoverSlotColor = other.dragHoverSlotColor;
+
+    prevVisualChecksum = other.prevVisualChecksum;
+    inventoryEntityId = other.inventoryEntityId;
+  }
 
   std::string name = "Inventory";
   Vec2 pos = Vec2(100, 100);
@@ -80,27 +131,33 @@ private:
   // Drag and drop state (static = global drag state, only one drag at a time)
   static bool isDragging;
   static glm::u16vec2 dragStartSlot;
-  static InventoryViewComponent* dragSourceView;  // Pointer to the view we're dragging from
+  static EntityId dragSourceEntity;  // Entity ID of the view we're dragging from
   static bool wasMouseButtonPressedLastFrame;  // Track previous frame mouse state for outside-release detection
 
+  // Active placement mode state (double-click a slot to paint tiles in the world)
+  static bool isPlacementMode;
+  static glm::u16vec2 activePlacementSlot;
+  static EntityId activePlacementEntity;
+
   // Checksum is based off visual config and inventory size - if it changes, we need to rebuild the UI
-  static u32 calculateVisualChecksum(const InventoryViewComponent& self, u32 sizeX, u32 sizeY);
-  static bool hasVisualConfigChanged(const InventoryViewComponent& self, u32 sizeX, u32 sizeY, u32 previousChecksum);
+  static u32 calculateVisualChecksum(RefT<InventoryViewComponent> self, u32 sizeX, u32 sizeY);
+  static bool hasVisualConfigChanged(RefT<InventoryViewComponent> self, u32 sizeX, u32 sizeY, u32 previousChecksum);
 
   // Slot click/drag callbacks
   static void onSlotMouseDown(EntityPtr inventoryEntity, glm::u16vec2 slotPos);
   static void onSlotMouseUp(EntityPtr inventoryEntity, glm::u16vec2 slotPos);
+  static void onSlotDoubleClick(EntityPtr inventoryEntity, glm::u16vec2 slotPos);
   
   // Tooltip display helpers
   static void showTooltip(EntityPtr inventoryEntity, size_t slotIndex);
-  static void hideTooltip(InventoryViewComponent& self);
+  static void hideTooltip(RefT<InventoryViewComponent> self);
   
   // Helper to perform the actual item move
-  static void performItemDrop(EntityPtr inventoryEntity, InventoryViewComponent* sourceView, glm::u16vec2 sourceSlot, 
+  static void performItemDrop(EntityPtr inventoryEntity, EntityId sourceEntity, glm::u16vec2 sourceSlot, 
                        glm::u16vec2 targetSlot);
   
   // Helper to check if a world position is within the inventory window bounds
-  static bool isPointInWindowBounds(const InventoryViewComponent& self, const glm::vec2& worldPos);
+  static bool isPointInWindowBounds(RefT<InventoryViewComponent> self, const glm::vec2& worldPos);
   
   // Helper to place item to world when released outside inventory with Shift pressed
   static void placeItemToWorld(EntityPtr inventoryEntity);

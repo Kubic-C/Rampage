@@ -6,38 +6,23 @@ RAMPAGE_START
 
 template<typename T>
 struct ObjectData {
-#ifndef NDEBUG
-  bool hasValue = false;
-#endif
-
-  std::array<u8, sizeof(T)> data;
+  u8 data[sizeof(T)];
 
   T* get() {
-    assert(hasValue);
-    return reinterpret_cast<T*>(data.data());
+    return reinterpret_cast<T*>(data);
   }
 
   T* construct() {
-#ifndef NDEBUG
-    hasValue = true;
-#endif
-    return new (data.data()) T();
+    return new (data) T();
   }
 
   void destruct() {
     get()->~T();
-#ifndef NDEBUG
-    hasValue = false;
-#endif
   }
 
-  void move(ObjectData<T>* dst) {
-    new (dst->data.data()) T(std::move(*get()));
-    get()->~T();
-#ifndef NDEBUG
-    dst->hasValue = true;
-    hasValue = false;
-#endif
+  void move(ObjectData<T>& dst) {
+    new (dst.data) T(std::move(*get()));
+    destruct();
   }
 };
 
@@ -108,7 +93,7 @@ public:
     }
 
     if (m_denseSize == m_denseCap) {
-      allocateAdditional((m_denseCap + 1) * 2); // exponential
+      allocateAdditional(m_denseCap + 1); // exponential
     }
 
     m_sparse[id] = m_denseSize;
@@ -128,7 +113,7 @@ public:
     m_dense[denseIdx].destruct();
 
     if (denseIdx != lastIdx) {
-      m_dense[lastIdx].move(&m_dense[denseIdx]);
+      m_dense[lastIdx].move(m_dense[denseIdx]);
       EntityId lastEntity = m_denseToEntity[lastIdx];
       m_sparse[lastEntity] = denseIdx;
       m_denseToEntity[denseIdx] = lastEntity;
@@ -145,7 +130,6 @@ public:
 
   u8* get(EntityId id) override {
     assert(exists(id));
-    assert(m_dense[m_sparse[id]].hasValue);
     return reinterpret_cast<u8*>(m_dense[m_sparse[id]].get());
   }
 
@@ -156,7 +140,7 @@ protected:
     ObjectData<T>* newDense = static_cast<ObjectData<T>*>(std::malloc(totalNewCap * sizeof(ObjectData<T>)));
     if (m_dense) {
       for (size_t i = 0; i < m_denseSize; ++i)
-        m_dense[i].move(newDense + i);
+        m_dense[i].move(newDense[i]);
       std::free(m_dense);
     }
 

@@ -217,6 +217,32 @@ inline EntityPtr getTileAtPos(IWorldPtr world, Vec2 worldPos) {
   return world->getEntity(0); // null entity
 }
 
+inline EntityPtr getTopTileAtPos(IWorldPtr world, Vec2 worldPos) {
+  b2WorldId worldId = world->getContext<b2WorldId>();
+
+  std::vector<EntityId> entitiesAtPlacement;
+  b2QueryFilter filter;
+  filter.categoryBits = Static;
+  filter.maskBits = Static | Friendly;
+  b2World_CastRay(worldId, worldPos, {0}, filter, &_getShapeEntity, &entitiesAtPlacement);
+
+  EntityId retEntity = NullEntityId;
+  WorldLayer topLayer = WorldLayer::Floor;
+  for(EntityId entityId : entitiesAtPlacement) {
+    EntityPtr entity = world->getEntity(entityId);
+    if (entity.has<TileComponent>()) {
+      auto tile = entity.get<TileComponent>();
+      if (tile->layer >= topLayer) {
+        topLayer = tile->layer;
+        retEntity = entity;
+      }
+    }
+  }
+
+  return world->getEntity(retEntity); // null entity
+}
+
+
 // Like getTileAtPos but prefers tiles that have a specific component.
 // Falls back to the first TileComponent entity if none have the component.
 template<typename TComp>

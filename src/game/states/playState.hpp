@@ -179,14 +179,18 @@ public:
         auto tileComp = e.get<TileComponent>();
         tileComp->rotation = rotateTileDirection(tileComp->rotation, 1);
       }
+    }
 
-      for(int i = 0; i < 1000; i++) {
-        EntityPtr ptr = assetLoader.cloneAsset("BasicZombie");
-        ptr.get<TransformComponent>()->pos = Vec2((i % 100) * 0.5f + evtMod.getMouseWorldPos().x, (i % 50) * 0.5f + evtMod.getMouseWorldPos().y);
+    if(evtMod.isKeyPressed(Key::O)) {
+      auto it = m_world->getWith(m_world->set<PlayerComponent>());
+      while(it->hasNext()) {
+        EntityPtr player = it->next();
+        auto invView = player.get<InventoryViewComponent>();
+        invView->isVisible = true;
       }
     }
 
-    if(evtMod.isMouseButtonPressed(MouseButton::Middle)) {
+    if(evtMod.isMouseButtonPressed(MouseButton::Right)) {
       EntityPtr e = getTileWithComponentAtPos<InventoryViewComponent>(m_world, evtMod.getMouseWorldPos());
       if(!e.isNull() && e.has<InventoryViewComponent>()) {
         auto invViewComp = e.get<InventoryViewComponent>();

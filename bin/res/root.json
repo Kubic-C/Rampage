@@ -234,6 +234,7 @@
         },
         {
           "type": "TileComponent",
+          "layer": "Floor",
           "collidable": false
         },
         {
@@ -260,6 +261,7 @@
         },
         {
           "type": "TileComponent",
+          "layer": "Wall",
           "material": {
             "friction": 0.0,
             "restitution": 1.0
@@ -477,6 +479,7 @@
         },
         {
           "type": "TileComponent",
+          "layer": "Wall",
           "material": {
             "friction": 0.0,
             "restitution": 1.0
@@ -556,7 +559,8 @@
           ]
         },
         {
-          "type": "TileComponent"
+          "type": "TileComponent",
+          "layer": "Wall"
         }
       ]
     },
@@ -578,7 +582,8 @@
           ]
         },
         {
-          "type": "TileComponent"
+          "type": "TileComponent",
+          "layer": "Wall"
         },
         {
           "type": "HealthComponent",
@@ -608,7 +613,8 @@
           ]
         },
         {
-          "type": "TileComponent"
+          "type": "TileComponent",
+          "layer": "Wall"
         },
         {
           "type": "HealthComponent",
@@ -767,7 +773,8 @@
           }
         },
         {
-          "type": "TileComponent"
+          "type": "TileComponent",
+          "layer": "Wall"
         },
         {
           "type": "HealthComponent",
@@ -941,7 +948,9 @@
           ]
         },
         {
-          "type": "TileComponent"
+          "type": "TileComponent",
+          "layer": "Wall",
+          "collidable": false
         },
         {
           "type": "HealthComponent",
@@ -976,7 +985,9 @@
           ]
         },
         {
-          "type": "TileComponent"
+          "type": "TileComponent",
+          "layer": "Wall",
+          "collidable": false
         },
         {
           "type": "HealthComponent",
@@ -988,7 +999,7 @@
         },
         {
           "type": "ConveyorPartComponent",
-          "inputDirections": ["Up", "Left"],
+          "inputDirections": ["Left", "Up"],
           "virtualDistanceIncrease": 0.5
         }
       ]
@@ -1011,7 +1022,9 @@
           ]
         },
         {
-          "type": "TileComponent"
+          "type": "TileComponent",
+          "layer": "Wall",
+          "collidable": false
         },
         {
           "type": "HealthComponent",
@@ -1046,7 +1059,9 @@
           ]
         },
         {
-          "type": "TileComponent"
+          "type": "TileComponent",
+          "layer": "Wall",
+          "collidable": false
         },
         {
           "type": "HealthComponent",
@@ -1081,7 +1096,9 @@
           ]
         },
         {
-          "type": "TileComponent"
+          "type": "TileComponent",
+          "layer": "Wall",
+          "collidable": false
         },
         {
           "type": "HealthComponent",

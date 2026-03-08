@@ -118,7 +118,8 @@ struct ConveyorPartComponent {
 
   EntityId conveyorId = 0;
   std::vector<TileDirection> inputDirections;
-  float virtualDistanceIncrease = 0.5f; 
+  float virtualDistanceIncrease = 0.5f;
+  TileDirection cachedRotation = TileDirection::Right; // tracks last-known tile rotation for revalidation
 };
 
 RAMPAGE_END
