@@ -1,11 +1,11 @@
 #pragma once
 
+#include "../../common/ecs/taggedWorld.hpp"
 #include "../../event/module.hpp"
 #include "../../render/module.hpp"
 #include "../components/components.hpp"
-#include "state.hpp"
-#include "../../common/ecs/taggedWorld.hpp"
 #include "../systems/inventory.hpp"
+#include "state.hpp"
 
 RAMPAGE_START
 
@@ -26,14 +26,14 @@ public:
   static void observePlayerDeath(EntityPtr player) {
     IWorldPtr world = player.world();
 
-    if(player.has<HealthComponent>() && player.get<HealthComponent>()->health <= 0) {
+    if (player.has<HealthComponent>() && player.get<HealthComponent>()->health <= 0) {
       auto& stateMgr = world->getContext<StateManager>();
       stateMgr.disableState("PlayState");
       stateMgr.enableState("LostState");
     }
   }
 
-  explicit PlayState(IWorldPtr _world) {  
+  explicit PlayState(IWorldPtr _world) {
     _world->component<PlayStateTag>(false);
     m_world = TaggedEntityWorld::create(_world, _world->component<PlayStateTag>());
 
@@ -49,20 +49,20 @@ public:
 
     tgui::Button::Ptr saveStateBtn = gui.get(playSaveStateTextName)->cast<tgui::Button>();
     saveStateBtn->onMousePress([=]() {
-        auto& serializer = m_world->getSerializer();
-        
-        serializer.begin(m_world);
-        serializer.queueAllWith(m_world->set<PlayStateTag>());
-        serializer.end("saveFile.rampage");
+      auto& serializer = m_world->getSerializer();
+
+      serializer.begin(m_world);
+      serializer.queueAllWith(m_world->set<PlayStateTag>());
+      serializer.end("saveFile.rampage");
     });
 
     tgui::Button::Ptr loadStateBtn = gui.get(playLoadStateTextName)->cast<tgui::Button>();
     loadStateBtn->onMousePress([=]() {
-        auto& deserializer = m_world->getDeserializer();
+      auto& deserializer = m_world->getDeserializer();
 
-        // Testing serialization and deserialization stability.
-        m_world->destroyAllEntitiesWith(m_world->set<PlayStateTag, IWorld::Enabled>());
-        deserializer.deserializeFromFile(*m_world, "saveFile.rampage");
+      // Testing serialization and deserialization stability.
+      m_world->destroyAllEntitiesWith(m_world->set<PlayStateTag, IWorld::Enabled>());
+      deserializer.deserializeFromFile(*m_world, "saveFile.rampage");
     });
 
     m_tickText = gui.get(tickTextName)->cast<tgui::Label>();
@@ -90,12 +90,14 @@ public:
     b2Body_EnableContactEvents(*player.get<BodyComponent>(), true);
     player.add<CameraInUseTag>();
 
-    for(int i = 0; i < 1; i++) {
+    for (int i = 0; i < 1; i++) {
       invMgr.dropItem(m_world, assetLoader.getAsset("BasicTurretItem"), Vec2(0, 0), 10);
       invMgr.dropItem(m_world, assetLoader.getAsset("BigGunTurretItem"), Vec2(1, 0), 10);
       invMgr.dropItem(m_world, assetLoader.getAsset("FenceItem"), Vec2(2, 0), 10);
       invMgr.dropItem(m_world, assetLoader.getAsset("PlaceableHighStoneItem"), Vec2(3, 1), 10);
-      invMgr.dropItem(m_world, assetLoader.getAsset("ZombieSpawnableItem"), Vec2(4, 2), 512);
+      invMgr.dropItem(m_world, assetLoader.getAsset("BasicZombieSpawnerItem"), Vec2(4, 2), 512);
+      invMgr.dropItem(m_world, assetLoader.getAsset("FastZombieSpawnableItem"), Vec2(4, 2), 512);
+      invMgr.dropItem(m_world, assetLoader.getAsset("BigZombieSpawnableItem"), Vec2(4, 2), 512);
       invMgr.dropItem(m_world, assetLoader.getAsset("WoodItem"), Vec2(2, 0), 10);
       invMgr.dropItem(m_world, assetLoader.getAsset("ChestItem"), Vec2(4, -2), 10);
       invMgr.dropItem(m_world, assetLoader.getAsset("PortItem"), Vec2(5, -2), 64);
@@ -126,19 +128,22 @@ public:
       // int length = 10;
       // for(int x = -length; x < length * 2; x++)
       //   for(int y = -length; y < length; y++)
-      //     tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(x, y), assetLoader.cloneAsset("GrassFloorTile"));
+      //     tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(x, y),
+      //     assetLoader.cloneAsset("GrassFloorTile"));
 
       // // Stone outline around the tilemap
       // for(int x = -length - 1; x <= length * 2; x++) {
-      //   tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall, glm::ivec2(x, length), assetLoader.cloneAsset("PermaHighStoneTile"));
-      //   tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall, glm::ivec2(x, -length - 1), assetLoader.cloneAsset("PermaHighStoneTile"));
+      //   tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall, glm::ivec2(x, length),
+      //   assetLoader.cloneAsset("PermaHighStoneTile")); tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall,
+      //   glm::ivec2(x, -length - 1), assetLoader.cloneAsset("PermaHighStoneTile"));
       // }
       // for(int y = -length; y < length; y++) {
-      //   tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall, glm::ivec2(-length - 1, y), assetLoader.cloneAsset("PermaHighStoneTile"));
-      //   tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall, glm::ivec2(length * 2, y), assetLoader.cloneAsset("PermaHighStoneTile"));
+      //   tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall, glm::ivec2(-length - 1, y),
+      //   assetLoader.cloneAsset("PermaHighStoneTile")); tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall,
+      //   glm::ivec2(length * 2, y), assetLoader.cloneAsset("PermaHighStoneTile"));
       // }
 
-      // m_tm = tm;  
+      // m_tm = tm;
 
       EntityPtr chunkLoader = m_world->create();
       chunkLoader.add<ChunkedTilemapComponent>();
@@ -152,17 +157,30 @@ public:
       bodyComp->id = b2CreateBody(physicsWorld, &bodyDef);
 
       auto chunkedTilemap = chunkLoader.get<ChunkedTilemapComponent>();
-      chunkedTilemap->generator = 
-      [](IWorldPtr world, const GeneratorChunkInfo& info){
+      chunkedTilemap->generator = [](IWorldPtr world, const GeneratorChunkInfo& info) {
         auto assetLoader = world->getAssetLoader();
         TilemapManager& tmMgr = world->getContext<TilemapManager>();
         auto tm = world->getEntity(info.tilemapEntity);
-        for(int x = info.minTilePos.x; x < info.maxTilePos.x; x++) {
-          for(int y = info.minTilePos.y; y < info.maxTilePos.y; y++) {
-            glm::ivec2 tilePos = glm::ivec2(x, y);
-            tmMgr.insertTile(world, tm, WorldLayer::Floor, tilePos, assetLoader.cloneAsset("GrassFloorTile"));
+
+        for (int x = info.minTilePos.x; x < info.maxTilePos.x; ++x) {
+          for (int y = info.minTilePos.y; y < info.maxTilePos.y; ++y) {
+
+            glm::ivec2 tilePos(x, y);
+            float n = noise2d<int>(x, y, info.seed);
+
+            std::string tile;
+            if(n > 0.5f)
+              tile = "PermaHighStoneTile";
+            else if (n > 0.25f)
+              tile = "GrassFloorTile";
+            else if (n > -0.08f)      // ← this is the beach zone
+              tile = "SandFloorTile";
+            else
+              tile = "WaterFloorTile";
+
+            tmMgr.insertTile(world, tm, WorldLayer::Floor, tilePos, assetLoader.cloneAsset(tile));
           }
-        };
+        }
       };
     }
   }
@@ -187,7 +205,8 @@ public:
     m_activeBodiesText->setText("Active Rigid Bodies: " + std::to_string(activeBodies));
     m_entityCountText->setText("Entity Count: " + std::to_string(m_world->getEntityCount()));
 
-    Vec2 origin = m_world->getContext<RenderModule>().getWorldCoords(m_world->getContext<EventModule>().getMouseCoords());
+    Vec2 origin = m_world->getContext<RenderModule>().getWorldCoords(
+        m_world->getContext<EventModule>().getMouseCoords());
 
     std::vector<b2ShapeId> shapes;
 
@@ -195,40 +214,40 @@ public:
     filter.maskBits = All;
     filter.categoryBits = All;
     b2World_CastRay(physicsWorldId, origin, Vec2(0), filter, isAllowed, &shapes);
-    for(b2ShapeId shape : shapes) {
+    for (b2ShapeId shape : shapes) {
       EntityPtr entity = b2DataToEntity(m_world, b2Shape_GetUserData(shape));
-      if(entity.isNull() || !entity.alive())
+      if (entity.isNull() || !entity.alive())
         continue;
 
-      if(entity.has<TileComponent>() && evtMod.isKeyHeld(Key::LeftControl)) {
+      if (entity.has<TileComponent>() && evtMod.isKeyHeld(Key::LeftControl)) {
         auto tileComp = entity.get<TileComponent>();
         tmMgr.removeTile(m_world, tileComp->parent, tileComp->layer, tileComp->pos, true);
       }
     }
 
     auto it = m_world->getWith(m_world->set<TilemapComponent>());
-    while(it->hasNext()) {
+    while (it->hasNext()) {
       EntityPtr tmEntity = it->next();
       tmMgr.checkAndHandleBreakage(m_world, tmEntity);
     }
 
-    if(evtMod.isKeyPressed(Key::P)) {
+    if (evtMod.isKeyPressed(Key::P)) {
       EntityPtr e = getTileAtPos(m_world, evtMod.getMouseWorldPos());
-      if(!e.isNull()) {
+      if (!e.isNull()) {
         auto tileComp = e.get<TileComponent>();
         tileComp->rotation = getRotateTileDirection(tileComp->rotation, 1);
       }
     }
 
-    if(evtMod.isKeyPressed(Key::O)) {
+    if (evtMod.isKeyPressed(Key::O)) {
       auto it = m_world->getWith(m_world->set<PlayerComponent>());
-      while(it->hasNext()) {
+      while (it->hasNext()) {
         EntityPtr player = it->next();
         auto invView = player.get<InventoryViewComponent>();
         invView->isVisible = true;
       }
 
-      for(int i = 0; i < 1000; i++) {
+      for (int i = 0; i < 1000; i++) {
         EntityPtr e = m_world->create();
         e.add<TransformComponent>();
         e.add<SpriteComponent>();
@@ -236,14 +255,13 @@ public:
       }
     }
 
-    if(evtMod.isMouseButtonPressed(MouseButton::Right)) {
+    if (evtMod.isMouseButtonPressed(MouseButton::Right)) {
       EntityPtr e = getTileWithComponentAtPos<InventoryViewComponent>(m_world, evtMod.getMouseWorldPos());
-      if(!e.isNull() && e.has<InventoryViewComponent>()) {
+      if (!e.isNull() && e.has<InventoryViewComponent>()) {
         auto invViewComp = e.get<InventoryViewComponent>();
         invViewComp->isVisible = true;
       }
     }
-
   }
 
   void onLeave() {

@@ -77,6 +77,7 @@ struct SubSpritesItem;
 struct SpriteComponent;
 struct CameraComponent;
 struct SeekPrimaryTargetTag;
+struct ChunkLoaderTag;
 struct PrimaryTargetTag;
 struct WorldMapTag;
 struct HealthComponent;
@@ -746,6 +747,47 @@ struct SeekPrimaryTargetTag : public JsonValue {
     auto vr = validate(j);
     if (!vr.valid()) throw std::runtime_error(vr.summary());
     SeekPrimaryTargetTag obj;
+    obj.setType(j.at("type").get<std::string>());
+    return obj;
+  }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+private:
+  std::string type_;
+};
+
+struct ChunkLoaderTag : public JsonValue {
+  struct Properties {
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "ChunkLoaderTag"; }
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "ChunkLoaderTag") result.add(fp, "Value does not match const");
+      }
+    }
+    return result;
+  }
+
+  static ChunkLoaderTag fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    ChunkLoaderTag obj;
     obj.setType(j.at("type").get<std::string>());
     return obj;
   }
@@ -4589,7 +4631,7 @@ private:
 };
 
 struct ComponentsItem : public JsonValue {
-  using Variant = std::variant<TransformComponent, SpriteComponent, CameraComponent, SeekPrimaryTargetTag, PrimaryTargetTag, WorldMapTag, HealthComponent, ContactDamageComponent, BulletDamageComponent, LifetimeComponent, PlayerComponent, BodyComponent, TileComponent, ArrowComponent, MultiTileComponent, TurretComponent, SpawnerComponent, CircleRenderComponent, RectangleRenderComponent, ItemComponent, InventoryComponent, InventoryViewComponent, ItemUseComponent, ItemPlaceableComponent, ItemStackComponent, OwnedByComponent, PortComponent, ConveyorPartComponent, ChunkedTilemapComponent>;
+  using Variant = std::variant<TransformComponent, SpriteComponent, CameraComponent, SeekPrimaryTargetTag, ChunkLoaderTag, PrimaryTargetTag, WorldMapTag, HealthComponent, ContactDamageComponent, BulletDamageComponent, LifetimeComponent, PlayerComponent, BodyComponent, TileComponent, ArrowComponent, MultiTileComponent, TurretComponent, SpawnerComponent, CircleRenderComponent, RectangleRenderComponent, ItemComponent, InventoryComponent, InventoryViewComponent, ItemUseComponent, ItemPlaceableComponent, ItemStackComponent, OwnedByComponent, PortComponent, ConveyorPartComponent, ChunkedTilemapComponent>;
 
   static ValidationResult validate(const json& j, const std::string& path = "") {
     ValidationResult result;
@@ -4607,6 +4649,7 @@ struct ComponentsItem : public JsonValue {
     else if (disc == "SpriteComponent") return SpriteComponent::validate(j, path);
     else if (disc == "CameraComponent") return CameraComponent::validate(j, path);
     else if (disc == "SeekPrimaryTargetTag") return SeekPrimaryTargetTag::validate(j, path);
+    else if (disc == "ChunkLoaderTag") return ChunkLoaderTag::validate(j, path);
     else if (disc == "PrimaryTargetTag") return PrimaryTargetTag::validate(j, path);
     else if (disc == "WorldMapTag") return WorldMapTag::validate(j, path);
     else if (disc == "HealthComponent") return HealthComponent::validate(j, path);
@@ -4645,6 +4688,7 @@ struct ComponentsItem : public JsonValue {
     else if (disc == "SpriteComponent") obj.variant_ = SpriteComponent::fromJson(j);
     else if (disc == "CameraComponent") obj.variant_ = CameraComponent::fromJson(j);
     else if (disc == "SeekPrimaryTargetTag") obj.variant_ = SeekPrimaryTargetTag::fromJson(j);
+    else if (disc == "ChunkLoaderTag") obj.variant_ = ChunkLoaderTag::fromJson(j);
     else if (disc == "PrimaryTargetTag") obj.variant_ = PrimaryTargetTag::fromJson(j);
     else if (disc == "WorldMapTag") obj.variant_ = WorldMapTag::fromJson(j);
     else if (disc == "HealthComponent") obj.variant_ = HealthComponent::fromJson(j);

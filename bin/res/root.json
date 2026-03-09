@@ -130,7 +130,64 @@
               "collisionMask": [
                 "All"
               ],
-              "density": 50,
+              "density": 35,
+              "shape": {
+                "shapeType": "Circle",
+                "radius": 0.25
+              }
+            }
+          ]
+        },
+        {
+          "type": "ChunkLoaderTag"
+        }
+      ]
+    },
+    {
+      "name": "FastZombie",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "TransformComponent"
+        },
+        {
+          "type": "SpriteComponent",
+          "subSprites": [
+            {
+              "layers": [
+                {
+                  "path": "fastZombie",
+                  "layer": "Top"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "SeekPrimaryTargetTag"
+        },
+        {
+          "type": "HealthComponent",
+          "health": 100
+        },
+        {
+          "type": "ContactDamageComponent",
+          "damage": 100
+        },
+        {
+          "type": "BodyComponent",
+          "bodyType": "dynamic",
+          "linearDamping": 5,
+          "shapes": [
+            {
+              "enableContactEvents": true,
+              "categoryMask": [
+                "Enemy"
+              ],
+              "collisionMask": [
+                "All"
+              ],
+              "density": 20,
               "shape": {
                 "shapeType": "Circle",
                 "radius": 0.25
@@ -171,7 +228,7 @@
         },
         {
           "type": "ContactDamageComponent",
-          "damage": 5
+          "damage": 1000
         },
         {
           "type": "BodyComponent",
@@ -186,13 +243,44 @@
               "collisionMask": [
                 "All"
               ],
-              "density": 10,
+              "density": 1,
               "shape": {
                 "shapeType": "Circle",
-                "radius": 1.0
+                "radius": 0.5
               }
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "BasicSpawnerTile",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "SpriteComponent",
+          "subSprites": [
+            {
+              "layers": [
+                {
+                  "path": "basicSpawner",
+                  "layer": "Wall"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "TileComponent",
+          "layer": "Wall",
+          "collidable": false
+        },
+        {
+          "type": "SpawnerComponent",
+          "spawn": "BasicZombie",
+          "spawnableRadius": 2.0,
+          "spawnCount": 10,
+          "spawnRate": 1
         }
       ]
     },
@@ -320,10 +408,7 @@
         {
           "type": "TileComponent",
           "layer": "Floor",
-          "collidable": false
-        },
-        {
-          "type": "ArrowComponent"
+          "collidable": true
         }
       ]
     },
@@ -1005,6 +1090,44 @@
       ]
     },
     {
+      "name": "FastZombieSpawnableItem",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "ItemComponent",
+          "description": "Blitzin' zombie",
+          "name": "Fast Zombie Spawnable",
+          "isUnique": false,
+          "maxStackSize": 256,
+          "stackCost": 1,
+          "iconAsset": "res/entities/fastZombie.png"
+        },
+        {
+          "type": "ItemPlaceableComponent",
+          "entityId": "FastZombie"
+        }
+      ]
+    },
+    {
+      "name": "BigZombieSpawnableItem",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "ItemComponent",
+          "description": "HESSS HUGGEEE",
+          "name": "Big Zombie Spawnable",
+          "isUnique": false,
+          "maxStackSize": 256,
+          "stackCost": 1,
+          "iconAsset": "res/entities/zombie.png"
+        },
+        {
+          "type": "ItemPlaceableComponent",
+          "entityId": "BigAssZombie"
+        }
+      ]
+    },
+    {
       "name": "ChestItem",
       "type": "Entity",
       "components": [
@@ -1357,6 +1480,25 @@
         {
           "type": "ItemPlaceableComponent",
           "entityId": "WaterFloorTile"
+        }
+      ]
+    },
+    {
+      "name": "BasicZombieSpawnerItem",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "ItemComponent",
+          "description": "A basic zombie spawner. Spawns zombies within a certain radius.",
+          "name": "Basic Zombie Spawner",
+          "isUnique": false,
+          "maxStackSize": 128,
+          "stackCost": 1,
+          "iconAsset": "res/entities/basicSpawner.png"
+        },
+        {
+          "type": "ItemPlaceableComponent",
+          "entityId": "BasicSpawnerTile"
         }
       ]
     }

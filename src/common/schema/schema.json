@@ -150,6 +150,16 @@
                 {
                   "properties": {
                     "type": {
+                      "const": "ChunkLoaderTag"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                },
+                {
+                  "properties": {
+                    "type": {
                       "const": "PrimaryTargetTag"
                     }
                   },

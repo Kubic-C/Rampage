@@ -51,6 +51,7 @@ inline void registerGameComponents(IWorldPtr world) {
   world->component<ConveyorPartComponent>(false);
   world->component<PortComponent>(false);
   world->component<ConveyorComponent>(false);
+  world->component<ChunkLoaderTag>(false);
 }
 
 RAMPAGE_END

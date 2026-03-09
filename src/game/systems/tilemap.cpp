@@ -563,32 +563,51 @@ void disableChunk(IWorldPtr world, EntityId tilemapEntityId, glm::ivec2 chunkPos
 }
 
 int updateChunkedTilemaps(IWorldPtr world, float dt) {
-  auto it = world->getWith<ChunkedTilemapComponent, TilemapComponent>();
   auto& tmMgr = world->getContext<TilemapManager>();
 
+  auto it = world->getWith<ChunkedTilemapComponent, TilemapComponent>();
   world->beginDefer(); 
   while(it->hasNext()) {
     EntityPtr entity = it->next();
     auto chunkedTilemap = entity.get<ChunkedTilemapComponent>();
     auto chunkedTrans = entity.get<TransformComponent>();
 
-    // 1) Determine which chunk the player is currently in
-    auto playerEntity = world->getFirstWith<PlayerComponent>();
-    if(!playerEntity.alive())
-      continue;
-    auto playerPos = playerEntity.get<TransformComponent>()->pos;
-    glm::ivec2 playerChunk = getNearestChunk(playerPos + chunkedTrans->pos, chunkedTilemap->chunkSize);
-
-    int minX = playerChunk.x - (int)chunkedTilemap->loadRadius;
-    int maxX = playerChunk.x + (int)chunkedTilemap->loadRadius;
-    int minY = playerChunk.y - (int)chunkedTilemap->loadRadius;
-    int maxY = playerChunk.y + (int)chunkedTilemap->loadRadius;
-
-    // 2) Determine the chunk coordinates that should be loaded.
     Set<glm::ivec2> chunksToLoad;
-    for(int x = minX; x <= maxX; ++x)
-      for(int y = minY; y <= maxY; ++y)
-          chunksToLoad.insert(glm::ivec2(x, y));
+    auto loaderIt = world->getWith<ChunkLoaderTag, TransformComponent>();
+    while(loaderIt->hasNext()) {
+      EntityPtr loaderEntity = loaderIt->next();
+      // 1) Determine which chunk the loader is currently in
+      auto loaderPos = loaderEntity.get<TransformComponent>()->pos;
+      glm::ivec2 loaderChunk = getNearestChunk(loaderPos, chunkedTilemap->chunkSize);
+    
+      int minX = loaderChunk.x - (int)chunkedTilemap->loadRadius;
+      int maxX = loaderChunk.x + (int)chunkedTilemap->loadRadius;
+      int minY = loaderChunk.y - (int)chunkedTilemap->loadRadius;
+      int maxY = loaderChunk.y + (int)chunkedTilemap->loadRadius;
+    
+      // 2) Determine the chunk coordinates that should be loaded.
+      for(int x = minX; x <= maxX; ++x)
+        for(int y = minY; y <= maxY; ++y)
+            chunksToLoad.insert(glm::ivec2(x, y));
+    }
+
+    loaderIt = world->getWith<PlayerComponent, TransformComponent>();
+    while(loaderIt->hasNext()) {
+      EntityPtr loaderEntity = loaderIt->next();
+      // 1) Determine which chunk the player is currently in
+      auto loaderPos = loaderEntity.get<TransformComponent>()->pos;
+      glm::ivec2 loaderChunk = getNearestChunk(loaderPos, chunkedTilemap->chunkSize);
+    
+      int minX = loaderChunk.x - (int)chunkedTilemap->loadRadius;
+      int maxX = loaderChunk.x + (int)chunkedTilemap->loadRadius;
+      int minY = loaderChunk.y - (int)chunkedTilemap->loadRadius;
+      int maxY = loaderChunk.y + (int)chunkedTilemap->loadRadius;
+    
+      // 2) Determine the chunk coordinates that should be loaded.
+      for(int x = minX; x <= maxX; ++x)
+        for(int y = minY; y <= maxY; ++y)
+            chunksToLoad.insert(glm::ivec2(x, y));
+    }
 
     // 3) Disable chunks that are outside the load radius.
     std::vector<glm::ivec2> chunksToUnload;
@@ -629,12 +648,67 @@ int updateChunkedTilemaps(IWorldPtr world, float dt) {
   return 0;
 }
 
+struct IsEntityChunkLoaderContext {
+  IWorldPtr world;
+  EntityId self = NullEntityId;
+  EntityId hitChunkLoader = NullEntityId;
+};
+
+float isEntityChunkLoader(b2ShapeId shapeId, b2Vec2 point, b2Vec2 normal, float fraction, void* context) {
+  IsEntityChunkLoaderContext& ctx = *static_cast<IsEntityChunkLoaderContext*>(context);
+
+  EntityPtr entity = b2DataToEntity(ctx.world, b2Shape_GetUserData(shapeId));
+  if(entity.isNull())
+    return -1.0f; // Not an entity, ignore and continue the raycast
+  if(entity == ctx.self)
+    return -1.0f;
+  if(entity.has<ChunkLoaderTag>()) {
+    ctx.hitChunkLoader = entity;
+    return 0.0f; // Hit the chunk loader, report a hit with fraction 0 to stop the raycast
+  }
+  return -1.0f; // Not a chunk loader, ignore and continue the raycast
+}
+
+// int updateChunkLoaders(IWorldPtr world, float dt) {
+//   b2WorldId physicsWorld = world->getContext<b2WorldId>();
+
+//   auto it = world->getWith<ChunkLoaderTag, BodyComponent, TransformComponent>();
+//   world->beginDefer();
+//   while(it->hasNext()) {
+//     EntityPtr e = it->next();
+//     auto trans = e.get<TransformComponent>();
+//     if(!e.has<ChunkLoaderTag>())
+//       continue;
+
+//     IsEntityChunkLoaderContext context;
+//     context.world = world;
+//     context.self = e;
+//     b2QueryFilter filter;
+//     filter.categoryBits = PhysicsCategories::All;
+//     filter.maskBits = ~PhysicsCategories::Static;
+//     b2ShapeProxy proxy;
+//     proxy.count = 1;
+//     proxy.points[0] = trans->pos;
+//     proxy.radius = 5.0f;
+//     b2World_CastShape(physicsWorld, &proxy, Vec2(0), filter, isEntityChunkLoader, &context);
+//     if(context.hitChunkLoader == NullEntityId)
+//       continue;
+
+//     EntityPtr chunkLoaderEntity = world->getEntity(context.hitChunkLoader);
+//     chunkLoaderEntity.remove<ChunkLoaderTag>();
+//   }
+//   world->endDefer();
+
+//   return 0;
+// }
+
 void loadTilemapSystems(IHost& host) {
   Pipeline& pipeline = host.getPipeline();
   IWorldPtr world = host.getWorld();
 
   world->component<PreviousMultiTileComponent>(false);
 
+  // pipeline.getGroup<GameGroup>().attachToStage<GameGroup::PreTickStage>(updateChunkLoaders);
   pipeline.getGroup<GamePerSecondGroup>().attachToStage<GamePerSecondGroup::TickStage>(updateChunkedTilemaps);
 
   world->addContext<TilemapManager>();

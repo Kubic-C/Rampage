@@ -176,7 +176,7 @@ int meshSprites(IWorldPtr world, float dt) {
     EntityPtr entity = it->next();
     auto transform = entity.get<TransformComponent>();
     auto sprite = entity.get<SpriteComponent>();
-    if(!cameraViewRect.contains(transform->pos))
+    if(!cameraViewRect.intersects(transform->pos, Vec2(tileSize)))
       continue;
     meshSprite(*transform, *sprite, *va, *instances);
   }
@@ -191,7 +191,7 @@ int meshSprites(IWorldPtr world, float dt) {
     Transform transform(
       getWorldTilePosition(entity),
       Rot(b2Body_GetRotation(bodyId)) + Rot(getTileDirectionToRadians(tile->rotation)));
-    if(!cameraViewRect.contains(transform.pos))
+    if(!cameraViewRect.intersects(transform.pos, Vec2(tileSize)))
       continue;
 
     meshSprite(transform, *sprite, *va, *instances);
