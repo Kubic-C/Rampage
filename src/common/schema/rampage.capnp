@@ -188,6 +188,14 @@ struct TilemapComponent {
     tiles @0 :List(TileEntry);         # tiles map as list of key-value pairs
 }
 
+struct ChunkedTilemapComponent {
+    seed @0 :UInt32;
+    chunkSize @1 :UInt32;
+    loadRadius @2 :UInt32;
+    chunks @3 :List(Vec2I16);
+    loadedChunks @4 :List(Vec2I16);
+}
+
 struct SurfaceMaterial {
   friction @0 :Float32;
   restitution @1 :Float32;

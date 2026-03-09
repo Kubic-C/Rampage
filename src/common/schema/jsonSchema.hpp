@@ -111,6 +111,7 @@ struct ItemStackComponent;
 struct OwnedByComponent;
 struct PortComponent;
 struct ConveyorPartComponent;
+struct ChunkedTilemapComponent;
 struct ComponentsItem;
 struct EntitiesItem;
 struct GameAssetLoaderSchema;
@@ -406,7 +407,7 @@ struct LayersItem : public JsonValue {
         result.add(fp, "Expected string");
       } else {
         const auto& val = j["layer"].get_ref<const std::string&>();
-        { bool ok = val == "Floor" || val == "Wall" || val == "Item" || val == "Top"; if (!ok) result.add(fp, "Value not in enum"); }
+        { bool ok = val == "Bottom" || val == "Floor" || val == "Wall" || val == "Turret" || val == "Item" || val == "Top"; if (!ok) result.add(fp, "Value not in enum"); }
       }
     }
     if (j.contains("offset")) {
@@ -4480,8 +4481,115 @@ private:
   std::optional<double> virtualDistanceIncrease_;
 };
 
+struct ChunkedTilemapComponent : public JsonValue {
+  struct Properties {
+    struct ChunkSize {
+      static const char* name() { return "chunkSize"; }
+      static constexpr bool required = false;
+      static constexpr int64_t minimum() { return 2; }
+    };
+    struct LoadRadius {
+      static const char* name() { return "loadRadius"; }
+      static constexpr bool required = false;
+      static constexpr int64_t minimum() { return 1; }
+    };
+    struct Seed {
+      static const char* name() { return "seed"; }
+      static constexpr bool required = false;
+      static constexpr int64_t minimum() { return 0; }
+    };
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "ChunkedTilemapComponent"; }
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("chunkSize")) {
+      std::string fp = path.empty() ? "chunkSize" : path + ".chunkSize";
+      if (!j["chunkSize"].is_number_integer()) {
+        result.add(fp, "Expected integer");
+      } else {
+        int64_t val = j["chunkSize"].get<int64_t>();
+        if (val < 2) result.add(fp, "Value below minimum");
+      }
+    }
+    if (j.contains("loadRadius")) {
+      std::string fp = path.empty() ? "loadRadius" : path + ".loadRadius";
+      if (!j["loadRadius"].is_number_integer()) {
+        result.add(fp, "Expected integer");
+      } else {
+        int64_t val = j["loadRadius"].get<int64_t>();
+        if (val < 1) result.add(fp, "Value below minimum");
+      }
+    }
+    if (j.contains("seed")) {
+      std::string fp = path.empty() ? "seed" : path + ".seed";
+      if (!j["seed"].is_number_integer()) {
+        result.add(fp, "Expected integer");
+      } else {
+        int64_t val = j["seed"].get<int64_t>();
+        if (val < 0) result.add(fp, "Value below minimum");
+      }
+    }
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "ChunkedTilemapComponent") result.add(fp, "Value does not match const");
+      }
+    }
+    return result;
+  }
+
+  static ChunkedTilemapComponent fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    ChunkedTilemapComponent obj;
+    if (j.contains("chunkSize")) {
+      obj.setChunkSize(j["chunkSize"].get<int64_t>());
+    }
+    if (j.contains("loadRadius")) {
+      obj.setLoadRadius(j["loadRadius"].get<int64_t>());
+    }
+    if (j.contains("seed")) {
+      obj.setSeed(j["seed"].get<int64_t>());
+    }
+    obj.setType(j.at("type").get<std::string>());
+    return obj;
+  }
+
+  bool hasChunkSize() const { return chunkSize_.has_value(); }
+  int64_t getChunkSize() const { return chunkSize_.value(); }
+  void setChunkSize(int64_t value) { chunkSize_ = value; }
+
+  bool hasLoadRadius() const { return loadRadius_.has_value(); }
+  int64_t getLoadRadius() const { return loadRadius_.value(); }
+  void setLoadRadius(int64_t value) { loadRadius_ = value; }
+
+  bool hasSeed() const { return seed_.has_value(); }
+  int64_t getSeed() const { return seed_.value(); }
+  void setSeed(int64_t value) { seed_ = value; }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+private:
+  std::optional<int64_t> chunkSize_;
+  std::optional<int64_t> loadRadius_;
+  std::optional<int64_t> seed_;
+  std::string type_;
+};
+
 struct ComponentsItem : public JsonValue {
-  using Variant = std::variant<TransformComponent, SpriteComponent, CameraComponent, SeekPrimaryTargetTag, PrimaryTargetTag, WorldMapTag, HealthComponent, ContactDamageComponent, BulletDamageComponent, LifetimeComponent, PlayerComponent, BodyComponent, TileComponent, ArrowComponent, MultiTileComponent, TurretComponent, SpawnerComponent, CircleRenderComponent, RectangleRenderComponent, ItemComponent, InventoryComponent, InventoryViewComponent, ItemUseComponent, ItemPlaceableComponent, ItemStackComponent, OwnedByComponent, PortComponent, ConveyorPartComponent>;
+  using Variant = std::variant<TransformComponent, SpriteComponent, CameraComponent, SeekPrimaryTargetTag, PrimaryTargetTag, WorldMapTag, HealthComponent, ContactDamageComponent, BulletDamageComponent, LifetimeComponent, PlayerComponent, BodyComponent, TileComponent, ArrowComponent, MultiTileComponent, TurretComponent, SpawnerComponent, CircleRenderComponent, RectangleRenderComponent, ItemComponent, InventoryComponent, InventoryViewComponent, ItemUseComponent, ItemPlaceableComponent, ItemStackComponent, OwnedByComponent, PortComponent, ConveyorPartComponent, ChunkedTilemapComponent>;
 
   static ValidationResult validate(const json& j, const std::string& path = "") {
     ValidationResult result;
@@ -4523,6 +4631,7 @@ struct ComponentsItem : public JsonValue {
     else if (disc == "OwnedByComponent") return OwnedByComponent::validate(j, path);
     else if (disc == "PortComponent") return PortComponent::validate(j, path);
     else if (disc == "ConveyorPartComponent") return ConveyorPartComponent::validate(j, path);
+    else if (disc == "ChunkedTilemapComponent") return ChunkedTilemapComponent::validate(j, path);
     else result.add(path.empty() ? "type" : path + ".type", "Unknown discriminator value '" + disc + "'");
     return result;
   }
@@ -4560,6 +4669,7 @@ struct ComponentsItem : public JsonValue {
     else if (disc == "OwnedByComponent") obj.variant_ = OwnedByComponent::fromJson(j);
     else if (disc == "PortComponent") obj.variant_ = PortComponent::fromJson(j);
     else if (disc == "ConveyorPartComponent") obj.variant_ = ConveyorPartComponent::fromJson(j);
+    else if (disc == "ChunkedTilemapComponent") obj.variant_ = ChunkedTilemapComponent::fromJson(j);
     return obj;
   }
 

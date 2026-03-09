@@ -36,7 +36,7 @@ void Serializer::queueAllWith(const ComponentSet& set) {
   if (!m_input)
     return;
 
-  auto iter = m_input->interfaceToUse->getWith(set);
+  auto iter = m_input->interfaceToUse->getWithDisabled(set);
   while(iter->hasNext()) {
     auto entity = iter->next();
     m_input->entitiesToSerialize.insert(std::make_pair(entity.id(), m_input->interfaceToUse->setOf(entity.id())));
@@ -150,6 +150,7 @@ bool Deserializer::deserializeState(IWorld& world, Schema::State::Reader stateRe
     else
       newId = world.ensure(serId);
 
+    world.disable(newId);
     idMapper.add(serId, newId);
   }
 

@@ -228,7 +228,8 @@ void TilemapComponent::deserialize(capnp::MessageReader& reader, const IdMapper&
     // If the entity has not yet already been deserialized, ensure its existence and add a TileComponent.
     // This will have no effect on the entity if it has not already been deserialized as
     // additional add operations are redundant and the the resolved entityId is already reserved.
-    world->ensure(entityId).add<TileComponent>();
+    EntityPtr ensuredTile = world->ensure(entityId);
+    ensuredTile.add<TileComponent>();
   }
 
   u32 shapeCount = b2Body_GetShapeCount(body);

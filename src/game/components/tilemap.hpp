@@ -83,7 +83,7 @@ struct TileComponent {
   static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
 
   bool collidable = true;
-  b2ShapeId shapeId;
+  b2ShapeId shapeId = b2_nullShapeId;
   glm::ivec2 pos = {0, 0};
   WorldLayer layer = WorldLayer::Floor;
   TileDirection rotation = TileDirection::Right;

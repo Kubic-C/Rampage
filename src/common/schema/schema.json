@@ -88,8 +88,10 @@
                                 "layer": {
                                   "type": "string",
                                   "enum": [
+                                    "Bottom",
                                     "Floor",
                                     "Wall",
+                                    "Turret",
                                     "Item",
                                     "Top"
                                   ]
@@ -893,6 +895,28 @@
                     },
                     "virtualDistanceIncrease": {
                       "type": "number"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                },
+                {
+                  "properties": {
+                    "type": {
+                      "const": "ChunkedTilemapComponent"
+                    },
+                    "seed": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "chunkSize": {
+                      "type": "integer",
+                      "minimum": 2
+                    },
+                    "loadRadius": {
+                      "type": "integer",
+                      "minimum": 1
                     }
                   },
                   "required": [
