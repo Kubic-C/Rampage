@@ -94,7 +94,7 @@ int RenderModule::onLoad() {
   // GL_DST_ALPHA);
 
   glEnable(GL_DEPTH_TEST);
-  glClearColor(0.2, 1, 0, 0);
+  glClearColor(0, 0, 0, 0);
 
   auto& pipeline = m_host->getPipeline();
   Pipeline::Group& group = pipeline.createGroup<RenderGroup>(9999999999.0f)

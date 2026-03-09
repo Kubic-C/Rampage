@@ -95,14 +95,16 @@ public:
       invMgr.dropItem(m_world, assetLoader.getAsset("BigGunTurretItem"), Vec2(1, 0), 10);
       invMgr.dropItem(m_world, assetLoader.getAsset("FenceItem"), Vec2(2, 0), 10);
       invMgr.dropItem(m_world, assetLoader.getAsset("PlaceableHighStoneItem"), Vec2(3, 1), 10);
-      invMgr.dropItem(m_world, assetLoader.getAsset("ZombieSpawnableItem"), Vec2(4, 2), 10);
+      invMgr.dropItem(m_world, assetLoader.getAsset("ZombieSpawnableItem"), Vec2(4, 2), 512);
       invMgr.dropItem(m_world, assetLoader.getAsset("WoodItem"), Vec2(2, 0), 10);
       invMgr.dropItem(m_world, assetLoader.getAsset("ChestItem"), Vec2(4, -2), 10);
       invMgr.dropItem(m_world, assetLoader.getAsset("Conveyor2WayItem"), Vec2(5, -2), 64);
       invMgr.dropItem(m_world, assetLoader.getAsset("Conveyor2WayCornerItem"), Vec2(6, -2), 64);
       invMgr.dropItem(m_world, assetLoader.getAsset("Conveyor3WayItem"), Vec2(7, -2), 64);
       invMgr.dropItem(m_world, assetLoader.getAsset("Conveyor4WayItem"), Vec2(8, -2), 64);
-      invMgr.dropItem(m_world, assetLoader.getAsset("PortItem"), Vec2(9, -2), 64);
+      invMgr.dropItem(m_world, assetLoader.getAsset("SandFloorItem"), Vec2(9, -2), 64);
+      invMgr.dropItem(m_world, assetLoader.getAsset("WaterFloorItem"), Vec2(9, -2), 64);
+      invMgr.dropItem(m_world, assetLoader.getAsset("GrassFloorItem"), Vec2(9, -2), 64);
     }
 
     /* WorldMap & Tilemap Component */
@@ -123,16 +125,16 @@ public:
       int length = 10;
       for(int x = -length; x < length * 2; x++)
         for(int y = -length; y < length; y++)
-          tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(x, y), assetLoader.cloneAsset("StoneFloorTile"));
+          tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(x, y), assetLoader.cloneAsset("GrassFloorTile"));
 
       // Stone outline around the tilemap
       for(int x = -length - 1; x <= length * 2; x++) {
-        tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(x, length), assetLoader.cloneAsset("PermaHighStoneTile"));
-        tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(x, -length - 1), assetLoader.cloneAsset("PermaHighStoneTile"));
+        tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall, glm::ivec2(x, length), assetLoader.cloneAsset("PermaHighStoneTile"));
+        tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall, glm::ivec2(x, -length - 1), assetLoader.cloneAsset("PermaHighStoneTile"));
       }
       for(int y = -length; y < length; y++) {
-        tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(-length - 1, y), assetLoader.cloneAsset("PermaHighStoneTile"));
-        tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(length * 2, y), assetLoader.cloneAsset("PermaHighStoneTile"));
+        tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall, glm::ivec2(-length - 1, y), assetLoader.cloneAsset("PermaHighStoneTile"));
+        tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall, glm::ivec2(length * 2, y), assetLoader.cloneAsset("PermaHighStoneTile"));
       }
 
       m_tm = tm;  

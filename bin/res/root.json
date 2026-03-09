@@ -247,6 +247,87 @@
       ]
     },
     {
+      "name": "GrassFloorTile",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "SpriteComponent",
+          "subSprites": [
+            {
+              "layers": [
+                {
+                  "path": "grass",
+                  "layer": "Floor"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "TileComponent",
+          "layer": "Floor",
+          "collidable": false
+        },
+        {
+          "type": "ArrowComponent"
+        }
+      ]
+    },
+    {
+      "name": "SandFloorTile",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "SpriteComponent",
+          "subSprites": [
+            {
+              "layers": [
+                {
+                  "path": "sand",
+                  "layer": "Floor"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "TileComponent",
+          "layer": "Floor",
+          "collidable": false
+        },
+        {
+          "type": "ArrowComponent"
+        }
+      ]
+    },
+    {
+      "name": "WaterFloorTile",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "SpriteComponent",
+          "subSprites": [
+            {
+              "layers": [
+                {
+                  "path": "water",
+                  "layer": "Floor"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "TileComponent",
+          "layer": "Floor",
+          "collidable": false
+        },
+        {
+          "type": "ArrowComponent"
+        }
+      ]
+    },
+    {
       "name": "PermaHighStoneTile",
       "type": "Entity",
       "components": [
@@ -565,6 +646,14 @@
         {
           "type": "TileComponent",
           "layer": "Wall"
+        },
+        {
+          "type": "HealthComponent",
+          "health": 50
+        },
+        {
+          "type": "ArrowComponent",
+          "tileCost": 10
         }
       ]
     },
@@ -904,8 +993,8 @@
           "type": "ItemComponent",
           "description": "Little guy says 'erghhh.' don't try placing him down? ok? ",
           "name": "Zombie Spawnable",
-          "isUnique": true,
-          "maxStackSize": 20,
+          "isUnique": false,
+          "maxStackSize": 256,
           "stackCost": 1,
           "iconAsset": "res/entities/zombie.png"
         },
@@ -1211,6 +1300,63 @@
         {
           "type": "ItemPlaceableComponent",
           "entityId": "Conveyor4WayTile"
+        }
+      ]
+    },
+    {
+      "name": "SandFloorItem",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "ItemComponent",
+          "description": "A sandy floor tile. Provides a natural look.",
+          "name": "Sand Floor Tile",
+          "isUnique": false,
+          "maxStackSize": 128,
+          "stackCost": 1,
+          "iconAsset": "res/entities/sand.png"
+        },
+        {
+          "type": "ItemPlaceableComponent",
+          "entityId": "SandFloorTile"
+        }
+      ]
+    },    
+    {
+      "name": "GrassFloorItem",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "ItemComponent",
+          "description": "A grassy floor tile. Provides a natural look.",
+          "name": "Grass Floor Tile",
+          "isUnique": false,
+          "maxStackSize": 128,
+          "stackCost": 1,
+          "iconAsset": "res/entities/grass.png"
+        },
+        {
+          "type": "ItemPlaceableComponent",
+          "entityId": "GrassFloorTile"
+        }
+      ]
+    },
+    {
+      "name": "WaterFloorItem",
+      "type": "Entity",
+      "components": [
+        {
+          "type": "ItemComponent",
+          "description": "A water floor tile. Provides a natural look.",
+          "name": "Water Floor Tile",
+          "isUnique": false,
+          "maxStackSize": 128,
+          "stackCost": 1,
+          "iconAsset": "res/entities/water.png"
+        },
+        {
+          "type": "ItemPlaceableComponent",
+          "entityId": "WaterFloorTile"
         }
       ]
     }
