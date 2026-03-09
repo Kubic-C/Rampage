@@ -31,11 +31,11 @@ inline TileDirection getOppositeDirection(TileDirection dir) {
   }
 }
 
-inline TileDirection rotateTileDirection(TileDirection dir, int steps) {
+inline TileDirection getRotateTileDirection(TileDirection dir, int steps) {
   return static_cast<TileDirection>((static_cast<int>(dir) + steps) & 3);
 }
 
-inline float tileDirectionToRadians(TileDirection dir) {
+inline float getTileDirectionToRadians(TileDirection dir) {
   // Up=0, Right=-π/2, Down=π, Left=π/2
   static constexpr float angles[] = { 0.0f, -glm::half_pi<float>(), glm::pi<float>(), glm::half_pi<float>() };
   return angles[static_cast<u8>(dir)];

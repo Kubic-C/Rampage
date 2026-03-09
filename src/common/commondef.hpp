@@ -169,7 +169,7 @@ template <typename K, typename T>
 using OpenMap = boost::unordered_flat_map<K, T>; /* Do not point towards any elements! */
 
 template <typename T>
-using Set = boost::unordered_set<T>;
+using Set = boost::unordered_flat_set<T>;
 
 inline bool isApprox(float a, float b, float max) {
   return fabsf(a - b) < max;

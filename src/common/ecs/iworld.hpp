@@ -242,6 +242,31 @@ public:
     return *reinterpret_cast<ContextType*>(getContext(m_contextIdMgr.id<ContextType>()));
   }
 
+  template <typename ... Params>
+  void removeAll(bool notify = true) {
+    removeAll(set<Params...>(), notify);
+  }
+
+  template <typename ... Params>
+  void destroyAllEntitiesWith(bool notify = true) {
+    destroyAllEntitiesWith(set<Params...>(), notify);
+  }
+
+  template <typename ... Params>
+  IEntityIteratorPtr getWith() {
+    return getWith(set<Params...>());
+  }
+
+  template <typename ... Params>
+  IEntityIteratorPtr getWithDisabled() {
+    return getWithDisabled(set<Params...>());
+  }
+
+  template <typename ... Params>
+  EntityPtr getFirstWith() {
+    return getFirstWith(set<Params...>());
+  }
+
 protected: 
   static inline StaticIdManager<u32> m_contextIdMgr;
   static inline StaticIdManager<u32> m_componentIdMgr;

@@ -68,7 +68,7 @@ void updateTurret(EntityPtr e, float dt, TurretContext& context) {
   // Get parent body rotation + tile rotation
   float parentRot = 0.0f;
   auto tileComp = e.get<TileComponent>();
-  float tileRot = tileDirectionToRadians(tileComp->rotation);
+  float tileRot = getTileDirectionToRadians(tileComp->rotation);
   auto parent = e.world()->getEntity(tileComp->parent);
   auto bodyComp = parent.get<BodyComponent>();
   if (b2Body_IsValid(bodyComp->id)) {

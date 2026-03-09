@@ -19,6 +19,8 @@ target_sources(
   "components/sprite.cpp"
   "components/tilemap.cpp"
   "components/tilemap.hpp"
+  "components/chunkedTilemap.cpp"
+  "components/chunkedTilemap.hpp"
   "components/turret.hpp"
   "components/turret.cpp"   
   "components/shapes.hpp"  

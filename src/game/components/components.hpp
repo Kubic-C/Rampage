@@ -9,6 +9,7 @@
 #include "spawner.hpp"
 #include "sprite.hpp"
 #include "tilemap.hpp"
+#include "chunkedTilemap.hpp"
 #include "turret.hpp"
 #include "worldMap.hpp"
 #include "inventory.hpp"    
@@ -33,6 +34,7 @@ inline void registerGameComponents(IWorldPtr world) {
   world->component<MultiTileComponent>(false);
   world->component<TileComponent>(false);
   world->component<TilemapComponent>(false);
+  world->component<ChunkedTilemapComponent>(false);
   world->component<TurretComponent>(false);
   world->component<WorldMapTag>(false);
   world->component<SeekPrimaryTargetTag>(false);
@@ -49,7 +51,6 @@ inline void registerGameComponents(IWorldPtr world) {
   world->component<ConveyorPartComponent>(false);
   world->component<PortComponent>(false);
   world->component<ConveyorComponent>(false);
-
 }
 
 RAMPAGE_END

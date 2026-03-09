@@ -665,7 +665,7 @@ bool acceptsInputFrom(EntityPtr partEntity, TileDirection worldDir) {
   auto part = partEntity.get<ConveyorPartComponent>();
   auto tile = partEntity.get<TileComponent>();
   for(TileDirection localDir : part->inputDirections) {
-    if(rotateTileDirection(localDir, static_cast<int>(tile->rotation)) == worldDir)
+    if(getRotateTileDirection(localDir, static_cast<int>(tile->rotation)) == worldDir)
       return true;
   }
   return false;
@@ -677,7 +677,7 @@ std::vector<TileDirection> getWorldDirections(EntityPtr partEntity) {
   auto tile = partEntity.get<TileComponent>();
   std::vector<TileDirection> dirs;
   for(TileDirection localDir : part->inputDirections) {
-    dirs.push_back(rotateTileDirection(localDir, static_cast<int>(tile->rotation)));
+    dirs.push_back(getRotateTileDirection(localDir, static_cast<int>(tile->rotation)));
   }
   return dirs;
 }

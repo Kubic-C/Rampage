@@ -190,7 +190,7 @@ int meshSprites(IWorldPtr world, float dt) {
     b2BodyId bodyId = world->getEntity(tile->parent).get<BodyComponent>()->id;
     Transform transform(
       getWorldTilePosition(entity),
-      Rot(b2Body_GetRotation(bodyId)) + Rot(tileDirectionToRadians(tile->rotation)));
+      Rot(b2Body_GetRotation(bodyId)) + Rot(getTileDirectionToRadians(tile->rotation)));
     if(!cameraViewRect.contains(transform.pos))
       continue;
 
@@ -216,6 +216,10 @@ int renderSprites(IWorldPtr world, float dt) {
   auto instances = spriteRender.get<InstanceBufferComponent>();
   auto shader = spriteRender.get<ShaderComponent>();
 
+  glEnable(GL_BLEND);
+  glEnable(GL_DEPTH_TEST);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
   instances->instanceBuffer.unmapBuffer();
 
   shader->use();
@@ -229,6 +233,8 @@ int renderSprites(IWorldPtr world, float dt) {
 
   instances->count = 0;
   instances->instances = static_cast<Instance*>(instances->instanceBuffer.mapBuffer(GL_WRITE_ONLY));
+
+  glDisable(GL_BLEND);
 
   return 0;
 }

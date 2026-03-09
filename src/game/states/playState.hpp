@@ -98,6 +98,7 @@ public:
       invMgr.dropItem(m_world, assetLoader.getAsset("ZombieSpawnableItem"), Vec2(4, 2), 512);
       invMgr.dropItem(m_world, assetLoader.getAsset("WoodItem"), Vec2(2, 0), 10);
       invMgr.dropItem(m_world, assetLoader.getAsset("ChestItem"), Vec2(4, -2), 10);
+      invMgr.dropItem(m_world, assetLoader.getAsset("PortItem"), Vec2(5, -2), 64);
       invMgr.dropItem(m_world, assetLoader.getAsset("Conveyor2WayItem"), Vec2(5, -2), 64);
       invMgr.dropItem(m_world, assetLoader.getAsset("Conveyor2WayCornerItem"), Vec2(6, -2), 64);
       invMgr.dropItem(m_world, assetLoader.getAsset("Conveyor3WayItem"), Vec2(7, -2), 64);
@@ -111,33 +112,58 @@ public:
     {
       // World Map
       TilemapManager& tmMgr = m_world->getContext<TilemapManager>();
-      EntityPtr tm = m_world->create();
-      tm.add<TransformComponent>();
-      tm.add<BodyComponent>();
-      tm.add<TilemapComponent>();
-      tm.add<BodyComponent>();
-      tm.add<WorldMapTag>();
-      auto bodyComp = tm.get<BodyComponent>();
+      // EntityPtr tm = m_world->create();
+      // tm.add<TransformComponent>();
+      // tm.add<BodyComponent>();
+      // tm.add<TilemapComponent>();
+      // tm.add<BodyComponent>();
+      // tm.add<WorldMapTag>();
+      // auto bodyComp = tm.get<BodyComponent>();
+      // b2BodyDef bodyDef = b2DefaultBodyDef();
+      // bodyDef.type = b2_staticBody;
+      // bodyComp->id = b2CreateBody(physicsWorld, &bodyDef);
+
+      // int length = 10;
+      // for(int x = -length; x < length * 2; x++)
+      //   for(int y = -length; y < length; y++)
+      //     tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(x, y), assetLoader.cloneAsset("GrassFloorTile"));
+
+      // // Stone outline around the tilemap
+      // for(int x = -length - 1; x <= length * 2; x++) {
+      //   tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall, glm::ivec2(x, length), assetLoader.cloneAsset("PermaHighStoneTile"));
+      //   tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall, glm::ivec2(x, -length - 1), assetLoader.cloneAsset("PermaHighStoneTile"));
+      // }
+      // for(int y = -length; y < length; y++) {
+      //   tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall, glm::ivec2(-length - 1, y), assetLoader.cloneAsset("PermaHighStoneTile"));
+      //   tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall, glm::ivec2(length * 2, y), assetLoader.cloneAsset("PermaHighStoneTile"));
+      // }
+
+      // m_tm = tm;  
+
+      EntityPtr chunkLoader = m_world->create();
+      chunkLoader.add<ChunkedTilemapComponent>();
+      chunkLoader.add<TilemapComponent>();
+      chunkLoader.add<TransformComponent>();
+      chunkLoader.add<BodyComponent>();
+
+      auto bodyComp = chunkLoader.get<BodyComponent>();
       b2BodyDef bodyDef = b2DefaultBodyDef();
       bodyDef.type = b2_staticBody;
       bodyComp->id = b2CreateBody(physicsWorld, &bodyDef);
 
-      int length = 10;
-      for(int x = -length; x < length * 2; x++)
-        for(int y = -length; y < length; y++)
-          tmMgr.insertTile(m_world, tm.id(), WorldLayer::Floor, glm::ivec2(x, y), assetLoader.cloneAsset("GrassFloorTile"));
-
-      // Stone outline around the tilemap
-      for(int x = -length - 1; x <= length * 2; x++) {
-        tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall, glm::ivec2(x, length), assetLoader.cloneAsset("PermaHighStoneTile"));
-        tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall, glm::ivec2(x, -length - 1), assetLoader.cloneAsset("PermaHighStoneTile"));
-      }
-      for(int y = -length; y < length; y++) {
-        tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall, glm::ivec2(-length - 1, y), assetLoader.cloneAsset("PermaHighStoneTile"));
-        tmMgr.insertTile(m_world, tm.id(), WorldLayer::Wall, glm::ivec2(length * 2, y), assetLoader.cloneAsset("PermaHighStoneTile"));
-      }
-
-      m_tm = tm;  
+      auto chunkedTilemap = chunkLoader.get<ChunkedTilemapComponent>();
+      chunkedTilemap->generator = 
+      [](IWorldPtr world, const GeneratorChunkInfo& info){
+        auto assetLoader = world->getAssetLoader();
+        TilemapManager& tmMgr = world->getContext<TilemapManager>();
+        auto tm = world->getEntity(info.tilemapEntity);
+        for(int x = info.minTilePos.x; x < info.maxTilePos.x; x++) {
+          for(int y = info.minTilePos.y; y < info.maxTilePos.y; y++) {
+            glm::ivec2 tilePos = glm::ivec2(x, y);
+            tmMgr.insertTile(world, tm, WorldLayer::Floor, tilePos, assetLoader.cloneAsset("GrassFloorTile"));
+          }
+        };
+      };
     }
   }
 
@@ -190,7 +216,7 @@ public:
       EntityPtr e = getTileAtPos(m_world, evtMod.getMouseWorldPos());
       if(!e.isNull()) {
         auto tileComp = e.get<TileComponent>();
-        tileComp->rotation = rotateTileDirection(tileComp->rotation, 1);
+        tileComp->rotation = getRotateTileDirection(tileComp->rotation, 1);
       }
     }
 
@@ -200,6 +226,13 @@ public:
         EntityPtr player = it->next();
         auto invView = player.get<InventoryViewComponent>();
         invView->isVisible = true;
+      }
+
+      for(int i = 0; i < 1000; i++) {
+        EntityPtr e = m_world->create();
+        e.add<TransformComponent>();
+        e.add<SpriteComponent>();
+        e.disable();
       }
     }
 
@@ -216,14 +249,13 @@ public:
   void onLeave() {
     m_world->getHost().setGameWorld(m_world->getTopWorld());
 
-    m_world->destroyAllEntitiesWith(m_world->set<PlayStateTag, IWorld::Enabled>());
+    m_world->destroyAllEntitiesWith(m_world->set<PlayStateTag>());
 
     m_menu->setEnabled(false);
     m_menu->setVisible(false);
   }
 
 private:
-  EntityId m_tm;
   tgui::Label::Ptr m_tickText;
   tgui::Label::Ptr m_tpsText;
   tgui::Label::Ptr m_fpsText;

@@ -2,6 +2,7 @@
 
 #include "../../common/common.hpp"
 #include "../components/tilemap.hpp"
+#include "../components/chunkedTilemap.hpp"
 
 RAMPAGE_START
 
@@ -24,6 +25,12 @@ public:
 
   // Detects if a tilemap has split into multiple disconnected components and creates new tilemaps
   std::vector<EntityPtr> checkAndHandleBreakage(IWorldPtr world, EntityId tilemapId);
+
+  void enableTile(IWorldPtr world, EntityId tilemap, glm::ivec2 gridPos, bool updateMass = true);
+  void disableTile(IWorldPtr world, EntityId tilemap, glm::ivec2 gridPos, bool updateMass = true);
+
+  void disableTilemap(IWorldPtr world, EntityId tilemap);
+  void enableTilemap(IWorldPtr world, EntityId tilemap);
 
 private:
   // Flood fill helper to find all connected tiles starting from a position (2D across all layers)
