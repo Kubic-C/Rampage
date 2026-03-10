@@ -62,28 +62,13 @@ void updateTurret(EntityPtr e, float dt, TurretContext& context) {
   b2WorldId physicsWorld = e.world()->getContext<b2WorldId>();
   auto turret = e.get<TurretComponent>();
   auto sprite = e.get<SpriteComponent>();
-
-  Vec2 turretPos = getWorldTilePosition(e);
-
-  // Get parent body rotation + tile rotation
-  float parentRot = 0.0f;
-  auto tileComp = e.get<TileComponent>();
-  float tileRot = getTileDirectionToRadians(tileComp->rotation);
-  auto parent = e.world()->getEntity(tileComp->parent);
-  auto bodyComp = parent.get<BodyComponent>();
-  if (b2Body_IsValid(bodyComp->id)) {
-    parentRot = b2Rot_GetAngle(b2Body_GetRotation(bodyComp->id)) + tileRot;
-  }
-
-  float parentDelta = signedAngleDiff(turret->cachedParentRot, parentRot);
-  turret->rot += parentDelta;
-  turret->cachedParentRot = parentRot;
+  auto transform = e.get<TransformComponent>();
 
   ClosestShape closestShape;
-  closestShape.center = turretPos;
+  closestShape.center = transform->pos;
   b2ShapeProxy proxy;
   proxy.count = 1;
-  proxy.points[0] = turretPos;
+  proxy.points[0] = transform->pos;
   proxy.radius = turret->radius;
   b2QueryFilter filter;
   filter.maskBits = Enemy;
@@ -94,10 +79,10 @@ void updateTurret(EntityPtr e, float dt, TurretContext& context) {
 
   b2BodyId targetBody = b2Shape_GetBody(closestShape.shape);
   Vec2 targetPos = b2Body_GetPosition(targetBody);
-  Vec2 targetDir = glm::normalize(targetPos - turretPos);
+  Vec2 targetDir = glm::normalize(targetPos - transform->pos);
   float targetRot = atan2f(targetDir.y, targetDir.x);
 
-  float closestDistToRotate = signedAngleDiff(turret->rot, targetRot);
+  float closestDistToRotate = signedAngleDiff(turret->rot + transform->rot, targetRot);
   float distToRotate = glm::abs(closestDistToRotate);
   float zLayerForBullets = -5.0f;
   if (distToRotate > turret->stopRange) {
@@ -113,7 +98,7 @@ void updateTurret(EntityPtr e, float dt, TurretContext& context) {
 
   for (auto& row : sprite->subSprites)
     for (auto& col : row) {
-      col.getLast().rot = turret->rot - parentRot; 
+      col.getLast().rot = turret->rot; 
 
       float z = getLayerZ(col.getLast().layer);
       if(z > zLayerForBullets)
@@ -126,8 +111,9 @@ void updateTurret(EntityPtr e, float dt, TurretContext& context) {
     if (turret->timeSinceLastShot >= turret->fireRate) {
       SummonBullet bullet;
       bullet.id = turret->summon;
-      float totalRot = turret->rot;
-      bullet.pos = turretPos + fast2DRotate(right, totalRot) * tileSize.x; // Spawn bullet at the end of the turret's barrel
+      float totalRot = turret->rot + transform->rot;
+      bullet.pos = transform->pos +
+          fast2DRotate(right, totalRot) * tileSize.x; // Spawn bullet at the end of the turret's barrel
       bullet.shootVelocity = fast2DRotate(right, totalRot) * turret->muzzleVelocity;
       bullet.radius = turret->bulletRadius;
       bullet.health = turret->bulletHealth;
@@ -143,7 +129,7 @@ void updateTurret(EntityPtr e, float dt, TurretContext& context) {
 int updateTurrets(IWorldPtr world, float deltaTime) {
   auto& context = world->getContext<TurretContext>();
 
-  auto it = world->getWith(world->set<TileComponent, TurretComponent>());
+  auto it = world->getWith(world->set<TransformComponent, TurretComponent>());
   while (it->hasNext())
     updateTurret(it->next(), deltaTime, context);
 
@@ -168,7 +154,7 @@ int updateTurrets(IWorldPtr world, float deltaTime) {
     bodyDef.type = b2_dynamicBody;
     bodyDef.linearVelocity = bullet.shootVelocity;
     bodyDef.position = bullet.pos;
-    bodyDef.userData = entityToB2Data(bulletEntity);
+    bodyDef.userData = EntityBox2dUserData::create(bulletEntity);
     bodyComp->id = b2CreateBody(physicsWorld, &bodyDef);
     b2Circle circle;
     circle.center = Vec2(0);
@@ -176,7 +162,7 @@ int updateTurrets(IWorldPtr world, float deltaTime) {
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     shapeDef.density = 100.0f;
     shapeDef.enableContactEvents = true;
-    shapeDef.userData = entityToB2Data(bulletEntity);
+    shapeDef.userData = EntityBox2dUserData::create(bulletEntity);
     b2Filter filter;
     filter.categoryBits = Friendly;
     filter.maskBits = Enemy;

@@ -106,7 +106,7 @@ void BodyComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id
   bodyDef.isBullet = bodyReader.getIsBullet();
   bodyDef.isEnabled = bodyReader.getIsEnabled();
   bodyDef.allowFastRotation = bodyReader.getAllowFastRotation();
-  bodyDef.userData = entityToB2Data(component.getEntity());
+  bodyDef.userData = EntityBox2dUserData::create(component.getEntity());
 
   // Try to set body position from Transform if available
   // This ensures the body is at the correct position before shapes are added
@@ -126,7 +126,7 @@ void BodyComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id
     auto defReader = shapeReader.getDef();
     b2ShapeDef shapeDef = b2DefaultShapeDef();
 
-    shapeDef.userData = entityToB2Data(component.getEntity());
+    shapeDef.userData = EntityBox2dUserData::create(component.getEntity());
     shapeDef.density = defReader.getDensity();
     shapeDef.isSensor = defReader.getIsSensor();
     shapeDef.enableContactEvents = defReader.getEnableContactEvents();
@@ -174,7 +174,7 @@ void BodyComponent::fromJson(Ref component, AssetLoader loader, const JSchema::J
 
   // Create body definition
   b2BodyDef bodyDef = b2DefaultBodyDef();
-  bodyDef.userData = entityToB2Data(entity);
+  bodyDef.userData = EntityBox2dUserData::create(entity);
   bodyDef.isEnabled = false; // fromJson means this component is being created from an asset, so we start disabled. The system that creates the entity from the asset can then enable it when ready.
   
   // Explicitly zero velocity for freshly created bodies from assets
@@ -220,7 +220,7 @@ void BodyComponent::fromJson(Ref component, AssetLoader loader, const JSchema::J
 
 void BodyComponent::addShapeFromJson(b2BodyId bodyId, const JSchema::ShapesItem& shapeJson) {
   b2ShapeDef shapeDef = b2DefaultShapeDef();
-  shapeDef.userData = b2Body_GetUserData(bodyId);
+  shapeDef.userData = EntityBox2dUserData::create(getEntityBox2dUserData(bodyId)->entity);
 
   // Parse shape definition
   if (shapeJson.hasEnableContactEvents())
@@ -307,7 +307,7 @@ void BodyComponent::copy(Ref src, Ref dst) {
   bodyDef.isBullet = b2Body_IsBullet(srcId);
   // bodyDef.isEnabled = b2Body_IsEnabled(srcId);
   bodyDef.allowFastRotation = false;
-  bodyDef.userData = entityToB2Data(dst.getEntity());
+  bodyDef.userData = EntityBox2dUserData::create(dst.getEntity());
 
   // Create the new body
   dstId = b2CreateBody(world, &bodyDef);
@@ -327,7 +327,7 @@ void BodyComponent::copy(Ref src, Ref dst) {
     shapeDef.density = b2Shape_GetDensity(srcShapeId);
     shapeDef.isSensor = b2Shape_IsSensor(srcShapeId);
     shapeDef.enableContactEvents = true;
-    shapeDef.userData = entityToB2Data(dst.getEntity());
+    shapeDef.userData = EntityBox2dUserData::create(dst.getEntity());
 
     // Clone shape based on type
     b2ShapeType shapeType = b2Shape_GetType(srcShapeId);

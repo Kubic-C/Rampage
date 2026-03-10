@@ -65,16 +65,16 @@ struct MultiTileComponent {
   static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
 
   // Returns the LOCAL NON TILE COORDINATE of the multile
-  glm::vec2 calculateCentroid() const {
+  glm::vec2 calculateCentroid(const glm::ivec2& offset) const {
     glm::vec2 sum(0.0f);
     for (const auto& pos : occupiedPositions) {
-      sum += glm::vec2(getLocalTileCenter(pos));
+      sum += glm::vec2(getLocalTileCenter(pos + offset));
     }
     return sum / static_cast<float>(occupiedPositions.size());
   }
 
+  // (0, 0) is the root position
   std::vector<glm::ivec2> occupiedPositions;  // All grid cells this entity occupies
-  glm::ivec2 anchorPos;  // Primary position
 };
 
 struct TileComponent {
@@ -82,23 +82,162 @@ struct TileComponent {
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
   static void fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& compJson);
 
+  // If FALSE: every reference to this tile component is the same entity.
+  // If TRUE: every reference to this tile component is WILL be a different entity.
   bool collidable = true;
-  b2ShapeId shapeId = b2_nullShapeId;
-  glm::ivec2 pos = {0, 0};
   WorldLayer layer = WorldLayer::Floor;
-  TileDirection rotation = TileDirection::Right;
-  EntityId parent = 0;
-  b2SurfaceMaterial material = b2DefaultSurfaceMaterial();
 };
 
 class TilemapManager;
+
+struct TileRef : EntityBox2dUserData {
+  TileRef()
+    : EntityBox2dUserData(UserDataType::Tile) {}
+
+  EntityId tilemap = NullEntityId; // Entity that this tile belongs to
+  glm::ivec2 worldPos = {INT_MAX, INT_MAX};
+  WorldLayer layer = WorldLayer::Invalid;
+};
+
+struct UniqueTileComponent : TileRef, JsonableTag {
+  static void serialize(capnp::MessageBuilder& builder, Ref component);
+  static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
+};
+
+struct Tile {
+  glm::ivec2 root = {0, 0}; // position of the root tile in tile coordinates 
+  EntityId tileId = NullEntityId;
+  b2ShapeId shapeId = b2_nullShapeId; 
+  TileDirection rotation = TileDirection::Right;
+  bool enabled = true;
+
+  // For Shape's user data
+  TileRef ref;
+};
+
+class TileChunk {
+public:
+  static constexpr int chunkSize = 64;
+  static constexpr glm::vec2 chunkTileSize = tileSize * (float)64;
+  using TilesList = std::array<Tile, chunkSize * chunkSize>;
+
+  static size_t convertToIndex(const glm::ivec2& localPos) {
+    return localPos.y * chunkSize + localPos.x;
+  }
+
+  static glm::ivec2 convertFromIndex(size_t index) {
+    glm::ivec2 pos;
+    pos.x = (int)index % chunkSize;
+    pos.y = (int)index / chunkSize;
+    return pos;
+  }
+
+  bool insertTile(glm::ivec2 localPos, EntityId entity, const glm::ivec2& root, const TileRef& ref) {
+    return insertTile(convertToIndex(localPos), entity, root, ref);
+  }
+
+  bool removeTile(glm::ivec2 localPos) {
+    return removeTile(convertToIndex(localPos));
+  }
+
+  Tile& getTile(glm::ivec2 localPos) {
+    return getTile(convertToIndex(localPos));
+  }
+
+  Tile getTile(glm::ivec2 localPos) const {
+    return getTile(convertToIndex(localPos));
+  }
+
+  bool hasTile(const glm::ivec2& pos) const {
+    return hasTile(convertToIndex(pos));
+  }
+
+  bool insertTile(size_t index, EntityId entity, const glm::ivec2& root, const TileRef& tileRef) {
+    if (hasTile(index)) {
+      return false; // Tile already exists at this position
+    }
+
+    curSize++;
+    tiles[index].tileId = entity;
+    tiles[index].ref = tileRef;
+    tiles[index].root = root;
+    return true;
+  }
+
+  bool removeTile(size_t index) {
+    Tile& tile = tiles[index];
+    if (tile.tileId == NullEntityId)
+      return false;
+    tile = Tile();
+    curSize--;
+    return true;
+  }
+
+  Tile& getTile(size_t index) {
+    Tile& tile = tiles[index];
+    if (tile.ref.entity == NullEntityId)
+      throw std::out_of_range("No tile at local position " + std::to_string(index));
+    return tile;
+  }
+
+  const Tile& getTile(size_t index) const {
+    const Tile& tile = tiles[index];
+    if (tile.ref.entity == NullEntityId)
+      throw std::out_of_range("No tile at local position " + std::to_string(index));
+    return tile;
+  }
+
+  bool hasTile(size_t index) const {
+    return tiles[index].ref.entity != NullEntityId;
+  }
+
+  size_t getSize() const {
+    return curSize;
+  }
+
+private:
+  size_t curSize = 0; // number of non-empty tiles in chunk
+  TilesList tiles; // Entity IDs
+};
+
+inline Vec2 getLocalChunkCenter(const glm::ivec2& chunkCoords) {
+  return static_cast<glm::vec2>(chunkCoords) * static_cast<float>(TileChunk::chunkSize) * tileSize +
+      static_cast<float>(TileChunk::chunkSize) * tileSize * 0.5f;
+}
+
+inline Vec2 getLocalChunkCorner(const glm::ivec2& chunkCoords) {
+  return static_cast<glm::vec2>(chunkCoords) * static_cast<float>(TileChunk::chunkSize) * tileSize;
+}
+
+inline glm::ivec2 getNearestChunkWorldPos(const glm::vec2& worldPos) {
+  return glm::floor(worldPos / (tileSize * static_cast<float>(TileChunk::chunkSize)));
+}
+
+// Returns tilePos in relation to the chunk corner (local chunk coordinates)
+inline glm::ivec2 getChunkLocalTilePos(const glm::ivec2& worldTilePos) {
+  int cs = static_cast<int>(TileChunk::chunkSize); // safe cast (chunkSize is usually 16/32/64)
+  glm::ivec2 mod = worldTilePos % cs; // component-wise
+  return (mod + cs) % cs;
+}
+
+// Returns the chunk position that tilePos belongs to (chunk coordinates)
+inline glm::ivec2 getChunkPos(const glm::ivec2& worldTilePos) {
+  int cs = static_cast<int>(TileChunk::chunkSize);
+  glm::ivec2 chunkPos;
+  chunkPos.x = (worldTilePos.x >= 0) ? (worldTilePos.x / cs) : ((worldTilePos.x - cs + 1) / cs);
+  chunkPos.y = (worldTilePos.y >= 0) ? (worldTilePos.y / cs) : ((worldTilePos.y - cs + 1) / cs);
+  return chunkPos;
+}
+inline glm::ivec2 getTilePosFromChunk(const glm::ivec2& chunkCoords, const glm::ivec2& localTilePos) {
+  return chunkCoords * static_cast<int>(TileChunk::chunkSize) + localTilePos;
+}
 
 struct TilemapComponent {
 protected:
   friend class TilemapManager;
 public:
-
   static constexpr size_t LayerCount = static_cast<size_t>(WorldLayer::Invalid);
+  using ChunkLayerList = std::array<Map<glm::ivec2, TileChunk>, LayerCount>;
 
   static void serialize(capnp::MessageBuilder& builder, Ref component);
   static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component);
@@ -106,163 +245,213 @@ public:
   static void copy(Ref src, Ref dst);
 
   // Getters
-  EntityId getTile(WorldLayer layer, glm::ivec2 pos) const {
-    return m_layers[static_cast<size_t>(layer)].at(pos);
+  Tile& getTile(const TileRef& ref) {
+    return getTile(ref.layer, ref.worldPos);
   }
 
-  bool containsTile(WorldLayer layer, glm::ivec2 pos) const {
-    return m_layers[static_cast<size_t>(layer)].contains(pos);
+  Tile getTile(const TileRef& ref) const {
+    return getTile(ref.layer, ref.worldPos);
   }
 
-  bool containsTileAtAnyLayer(glm::ivec2 pos) const {
+  Tile getTile(WorldLayer layer, const glm::ivec2& pos) const {
+    glm::ivec2 chunkPos = getChunkPos(pos);
+    glm::ivec2 localTilePos = getChunkLocalTilePos(pos);
+
+    const auto& chunk = m_layers[static_cast<size_t>(layer)].at(chunkPos);
+    return chunk.getTile(localTilePos);
+  }
+
+  Tile& getTile(WorldLayer layer, const glm::ivec2& pos) {
+    glm::ivec2 chunkPos = getChunkPos(pos);
+    glm::ivec2 localTilePos = getChunkLocalTilePos(pos);
+
+    auto& chunk = m_layers[static_cast<size_t>(layer)].at(chunkPos);
+    return chunk.getTile(localTilePos);
+  }
+
+  bool containsTile(WorldLayer wLayer, const glm::ivec2& pos) const {
+    size_t layer = static_cast<size_t>(wLayer);
+    glm::ivec2 chunkPos = getChunkPos(pos);
+    glm::ivec2 localTilePos = getChunkLocalTilePos(pos);
+
+    if(!m_layers[layer].contains(chunkPos))
+      return false;
+    const auto& chunk = m_layers[layer].at(chunkPos);
+    return chunk.hasTile(localTilePos);
+  }
+
+  bool containsTileAtAnyLayer(const glm::ivec2& pos) const {
     for (size_t l = 0; l < LayerCount; ++l)
-      if (m_layers[l].contains(pos)) return true;
+      if (containsTile(static_cast<WorldLayer>(l), pos)) return true;
     return false;
   }
 
-  WorldLayer getLayerOfTopTile(glm::ivec2 pos) const {
+  WorldLayer getLayerOfTopTile(const glm::ivec2& pos) const {
     for (size_t l = LayerCount; l-- > 0;) {
-      if (m_layers[l].contains(pos)) return static_cast<WorldLayer>(l);
+      if (containsTile(static_cast<WorldLayer>(l), pos)) return static_cast<WorldLayer>(l);
     }
     return WorldLayer::Invalid;
   }
 
-  const OpenMap<glm::ivec2, EntityId>& getLayer(WorldLayer layer) const {
-    return m_layers[static_cast<size_t>(layer)];
-  }
-
-  OpenMap<glm::ivec2, EntityId>& getLayer(WorldLayer layer) {
-    return m_layers[static_cast<size_t>(layer)];
-  }
-
-  bool empty() const {
+  bool isEmpty() const {
     for (const auto& layer : m_layers)
       if (!layer.empty()) return false;
     return true;
   }
 
-  size_t size() const {
-    size_t total = 0;
-    for (const auto& layer : m_layers)
-      total += layer.size();
-    return total;
+  size_t getSize() const {
+    size_t totalSize = 0;
+    for (const auto& layer : m_layers) {
+      for (const auto& chunkPair : layer) {
+        totalSize += chunkPair.second.getSize();
+      }
+    }
+    return totalSize;
+  }
+
+  const ChunkLayerList& getChunkLayers() const {
+    return m_layers;
   }
 
 protected:
 
   // Setters
-  void setTile(WorldLayer layer, glm::ivec2 pos, EntityId id) {
-    m_layers[static_cast<size_t>(layer)][pos] = id;
+  void setTile(EntityId tilemap, WorldLayer wLayer, glm::ivec2 pos, glm::ivec2 root, EntityId id) {
+    size_t layer = static_cast<size_t>(wLayer);
+    glm::ivec2 chunkPos = getChunkPos(pos);
+    glm::ivec2 localTilePos = getChunkLocalTilePos(pos);
+
+    TileRef tileRef;
+    tileRef.tilemap = tilemap;
+    tileRef.entity = id;
+    tileRef.layer = wLayer;
+    tileRef.worldPos = pos;
+    assert(static_cast<int>(wLayer) <= 3);
+    m_layers[layer][chunkPos].insertTile(localTilePos, id, root, tileRef);
   }
 
-  bool insertTile(WorldLayer layer, glm::ivec2 pos, EntityId id) {
-    auto& layerMap = m_layers[static_cast<size_t>(layer)];
-    if (layerMap.contains(pos)) return false;
-    layerMap[pos] = id;
+  bool insertTile(EntityId tilemap, WorldLayer wLayer, glm::ivec2 pos, glm::ivec2 root, EntityId id) {
+    auto& layerMap = m_layers[static_cast<size_t>(wLayer)];
+    glm::ivec2 chunkPos = getChunkPos(pos);
+    glm::ivec2 localTilePos = getChunkLocalTilePos(pos);
+
+    if (layerMap[chunkPos].hasTile(localTilePos)) {
+      return false; // Tile already exists at this position
+    }
+
+    TileRef tileRef;
+    tileRef.tilemap = tilemap;
+    tileRef.entity = id;
+    tileRef.layer = wLayer;
+    tileRef.worldPos = pos;
+    assert(static_cast<int>(wLayer) <= 3);
+    layerMap[chunkPos].insertTile(localTilePos, id, root, tileRef);
     return true;
   }
 
-  void removeTile(WorldLayer layer, glm::ivec2 pos) {
-    m_layers[static_cast<size_t>(layer)].erase(pos);
+  void removeTile(WorldLayer wLayer, glm::ivec2 pos) {
+    size_t layer = static_cast<size_t>(wLayer);
+    glm::ivec2 chunkPos = getChunkPos(pos);
+    glm::ivec2 localTilePos = getChunkLocalTilePos(pos);
+
+    if (m_layers[layer].contains(chunkPos)) {
+      m_layers[layer][chunkPos].removeTile(localTilePos);
+
+      if (m_layers[layer][chunkPos].getSize() == 0) {
+        m_layers[layer].erase(chunkPos);                      // optional but highly recommended
+      } 
+    }
   }
 
 private:
-  std::array<OpenMap<glm::ivec2, EntityId>, LayerCount> m_layers;
+  ChunkLayerList m_layers;
 };
 
-inline Vec2 getWorldTilePosition(EntityPtr tileEntity) {
-  auto tileComp = tileEntity.get<TileComponent>();
-  EntityPtr tilemap = tileEntity.world()->getEntity(tileEntity.get<TileComponent>()->parent);
-  auto bodyComp = tilemap.get<BodyComponent>();
-
-  Vec2 localPos;
-  if(tileEntity.has<MultiTileComponent>()) {
-    auto multiTile = tileEntity.get<MultiTileComponent>();
-    localPos = multiTile->calculateCentroid();
-  } else 
-    localPos = getLocalTileCenter(tileComp->pos);
-
-  Vec2 worldPos = b2Body_GetWorldPoint(bodyComp->id, localPos);
-  return worldPos;
-}
-
+struct _GetShapeEntityContext {
+  IWorldPtr world;
+  std::vector<TileRef> tilesAtPlacement;
+};
 
 inline float _getShapeEntity(b2ShapeId shapeId, b2Vec2 point, b2Vec2 normal, float fraction, void* context) {
-  std::vector<EntityId>& entitiesAtPlacement = *(std::vector<EntityId>*)context;
+  _GetShapeEntityContext* ctx = reinterpret_cast<_GetShapeEntityContext*>(context);
+  IWorldPtr world = ctx->world;
+  auto& tilesAtPlacement = ctx->tilesAtPlacement;
 
-  EntityId entityId = b2RawDataToEntity(b2Shape_GetUserData(shapeId));
-  if(entityId != 0) {
-    entitiesAtPlacement.push_back(entityId);
-  }
+  EntityBox2dUserData* entityUserData = getEntityBox2dUserData(shapeId);
+  if (!entityUserData || entityUserData->type != UserDataType::Tile)
+    return -1.0f;
+
+  TileRef* tileData = (TileRef*)entityUserData;
+  tilesAtPlacement.push_back(*tileData);
 
   return -1.0f;
 }
 
-inline EntityPtr getTileAtPos(IWorldPtr world, Vec2 worldPos) {
+inline TileRef getTileAtPos(IWorldPtr world, Vec2 worldPos) {
   b2WorldId worldId = world->getContext<b2WorldId>();
 
-  std::vector<EntityId> entitiesAtPlacement;
+  _GetShapeEntityContext context;
+  context.world = world;
   b2QueryFilter filter;
   filter.categoryBits = Static;
   filter.maskBits = Static | Friendly;
-  b2World_CastRay(worldId, worldPos, {0}, filter, &_getShapeEntity, &entitiesAtPlacement);
+  b2World_CastRay(worldId, worldPos, {0}, filter, &_getShapeEntity, &context);
 
-  for(EntityId entityId : entitiesAtPlacement) {
-    EntityPtr entity = world->getEntity(entityId);
-    if (entity.has<TileComponent>()) {
-      return entity;
-    }
+  for (const auto& tileRef : context.tilesAtPlacement) {
+    return tileRef; // just return the first available tile position, we don't care about layers here
   }
 
-  return world->getEntity(0); // null entity
+  return TileRef(); // null entity
 }
 
-inline EntityPtr getTopTileAtPos(IWorldPtr world, Vec2 worldPos) {
+inline TileRef getTopTileAtPos(IWorldPtr world, Vec2 worldPos) {
   b2WorldId worldId = world->getContext<b2WorldId>();
 
-  std::vector<EntityId> entitiesAtPlacement;
+  _GetShapeEntityContext context;
+  context.world = world;
   b2QueryFilter filter;
   filter.categoryBits = Static;
   filter.maskBits = Static | Friendly;
-  b2World_CastRay(worldId, worldPos, {0}, filter, &_getShapeEntity, &entitiesAtPlacement);
+  b2World_CastRay(worldId, worldPos, {0}, filter, &_getShapeEntity, &context);
 
-  EntityId retEntity = NullEntityId;
+  size_t retIndex = 0;
   WorldLayer topLayer = WorldLayer::Floor;
-  for(EntityId entityId : entitiesAtPlacement) {
-    EntityPtr entity = world->getEntity(entityId);
-    if (entity.has<TileComponent>()) {
-      auto tile = entity.get<TileComponent>();
-      if (tile->layer >= topLayer) {
-        topLayer = tile->layer;
-        retEntity = entity;
-      }
+  for (size_t i = 0; i < context.tilesAtPlacement.size(); i++) {
+    if (context.tilesAtPlacement[i].layer >= topLayer) {
+      topLayer = context.tilesAtPlacement[i].layer;
+      retIndex = i;
     }
   }
 
-  return world->getEntity(retEntity); // null entity
+  if(context.tilesAtPlacement.empty())
+    return TileRef(); // null entity
+  else
+    return context.tilesAtPlacement[retIndex];
 }
-
 
 // Like getTileAtPos but prefers tiles that have a specific component.
 // Falls back to the first TileComponent entity if none have the component.
 template<typename TComp>
-inline EntityPtr getTileWithComponentAtPos(IWorldPtr world, Vec2 worldPos) {
+inline TileRef getTileWithComponentAtPos(IWorldPtr world, Vec2 worldPos) {
   b2WorldId worldId = world->getContext<b2WorldId>();
 
-  std::vector<EntityId> entitiesAtPlacement;
+  _GetShapeEntityContext context;
+  context.world = world;
   b2QueryFilter filter;
   filter.categoryBits = Static;
   filter.maskBits = Static | Friendly;
-  b2World_CastRay(worldId, worldPos, {0}, filter, &_getShapeEntity, &entitiesAtPlacement);
+  b2World_CastRay(worldId, worldPos, {0}, filter, &_getShapeEntity, &context);
 
-  EntityPtr fallback = world->getEntity(0);
-  for (EntityId entityId : entitiesAtPlacement) {
-    EntityPtr entity = world->getEntity(entityId);
-    if (!entity.has<TileComponent>()) continue;
-    if (entity.has<TComp>()) return entity;
-    if (fallback.isNull()) fallback = entity;
+  for (size_t i = 0; i < context.tilesAtPlacement.size(); i++) {
+    TileRef& tileRef = context.tilesAtPlacement[i];
+    EntityPtr tilemapEntity = world->getEntity(tileRef.tilemap);
+    auto tilemap = tilemapEntity.get<TilemapComponent>();
+    EntityPtr tileEntity = world->getEntity(tilemap->getTile(tileRef.layer, tileRef.worldPos).tileId);
+
+    if (tileEntity.has<TComp>())
+      return tileRef;
   }
-  return fallback;
+  return TileRef();
 }
 
 RAMPAGE_END

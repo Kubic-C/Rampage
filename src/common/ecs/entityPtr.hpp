@@ -45,7 +45,6 @@ public:
 
   template <typename T>
   RefT<T> get() const {
-    m_world->exists(m_id);
     return RefT<T>(m_world, m_id);
   }
 
@@ -63,17 +62,19 @@ private:
   EntityId m_id;
 };
 
-inline void* entityToB2Data(const EntityId id) {
-  return reinterpret_cast<void*>(id);
+inline EntityPtr Ref::getEntity() {
+  return m_world->getEntity(m_entity);
 }
 
-inline EntityId b2RawDataToEntity(void* vp) {
-  return static_cast<EntityId>(reinterpret_cast<uintptr_t>(vp));
-}
+inline void* Ref::get() {
+  assert(m_world->exists(m_entity));
+  assert(m_world->has(m_entity, m_comp));
+  IPool* pool = m_world->getPool(m_comp);
+  assert(pool);
+  void* comp = pool->get(m_entity);
+  assert(comp);
 
-inline EntityPtr b2DataToEntity(IWorldPtr world, void* vp) {
-  return world->getEntity(b2RawDataToEntity(vp));
+  return comp;
 }
-
 
 RAMPAGE_END

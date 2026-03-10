@@ -71,13 +71,13 @@ void updatePlayer(EntityPtr e, float dt) {
   int contactCount = b2Body_GetContactData(body->id, contacts.data(), contactCap);
   contacts.resize(contactCount);
   for(b2ContactData& contact : contacts) {
-    EntityId otherId = b2RawDataToEntity(b2Shape_GetUserData(contact.shapeIdA));
-    if (otherId == e)
-      otherId = b2RawDataToEntity(b2Shape_GetUserData(contact.shapeIdB));
-    if (otherId == NullEntityId)
+    EntityBox2dUserData* otherUserData = getEntityBox2dUserData(contact.shapeIdA);
+    if (!otherUserData || otherUserData->entity == e)
+      otherUserData = getEntityBox2dUserData(contact.shapeIdB);
+    if (!otherUserData)
       continue;
 
-    EntityPtr other = world->getEntity(otherId);
+    EntityPtr other = world->getEntity(otherUserData->entity);
     if(other.has<ItemStackComponent>() && !other.has<ItemPlacedTag>()) {
       auto itemStackComp = other.get<ItemStackComponent>();
 

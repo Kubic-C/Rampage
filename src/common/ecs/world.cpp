@@ -260,11 +260,11 @@ EntityWorld::EntityWorld(IHost& host, PrivateConstructorTag) : m_host(host), m_a
   m_sets.reserve(10000);
   m_sets.insert(std::make_pair(findOrCreateSet(ComponentSet()), EntityList()));
 
-  component<Enabled>(false);
-  component<Destroy>(false);
-  component<ComponentAddedEvent>(false);
-  component<ComponentRemovedEvent>(false);
-  component<AssetTag>(false);
+  registerComponent<Enabled>();
+  registerComponent<Destroy>();
+  registerComponent<ComponentAddedEvent>();
+  registerComponent<ComponentRemovedEvent>();
+  registerComponent<AssetTag>();
 }
 
 EntityWorld::~EntityWorld() noexcept {
@@ -477,7 +477,7 @@ bool EntityWorld::isDefer() {
 }
 
 Ref EntityWorld::get(EntityId entity, ComponentId compId) {
-  return Ref(getEntity(entity), compId);
+  return Ref(this, entity, compId);
 }
 
 std::string_view EntityWorld::nameOf(ComponentId compId) {
@@ -514,14 +514,6 @@ void EntityWorld::add(EntityId entity, const ComponentSet& addComps, bool emit) 
 void EntityWorld::remove(EntityId entity, const ComponentSet& remComps, bool emit) {
   assert(exists(entity));
 
-#ifndef NDEBUG
-  {
-    const ComponentSet& oldSet = setOf(entity);
-    for (ComponentId compId : remComps.list())
-      assert(oldSet.has(compId));
-  }
-#endif
-
   if (emit)
     for (ComponentId compId : remComps.list())
       this->emit(component<ComponentRemovedEvent>(), entity, compId);
@@ -530,7 +522,7 @@ void EntityWorld::remove(EntityId entity, const ComponentSet& remComps, bool emi
   ComponentSetBuilder tempSet(oldSet);
   for (ComponentId compId : remComps.list()) {
     if (!oldSet.has(compId))
-      throw std::runtime_error("Set does not contain compId: " + std::to_string(compId));
+      continue;
 
     IPool* pool = getPool(compId);
     tempSet.remove(compId);
@@ -591,15 +583,12 @@ const ComponentSet& EntityWorld::setOf(EntityId entity) {
   return *getEntitySet(entity);
 }
 
-ComponentId EntityWorld::component(ComponentId compId, bool isRegistered, const std::string_view& name, 
+ComponentId EntityWorld::registerComponent(ComponentId compId, const std::string_view& name, 
   size_t size, NewPoolFunc newPoolFunc, FromJsonFunc fromJsonFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
   SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) noexcept {
   if (compId < m_componentNames.size())
     return compId;
-  
-  if(isRegistered)
-    throw std::runtime_error("Component not initialized, despite being marked so");
-
+ 
   m_componentNames.resize(compId + 1, "");
   m_componentCopyCtor.resize(compId + 1, nullptr);
   m_componentMoveCtor.resize(compId + 1, nullptr);

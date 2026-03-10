@@ -4,6 +4,11 @@
 
 RAMPAGE_START
 
+namespace alloc {
+  using ComponentSetAllocator = boost::pool_allocator<ComponentId>;
+  static ComponentSetAllocator componentSetAllocator;
+}
+
 class ComponentSetBuilder;
 
 class ComponentSet {
@@ -15,6 +20,7 @@ public:
   ComponentSet(ComponentSet&&) = default;
 
   ComponentSet(const std::vector<ComponentId>& ids);
+  ComponentSet(const std::vector<ComponentId, alloc::ComponentSetAllocator>& ids);
   ComponentSet(const std::initializer_list<ComponentId>& ids);
 
   const ComponentSet add(ComponentId id) const;
@@ -25,7 +31,7 @@ public:
   // Is this set a subset of other set
   bool subset(const ComponentSet& set) const;
   ComponentSetId getSetId() const;
-  const std::vector<ComponentId>& list() const;
+  const std::vector<ComponentId, alloc::ComponentSetAllocator>& list() const;
 
   ComponentSet& operator=(const ComponentSet& other) = default;
 
@@ -34,7 +40,7 @@ public:
   }
 
 protected:
-  std::vector<ComponentId> m_comps;
+  std::vector<ComponentId, alloc::ComponentSetAllocator> m_comps;
 };
 
 class ComponentSetBuilder {
@@ -58,12 +64,12 @@ public:
   // Is this set a subset of other set
   bool subset(const ComponentSet& set) const;
   ComponentSetId getSetId() const;
-  const std::vector<ComponentId>& list() const;
-  std::vector<ComponentId>& list();
+  const std::vector<ComponentId, alloc::ComponentSetAllocator>& list() const;
+  std::vector<ComponentId, alloc::ComponentSetAllocator>& list();
   ComponentSet build() const;
 
 protected:
-  std::vector<ComponentId> m_comps;
+  std::vector<ComponentId, alloc::ComponentSetAllocator> m_comps;
 };
 
 RAMPAGE_END

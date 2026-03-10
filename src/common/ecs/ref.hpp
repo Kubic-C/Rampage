@@ -12,9 +12,9 @@ class RefT;
 // A safe-access version for components
 class Ref {
 public:
-  Ref(IWorldPtr world, EntityId id, ComponentId comp);
-  Ref(EntityPtr entity, ComponentId comp);
+  Ref(IWorldPtr world, EntityId id, ComponentId comp) : m_world(world), m_entity(id), m_comp(comp) {}
 
+  EntityPtr getEntity();
   void* get();
 
   template <typename T>
@@ -23,8 +23,6 @@ public:
   IWorldPtr getWorld() {
     return m_world;
   }
-
-  EntityPtr getEntity();
 
 private:
   IWorldPtr m_world;

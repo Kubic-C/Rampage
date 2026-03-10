@@ -32,8 +32,8 @@ struct CameraComponent {
   ViewRect getViewRect(const Transform& transform, const Vec2& screenDim, float z = 1.0f) const;
   void safeZoom(float amount);
 
-  float m_zoom;
-  float m_rot;
+  float m_zoom = 1;
+  float m_rot = 0;
 };
 
 RAMPAGE_END

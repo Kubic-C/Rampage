@@ -68,6 +68,11 @@ public:
 
 #endif // RAMPSON_TYPES_DEFINED
 
+struct Dir;
+struct TilePos;
+struct NodesItem;
+struct OldTarget;
+struct VectorTilemapPathfinding;
 struct Pos;
 struct TransformComponent;
 struct GridPos;
@@ -77,6 +82,7 @@ struct SubSpritesItem;
 struct SpriteComponent;
 struct CameraComponent;
 struct SeekPrimaryTargetTag;
+struct UniqueTileComponent;
 struct ChunkLoaderTag;
 struct PrimaryTargetTag;
 struct WorldMapTag;
@@ -89,11 +95,8 @@ struct VerticesItem;
 struct Shape;
 struct ShapesItem;
 struct BodyComponent;
-struct Material;
 struct TileComponent;
-struct Dir;
 struct ArrowComponent;
-struct AnchorPos;
 struct OccupiedPositionsItem;
 struct MultiTileComponent;
 struct TurretComponent;
@@ -116,6 +119,400 @@ struct ChunkedTilemapComponent;
 struct ComponentsItem;
 struct EntitiesItem;
 struct GameAssetLoaderSchema;
+
+struct Dir : public JsonValue {
+  struct Properties {
+    struct X {
+      static const char* name() { return "x"; }
+      static constexpr bool required = false;
+    };
+    struct Y {
+      static const char* name() { return "y"; }
+      static constexpr bool required = false;
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (j.contains("x")) {
+      std::string fp = path.empty() ? "x" : path + ".x";
+      if (!j["x"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["x"].get<double>();
+      }
+    }
+    if (j.contains("y")) {
+      std::string fp = path.empty() ? "y" : path + ".y";
+      if (!j["y"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["y"].get<double>();
+      }
+    }
+    return result;
+  }
+
+  static Dir fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    Dir obj;
+    if (j.contains("x")) {
+      obj.setX(j["x"].get<double>());
+    }
+    if (j.contains("y")) {
+      obj.setY(j["y"].get<double>());
+    }
+    return obj;
+  }
+
+  bool hasX() const { return x_.has_value(); }
+  double getX() const { return x_.value(); }
+  void setX(double value) { x_ = value; }
+
+  bool hasY() const { return y_.has_value(); }
+  double getY() const { return y_.value(); }
+  void setY(double value) { y_ = value; }
+
+private:
+  std::optional<double> x_;
+  std::optional<double> y_;
+};
+
+struct TilePos : public JsonValue {
+  struct Properties {
+    struct X {
+      static const char* name() { return "x"; }
+      static constexpr bool required = false;
+    };
+    struct Y {
+      static const char* name() { return "y"; }
+      static constexpr bool required = false;
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (j.contains("x")) {
+      std::string fp = path.empty() ? "x" : path + ".x";
+      if (!j["x"].is_number_integer()) {
+        result.add(fp, "Expected integer");
+      } else {
+        int64_t val = j["x"].get<int64_t>();
+      }
+    }
+    if (j.contains("y")) {
+      std::string fp = path.empty() ? "y" : path + ".y";
+      if (!j["y"].is_number_integer()) {
+        result.add(fp, "Expected integer");
+      } else {
+        int64_t val = j["y"].get<int64_t>();
+      }
+    }
+    return result;
+  }
+
+  static TilePos fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    TilePos obj;
+    if (j.contains("x")) {
+      obj.setX(j["x"].get<int64_t>());
+    }
+    if (j.contains("y")) {
+      obj.setY(j["y"].get<int64_t>());
+    }
+    return obj;
+  }
+
+  bool hasX() const { return x_.has_value(); }
+  int64_t getX() const { return x_.value(); }
+  void setX(int64_t value) { x_ = value; }
+
+  bool hasY() const { return y_.has_value(); }
+  int64_t getY() const { return y_.value(); }
+  void setY(int64_t value) { y_ = value; }
+
+private:
+  std::optional<int64_t> x_;
+  std::optional<int64_t> y_;
+};
+
+struct NodesItem : public JsonValue {
+  struct Properties {
+    struct Cost {
+      static const char* name() { return "cost"; }
+      static constexpr bool required = false;
+    };
+    struct Dir {
+      static const char* name() { return "dir"; }
+      static constexpr bool required = false;
+    };
+    struct Gen {
+      static const char* name() { return "gen"; }
+      static constexpr bool required = false;
+      static constexpr int64_t minimum() { return 0; }
+    };
+    struct TilePos {
+      static const char* name() { return "tilePos"; }
+      static constexpr bool required = false;
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (j.contains("cost")) {
+      std::string fp = path.empty() ? "cost" : path + ".cost";
+      if (!j["cost"].is_number()) {
+        result.add(fp, "Expected number");
+      } else {
+        double val = j["cost"].get<double>();
+      }
+    }
+    if (j.contains("dir")) {
+      std::string fp = path.empty() ? "dir" : path + ".dir";
+      if (!j["dir"].is_object()) {
+        result.add(fp, "Expected object");
+      } else {
+        result.merge(Dir::validate(j["dir"], fp));
+      }
+    }
+    if (j.contains("gen")) {
+      std::string fp = path.empty() ? "gen" : path + ".gen";
+      if (!j["gen"].is_number_integer()) {
+        result.add(fp, "Expected integer");
+      } else {
+        int64_t val = j["gen"].get<int64_t>();
+        if (val < 0) result.add(fp, "Value below minimum");
+      }
+    }
+    if (j.contains("tilePos")) {
+      std::string fp = path.empty() ? "tilePos" : path + ".tilePos";
+      if (!j["tilePos"].is_object()) {
+        result.add(fp, "Expected object");
+      } else {
+        result.merge(TilePos::validate(j["tilePos"], fp));
+      }
+    }
+    return result;
+  }
+
+  static NodesItem fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    NodesItem obj;
+    if (j.contains("cost")) {
+      obj.setCost(j["cost"].get<double>());
+    }
+    if (j.contains("dir")) {
+      obj.setDir(Dir::fromJson(j["dir"]));
+    }
+    if (j.contains("gen")) {
+      obj.setGen(j["gen"].get<int64_t>());
+    }
+    if (j.contains("tilePos")) {
+      obj.setTilePos(TilePos::fromJson(j["tilePos"]));
+    }
+    return obj;
+  }
+
+  bool hasCost() const { return cost_.has_value(); }
+  double getCost() const { return cost_.value(); }
+  void setCost(double value) { cost_ = value; }
+
+  bool hasDir() const { return dir_.has_value(); }
+  const Dir& getDir() const { return dir_.value(); }
+  Dir& getDir() { return dir_.value(); }
+  void setDir(const Dir& value) { dir_ = value; }
+
+  bool hasGen() const { return gen_.has_value(); }
+  int64_t getGen() const { return gen_.value(); }
+  void setGen(int64_t value) { gen_ = value; }
+
+  bool hasTilePos() const { return tilePos_.has_value(); }
+  const TilePos& getTilePos() const { return tilePos_.value(); }
+  TilePos& getTilePos() { return tilePos_.value(); }
+  void setTilePos(const TilePos& value) { tilePos_ = value; }
+
+private:
+  std::optional<double> cost_;
+  std::optional<Dir> dir_;
+  std::optional<int64_t> gen_;
+  std::optional<TilePos> tilePos_;
+};
+
+struct OldTarget : public JsonValue {
+  struct Properties {
+    struct X {
+      static const char* name() { return "x"; }
+      static constexpr bool required = false;
+    };
+    struct Y {
+      static const char* name() { return "y"; }
+      static constexpr bool required = false;
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (j.contains("x")) {
+      std::string fp = path.empty() ? "x" : path + ".x";
+      if (!j["x"].is_number_integer()) {
+        result.add(fp, "Expected integer");
+      } else {
+        int64_t val = j["x"].get<int64_t>();
+      }
+    }
+    if (j.contains("y")) {
+      std::string fp = path.empty() ? "y" : path + ".y";
+      if (!j["y"].is_number_integer()) {
+        result.add(fp, "Expected integer");
+      } else {
+        int64_t val = j["y"].get<int64_t>();
+      }
+    }
+    return result;
+  }
+
+  static OldTarget fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    OldTarget obj;
+    if (j.contains("x")) {
+      obj.setX(j["x"].get<int64_t>());
+    }
+    if (j.contains("y")) {
+      obj.setY(j["y"].get<int64_t>());
+    }
+    return obj;
+  }
+
+  bool hasX() const { return x_.has_value(); }
+  int64_t getX() const { return x_.value(); }
+  void setX(int64_t value) { x_ = value; }
+
+  bool hasY() const { return y_.has_value(); }
+  int64_t getY() const { return y_.value(); }
+  void setY(int64_t value) { y_ = value; }
+
+private:
+  std::optional<int64_t> x_;
+  std::optional<int64_t> y_;
+};
+
+struct VectorTilemapPathfinding : public JsonValue {
+  struct Properties {
+    struct CurGen {
+      static const char* name() { return "curGen"; }
+      static constexpr bool required = false;
+      static constexpr int64_t minimum() { return 0; }
+    };
+    struct Nodes {
+      static const char* name() { return "nodes"; }
+      static constexpr bool required = false;
+    };
+    struct OldTarget {
+      static const char* name() { return "oldTarget"; }
+      static constexpr bool required = false;
+    };
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "VectorTilemapPathfinding"; }
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("curGen")) {
+      std::string fp = path.empty() ? "curGen" : path + ".curGen";
+      if (!j["curGen"].is_number_integer()) {
+        result.add(fp, "Expected integer");
+      } else {
+        int64_t val = j["curGen"].get<int64_t>();
+        if (val < 0) result.add(fp, "Value below minimum");
+      }
+    }
+    if (j.contains("nodes")) {
+      std::string fp = path.empty() ? "nodes" : path + ".nodes";
+      if (!j["nodes"].is_array()) {
+        result.add(fp, "Expected array");
+      } else {
+        const auto& arr = j["nodes"];
+        for (size_t i = 0; i < arr.size(); ++i) {
+          std::string ip = fp + "[" + std::to_string(i) + "]";
+          if (!arr[i].is_object()) result.add(ip, "Expected object");
+          else result.merge(NodesItem::validate(arr[i], ip));
+        }
+      }
+    }
+    if (j.contains("oldTarget")) {
+      std::string fp = path.empty() ? "oldTarget" : path + ".oldTarget";
+      if (!j["oldTarget"].is_object()) {
+        result.add(fp, "Expected object");
+      } else {
+        result.merge(OldTarget::validate(j["oldTarget"], fp));
+      }
+    }
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "VectorTilemapPathfinding") result.add(fp, "Value does not match const");
+      }
+    }
+    return result;
+  }
+
+  static VectorTilemapPathfinding fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    VectorTilemapPathfinding obj;
+    if (j.contains("curGen")) {
+      obj.setCurGen(j["curGen"].get<int64_t>());
+    }
+    if (j.contains("nodes")) {
+      { std::vector<NodesItem> items; for (const auto& e : j["nodes"]) items.push_back(NodesItem::fromJson(e)); obj.setNodes(items); }
+    }
+    if (j.contains("oldTarget")) {
+      obj.setOldTarget(OldTarget::fromJson(j["oldTarget"]));
+    }
+    obj.setType(j.at("type").get<std::string>());
+    return obj;
+  }
+
+  bool hasCurGen() const { return curGen_.has_value(); }
+  int64_t getCurGen() const { return curGen_.value(); }
+  void setCurGen(int64_t value) { curGen_ = value; }
+
+  bool hasNodes() const { return nodes_.has_value(); }
+  const std::vector<NodesItem>& getNodes() const { return nodes_.value(); }
+  std::vector<NodesItem>& getNodes() { return nodes_.value(); }
+  void setNodes(const std::vector<NodesItem>& value) { nodes_ = value; }
+
+  bool hasOldTarget() const { return oldTarget_.has_value(); }
+  const OldTarget& getOldTarget() const { return oldTarget_.value(); }
+  OldTarget& getOldTarget() { return oldTarget_.value(); }
+  void setOldTarget(const OldTarget& value) { oldTarget_ = value; }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+private:
+  std::optional<int64_t> curGen_;
+  std::optional<std::vector<NodesItem>> nodes_;
+  std::optional<OldTarget> oldTarget_;
+  std::string type_;
+};
 
 struct Pos : public JsonValue {
   struct Properties {
@@ -747,6 +1144,47 @@ struct SeekPrimaryTargetTag : public JsonValue {
     auto vr = validate(j);
     if (!vr.valid()) throw std::runtime_error(vr.summary());
     SeekPrimaryTargetTag obj;
+    obj.setType(j.at("type").get<std::string>());
+    return obj;
+  }
+
+  const std::string& getType() const { return type_; }
+  std::string& getType() { return type_; }
+  void setType(const std::string& value) { type_ = value; }
+
+private:
+  std::string type_;
+};
+
+struct UniqueTileComponent : public JsonValue {
+  struct Properties {
+    struct Type {
+      static const char* name() { return "type"; }
+      static constexpr bool required = true;
+      static const char* constValue() { return "UniqueTileComponent"; }
+    };
+  };
+
+  static ValidationResult validate(const json& j, const std::string& path = "") {
+    ValidationResult result;
+    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
+    if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
+    if (j.contains("type")) {
+      std::string fp = path.empty() ? "type" : path + ".type";
+      if (!j["type"].is_string()) {
+        result.add(fp, "Expected string");
+      } else {
+        const auto& val = j["type"].get_ref<const std::string&>();
+        if (val != "UniqueTileComponent") result.add(fp, "Value does not match const");
+      }
+    }
+    return result;
+  }
+
+  static UniqueTileComponent fromJson(const json& j) {
+    auto vr = validate(j);
+    if (!vr.valid()) throw std::runtime_error(vr.summary());
+    UniqueTileComponent obj;
     obj.setType(j.at("type").get<std::string>());
     return obj;
   }
@@ -1740,66 +2178,6 @@ private:
   std::string type_;
 };
 
-struct Material : public JsonValue {
-  struct Properties {
-    struct Friction {
-      static const char* name() { return "friction"; }
-      static constexpr bool required = false;
-    };
-    struct Restitution {
-      static const char* name() { return "restitution"; }
-      static constexpr bool required = false;
-    };
-  };
-
-  static ValidationResult validate(const json& j, const std::string& path = "") {
-    ValidationResult result;
-    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
-    if (j.contains("friction")) {
-      std::string fp = path.empty() ? "friction" : path + ".friction";
-      if (!j["friction"].is_number()) {
-        result.add(fp, "Expected number");
-      } else {
-        double val = j["friction"].get<double>();
-      }
-    }
-    if (j.contains("restitution")) {
-      std::string fp = path.empty() ? "restitution" : path + ".restitution";
-      if (!j["restitution"].is_number()) {
-        result.add(fp, "Expected number");
-      } else {
-        double val = j["restitution"].get<double>();
-      }
-    }
-    return result;
-  }
-
-  static Material fromJson(const json& j) {
-    auto vr = validate(j);
-    if (!vr.valid()) throw std::runtime_error(vr.summary());
-    Material obj;
-    if (j.contains("friction")) {
-      obj.setFriction(j["friction"].get<double>());
-    }
-    if (j.contains("restitution")) {
-      obj.setRestitution(j["restitution"].get<double>());
-    }
-    return obj;
-  }
-
-  bool hasFriction() const { return friction_.has_value(); }
-  double getFriction() const { return friction_.value(); }
-  void setFriction(double value) { friction_ = value; }
-
-  bool hasRestitution() const { return restitution_.has_value(); }
-  double getRestitution() const { return restitution_.value(); }
-  void setRestitution(double value) { restitution_ = value; }
-
-private:
-  std::optional<double> friction_;
-  std::optional<double> restitution_;
-};
-
 struct TileComponent : public JsonValue {
   struct Properties {
     struct Collidable {
@@ -1810,22 +2188,14 @@ struct TileComponent : public JsonValue {
       static const char* name() { return "layer"; }
       static constexpr bool required = false;
     };
-    struct Material {
-      static const char* name() { return "material"; }
-      static constexpr bool required = false;
-    };
-    struct Pos {
-      static const char* name() { return "pos"; }
-      static constexpr bool required = false;
-    };
-    struct Rotation {
-      static const char* name() { return "rotation"; }
-      static constexpr bool required = false;
-    };
     struct Type {
       static const char* name() { return "type"; }
       static constexpr bool required = true;
       static const char* constValue() { return "TileComponent"; }
+    };
+    struct Unique {
+      static const char* name() { return "unique"; }
+      static constexpr bool required = false;
     };
   };
 
@@ -1848,31 +2218,6 @@ struct TileComponent : public JsonValue {
         { bool ok = val == "Top" || val == "Item" || val == "Wall" || val == "Floor"; if (!ok) result.add(fp, "Value not in enum"); }
       }
     }
-    if (j.contains("material")) {
-      std::string fp = path.empty() ? "material" : path + ".material";
-      if (!j["material"].is_object()) {
-        result.add(fp, "Expected object");
-      } else {
-        result.merge(Material::validate(j["material"], fp));
-      }
-    }
-    if (j.contains("pos")) {
-      std::string fp = path.empty() ? "pos" : path + ".pos";
-      if (!j["pos"].is_object()) {
-        result.add(fp, "Expected object");
-      } else {
-        result.merge(Pos::validate(j["pos"], fp));
-      }
-    }
-    if (j.contains("rotation")) {
-      std::string fp = path.empty() ? "rotation" : path + ".rotation";
-      if (!j["rotation"].is_string()) {
-        result.add(fp, "Expected string");
-      } else {
-        const auto& val = j["rotation"].get_ref<const std::string&>();
-        { bool ok = val == "Up" || val == "Right" || val == "Down" || val == "Left"; if (!ok) result.add(fp, "Value not in enum"); }
-      }
-    }
     if (j.contains("type")) {
       std::string fp = path.empty() ? "type" : path + ".type";
       if (!j["type"].is_string()) {
@@ -1880,6 +2225,12 @@ struct TileComponent : public JsonValue {
       } else {
         const auto& val = j["type"].get_ref<const std::string&>();
         if (val != "TileComponent") result.add(fp, "Value does not match const");
+      }
+    }
+    if (j.contains("unique")) {
+      std::string fp = path.empty() ? "unique" : path + ".unique";
+      if (!j["unique"].is_boolean()) {
+        result.add(fp, "Expected boolean");
       }
     }
     return result;
@@ -1895,16 +2246,10 @@ struct TileComponent : public JsonValue {
     if (j.contains("layer")) {
       obj.setLayer(j["layer"].get<std::string>());
     }
-    if (j.contains("material")) {
-      obj.setMaterial(Material::fromJson(j["material"]));
-    }
-    if (j.contains("pos")) {
-      obj.setPos(Pos::fromJson(j["pos"]));
-    }
-    if (j.contains("rotation")) {
-      obj.setRotation(j["rotation"].get<std::string>());
-    }
     obj.setType(j.at("type").get<std::string>());
+    if (j.contains("unique")) {
+      obj.setUnique(j["unique"].get<bool>());
+    }
     return obj;
   }
 
@@ -1917,109 +2262,23 @@ struct TileComponent : public JsonValue {
   std::string& getLayer() { return layer_.value(); }
   void setLayer(const std::string& value) { layer_ = value; }
 
-  bool hasMaterial() const { return material_.has_value(); }
-  const Material& getMaterial() const { return material_.value(); }
-  Material& getMaterial() { return material_.value(); }
-  void setMaterial(const Material& value) { material_ = value; }
-
-  bool hasPos() const { return pos_.has_value(); }
-  const Pos& getPos() const { return pos_.value(); }
-  Pos& getPos() { return pos_.value(); }
-  void setPos(const Pos& value) { pos_ = value; }
-
-  bool hasRotation() const { return rotation_.has_value(); }
-  const std::string& getRotation() const { return rotation_.value(); }
-  std::string& getRotation() { return rotation_.value(); }
-  void setRotation(const std::string& value) { rotation_ = value; }
-
   const std::string& getType() const { return type_; }
   std::string& getType() { return type_; }
   void setType(const std::string& value) { type_ = value; }
 
+  bool hasUnique() const { return unique_.has_value(); }
+  bool getUnique() const { return unique_.value(); }
+  void setUnique(bool value) { unique_ = value; }
+
 private:
   std::optional<bool> collidable_;
   std::optional<std::string> layer_;
-  std::optional<Material> material_;
-  std::optional<Pos> pos_;
-  std::optional<std::string> rotation_;
   std::string type_;
-};
-
-struct Dir : public JsonValue {
-  struct Properties {
-    struct X {
-      static const char* name() { return "x"; }
-      static constexpr bool required = false;
-    };
-    struct Y {
-      static const char* name() { return "y"; }
-      static constexpr bool required = false;
-    };
-  };
-
-  static ValidationResult validate(const json& j, const std::string& path = "") {
-    ValidationResult result;
-    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
-    if (j.contains("x")) {
-      std::string fp = path.empty() ? "x" : path + ".x";
-      if (!j["x"].is_number()) {
-        result.add(fp, "Expected number");
-      } else {
-        double val = j["x"].get<double>();
-      }
-    }
-    if (j.contains("y")) {
-      std::string fp = path.empty() ? "y" : path + ".y";
-      if (!j["y"].is_number()) {
-        result.add(fp, "Expected number");
-      } else {
-        double val = j["y"].get<double>();
-      }
-    }
-    return result;
-  }
-
-  static Dir fromJson(const json& j) {
-    auto vr = validate(j);
-    if (!vr.valid()) throw std::runtime_error(vr.summary());
-    Dir obj;
-    if (j.contains("x")) {
-      obj.setX(j["x"].get<double>());
-    }
-    if (j.contains("y")) {
-      obj.setY(j["y"].get<double>());
-    }
-    return obj;
-  }
-
-  bool hasX() const { return x_.has_value(); }
-  double getX() const { return x_.value(); }
-  void setX(double value) { x_ = value; }
-
-  bool hasY() const { return y_.has_value(); }
-  double getY() const { return y_.value(); }
-  void setY(double value) { y_ = value; }
-
-private:
-  std::optional<double> x_;
-  std::optional<double> y_;
+  std::optional<bool> unique_;
 };
 
 struct ArrowComponent : public JsonValue {
   struct Properties {
-    struct Cost {
-      static const char* name() { return "cost"; }
-      static constexpr bool required = false;
-    };
-    struct Dir {
-      static const char* name() { return "dir"; }
-      static constexpr bool required = false;
-    };
-    struct Generation {
-      static const char* name() { return "generation"; }
-      static constexpr bool required = false;
-      static constexpr int64_t minimum() { return 0; }
-    };
     struct TileCost {
       static const char* name() { return "tileCost"; }
       static constexpr bool required = false;
@@ -2036,31 +2295,6 @@ struct ArrowComponent : public JsonValue {
     ValidationResult result;
     if (!j.is_object()) { result.add(path, "Expected object"); return result; }
     if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
-    if (j.contains("cost")) {
-      std::string fp = path.empty() ? "cost" : path + ".cost";
-      if (!j["cost"].is_number()) {
-        result.add(fp, "Expected number");
-      } else {
-        double val = j["cost"].get<double>();
-      }
-    }
-    if (j.contains("dir")) {
-      std::string fp = path.empty() ? "dir" : path + ".dir";
-      if (!j["dir"].is_object()) {
-        result.add(fp, "Expected object");
-      } else {
-        result.merge(Dir::validate(j["dir"], fp));
-      }
-    }
-    if (j.contains("generation")) {
-      std::string fp = path.empty() ? "generation" : path + ".generation";
-      if (!j["generation"].is_number_integer()) {
-        result.add(fp, "Expected integer");
-      } else {
-        int64_t val = j["generation"].get<int64_t>();
-        if (val < 0) result.add(fp, "Value below minimum");
-      }
-    }
     if (j.contains("tileCost")) {
       std::string fp = path.empty() ? "tileCost" : path + ".tileCost";
       if (!j["tileCost"].is_number_integer()) {
@@ -2086,34 +2320,12 @@ struct ArrowComponent : public JsonValue {
     auto vr = validate(j);
     if (!vr.valid()) throw std::runtime_error(vr.summary());
     ArrowComponent obj;
-    if (j.contains("cost")) {
-      obj.setCost(j["cost"].get<double>());
-    }
-    if (j.contains("dir")) {
-      obj.setDir(Dir::fromJson(j["dir"]));
-    }
-    if (j.contains("generation")) {
-      obj.setGeneration(j["generation"].get<int64_t>());
-    }
     if (j.contains("tileCost")) {
       obj.setTileCost(j["tileCost"].get<int64_t>());
     }
     obj.setType(j.at("type").get<std::string>());
     return obj;
   }
-
-  bool hasCost() const { return cost_.has_value(); }
-  double getCost() const { return cost_.value(); }
-  void setCost(double value) { cost_ = value; }
-
-  bool hasDir() const { return dir_.has_value(); }
-  const Dir& getDir() const { return dir_.value(); }
-  Dir& getDir() { return dir_.value(); }
-  void setDir(const Dir& value) { dir_ = value; }
-
-  bool hasGeneration() const { return generation_.has_value(); }
-  int64_t getGeneration() const { return generation_.value(); }
-  void setGeneration(int64_t value) { generation_ = value; }
 
   bool hasTileCost() const { return tileCost_.has_value(); }
   int64_t getTileCost() const { return tileCost_.value(); }
@@ -2124,71 +2336,8 @@ struct ArrowComponent : public JsonValue {
   void setType(const std::string& value) { type_ = value; }
 
 private:
-  std::optional<double> cost_;
-  std::optional<Dir> dir_;
-  std::optional<int64_t> generation_;
   std::optional<int64_t> tileCost_;
   std::string type_;
-};
-
-struct AnchorPos : public JsonValue {
-  struct Properties {
-    struct X {
-      static const char* name() { return "x"; }
-      static constexpr bool required = false;
-    };
-    struct Y {
-      static const char* name() { return "y"; }
-      static constexpr bool required = false;
-    };
-  };
-
-  static ValidationResult validate(const json& j, const std::string& path = "") {
-    ValidationResult result;
-    if (!j.is_object()) { result.add(path, "Expected object"); return result; }
-    if (j.contains("x")) {
-      std::string fp = path.empty() ? "x" : path + ".x";
-      if (!j["x"].is_number_integer()) {
-        result.add(fp, "Expected integer");
-      } else {
-        int64_t val = j["x"].get<int64_t>();
-      }
-    }
-    if (j.contains("y")) {
-      std::string fp = path.empty() ? "y" : path + ".y";
-      if (!j["y"].is_number_integer()) {
-        result.add(fp, "Expected integer");
-      } else {
-        int64_t val = j["y"].get<int64_t>();
-      }
-    }
-    return result;
-  }
-
-  static AnchorPos fromJson(const json& j) {
-    auto vr = validate(j);
-    if (!vr.valid()) throw std::runtime_error(vr.summary());
-    AnchorPos obj;
-    if (j.contains("x")) {
-      obj.setX(j["x"].get<int64_t>());
-    }
-    if (j.contains("y")) {
-      obj.setY(j["y"].get<int64_t>());
-    }
-    return obj;
-  }
-
-  bool hasX() const { return x_.has_value(); }
-  int64_t getX() const { return x_.value(); }
-  void setX(int64_t value) { x_ = value; }
-
-  bool hasY() const { return y_.has_value(); }
-  int64_t getY() const { return y_.value(); }
-  void setY(int64_t value) { y_ = value; }
-
-private:
-  std::optional<int64_t> x_;
-  std::optional<int64_t> y_;
 };
 
 struct OccupiedPositionsItem : public JsonValue {
@@ -2253,10 +2402,6 @@ private:
 
 struct MultiTileComponent : public JsonValue {
   struct Properties {
-    struct AnchorPos {
-      static const char* name() { return "anchorPos"; }
-      static constexpr bool required = false;
-    };
     struct OccupiedPositions {
       static const char* name() { return "occupiedPositions"; }
       static constexpr bool required = false;
@@ -2272,14 +2417,6 @@ struct MultiTileComponent : public JsonValue {
     ValidationResult result;
     if (!j.is_object()) { result.add(path, "Expected object"); return result; }
     if (!j.contains("type")) result.add(path.empty() ? "type" : path + ".type", "Required field missing");
-    if (j.contains("anchorPos")) {
-      std::string fp = path.empty() ? "anchorPos" : path + ".anchorPos";
-      if (!j["anchorPos"].is_object()) {
-        result.add(fp, "Expected object");
-      } else {
-        result.merge(AnchorPos::validate(j["anchorPos"], fp));
-      }
-    }
     if (j.contains("occupiedPositions")) {
       std::string fp = path.empty() ? "occupiedPositions" : path + ".occupiedPositions";
       if (!j["occupiedPositions"].is_array()) {
@@ -2309,20 +2446,12 @@ struct MultiTileComponent : public JsonValue {
     auto vr = validate(j);
     if (!vr.valid()) throw std::runtime_error(vr.summary());
     MultiTileComponent obj;
-    if (j.contains("anchorPos")) {
-      obj.setAnchorPos(AnchorPos::fromJson(j["anchorPos"]));
-    }
     if (j.contains("occupiedPositions")) {
       { std::vector<OccupiedPositionsItem> items; for (const auto& e : j["occupiedPositions"]) items.push_back(OccupiedPositionsItem::fromJson(e)); obj.setOccupiedPositions(items); }
     }
     obj.setType(j.at("type").get<std::string>());
     return obj;
   }
-
-  bool hasAnchorPos() const { return anchorPos_.has_value(); }
-  const AnchorPos& getAnchorPos() const { return anchorPos_.value(); }
-  AnchorPos& getAnchorPos() { return anchorPos_.value(); }
-  void setAnchorPos(const AnchorPos& value) { anchorPos_ = value; }
 
   bool hasOccupiedPositions() const { return occupiedPositions_.has_value(); }
   const std::vector<OccupiedPositionsItem>& getOccupiedPositions() const { return occupiedPositions_.value(); }
@@ -2334,7 +2463,6 @@ struct MultiTileComponent : public JsonValue {
   void setType(const std::string& value) { type_ = value; }
 
 private:
-  std::optional<AnchorPos> anchorPos_;
   std::optional<std::vector<OccupiedPositionsItem>> occupiedPositions_;
   std::string type_;
 };
@@ -4631,7 +4759,7 @@ private:
 };
 
 struct ComponentsItem : public JsonValue {
-  using Variant = std::variant<TransformComponent, SpriteComponent, CameraComponent, SeekPrimaryTargetTag, ChunkLoaderTag, PrimaryTargetTag, WorldMapTag, HealthComponent, ContactDamageComponent, BulletDamageComponent, LifetimeComponent, PlayerComponent, BodyComponent, TileComponent, ArrowComponent, MultiTileComponent, TurretComponent, SpawnerComponent, CircleRenderComponent, RectangleRenderComponent, ItemComponent, InventoryComponent, InventoryViewComponent, ItemUseComponent, ItemPlaceableComponent, ItemStackComponent, OwnedByComponent, PortComponent, ConveyorPartComponent, ChunkedTilemapComponent>;
+  using Variant = std::variant<VectorTilemapPathfinding, TransformComponent, SpriteComponent, CameraComponent, SeekPrimaryTargetTag, UniqueTileComponent, ChunkLoaderTag, PrimaryTargetTag, WorldMapTag, HealthComponent, ContactDamageComponent, BulletDamageComponent, LifetimeComponent, PlayerComponent, BodyComponent, TileComponent, ArrowComponent, MultiTileComponent, TurretComponent, SpawnerComponent, CircleRenderComponent, RectangleRenderComponent, ItemComponent, InventoryComponent, InventoryViewComponent, ItemUseComponent, ItemPlaceableComponent, ItemStackComponent, OwnedByComponent, PortComponent, ConveyorPartComponent, ChunkedTilemapComponent>;
 
   static ValidationResult validate(const json& j, const std::string& path = "") {
     ValidationResult result;
@@ -4645,10 +4773,12 @@ struct ComponentsItem : public JsonValue {
       return result;
     }
     const auto& disc = j["type"].get_ref<const std::string&>();
-    if (disc == "TransformComponent") return TransformComponent::validate(j, path);
+    if (disc == "VectorTilemapPathfinding") return VectorTilemapPathfinding::validate(j, path);
+    else if (disc == "TransformComponent") return TransformComponent::validate(j, path);
     else if (disc == "SpriteComponent") return SpriteComponent::validate(j, path);
     else if (disc == "CameraComponent") return CameraComponent::validate(j, path);
     else if (disc == "SeekPrimaryTargetTag") return SeekPrimaryTargetTag::validate(j, path);
+    else if (disc == "UniqueTileComponent") return UniqueTileComponent::validate(j, path);
     else if (disc == "ChunkLoaderTag") return ChunkLoaderTag::validate(j, path);
     else if (disc == "PrimaryTargetTag") return PrimaryTargetTag::validate(j, path);
     else if (disc == "WorldMapTag") return WorldMapTag::validate(j, path);
@@ -4684,10 +4814,12 @@ struct ComponentsItem : public JsonValue {
     if (!vr.valid()) throw std::runtime_error(vr.summary());
     ComponentsItem obj;
     const auto& disc = j["type"].get_ref<const std::string&>();
-    if (disc == "TransformComponent") obj.variant_ = TransformComponent::fromJson(j);
+    if (disc == "VectorTilemapPathfinding") obj.variant_ = VectorTilemapPathfinding::fromJson(j);
+    else if (disc == "TransformComponent") obj.variant_ = TransformComponent::fromJson(j);
     else if (disc == "SpriteComponent") obj.variant_ = SpriteComponent::fromJson(j);
     else if (disc == "CameraComponent") obj.variant_ = CameraComponent::fromJson(j);
     else if (disc == "SeekPrimaryTargetTag") obj.variant_ = SeekPrimaryTargetTag::fromJson(j);
+    else if (disc == "UniqueTileComponent") obj.variant_ = UniqueTileComponent::fromJson(j);
     else if (disc == "ChunkLoaderTag") obj.variant_ = ChunkLoaderTag::fromJson(j);
     else if (disc == "PrimaryTargetTag") obj.variant_ = PrimaryTargetTag::fromJson(j);
     else if (disc == "WorldMapTag") obj.variant_ = WorldMapTag::fromJson(j);

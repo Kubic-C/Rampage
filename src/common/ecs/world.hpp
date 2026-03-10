@@ -26,7 +26,8 @@ protected:
   using EntityListIterator = EntityList::const_iterator;
   
 public:
-  using IWorld::component;
+  using IWorld::registerComponent;
+  using IWorld::component;  
   using IWorld::set;
   using IWorld::observe;
   using IWorld::emit;
@@ -34,8 +35,8 @@ public:
   using IWorld::remove;
 
   static IWorldPtr createWorld(IHost& host) {
-    IWorldPtr world = std::make_shared<EntityWorld>(host, PrivateConstructorTag{});
-    std::static_pointer_cast<EntityWorld>(world)->m_self = world;
+    EntityWorld* world = new EntityWorld(host, PrivateConstructorTag{});
+    world->m_self = world;
     return world;
   }
 
@@ -84,7 +85,7 @@ public:
   virtual void move(EntityId src, EntityId dst, const ComponentSet& comps = {}) override;
   virtual const ComponentSet& setOf(EntityId entity) override;
 
-  virtual ComponentId component(ComponentId compid, bool isRegistered, const std::string_view& name, 
+  virtual ComponentId registerComponent(ComponentId compid, const std::string_view& name, 
     size_t size, NewPoolFunc newPoolFunc, FromJsonFunc fromJsonFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
     SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) noexcept override;
 

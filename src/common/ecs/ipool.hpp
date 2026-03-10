@@ -93,7 +93,7 @@ public:
     }
 
     if (m_denseSize == m_denseCap) {
-      allocateAdditional(m_denseCap + 1); // exponential
+      allocateAdditional((m_denseCap + 1) * 2); // exponential
     }
 
     m_sparse[id] = m_denseSize;

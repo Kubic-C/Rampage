@@ -62,12 +62,12 @@ int physicsStep(IWorldPtr world, float dt) {
   for (int i = 0; i < events.beginCount; i++) {
     const b2ContactBeginTouchEvent& touch = events.beginEvents[i];
 
-    void* Ab2Data = b2Shape_GetUserData(touch.shapeIdA);
-    void* Bb2Data = b2Shape_GetUserData(touch.shapeIdB);
+    EntityBox2dUserData* Ab2Data = getEntityBox2dUserData(touch.shapeIdA);
+    EntityBox2dUserData* Bb2Data = getEntityBox2dUserData(touch.shapeIdB);
     if (!Ab2Data || !Bb2Data)
       continue;
-    EntityPtr eA = b2DataToEntity(world, Ab2Data);
-    EntityPtr eB = b2DataToEntity(world, Bb2Data);
+    EntityPtr eA = world->getEntity(Ab2Data->entity);
+    EntityPtr eB = world->getEntity(Bb2Data->entity);
 
     eA.add<LastCollisionData>();
     eB.add<LastCollisionData>();
@@ -84,12 +84,12 @@ int physicsStep(IWorldPtr world, float dt) {
         !b2Shape_IsValid(touch.shapeIdB))
       continue;
 
-    void* Ab2Data = b2Shape_GetUserData(touch.shapeIdA);
-    void* Bb2Data = b2Shape_GetUserData(touch.shapeIdB);
+    EntityBox2dUserData* Ab2Data = getEntityBox2dUserData(touch.shapeIdA);
+    EntityBox2dUserData* Bb2Data = getEntityBox2dUserData(touch.shapeIdB);
     if (!Ab2Data || !Bb2Data)
       continue;
-    EntityPtr eA = b2DataToEntity(world, Ab2Data);
-    EntityPtr eB = b2DataToEntity(world, Bb2Data);
+    EntityPtr eA = world->getEntity(Ab2Data->entity);
+    EntityPtr eB = world->getEntity(Bb2Data->entity);
 
     eA.add<LastCollisionData>();
     eB.add<LastCollisionData>();
@@ -120,13 +120,13 @@ void observeDestroyedBody(EntityPtr entity) {
   contacts.resize(actualSize);
 
   for (const b2ContactData& contactData : contacts) {
-    EntityId other = b2RawDataToEntity(b2Shape_GetUserData(contactData.shapeIdA));
-    if (other == entity)
-        other = b2RawDataToEntity(b2Shape_GetUserData(contactData.shapeIdB));
-    if (other == NullEntityId)
+    EntityBox2dUserData* other = getEntityBox2dUserData(contactData.shapeIdA);
+    if (!other || other->entity == entity)
+        other = getEntityBox2dUserData(contactData.shapeIdB);
+    if (!other)
       continue;
 
-    lastCollisionData->other = other;
+    lastCollisionData->other = other->entity;
     world->emit<OnCollisionEndEvent>(entity, world->component<LastCollisionData>());
   }
 }

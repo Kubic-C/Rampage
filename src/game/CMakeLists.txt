@@ -6,6 +6,7 @@ target_link_libraries(RGame PUBLIC RCommon TGUI::TGUI)
 target_sources(
   RGame PUBLIC
   "components/arrow.hpp"
+  "components/arrow.cpp"
   "components/body.hpp"
   "components/body.cpp"
   "components/collisionEvent.hpp"

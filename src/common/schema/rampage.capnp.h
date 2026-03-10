@@ -22,10 +22,13 @@ CAPNP_DECLARE_SCHEMA(a9e6ab088fb12bd3);
 CAPNP_DECLARE_SCHEMA(aa4969aafed57949);
 CAPNP_DECLARE_SCHEMA(b6b875d105f93bc2);
 CAPNP_DECLARE_SCHEMA(b286d739864eb1fd);
+CAPNP_DECLARE_SCHEMA(f728fb44cbfbb38f);
 CAPNP_DECLARE_SCHEMA(e46148703c226798);
 CAPNP_DECLARE_SCHEMA(c20fe7c807d7fb38);
 CAPNP_DECLARE_SCHEMA(cc42a9ba24c41f74);
 CAPNP_DECLARE_SCHEMA(86afb0eb4584dca5);
+CAPNP_DECLARE_SCHEMA(f238d7e3a83291d0);
+CAPNP_DECLARE_SCHEMA(9e055972fdd803bd);
 CAPNP_DECLARE_SCHEMA(cb637bd845811715);
 CAPNP_DECLARE_SCHEMA(d384dfc79196c7ad);
 CAPNP_DECLARE_SCHEMA(8f17c18069203e01);
@@ -34,9 +37,6 @@ CAPNP_DECLARE_SCHEMA(853d504be38b2d2c);
 CAPNP_DECLARE_SCHEMA(c7a415a3ea75cdef);
 CAPNP_DECLARE_SCHEMA(dc8f40043f5e9cf9);
 CAPNP_DECLARE_SCHEMA(94fa2950e963efae);
-CAPNP_DECLARE_SCHEMA(8aca00a572816934);
-CAPNP_DECLARE_SCHEMA(a6300e38d3b75a9e);
-CAPNP_DECLARE_SCHEMA(f4ef1ba59d753bf2);
 CAPNP_DECLARE_SCHEMA(a1f425f276ceb783);
 CAPNP_DECLARE_SCHEMA(9a0373c1c07c8a36);
 CAPNP_DECLARE_SCHEMA(c7ba077f3a6b39a4);
@@ -46,6 +46,7 @@ CAPNP_DECLARE_SCHEMA(dd2050bbe6c1c0db);
 CAPNP_DECLARE_SCHEMA(e6da72db6380a96f);
 CAPNP_DECLARE_SCHEMA(f49d4e1f28c05796);
 CAPNP_DECLARE_SCHEMA(ed56815cfe688269);
+CAPNP_DECLARE_SCHEMA(ebc0eb88a3794c82);
 CAPNP_DECLARE_SCHEMA(886a10f48e6deb05);
 CAPNP_DECLARE_SCHEMA(db1f0b9bc360eb5f);
 CAPNP_DECLARE_SCHEMA(a3e8f69f1a825391);
@@ -155,6 +156,21 @@ struct Vec2I16 {
   };
 };
 
+struct Vec2I32 {
+  Vec2I32() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(f728fb44cbfbb38f, 1, 0)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
 struct Vec3I32 {
   Vec3I32() = delete;
 
@@ -209,6 +225,36 @@ struct ArrowComponent {
 
   struct _capnpPrivate {
     CAPNP_DECLARE_STRUCT_HEADER(86afb0eb4584dca5, 2, 1)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct VectorTilemapPathfindingNode {
+  VectorTilemapPathfindingNode() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(f238d7e3a83291d0, 1, 2)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct VectorTilemapPathfinding {
+  VectorTilemapPathfinding() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(9e055972fdd803bd, 1, 2)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -335,51 +381,6 @@ struct ItemStackComponent {
   };
 };
 
-struct ItemAttrIcon {
-  ItemAttrIcon() = delete;
-
-  class Reader;
-  class Builder;
-  class Pipeline;
-
-  struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(8aca00a572816934, 0, 1)
-    #if !CAPNP_LITE
-    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
-    #endif  // !CAPNP_LITE
-  };
-};
-
-struct ItemAttrStackCost {
-  ItemAttrStackCost() = delete;
-
-  class Reader;
-  class Builder;
-  class Pipeline;
-
-  struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(a6300e38d3b75a9e, 1, 0)
-    #if !CAPNP_LITE
-    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
-    #endif  // !CAPNP_LITE
-  };
-};
-
-struct ItemAttrTileComponent {
-  ItemAttrTileComponent() = delete;
-
-  class Reader;
-  class Builder;
-  class Pipeline;
-
-  struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(f4ef1ba59d753bf2, 1, 0)
-    #if !CAPNP_LITE
-    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
-    #endif  // !CAPNP_LITE
-  };
-};
-
 struct PlayerComponent {
   PlayerComponent() = delete;
 
@@ -493,7 +494,7 @@ struct MultiTileComponent {
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(f49d4e1f28c05796, 0, 2)
+    CAPNP_DECLARE_STRUCT_HEADER(f49d4e1f28c05796, 0, 1)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -508,7 +509,22 @@ struct TileComponent {
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(ed56815cfe688269, 1, 2)
+    CAPNP_DECLARE_STRUCT_HEADER(ed56815cfe688269, 1, 0)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct UniqueTileComponent {
+  UniqueTileComponent() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(ebc0eb88a3794c82, 1, 1)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -523,7 +539,7 @@ struct TileEntry {
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(886a10f48e6deb05, 1, 1)
+    CAPNP_DECLARE_STRUCT_HEADER(886a10f48e6deb05, 1, 2)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -1274,6 +1290,87 @@ private:
 };
 #endif  // !CAPNP_LITE
 
+class Vec2I32::Reader {
+public:
+  typedef Vec2I32 Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline  ::int32_t getX() const;
+
+  inline  ::int32_t getY() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class Vec2I32::Builder {
+public:
+  typedef Vec2I32 Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline  ::int32_t getX();
+  inline void setX( ::int32_t value);
+
+  inline  ::int32_t getY();
+  inline void setY( ::int32_t value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class Vec2I32::Pipeline {
+public:
+  typedef Vec2I32 Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
 class Vec3I32::Reader {
 public:
   typedef Vec3I32 Reads;
@@ -1617,6 +1714,206 @@ public:
       : _typeless(kj::mv(typeless)) {}
 
   inline  ::Schema::Vec2F32::Pipeline getDir();
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class VectorTilemapPathfindingNode::Reader {
+public:
+  typedef VectorTilemapPathfindingNode Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline bool hasPos() const;
+  inline  ::Schema::Vec2I32::Reader getPos() const;
+
+  inline bool hasDir() const;
+  inline  ::Schema::Vec2F32::Reader getDir() const;
+
+  inline float getCost() const;
+
+  inline  ::uint32_t getGen() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class VectorTilemapPathfindingNode::Builder {
+public:
+  typedef VectorTilemapPathfindingNode Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline bool hasPos();
+  inline  ::Schema::Vec2I32::Builder getPos();
+  inline void setPos( ::Schema::Vec2I32::Reader value);
+  inline  ::Schema::Vec2I32::Builder initPos();
+  inline void adoptPos(::capnp::Orphan< ::Schema::Vec2I32>&& value);
+  inline ::capnp::Orphan< ::Schema::Vec2I32> disownPos();
+
+  inline bool hasDir();
+  inline  ::Schema::Vec2F32::Builder getDir();
+  inline void setDir( ::Schema::Vec2F32::Reader value);
+  inline  ::Schema::Vec2F32::Builder initDir();
+  inline void adoptDir(::capnp::Orphan< ::Schema::Vec2F32>&& value);
+  inline ::capnp::Orphan< ::Schema::Vec2F32> disownDir();
+
+  inline float getCost();
+  inline void setCost(float value);
+
+  inline  ::uint32_t getGen();
+  inline void setGen( ::uint32_t value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class VectorTilemapPathfindingNode::Pipeline {
+public:
+  typedef VectorTilemapPathfindingNode Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+  inline  ::Schema::Vec2I32::Pipeline getPos();
+  inline  ::Schema::Vec2F32::Pipeline getDir();
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class VectorTilemapPathfinding::Reader {
+public:
+  typedef VectorTilemapPathfinding Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline bool hasOldTarget() const;
+  inline  ::Schema::Vec2I32::Reader getOldTarget() const;
+
+  inline  ::uint32_t getCurGen() const;
+
+  inline bool hasNodes() const;
+  inline  ::capnp::List< ::Schema::VectorTilemapPathfindingNode,  ::capnp::Kind::STRUCT>::Reader getNodes() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class VectorTilemapPathfinding::Builder {
+public:
+  typedef VectorTilemapPathfinding Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline bool hasOldTarget();
+  inline  ::Schema::Vec2I32::Builder getOldTarget();
+  inline void setOldTarget( ::Schema::Vec2I32::Reader value);
+  inline  ::Schema::Vec2I32::Builder initOldTarget();
+  inline void adoptOldTarget(::capnp::Orphan< ::Schema::Vec2I32>&& value);
+  inline ::capnp::Orphan< ::Schema::Vec2I32> disownOldTarget();
+
+  inline  ::uint32_t getCurGen();
+  inline void setCurGen( ::uint32_t value);
+
+  inline bool hasNodes();
+  inline  ::capnp::List< ::Schema::VectorTilemapPathfindingNode,  ::capnp::Kind::STRUCT>::Builder getNodes();
+  inline void setNodes( ::capnp::List< ::Schema::VectorTilemapPathfindingNode,  ::capnp::Kind::STRUCT>::Reader value);
+  inline  ::capnp::List< ::Schema::VectorTilemapPathfindingNode,  ::capnp::Kind::STRUCT>::Builder initNodes(unsigned int size);
+  inline void adoptNodes(::capnp::Orphan< ::capnp::List< ::Schema::VectorTilemapPathfindingNode,  ::capnp::Kind::STRUCT>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::Schema::VectorTilemapPathfindingNode,  ::capnp::Kind::STRUCT>> disownNodes();
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class VectorTilemapPathfinding::Pipeline {
+public:
+  typedef VectorTilemapPathfinding Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+  inline  ::Schema::Vec2I32::Pipeline getOldTarget();
 private:
   ::capnp::AnyPointer::Pipeline _typeless;
   friend class ::capnp::PipelineHook;
@@ -2430,239 +2727,6 @@ private:
 };
 #endif  // !CAPNP_LITE
 
-class ItemAttrIcon::Reader {
-public:
-  typedef ItemAttrIcon Reads;
-
-  Reader() = default;
-  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
-
-  inline ::capnp::MessageSize totalSize() const {
-    return _reader.totalSize().asPublic();
-  }
-
-#if !CAPNP_LITE
-  inline ::kj::StringTree toString() const {
-    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
-  }
-#endif  // !CAPNP_LITE
-
-  inline bool hasName() const;
-  inline  ::capnp::Text::Reader getName() const;
-
-private:
-  ::capnp::_::StructReader _reader;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::ToDynamic_;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::_::PointerHelpers;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::List;
-  friend class ::capnp::MessageBuilder;
-  friend class ::capnp::Orphanage;
-};
-
-class ItemAttrIcon::Builder {
-public:
-  typedef ItemAttrIcon Builds;
-
-  Builder() = delete;  // Deleted to discourage incorrect usage.
-                       // You can explicitly initialize to nullptr instead.
-  inline Builder(decltype(nullptr)) {}
-  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
-  inline operator Reader() const { return Reader(_builder.asReader()); }
-  inline Reader asReader() const { return *this; }
-
-  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
-#if !CAPNP_LITE
-  inline ::kj::StringTree toString() const { return asReader().toString(); }
-#endif  // !CAPNP_LITE
-
-  inline bool hasName();
-  inline  ::capnp::Text::Builder getName();
-  inline void setName( ::capnp::Text::Reader value);
-  inline  ::capnp::Text::Builder initName(unsigned int size);
-  inline void adoptName(::capnp::Orphan< ::capnp::Text>&& value);
-  inline ::capnp::Orphan< ::capnp::Text> disownName();
-
-private:
-  ::capnp::_::StructBuilder _builder;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::ToDynamic_;
-  friend class ::capnp::Orphanage;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::_::PointerHelpers;
-};
-
-#if !CAPNP_LITE
-class ItemAttrIcon::Pipeline {
-public:
-  typedef ItemAttrIcon Pipelines;
-
-  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
-  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
-      : _typeless(kj::mv(typeless)) {}
-
-private:
-  ::capnp::AnyPointer::Pipeline _typeless;
-  friend class ::capnp::PipelineHook;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::ToDynamic_;
-};
-#endif  // !CAPNP_LITE
-
-class ItemAttrStackCost::Reader {
-public:
-  typedef ItemAttrStackCost Reads;
-
-  Reader() = default;
-  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
-
-  inline ::capnp::MessageSize totalSize() const {
-    return _reader.totalSize().asPublic();
-  }
-
-#if !CAPNP_LITE
-  inline ::kj::StringTree toString() const {
-    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
-  }
-#endif  // !CAPNP_LITE
-
-  inline  ::uint8_t getStackCost() const;
-
-private:
-  ::capnp::_::StructReader _reader;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::ToDynamic_;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::_::PointerHelpers;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::List;
-  friend class ::capnp::MessageBuilder;
-  friend class ::capnp::Orphanage;
-};
-
-class ItemAttrStackCost::Builder {
-public:
-  typedef ItemAttrStackCost Builds;
-
-  Builder() = delete;  // Deleted to discourage incorrect usage.
-                       // You can explicitly initialize to nullptr instead.
-  inline Builder(decltype(nullptr)) {}
-  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
-  inline operator Reader() const { return Reader(_builder.asReader()); }
-  inline Reader asReader() const { return *this; }
-
-  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
-#if !CAPNP_LITE
-  inline ::kj::StringTree toString() const { return asReader().toString(); }
-#endif  // !CAPNP_LITE
-
-  inline  ::uint8_t getStackCost();
-  inline void setStackCost( ::uint8_t value);
-
-private:
-  ::capnp::_::StructBuilder _builder;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::ToDynamic_;
-  friend class ::capnp::Orphanage;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::_::PointerHelpers;
-};
-
-#if !CAPNP_LITE
-class ItemAttrStackCost::Pipeline {
-public:
-  typedef ItemAttrStackCost Pipelines;
-
-  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
-  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
-      : _typeless(kj::mv(typeless)) {}
-
-private:
-  ::capnp::AnyPointer::Pipeline _typeless;
-  friend class ::capnp::PipelineHook;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::ToDynamic_;
-};
-#endif  // !CAPNP_LITE
-
-class ItemAttrTileComponent::Reader {
-public:
-  typedef ItemAttrTileComponent Reads;
-
-  Reader() = default;
-  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
-
-  inline ::capnp::MessageSize totalSize() const {
-    return _reader.totalSize().asPublic();
-  }
-
-#if !CAPNP_LITE
-  inline ::kj::StringTree toString() const {
-    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
-  }
-#endif  // !CAPNP_LITE
-
-  inline  ::uint32_t getAssetId() const;
-
-private:
-  ::capnp::_::StructReader _reader;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::ToDynamic_;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::_::PointerHelpers;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::List;
-  friend class ::capnp::MessageBuilder;
-  friend class ::capnp::Orphanage;
-};
-
-class ItemAttrTileComponent::Builder {
-public:
-  typedef ItemAttrTileComponent Builds;
-
-  Builder() = delete;  // Deleted to discourage incorrect usage.
-                       // You can explicitly initialize to nullptr instead.
-  inline Builder(decltype(nullptr)) {}
-  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
-  inline operator Reader() const { return Reader(_builder.asReader()); }
-  inline Reader asReader() const { return *this; }
-
-  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
-#if !CAPNP_LITE
-  inline ::kj::StringTree toString() const { return asReader().toString(); }
-#endif  // !CAPNP_LITE
-
-  inline  ::uint32_t getAssetId();
-  inline void setAssetId( ::uint32_t value);
-
-private:
-  ::capnp::_::StructBuilder _builder;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::ToDynamic_;
-  friend class ::capnp::Orphanage;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::_::PointerHelpers;
-};
-
-#if !CAPNP_LITE
-class ItemAttrTileComponent::Pipeline {
-public:
-  typedef ItemAttrTileComponent Pipelines;
-
-  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
-  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
-      : _typeless(kj::mv(typeless)) {}
-
-private:
-  ::capnp::AnyPointer::Pipeline _typeless;
-  friend class ::capnp::PipelineHook;
-  template <typename, ::capnp::Kind>
-  friend struct ::capnp::ToDynamic_;
-};
-#endif  // !CAPNP_LITE
-
 class PlayerComponent::Reader {
 public:
   typedef PlayerComponent Reads;
@@ -3346,9 +3410,6 @@ public:
   inline bool hasOccupiedPositions() const;
   inline  ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>::Reader getOccupiedPositions() const;
 
-  inline bool hasAnchorPos() const;
-  inline  ::Schema::Vec3I32::Reader getAnchorPos() const;
-
 private:
   ::capnp::_::StructReader _reader;
   template <typename, ::capnp::Kind>
@@ -3384,13 +3445,6 @@ public:
   inline void adoptOccupiedPositions(::capnp::Orphan< ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>>&& value);
   inline ::capnp::Orphan< ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT>> disownOccupiedPositions();
 
-  inline bool hasAnchorPos();
-  inline  ::Schema::Vec3I32::Builder getAnchorPos();
-  inline void setAnchorPos( ::Schema::Vec3I32::Reader value);
-  inline  ::Schema::Vec3I32::Builder initAnchorPos();
-  inline void adoptAnchorPos(::capnp::Orphan< ::Schema::Vec3I32>&& value);
-  inline ::capnp::Orphan< ::Schema::Vec3I32> disownAnchorPos();
-
 private:
   ::capnp::_::StructBuilder _builder;
   template <typename, ::capnp::Kind>
@@ -3409,7 +3463,6 @@ public:
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
       : _typeless(kj::mv(typeless)) {}
 
-  inline  ::Schema::Vec3I32::Pipeline getAnchorPos();
 private:
   ::capnp::AnyPointer::Pipeline _typeless;
   friend class ::capnp::PipelineHook;
@@ -3435,17 +3488,11 @@ public:
   }
 #endif  // !CAPNP_LITE
 
-  inline bool hasPos() const;
-  inline  ::Schema::Vec3I32::Reader getPos() const;
-
-  inline  ::uint32_t getParent() const;
-
-  inline bool hasMaterial() const;
-  inline  ::Schema::SurfaceMaterial::Reader getMaterial() const;
+  inline bool getUnique() const;
 
   inline bool getCollidable() const;
 
-  inline  ::uint8_t getRotation() const;
+  inline  ::uint8_t getLayer() const;
 
 private:
   ::capnp::_::StructReader _reader;
@@ -3475,28 +3522,14 @@ public:
   inline ::kj::StringTree toString() const { return asReader().toString(); }
 #endif  // !CAPNP_LITE
 
-  inline bool hasPos();
-  inline  ::Schema::Vec3I32::Builder getPos();
-  inline void setPos( ::Schema::Vec3I32::Reader value);
-  inline  ::Schema::Vec3I32::Builder initPos();
-  inline void adoptPos(::capnp::Orphan< ::Schema::Vec3I32>&& value);
-  inline ::capnp::Orphan< ::Schema::Vec3I32> disownPos();
-
-  inline  ::uint32_t getParent();
-  inline void setParent( ::uint32_t value);
-
-  inline bool hasMaterial();
-  inline  ::Schema::SurfaceMaterial::Builder getMaterial();
-  inline void setMaterial( ::Schema::SurfaceMaterial::Reader value);
-  inline  ::Schema::SurfaceMaterial::Builder initMaterial();
-  inline void adoptMaterial(::capnp::Orphan< ::Schema::SurfaceMaterial>&& value);
-  inline ::capnp::Orphan< ::Schema::SurfaceMaterial> disownMaterial();
+  inline bool getUnique();
+  inline void setUnique(bool value);
 
   inline bool getCollidable();
   inline void setCollidable(bool value);
 
-  inline  ::uint8_t getRotation();
-  inline void setRotation( ::uint8_t value);
+  inline  ::uint8_t getLayer();
+  inline void setLayer( ::uint8_t value);
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -3516,8 +3549,93 @@ public:
   inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
       : _typeless(kj::mv(typeless)) {}
 
-  inline  ::Schema::Vec3I32::Pipeline getPos();
-  inline  ::Schema::SurfaceMaterial::Pipeline getMaterial();
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class UniqueTileComponent::Reader {
+public:
+  typedef UniqueTileComponent Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline bool hasTilePos() const;
+  inline  ::Schema::Vec3I32::Reader getTilePos() const;
+
+  inline  ::uint32_t getParent() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class UniqueTileComponent::Builder {
+public:
+  typedef UniqueTileComponent Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline bool hasTilePos();
+  inline  ::Schema::Vec3I32::Builder getTilePos();
+  inline void setTilePos( ::Schema::Vec3I32::Reader value);
+  inline  ::Schema::Vec3I32::Builder initTilePos();
+  inline void adoptTilePos(::capnp::Orphan< ::Schema::Vec3I32>&& value);
+  inline ::capnp::Orphan< ::Schema::Vec3I32> disownTilePos();
+
+  inline  ::uint32_t getParent();
+  inline void setParent( ::uint32_t value);
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class UniqueTileComponent::Pipeline {
+public:
+  typedef UniqueTileComponent Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+  inline  ::Schema::Vec3I32::Pipeline getTilePos();
 private:
   ::capnp::AnyPointer::Pipeline _typeless;
   friend class ::capnp::PipelineHook;
@@ -3546,7 +3664,12 @@ public:
   inline bool hasPos() const;
   inline  ::Schema::Vec3I32::Reader getPos() const;
 
+  inline bool hasRoot() const;
+  inline  ::Schema::Vec2I32::Reader getRoot() const;
+
   inline  ::uint32_t getEntityId() const;
+
+  inline bool getEnabled() const;
 
 private:
   ::capnp::_::StructReader _reader;
@@ -3583,8 +3706,18 @@ public:
   inline void adoptPos(::capnp::Orphan< ::Schema::Vec3I32>&& value);
   inline ::capnp::Orphan< ::Schema::Vec3I32> disownPos();
 
+  inline bool hasRoot();
+  inline  ::Schema::Vec2I32::Builder getRoot();
+  inline void setRoot( ::Schema::Vec2I32::Reader value);
+  inline  ::Schema::Vec2I32::Builder initRoot();
+  inline void adoptRoot(::capnp::Orphan< ::Schema::Vec2I32>&& value);
+  inline ::capnp::Orphan< ::Schema::Vec2I32> disownRoot();
+
   inline  ::uint32_t getEntityId();
   inline void setEntityId( ::uint32_t value);
+
+  inline bool getEnabled();
+  inline void setEnabled(bool value);
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -3605,6 +3738,7 @@ public:
       : _typeless(kj::mv(typeless)) {}
 
   inline  ::Schema::Vec3I32::Pipeline getPos();
+  inline  ::Schema::Vec2I32::Pipeline getRoot();
 private:
   ::capnp::AnyPointer::Pipeline _typeless;
   friend class ::capnp::PipelineHook;
@@ -6316,6 +6450,34 @@ inline void Vec2I16::Builder::setY( ::int16_t value) {
       ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
 }
 
+inline  ::int32_t Vec2I32::Reader::getX() const {
+  return _reader.getDataField< ::int32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::int32_t Vec2I32::Builder::getX() {
+  return _builder.getDataField< ::int32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void Vec2I32::Builder::setX( ::int32_t value) {
+  _builder.setDataField< ::int32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::int32_t Vec2I32::Reader::getY() const {
+  return _reader.getDataField< ::int32_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+
+inline  ::int32_t Vec2I32::Builder::getY() {
+  return _builder.getDataField< ::int32_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+inline void Vec2I32::Builder::setY( ::int32_t value) {
+  _builder.setDataField< ::int32_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
+}
+
 inline  ::int32_t Vec3I32::Reader::getX() const {
   return _reader.getDataField< ::int32_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
@@ -6518,6 +6680,199 @@ inline  ::uint32_t ArrowComponent::Builder::getTileCost() {
 inline void ArrowComponent::Builder::setTileCost( ::uint32_t value) {
   _builder.setDataField< ::uint32_t>(
       ::capnp::bounded<2>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool VectorTilemapPathfindingNode::Reader::hasPos() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool VectorTilemapPathfindingNode::Builder::hasPos() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::Schema::Vec2I32::Reader VectorTilemapPathfindingNode::Reader::getPos() const {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2I32>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::Schema::Vec2I32::Builder VectorTilemapPathfindingNode::Builder::getPos() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2I32>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::Schema::Vec2I32::Pipeline VectorTilemapPathfindingNode::Pipeline::getPos() {
+  return  ::Schema::Vec2I32::Pipeline(_typeless.getPointerField(0));
+}
+#endif  // !CAPNP_LITE
+inline void VectorTilemapPathfindingNode::Builder::setPos( ::Schema::Vec2I32::Reader value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec2I32>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::Schema::Vec2I32::Builder VectorTilemapPathfindingNode::Builder::initPos() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2I32>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void VectorTilemapPathfindingNode::Builder::adoptPos(
+    ::capnp::Orphan< ::Schema::Vec2I32>&& value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec2I32>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::Schema::Vec2I32> VectorTilemapPathfindingNode::Builder::disownPos() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2I32>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool VectorTilemapPathfindingNode::Reader::hasDir() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline bool VectorTilemapPathfindingNode::Builder::hasDir() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline  ::Schema::Vec2F32::Reader VectorTilemapPathfindingNode::Reader::getDir() const {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::get(_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline  ::Schema::Vec2F32::Builder VectorTilemapPathfindingNode::Builder::getDir() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::get(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::Schema::Vec2F32::Pipeline VectorTilemapPathfindingNode::Pipeline::getDir() {
+  return  ::Schema::Vec2F32::Pipeline(_typeless.getPointerField(1));
+}
+#endif  // !CAPNP_LITE
+inline void VectorTilemapPathfindingNode::Builder::setDir( ::Schema::Vec2F32::Reader value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::set(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+}
+inline  ::Schema::Vec2F32::Builder VectorTilemapPathfindingNode::Builder::initDir() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::init(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline void VectorTilemapPathfindingNode::Builder::adoptDir(
+    ::capnp::Orphan< ::Schema::Vec2F32>&& value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::adopt(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::Schema::Vec2F32> VectorTilemapPathfindingNode::Builder::disownDir() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2F32>::disown(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline float VectorTilemapPathfindingNode::Reader::getCost() const {
+  return _reader.getDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline float VectorTilemapPathfindingNode::Builder::getCost() {
+  return _builder.getDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void VectorTilemapPathfindingNode::Builder::setCost(float value) {
+  _builder.setDataField<float>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t VectorTilemapPathfindingNode::Reader::getGen() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t VectorTilemapPathfindingNode::Builder::getGen() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
+}
+inline void VectorTilemapPathfindingNode::Builder::setGen( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool VectorTilemapPathfinding::Reader::hasOldTarget() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool VectorTilemapPathfinding::Builder::hasOldTarget() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::Schema::Vec2I32::Reader VectorTilemapPathfinding::Reader::getOldTarget() const {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2I32>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::Schema::Vec2I32::Builder VectorTilemapPathfinding::Builder::getOldTarget() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2I32>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::Schema::Vec2I32::Pipeline VectorTilemapPathfinding::Pipeline::getOldTarget() {
+  return  ::Schema::Vec2I32::Pipeline(_typeless.getPointerField(0));
+}
+#endif  // !CAPNP_LITE
+inline void VectorTilemapPathfinding::Builder::setOldTarget( ::Schema::Vec2I32::Reader value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec2I32>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::Schema::Vec2I32::Builder VectorTilemapPathfinding::Builder::initOldTarget() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2I32>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void VectorTilemapPathfinding::Builder::adoptOldTarget(
+    ::capnp::Orphan< ::Schema::Vec2I32>&& value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec2I32>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::Schema::Vec2I32> VectorTilemapPathfinding::Builder::disownOldTarget() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2I32>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline  ::uint32_t VectorTilemapPathfinding::Reader::getCurGen() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t VectorTilemapPathfinding::Builder::getCurGen() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void VectorTilemapPathfinding::Builder::setCurGen( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool VectorTilemapPathfinding::Reader::hasNodes() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline bool VectorTilemapPathfinding::Builder::hasNodes() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::List< ::Schema::VectorTilemapPathfindingNode,  ::capnp::Kind::STRUCT>::Reader VectorTilemapPathfinding::Reader::getNodes() const {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::VectorTilemapPathfindingNode,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline  ::capnp::List< ::Schema::VectorTilemapPathfindingNode,  ::capnp::Kind::STRUCT>::Builder VectorTilemapPathfinding::Builder::getNodes() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::VectorTilemapPathfindingNode,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline void VectorTilemapPathfinding::Builder::setNodes( ::capnp::List< ::Schema::VectorTilemapPathfindingNode,  ::capnp::Kind::STRUCT>::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::VectorTilemapPathfindingNode,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::List< ::Schema::VectorTilemapPathfindingNode,  ::capnp::Kind::STRUCT>::Builder VectorTilemapPathfinding::Builder::initNodes(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::VectorTilemapPathfindingNode,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), size);
+}
+inline void VectorTilemapPathfinding::Builder::adoptNodes(
+    ::capnp::Orphan< ::capnp::List< ::Schema::VectorTilemapPathfindingNode,  ::capnp::Kind::STRUCT>>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::VectorTilemapPathfindingNode,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::List< ::Schema::VectorTilemapPathfindingNode,  ::capnp::Kind::STRUCT>> VectorTilemapPathfinding::Builder::disownNodes() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::Schema::VectorTilemapPathfindingNode,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
 }
 
 inline  ::uint32_t ItemStack::Reader::getCount() const {
@@ -7244,68 +7599,6 @@ inline void ItemStackComponent::Builder::setItemId( ::uint32_t value) {
       ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
 }
 
-inline bool ItemAttrIcon::Reader::hasName() const {
-  return !_reader.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
-}
-inline bool ItemAttrIcon::Builder::hasName() {
-  return !_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
-}
-inline  ::capnp::Text::Reader ItemAttrIcon::Reader::getName() const {
-  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_reader.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-inline  ::capnp::Text::Builder ItemAttrIcon::Builder::getName() {
-  return ::capnp::_::PointerHelpers< ::capnp::Text>::get(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-inline void ItemAttrIcon::Builder::setName( ::capnp::Text::Reader value) {
-  ::capnp::_::PointerHelpers< ::capnp::Text>::set(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
-}
-inline  ::capnp::Text::Builder ItemAttrIcon::Builder::initName(unsigned int size) {
-  return ::capnp::_::PointerHelpers< ::capnp::Text>::init(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), size);
-}
-inline void ItemAttrIcon::Builder::adoptName(
-    ::capnp::Orphan< ::capnp::Text>&& value) {
-  ::capnp::_::PointerHelpers< ::capnp::Text>::adopt(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
-}
-inline ::capnp::Orphan< ::capnp::Text> ItemAttrIcon::Builder::disownName() {
-  return ::capnp::_::PointerHelpers< ::capnp::Text>::disown(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-
-inline  ::uint8_t ItemAttrStackCost::Reader::getStackCost() const {
-  return _reader.getDataField< ::uint8_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-
-inline  ::uint8_t ItemAttrStackCost::Builder::getStackCost() {
-  return _builder.getDataField< ::uint8_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-inline void ItemAttrStackCost::Builder::setStackCost( ::uint8_t value) {
-  _builder.setDataField< ::uint8_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
-}
-
-inline  ::uint32_t ItemAttrTileComponent::Reader::getAssetId() const {
-  return _reader.getDataField< ::uint32_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-
-inline  ::uint32_t ItemAttrTileComponent::Builder::getAssetId() {
-  return _builder.getDataField< ::uint32_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
-}
-inline void ItemAttrTileComponent::Builder::setAssetId( ::uint32_t value) {
-  _builder.setDataField< ::uint32_t>(
-      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
-}
-
 inline bool PlayerComponent::Reader::hasMouse() const {
   return !_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
@@ -7866,163 +8159,99 @@ inline ::capnp::Orphan< ::capnp::List< ::Schema::Vec3I32,  ::capnp::Kind::STRUCT
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
-inline bool MultiTileComponent::Reader::hasAnchorPos() const {
-  return !_reader.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
-}
-inline bool MultiTileComponent::Builder::hasAnchorPos() {
-  return !_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
-}
-inline  ::Schema::Vec3I32::Reader MultiTileComponent::Reader::getAnchorPos() const {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::get(_reader.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
-}
-inline  ::Schema::Vec3I32::Builder MultiTileComponent::Builder::getAnchorPos() {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::get(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
-}
-#if !CAPNP_LITE
-inline  ::Schema::Vec3I32::Pipeline MultiTileComponent::Pipeline::getAnchorPos() {
-  return  ::Schema::Vec3I32::Pipeline(_typeless.getPointerField(1));
-}
-#endif  // !CAPNP_LITE
-inline void MultiTileComponent::Builder::setAnchorPos( ::Schema::Vec3I32::Reader value) {
-  ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::set(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
-}
-inline  ::Schema::Vec3I32::Builder MultiTileComponent::Builder::initAnchorPos() {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::init(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
-}
-inline void MultiTileComponent::Builder::adoptAnchorPos(
-    ::capnp::Orphan< ::Schema::Vec3I32>&& value) {
-  ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::adopt(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
-}
-inline ::capnp::Orphan< ::Schema::Vec3I32> MultiTileComponent::Builder::disownAnchorPos() {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::disown(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
-}
-
-inline bool TileComponent::Reader::hasPos() const {
-  return !_reader.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
-}
-inline bool TileComponent::Builder::hasPos() {
-  return !_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
-}
-inline  ::Schema::Vec3I32::Reader TileComponent::Reader::getPos() const {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::get(_reader.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-inline  ::Schema::Vec3I32::Builder TileComponent::Builder::getPos() {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::get(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-#if !CAPNP_LITE
-inline  ::Schema::Vec3I32::Pipeline TileComponent::Pipeline::getPos() {
-  return  ::Schema::Vec3I32::Pipeline(_typeless.getPointerField(0));
-}
-#endif  // !CAPNP_LITE
-inline void TileComponent::Builder::setPos( ::Schema::Vec3I32::Reader value) {
-  ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::set(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
-}
-inline  ::Schema::Vec3I32::Builder TileComponent::Builder::initPos() {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::init(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-inline void TileComponent::Builder::adoptPos(
-    ::capnp::Orphan< ::Schema::Vec3I32>&& value) {
-  ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::adopt(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
-}
-inline ::capnp::Orphan< ::Schema::Vec3I32> TileComponent::Builder::disownPos() {
-  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::disown(_builder.getPointerField(
-      ::capnp::bounded<0>() * ::capnp::POINTERS));
-}
-
-inline  ::uint32_t TileComponent::Reader::getParent() const {
-  return _reader.getDataField< ::uint32_t>(
+inline bool TileComponent::Reader::getUnique() const {
+  return _reader.getDataField<bool>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
 
-inline  ::uint32_t TileComponent::Builder::getParent() {
-  return _builder.getDataField< ::uint32_t>(
+inline bool TileComponent::Builder::getUnique() {
+  return _builder.getDataField<bool>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
 }
-inline void TileComponent::Builder::setParent( ::uint32_t value) {
-  _builder.setDataField< ::uint32_t>(
+inline void TileComponent::Builder::setUnique(bool value) {
+  _builder.setDataField<bool>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
-}
-
-inline bool TileComponent::Reader::hasMaterial() const {
-  return !_reader.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
-}
-inline bool TileComponent::Builder::hasMaterial() {
-  return !_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
-}
-inline  ::Schema::SurfaceMaterial::Reader TileComponent::Reader::getMaterial() const {
-  return ::capnp::_::PointerHelpers< ::Schema::SurfaceMaterial>::get(_reader.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
-}
-inline  ::Schema::SurfaceMaterial::Builder TileComponent::Builder::getMaterial() {
-  return ::capnp::_::PointerHelpers< ::Schema::SurfaceMaterial>::get(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
-}
-#if !CAPNP_LITE
-inline  ::Schema::SurfaceMaterial::Pipeline TileComponent::Pipeline::getMaterial() {
-  return  ::Schema::SurfaceMaterial::Pipeline(_typeless.getPointerField(1));
-}
-#endif  // !CAPNP_LITE
-inline void TileComponent::Builder::setMaterial( ::Schema::SurfaceMaterial::Reader value) {
-  ::capnp::_::PointerHelpers< ::Schema::SurfaceMaterial>::set(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
-}
-inline  ::Schema::SurfaceMaterial::Builder TileComponent::Builder::initMaterial() {
-  return ::capnp::_::PointerHelpers< ::Schema::SurfaceMaterial>::init(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
-}
-inline void TileComponent::Builder::adoptMaterial(
-    ::capnp::Orphan< ::Schema::SurfaceMaterial>&& value) {
-  ::capnp::_::PointerHelpers< ::Schema::SurfaceMaterial>::adopt(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
-}
-inline ::capnp::Orphan< ::Schema::SurfaceMaterial> TileComponent::Builder::disownMaterial() {
-  return ::capnp::_::PointerHelpers< ::Schema::SurfaceMaterial>::disown(_builder.getPointerField(
-      ::capnp::bounded<1>() * ::capnp::POINTERS));
 }
 
 inline bool TileComponent::Reader::getCollidable() const {
   return _reader.getDataField<bool>(
-      ::capnp::bounded<32>() * ::capnp::ELEMENTS, true);
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
 }
 
 inline bool TileComponent::Builder::getCollidable() {
   return _builder.getDataField<bool>(
-      ::capnp::bounded<32>() * ::capnp::ELEMENTS, true);
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
 }
 inline void TileComponent::Builder::setCollidable(bool value) {
   _builder.setDataField<bool>(
-      ::capnp::bounded<32>() * ::capnp::ELEMENTS, value, true);
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
 }
 
-inline  ::uint8_t TileComponent::Reader::getRotation() const {
+inline  ::uint8_t TileComponent::Reader::getLayer() const {
   return _reader.getDataField< ::uint8_t>(
-      ::capnp::bounded<5>() * ::capnp::ELEMENTS);
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
 }
 
-inline  ::uint8_t TileComponent::Builder::getRotation() {
+inline  ::uint8_t TileComponent::Builder::getLayer() {
   return _builder.getDataField< ::uint8_t>(
-      ::capnp::bounded<5>() * ::capnp::ELEMENTS);
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS);
 }
-inline void TileComponent::Builder::setRotation( ::uint8_t value) {
+inline void TileComponent::Builder::setLayer( ::uint8_t value) {
   _builder.setDataField< ::uint8_t>(
-      ::capnp::bounded<5>() * ::capnp::ELEMENTS, value);
+      ::capnp::bounded<1>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool UniqueTileComponent::Reader::hasTilePos() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool UniqueTileComponent::Builder::hasTilePos() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::Schema::Vec3I32::Reader UniqueTileComponent::Reader::getTilePos() const {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::Schema::Vec3I32::Builder UniqueTileComponent::Builder::getTilePos() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::Schema::Vec3I32::Pipeline UniqueTileComponent::Pipeline::getTilePos() {
+  return  ::Schema::Vec3I32::Pipeline(_typeless.getPointerField(0));
+}
+#endif  // !CAPNP_LITE
+inline void UniqueTileComponent::Builder::setTilePos( ::Schema::Vec3I32::Reader value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::Schema::Vec3I32::Builder UniqueTileComponent::Builder::initTilePos() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void UniqueTileComponent::Builder::adoptTilePos(
+    ::capnp::Orphan< ::Schema::Vec3I32>&& value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::Schema::Vec3I32> UniqueTileComponent::Builder::disownTilePos() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec3I32>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline  ::uint32_t UniqueTileComponent::Reader::getParent() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t UniqueTileComponent::Builder::getParent() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void UniqueTileComponent::Builder::setParent( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
 }
 
 inline bool TileEntry::Reader::hasPos() const {
@@ -8064,6 +8293,45 @@ inline ::capnp::Orphan< ::Schema::Vec3I32> TileEntry::Builder::disownPos() {
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
+inline bool TileEntry::Reader::hasRoot() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline bool TileEntry::Builder::hasRoot() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline  ::Schema::Vec2I32::Reader TileEntry::Reader::getRoot() const {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2I32>::get(_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline  ::Schema::Vec2I32::Builder TileEntry::Builder::getRoot() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2I32>::get(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::Schema::Vec2I32::Pipeline TileEntry::Pipeline::getRoot() {
+  return  ::Schema::Vec2I32::Pipeline(_typeless.getPointerField(1));
+}
+#endif  // !CAPNP_LITE
+inline void TileEntry::Builder::setRoot( ::Schema::Vec2I32::Reader value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec2I32>::set(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+}
+inline  ::Schema::Vec2I32::Builder TileEntry::Builder::initRoot() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2I32>::init(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline void TileEntry::Builder::adoptRoot(
+    ::capnp::Orphan< ::Schema::Vec2I32>&& value) {
+  ::capnp::_::PointerHelpers< ::Schema::Vec2I32>::adopt(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::Schema::Vec2I32> TileEntry::Builder::disownRoot() {
+  return ::capnp::_::PointerHelpers< ::Schema::Vec2I32>::disown(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
 inline  ::uint32_t TileEntry::Reader::getEntityId() const {
   return _reader.getDataField< ::uint32_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS);
@@ -8076,6 +8344,20 @@ inline  ::uint32_t TileEntry::Builder::getEntityId() {
 inline void TileEntry::Builder::setEntityId( ::uint32_t value) {
   _builder.setDataField< ::uint32_t>(
       ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool TileEntry::Reader::getEnabled() const {
+  return _reader.getDataField<bool>(
+      ::capnp::bounded<32>() * ::capnp::ELEMENTS);
+}
+
+inline bool TileEntry::Builder::getEnabled() {
+  return _builder.getDataField<bool>(
+      ::capnp::bounded<32>() * ::capnp::ELEMENTS);
+}
+inline void TileEntry::Builder::setEnabled(bool value) {
+  _builder.setDataField<bool>(
+      ::capnp::bounded<32>() * ::capnp::ELEMENTS, value);
 }
 
 inline bool TilemapComponent::Reader::hasTiles() const {

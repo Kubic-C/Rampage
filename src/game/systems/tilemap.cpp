@@ -4,71 +4,29 @@
 
 RAMPAGE_START
 
-struct PreviousMultiTileComponent {
-  static void serialize(capnp::MessageBuilder& builder, Ref component) {
-    auto multiTileBuilder = builder.initRoot<Schema::MultiTileComponent>();
-    MultiTileComponent& self = component.cast<PreviousMultiTileComponent>()->mt;
-    
-    // Serialize occupiedPositions
-    auto positionsBuilder = multiTileBuilder.initOccupiedPositions((u32)self.occupiedPositions.size());
-    for (size_t i = 0; i < self.occupiedPositions.size(); ++i) {
-      const auto& pos = self.occupiedPositions[i];
-      positionsBuilder[i].setX((i32)pos.x);
-      positionsBuilder[i].setY((i32)pos.y);
-      positionsBuilder[i].setZ(0);
-    }
-    
-    // Serialize anchorPos
-    auto anchorPosBuilder = multiTileBuilder.getAnchorPos();
-    anchorPosBuilder.setX((i32)self.anchorPos.x);
-    anchorPosBuilder.setY((i32)self.anchorPos.y);
-    anchorPosBuilder.setZ(0);
-  }
-
-  static void deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component) {
-    auto multiTileReader = reader.getRoot<Schema::MultiTileComponent>();
-    MultiTileComponent& self = component.cast<PreviousMultiTileComponent>()->mt;
-    
-    // Deserialize occupiedPositions
-    self.occupiedPositions.clear();
-    const auto positionsReader = multiTileReader.getOccupiedPositions();
-    for (auto posReader : positionsReader) {
-      glm::ivec2 pos((i32)posReader.getX(), (i32)posReader.getY());
-      self.occupiedPositions.push_back(pos);
-    }
-    
-    // Deserialize anchorPos
-    const auto anchorPosReader = multiTileReader.getAnchorPos();
-    self.anchorPos = glm::ivec2((i32)anchorPosReader.getX(), (i32)anchorPosReader.getY());
-  }
-
-  MultiTileComponent mt;
-};
-
-bool TilemapManager::canInsert(IWorldPtr world, EntityId tilemapEntityId, WorldLayer layer, glm::ivec2 gridPos, EntityId tileEntityId) {
+bool TilemapManager::canInsert(IWorldPtr world, EntityId tilemapEntityId, glm::ivec2 gridPos, TileDirection rotation, EntityId tileEntityId) {
   EntityPtr tilemapEntity = world->getEntity(tilemapEntityId);
   EntityPtr tileEntity = world->getEntity(tileEntityId);
   auto tilemap = tilemapEntity.get<TilemapComponent>();
   auto bodyComp = tilemapEntity.get<BodyComponent>();
   if(!tileEntity.has<TileComponent>()) 
     return false;
-  auto tile = tileEntity.get<TileComponent>();
+  WorldLayer layer = tileEntity.get<TileComponent>()->layer;
 
   // Insert single/multi tile in the tilemap
 
   // 1) (READONLY) Determine all occupied positions based on whether it's a multi-tile or single tile entity
-  std::vector<std::pair<glm::ivec2, EntityId>> occupiedPositions;
-  occupiedPositions.push_back({gridPos, tileEntityId}); // The first tile IS ALWAYS the anchor tile.
+  std::vector<glm::ivec2> occupiedPositions;
   if(tileEntity.has<MultiTileComponent>()) {
     // Read from multi-tile component to determine all occupied positions,
     // and add them to the tilemap as well with the same parent
     auto multiTile = tileEntity.get<MultiTileComponent>();
     for(const auto& pos : multiTile->occupiedPositions) {
-      if(pos == multiTile->anchorPos)
-        continue; // Skip the anchor tile since we already added it
-      glm::ivec2 rotatedOffset = rotateTileOffset(pos - multiTile->anchorPos, tile->rotation);
-      occupiedPositions.push_back({rotatedOffset + gridPos, NullEntityId});
+      glm::ivec2 rotatedOffset = rotateTileOffset(pos, rotation);
+      occupiedPositions.push_back(rotatedOffset + gridPos);
     }
+  } else {
+    occupiedPositions.push_back(gridPos);
   }
 
   // 2) (READONLY) Failure cases; 
@@ -79,40 +37,35 @@ bool TilemapManager::canInsert(IWorldPtr world, EntityId tilemapEntityId, WorldL
   if(layer == WorldLayer::Invalid)
     return false;
   for(auto& pos : occupiedPositions)
-    if(tilemap->containsTile(layer, pos.first))
+    if(tilemap->containsTile(layer, pos))
       return false;
-  if(tile->parent != 0)
-    return false;
-  if(b2Shape_IsValid(tile->shapeId))
-    return false;
  
   return true;
 }
 
-bool TilemapManager::insertTile(IWorldPtr world, EntityId tilemapEntityId, WorldLayer layer, glm::ivec2 gridPos, EntityId tileEntityId) {
+bool TilemapManager::insertTile(IWorldPtr world, EntityId tilemapEntityId, glm::ivec2 gridPos, TileDirection rotation, EntityId _tileEntityId) {
   EntityPtr tilemapEntity = world->getEntity(tilemapEntityId);
-  EntityPtr tileEntity = world->getEntity(tileEntityId);
+  EntityPtr tileEntity = world->getEntity(_tileEntityId);
   auto tilemap = tilemapEntity.get<TilemapComponent>();
   auto bodyComp = tilemapEntity.get<BodyComponent>();
   if(!tileEntity.has<TileComponent>()) 
     return false;
-  auto tile = tileEntity.get<TileComponent>();
+  WorldLayer layer = tileEntity.get<TileComponent>()->layer;
 
   // Insert single/multi tile in the tilemap
 
   // 1) (READONLY) Determine all occupied positions based on whether it's a multi-tile or single tile entity
-  std::vector<std::pair<glm::ivec2, EntityId>> occupiedPositions;
-  occupiedPositions.push_back({gridPos, tileEntityId}); // The first tile IS ALWAYS the anchor tile.
+  std::vector<glm::ivec2> occupiedPositions;
   if(tileEntity.has<MultiTileComponent>()) {
     // Read from multi-tile component to determine all occupied positions,
     // and add them to the tilemap as well with the same parent
     auto multiTile = tileEntity.get<MultiTileComponent>();
     for(const auto& pos : multiTile->occupiedPositions) {
-      if(pos == multiTile->anchorPos)
-        continue; // Skip the anchor tile since we already added it
-      glm::ivec2 rotatedOffset = rotateTileOffset(pos - multiTile->anchorPos, tile->rotation);
-      occupiedPositions.push_back({rotatedOffset + gridPos, NullEntityId});
+      glm::ivec2 rotatedOffset = rotateTileOffset(pos, rotation);
+      occupiedPositions.push_back(rotatedOffset + gridPos);
     }
+  } else {
+    occupiedPositions.push_back(gridPos);
   }
 
   // 2) (READONLY) Failure cases; 
@@ -123,59 +76,43 @@ bool TilemapManager::insertTile(IWorldPtr world, EntityId tilemapEntityId, World
   if(layer == WorldLayer::Invalid)
     return false;
   for(auto& pos : occupiedPositions)
-    if(tilemap->containsTile(layer, pos.first))
+    if(tilemap->containsTile(layer, pos))
       return false;
-  if(tile->parent != 0)
-    return false;
-  if(b2Shape_IsValid(tile->shapeId))
-    return false;
 
   // 3) Update tilemap and tile data and create additional subtiles as needed.
-  tile->pos = gridPos;
-  tile->layer = layer;
-  tile->parent = tilemapEntityId;
-  tilemap->setTile(layer, gridPos, tileEntityId);
-  for(auto&[pos, entity] : occupiedPositions) {
-    if(pos == gridPos)
-      continue; // Skip the anchor tile since we already added it
-    EntityPtr subTile = world->create();
-    subTile.add<TileComponent>();
-    auto subTileComp = subTile.get<TileComponent>();
-    subTileComp->parent = tileEntityId;
-    subTileComp->material = tile->material;
-    subTileComp->pos = pos;
-    subTileComp->layer = layer;
-
-    entity = subTile;
-    tilemap->setTile(layer, pos, subTile);
+  if(tileEntity.has<UniqueTileComponent>()) {
+    tileEntity = tileEntity.clone();
+    tileEntity.remove<AssetTag>();
+    tileEntity.add<TransformComponent>();
+    auto uniqueTile = tileEntity.get<UniqueTileComponent>();
+    uniqueTile->worldPos = gridPos;
+    uniqueTile->layer = layer;
+    uniqueTile->entity = tilemapEntityId;
+    auto transform = tileEntity.get<TransformComponent>();
+    auto tilemapTransform = tilemapEntity.get<TransformComponent>();
+    transform->pos = tilemapTransform->getWorldPoint(getLocalTileCenter(uniqueTile->worldPos));
+    transform->rot = tilemapTransform->rot;
   }
-  if(tileEntity.has<MultiTileComponent>()) {
-    auto multiTile = tileEntity.get<MultiTileComponent>();
-    tileEntity.add<PreviousMultiTileComponent>();
-    auto prevMultiTile = tileEntity.get<PreviousMultiTileComponent>();
-    prevMultiTile->mt.anchorPos = multiTile->anchorPos; // Store previous state for undo/rollback purposes
-    prevMultiTile->mt.occupiedPositions = multiTile->occupiedPositions;
-    // Write back to multitile the updated positions
-    multiTile->anchorPos = gridPos;
-    multiTile->occupiedPositions.clear();
-    for (const auto& pos : occupiedPositions) { 
-      multiTile->occupiedPositions.push_back(pos.first);
-    }
+
+  for(const auto& pos : occupiedPositions) {
+    tilemap->setTile(tilemapEntity, layer, pos, gridPos, tileEntity);
+    tilemap->getTile(layer, pos).rotation = rotation;
   }
     
   // 4) Create Box2D shapes for each tile and subtile
-  for(const auto& [pos, entity] : occupiedPositions) {
-    auto tileComp = world->getEntity(entity).get<TileComponent>();
+  bool isCollidable = tileEntity.get<TileComponent>()->collidable;
+  for(const auto& pos : occupiedPositions) {
+    Tile& tile = tilemap->getTile(layer, pos);
 
     Vec2 tilePos = getLocalTileCenter(pos);
     b2Polygon tilePolygon =
         b2MakeOffsetBox(tileSize.x * 0.5f, tileSize.y * 0.5f, tilePos, Rot(0.0f));
     b2ShapeDef shapeDef = b2DefaultShapeDef();
-    shapeDef.userData = entityToB2Data(tileEntity.id());
-    shapeDef.material = tile->material;
+    shapeDef.userData = &tile.ref;
+    shapeDef.material = b2DefaultSurfaceMaterial();
     shapeDef.updateBodyMass = false;
-    shapeDef.isSensor = !tile->collidable;
-    tileComp->shapeId = b2CreatePolygonShape(bodyComp->id, &shapeDef, &tilePolygon);
+    shapeDef.isSensor = !isCollidable;
+    tile.shapeId = b2CreatePolygonShape(bodyComp->id, &shapeDef, &tilePolygon);
   }
 
   b2Body_ApplyMassFromShapes(*bodyComp);
@@ -183,39 +120,33 @@ bool TilemapManager::insertTile(IWorldPtr world, EntityId tilemapEntityId, World
   return true;
 }
 
-EntityPtr TilemapManager::removeTile(IWorldPtr world, EntityId tilemapEntityId, WorldLayer layer, glm::ivec2 gridPos, bool autoDestroyEntity) {
+EntityPtr TilemapManager::removeTile(IWorldPtr world, EntityId tilemapEntityId, WorldLayer layer, glm::ivec2 gridPos) {
   EntityPtr tilemapEntity = world->getEntity(tilemapEntityId);
   auto tilemap = tilemapEntity.get<TilemapComponent>();
 
   if(!tilemap->containsTile(layer, gridPos))
     return world->getEntity(NullEntityId);
-  EntityPtr tileEntity = world->getEntity(getAnchorTile(world, tilemap->getTile(layer, gridPos)));
-  gridPos = tileEntity.get<TileComponent>()->pos; // Update to the actual position of the tile in case it's a multi-tile entity
-  auto tile = tileEntity.get<TileComponent>();
+  const Tile& tile = getAnchorTile(world, tilemap->getTile(layer, gridPos));
+  gridPos = tile.ref.worldPos; // Update to the actual position of the tile in case it's a multi-tile entity
+  EntityPtr tileEntity = world->getEntity(tile.tileId);
 
-  std::vector<std::pair<glm::ivec2, EntityId>> occupiedPositions;
-  occupiedPositions.push_back({gridPos, tileEntity}); // The first tile IS ALWAYS the anchor tile.
+  std::vector<glm::ivec2> occupiedPositions;
   if(tileEntity.has<MultiTileComponent>()) {
+    // Read from multi-tile component to determine all occupied positions,
+    // and add them to the tilemap as well with the same parent
     auto multiTile = tileEntity.get<MultiTileComponent>();
-    auto prevMultiTile = tileEntity.get<PreviousMultiTileComponent>();
     for(const auto& pos : multiTile->occupiedPositions) {
-      if(pos == multiTile->anchorPos)
-        continue; // Skip the anchor tile since we already added it
-      occupiedPositions.push_back({pos, world->getEntity(tilemap->getTile(layer, pos))});
+      glm::ivec2 rotatedOffset = rotateTileOffset(pos, tile.rotation);
+      occupiedPositions.push_back(rotatedOffset + gridPos);
     }
-    multiTile->occupiedPositions = prevMultiTile->mt.occupiedPositions; // Restore previous state in case we need to undo/rollback
-    multiTile->anchorPos = prevMultiTile->mt.anchorPos;
+  } else {
+    occupiedPositions.push_back(gridPos);
   }
 
-  for (const auto& [pos, entity] : occupiedPositions) {
-    auto tileComp = world->getEntity(entity).get<TileComponent>();
-    if (b2Shape_IsValid(tileComp->shapeId)) {
-      b2DestroyShape(tileComp->shapeId, false);
-      tileComp->shapeId = b2_nullShapeId;
-    }
+  for (const auto& pos : occupiedPositions) {
+    const Tile& subTile = tilemap->getTile(layer, pos);
 
-    if(pos != gridPos)
-      world->destroy(entity);
+    b2DestroyShape(subTile.shapeId, false);
     tilemap->removeTile(layer, pos);
   }
 
@@ -224,7 +155,7 @@ EntityPtr TilemapManager::removeTile(IWorldPtr world, EntityId tilemapEntityId, 
   // Check if the tilemap has split
   checkAndHandleBreakage(world, tilemapEntityId);
 
-  if(autoDestroyEntity) {
+  if(tileEntity.has<UniqueTileComponent>() && world->isAlive(tileEntity)) {
     world->destroy(tileEntity);
     return world->getEntity(NullEntityId);
   }
@@ -232,26 +163,16 @@ EntityPtr TilemapManager::removeTile(IWorldPtr world, EntityId tilemapEntityId, 
   return tileEntity;
 }
 
-bool TilemapManager::isAnchorTile(IWorldPtr world, EntityId tileId) {
-  EntityPtr tileEntity = world->getEntity(tileId);
-  EntityPtr parentEntity = world->getEntity(tileEntity.get<TileComponent>()->parent);
-  return parentEntity.has<MultiTileComponent>();
+bool TilemapManager::isAnchorTile(const Tile& tile) {
+  return tile.root == tile.ref.worldPos;
 }
 
-EntityPtr TilemapManager::getAnchorTile(IWorldPtr world, EntityId tileId) {
-  EntityPtr tileEntity = world->getEntity(tileId);
-  auto tile = tileEntity.get<TileComponent>();
-  EntityPtr parentEntity = world->getEntity(tile->parent);
-
-  if(!parentEntity.has<MultiTileComponent>())
-    return tileEntity;
-
-  auto parentTile = parentEntity.get<TileComponent>();
-  EntityPtr tilemapEntity = world->getEntity(parentTile->parent);
+Tile& TilemapManager::getAnchorTile(IWorldPtr world, const Tile& tile) {
+  EntityPtr tileEntity = world->getEntity(tile.tileId);
+  EntityPtr tilemapEntity = world->getEntity(tile.ref.tilemap);
   auto tilemap = tilemapEntity.get<TilemapComponent>();
-  auto multiTile = parentEntity.get<MultiTileComponent>();
 
-  return world->getEntity(tilemap->getTile(parentTile->layer, multiTile->anchorPos));
+  return tilemap->getTile(tile.ref.layer, tile.root);
 }
 
 Vec2 TilemapManager::floodFillTiles(RefT<TilemapComponent> tilemap, glm::ivec2 startPos, 
@@ -291,14 +212,20 @@ std::vector<EntityPtr> TilemapManager::checkAndHandleBreakage(IWorldPtr world, E
   auto tilemap = tilemapEntity.get<TilemapComponent>();
   auto bodyComp = tilemapEntity.get<BodyComponent>();
 
-  if (tilemap->empty())
+  if (tilemap->isEmpty())
     return {};
 
   // Collect all unique 2D positions across all layers
   Set<glm::ivec2> allPositions;
   for (size_t l = 0; l < TilemapComponent::LayerCount; ++l) {
-    for (const auto& [pos, entity] : tilemap->getLayer(static_cast<WorldLayer>(l))) {
-      allPositions.insert(pos);
+    for (auto& [chunkPos, chunk] : tilemap->m_layers[l]) {
+      for(size_t index = 0; index < TileChunk::chunkSize * TileChunk::chunkSize; ++index) {
+        if(!chunk.hasTile(TileChunk::convertFromIndex(index)))
+          continue;
+        glm::ivec2 pos = getTilePosFromChunk(chunkPos, TileChunk::convertFromIndex(index));
+
+        allPositions.insert(pos); 
+      }
     }
   }
 
@@ -373,29 +300,29 @@ std::vector<EntityPtr> TilemapManager::checkAndHandleBreakage(IWorldPtr world, E
         if (!tilemap->containsTile(layer, oldPos))
           continue;
 
-        EntityPtr tileEntity = world->getEntity(tilemap->getTile(layer, oldPos));
-        auto tile = tileEntity.get<TileComponent>();
+        Tile& oldTile = tilemap->getTile(layer, oldPos);
+        EntityPtr oldEntity = world->getEntity(oldTile.tileId);
+        if(oldEntity.has<UniqueTileComponent>())
+          oldEntity = oldEntity.clone();
+        newTilemap->setTile(newTilemapEntity, layer, newPos, oldTile.root - islandAnchor, oldEntity);
+        Tile& tile = newTilemap->getTile(layer, newPos);
+        EntityPtr tileEntity = world->getEntity(tile.tileId);
+        auto tileComp = tileEntity.get<TileComponent>();
 
         // Destroy old shape
-        if (b2Shape_IsValid(tile->shapeId))
-          b2DestroyShape(tile->shapeId, false);
+        if (b2Shape_IsValid(oldTile.shapeId))
+          b2DestroyShape(oldTile.shapeId, false);
 
         // Create new shape on new tilemap body (position relative to body center)
         Vec2 tilePos = getLocalTileCenter(newPos);
         b2Polygon tilePolygon = b2MakeOffsetBox(tileSize.x * 0.5f, tileSize.y * 0.5f, tilePos, Rot(0.0f));
         b2ShapeDef shapeDef = b2DefaultShapeDef();
-        shapeDef.userData = entityToB2Data(tileEntity.id());
-        shapeDef.material = tile->material;
+        shapeDef.userData = &tile.ref;
         shapeDef.updateBodyMass = false;
-        shapeDef.isSensor = !tile->collidable;
-        tile->shapeId = b2CreatePolygonShape(newBodyComp->id, &shapeDef, &tilePolygon);
+        shapeDef.isSensor = !tileComp->collidable;
+        tile.shapeId = b2CreatePolygonShape(newBodyComp->id, &shapeDef, &tilePolygon);
 
-        // Update tile parent reference
-        tile->pos = newPos;
-        tile->parent = newTilemapEntity.id();
-
-        // Move tile to new tilemap
-        newTilemap->setTile(layer, newPos, tilemap->getTile(layer, oldPos));
+        // Remove tile to new tilemap
         tilemap->removeTile(layer, oldPos);
       }
     }
@@ -420,35 +347,42 @@ void TilemapManager::enableTile(IWorldPtr world, EntityId tilemapEntityId, glm::
     WorldLayer layer = static_cast<WorldLayer>(l);
     if(!tilemap->containsTile(layer, gridPos))
       continue;
-    auto tileEntity = getAnchorTile(world, tilemap->getTile(layer, gridPos));
-    if(tileEntity.has<IWorld::Enabled>())
+    Tile& tile = getAnchorTile(world, tilemap->getTile(layer, gridPos));
+    if(tile.enabled)
       continue;
+    EntityPtr tileEntity = world->getEntity(tile.tileId);
     
     occupiedPositions.clear();
     if(tileEntity.has<MultiTileComponent>()) {
+      // Read from multi-tile component to determine all occupied positions,
+      // and add them to the tilemap as well with the same parent
       auto multiTile = tileEntity.get<MultiTileComponent>();
-      for(const auto& pos : multiTile->occupiedPositions)
-        occupiedPositions.push_back(pos);
-    } else
+      for(const auto& pos : multiTile->occupiedPositions) {
+        glm::ivec2 rotatedOffset = rotateTileOffset(pos, tile.rotation);
+        occupiedPositions.push_back(rotatedOffset + gridPos);
+      }
+    } else {
       occupiedPositions.push_back(gridPos);
+    }
       
     auto parentTile = tileEntity.get<TileComponent>();
     for(const auto& pos : occupiedPositions) {
-      auto tileEntitySubTile = world->getEntity(tilemap->getTile(layer, pos));
-      auto subTileComp = tileEntitySubTile.get<TileComponent>();
+      Tile& tile = tilemap->getTile(layer, pos);
         
-      tileEntitySubTile.enable();
+      tile.enabled = true;
 
       Vec2 tilePos = getLocalTileCenter(pos);
       b2Polygon tilePolygon =
           b2MakeOffsetBox(tileSize.x * 0.5f, tileSize.y * 0.5f, tilePos, Rot(0.0f));
       b2ShapeDef shapeDef = b2DefaultShapeDef();
-      shapeDef.userData = entityToB2Data(tileEntitySubTile.id());
-      shapeDef.material =  parentTile->material;
+      shapeDef.userData = &tile.ref;
       shapeDef.updateBodyMass = false;
       shapeDef.isSensor = !parentTile->collidable;
-      subTileComp->shapeId = b2CreatePolygonShape(bodyComp->id, &shapeDef, &tilePolygon);
+      tile.shapeId = b2CreatePolygonShape(bodyComp->id, &shapeDef, &tilePolygon);
     }
+
+    if(tileEntity.has<UniqueTileComponent>()) 
+      tileEntity.enable();
   }
 
   if(updateMass)
@@ -465,27 +399,34 @@ void TilemapManager::disableTile(IWorldPtr world, EntityId tilemapEntityId, glm:
     WorldLayer layer = static_cast<WorldLayer>(l);
     if(!tilemap->containsTile(layer, gridPos))
       continue;
-    auto tileEntity = getAnchorTile(world, tilemap->getTile(layer, gridPos));
-    if(!tileEntity.has<IWorld::Enabled>())
+    Tile& tile = getAnchorTile(world, tilemap->getTile(layer, gridPos));
+    if(!tile.enabled)
       continue;
+    EntityPtr tileEntity = world->getEntity(tile.tileId);
     
     occupiedPositions.clear();
     if(tileEntity.has<MultiTileComponent>()) {
+      // Read from multi-tile component to determine all occupied positions,
+      // and add them to the tilemap as well with the same parent
       auto multiTile = tileEntity.get<MultiTileComponent>();
-      for(const auto& pos : multiTile->occupiedPositions)
-        occupiedPositions.push_back(pos);
-    } else
+      for(const auto& pos : multiTile->occupiedPositions) {
+        glm::ivec2 rotatedOffset = rotateTileOffset(pos, tile.rotation);
+        occupiedPositions.push_back(rotatedOffset + gridPos);
+      }
+    } else {
       occupiedPositions.push_back(gridPos);
-    
-    auto parentTile = tileEntity.get<TileComponent>();
-    for(const auto& pos : occupiedPositions) {
-      auto tileEntitySubTile = world->getEntity(tilemap->getTile(layer, pos));
-      auto subTileComp = tileEntitySubTile.get<TileComponent>();
-        
-      tileEntitySubTile.disable();
-      b2DestroyShape(subTileComp->shapeId, false);
-      subTileComp->shapeId = b2_nullShapeId; 
     }
+      
+    for(const auto& pos : occupiedPositions) {
+      Tile& tile = tilemap->getTile(layer, pos);
+        
+      tile.enabled = false;
+      b2DestroyShape(tile.shapeId, false);
+      tile.shapeId = b2_nullShapeId;
+    }
+
+    if(tileEntity.has<UniqueTileComponent>()) 
+      tileEntity.disable();
   }
 
   if(updateMass)
@@ -497,10 +438,19 @@ void TilemapManager::disableTilemap(IWorldPtr world, EntityId tilemapEntityId) {
   auto tilemap = tilemapEntity.get<TilemapComponent>();
   auto bodyComp = tilemapEntity.get<BodyComponent>();
 
-  for(size_t l = 0; l < TilemapComponent::LayerCount; ++l) {
-    WorldLayer layer = static_cast<WorldLayer>(l);
-    for (const auto& [pos, entity] : tilemap->getLayer(layer)) {
-      world->getEntity(entity).disable();
+  for (size_t l = 0; l < TilemapComponent::LayerCount; ++l) {
+    for (auto& [chunkPos, chunk] : tilemap->m_layers[l]) {
+      for(size_t index = 0; index < TileChunk::chunkSize * TileChunk::chunkSize; ++index) {
+        if(!chunk.hasTile(TileChunk::convertFromIndex(index)))
+          continue;
+        Tile& tile = chunk.getTile(TileChunk::convertFromIndex(index));
+        EntityPtr tileEntity = world->getEntity(tile.tileId);
+        glm::ivec2 pos = getTilePosFromChunk(chunkPos, TileChunk::convertFromIndex(index));
+
+        tile.enabled = false;
+        if(tileEntity.has<UniqueTileComponent>())
+          tileEntity.disable();
+      }
     }
   }
 
@@ -512,10 +462,19 @@ void TilemapManager::enableTilemap(IWorldPtr world, EntityId tilemapEntityId) {
   auto tilemap = tilemapEntity.get<TilemapComponent>();
   auto bodyComp = tilemapEntity.get<BodyComponent>();
 
-  for(size_t l = 0; l < TilemapComponent::LayerCount; ++l) {
-    WorldLayer layer = static_cast<WorldLayer>(l);
-    for (const auto& [pos, entity] : tilemap->getLayer(layer)) {
-      world->getEntity(entity).enable();
+  for (size_t l = 0; l < TilemapComponent::LayerCount; ++l) {
+    for (auto& [chunkPos, chunk] : tilemap->m_layers[l]) {
+      for(size_t index = 0; index < TileChunk::chunkSize * TileChunk::chunkSize; ++index) {
+        if(!chunk.hasTile(TileChunk::convertFromIndex(index)))
+          continue;
+        Tile& tile = chunk.getTile(TileChunk::convertFromIndex(index));
+        EntityPtr tileEntity = world->getEntity(tile.tileId);
+        glm::ivec2 pos = getTilePosFromChunk(chunkPos, TileChunk::convertFromIndex(index));
+
+        tile.enabled = true;
+        if(tileEntity.has<UniqueTileComponent>())
+          tileEntity.enable();
+      }
     }
   }
 
@@ -554,12 +513,14 @@ void disableRangeOfTiles(IWorldPtr world, EntityId tilemapEntityId, glm::ivec2 s
   b2Body_ApplyMassFromShapes(*bodyComp);
 }
 
-void enableChunk(IWorldPtr world, EntityId tilemapEntityId, glm::ivec2 chunkPos, size_t chunkSize) {
-  enableRangeOfTiles(world, tilemapEntityId, chunkPos * static_cast<int>(chunkSize), chunkPos * static_cast<int>(chunkSize) + glm::ivec2(static_cast<int>(chunkSize)));
+void enableChunk(IWorldPtr world, EntityId tilemapEntityId, glm::ivec2 chunkPos) {
+  enableRangeOfTiles(world, tilemapEntityId, chunkPos * TileChunk::chunkSize,
+                     chunkPos * TileChunk::chunkSize + glm::ivec2(TileChunk::chunkSize));
 }
 
-void disableChunk(IWorldPtr world, EntityId tilemapEntityId, glm::ivec2 chunkPos, size_t chunkSize) {
-  disableRangeOfTiles(world, tilemapEntityId, chunkPos * static_cast<int>(chunkSize), chunkPos * static_cast<int>(chunkSize) + glm::ivec2(static_cast<int>(chunkSize)));
+void disableChunk(IWorldPtr world, EntityId tilemapEntityId, glm::ivec2 chunkPos) {
+  disableRangeOfTiles(world, tilemapEntityId, chunkPos * TileChunk::chunkSize,
+                      chunkPos * TileChunk::chunkSize + glm::ivec2(TileChunk::chunkSize));
 }
 
 int updateChunkedTilemaps(IWorldPtr world, float dt) {
@@ -578,7 +539,7 @@ int updateChunkedTilemaps(IWorldPtr world, float dt) {
       EntityPtr loaderEntity = loaderIt->next();
       // 1) Determine which chunk the loader is currently in
       auto loaderPos = loaderEntity.get<TransformComponent>()->pos;
-      glm::ivec2 loaderChunk = getNearestChunk(loaderPos, chunkedTilemap->chunkSize);
+      glm::ivec2 loaderChunk = getNearestChunkWorldPos(loaderPos);
     
       int minX = loaderChunk.x - (int)chunkedTilemap->loadRadius;
       int maxX = loaderChunk.x + (int)chunkedTilemap->loadRadius;
@@ -596,7 +557,7 @@ int updateChunkedTilemaps(IWorldPtr world, float dt) {
       EntityPtr loaderEntity = loaderIt->next();
       // 1) Determine which chunk the player is currently in
       auto loaderPos = loaderEntity.get<TransformComponent>()->pos;
-      glm::ivec2 loaderChunk = getNearestChunk(loaderPos, chunkedTilemap->chunkSize);
+      glm::ivec2 loaderChunk = getNearestChunkWorldPos(loaderPos);
     
       int minX = loaderChunk.x - (int)chunkedTilemap->loadRadius;
       int maxX = loaderChunk.x + (int)chunkedTilemap->loadRadius;
@@ -615,7 +576,7 @@ int updateChunkedTilemaps(IWorldPtr world, float dt) {
       if(!chunksToLoad.contains(pos))
         chunksToUnload.push_back(pos);
     for(const auto& chunkPos : chunksToUnload) {
-      disableChunk(world, entity, chunkPos, chunkedTilemap->chunkSize);
+      disableChunk(world, entity, chunkPos);
       chunkedTilemap->loadedChunks.erase(chunkPos);
     }
 
@@ -625,14 +586,14 @@ int updateChunkedTilemaps(IWorldPtr world, float dt) {
         continue; // Already loaded
 
       if(chunkedTilemap->chunks.contains(chunkPos)) {
-        enableChunk(world, entity, chunkPos, chunkedTilemap->chunkSize);
+        enableChunk(world, entity, chunkPos);
       } else {
         // Generate tiles for the chunk using the provided generator function
         if (chunkedTilemap->generator) {
           GeneratorChunkInfo info;
           info.seed = chunkedTilemap->seed;
-          info.minTilePos = chunkPos * static_cast<int>(chunkedTilemap->chunkSize);
-          info.maxTilePos = chunkPos * static_cast<int>(chunkedTilemap->chunkSize) + glm::ivec2(static_cast<int>(chunkedTilemap->chunkSize));
+          info.minTilePos = chunkPos * static_cast<int>(TileChunk::chunkSize);
+          info.maxTilePos = chunkPos * static_cast<int>(TileChunk::chunkSize) + glm::ivec2(static_cast<int>(TileChunk::chunkSize));
           info.tilemapEntity = entity;
           chunkedTilemap->generator(world, info);
         }
@@ -654,20 +615,20 @@ struct IsEntityChunkLoaderContext {
   EntityId hitChunkLoader = NullEntityId;
 };
 
-float isEntityChunkLoader(b2ShapeId shapeId, b2Vec2 point, b2Vec2 normal, float fraction, void* context) {
-  IsEntityChunkLoaderContext& ctx = *static_cast<IsEntityChunkLoaderContext*>(context);
+// float isEntityChunkLoader(b2ShapeId shapeId, b2Vec2 point, b2Vec2 normal, float fraction, void* context) {
+//   IsEntityChunkLoaderContext& ctx = *static_cast<IsEntityChunkLoaderContext*>(context);
 
-  EntityPtr entity = b2DataToEntity(ctx.world, b2Shape_GetUserData(shapeId));
-  if(entity.isNull())
-    return -1.0f; // Not an entity, ignore and continue the raycast
-  if(entity == ctx.self)
-    return -1.0f;
-  if(entity.has<ChunkLoaderTag>()) {
-    ctx.hitChunkLoader = entity;
-    return 0.0f; // Hit the chunk loader, report a hit with fraction 0 to stop the raycast
-  }
-  return -1.0f; // Not a chunk loader, ignore and continue the raycast
-}
+//   EntityPtr entity = b2DataToEntity(ctx.world, b2Shape_GetUserData(shapeId));
+//   if(entity.isNull())
+//     return -1.0f; // Not an entity, ignore and continue the raycast
+//   if(entity == ctx.self)
+//     return -1.0f;
+//   if(entity.has<ChunkLoaderTag>()) {
+//     ctx.hitChunkLoader = entity;
+//     return 0.0f; // Hit the chunk loader, report a hit with fraction 0 to stop the raycast
+//   }
+//   return -1.0f; // Not a chunk loader, ignore and continue the raycast
+// }
 
 // int updateChunkLoaders(IWorldPtr world, float dt) {
 //   b2WorldId physicsWorld = world->getContext<b2WorldId>();
@@ -702,24 +663,47 @@ float isEntityChunkLoader(b2ShapeId shapeId, b2Vec2 point, b2Vec2 normal, float 
 //   return 0;
 // }
 
+int updateUniqueTileTransforms(IWorldPtr world, float dt) {
+  auto it = world->getWith<UniqueTileComponent, TransformComponent>();
+  while(it->hasNext()) {
+    EntityPtr entity = it->next();
+    auto uniqueTile = entity.get<UniqueTileComponent>();
+    auto transform = entity.get<TransformComponent>();
+    auto tilemapEntity = world->getEntity(uniqueTile->entity);
+    auto tilemap = tilemapEntity.get<TilemapComponent>();
+    Tile& tile = tilemap->getTile(uniqueTile->layer, uniqueTile->worldPos);
+    auto tilemapTransform = tilemapEntity.get<TransformComponent>();
+
+    Vec2 pos;
+    if(entity.has<MultiTileComponent>()) {
+      pos = entity.get<MultiTileComponent>()->calculateCentroid(tile.root);
+    } else {
+      pos = getLocalTileCenter(tile.root);
+    }
+
+    transform->pos = tilemapTransform->getWorldPoint(pos);
+    transform->rot = tilemapTransform->rot + Rot(getTileDirectionToRadians(tile.rotation));
+  }
+
+  return 0;
+} 
+
 void loadTilemapSystems(IHost& host) {
   Pipeline& pipeline = host.getPipeline();
   IWorldPtr world = host.getWorld();
 
-  world->component<PreviousMultiTileComponent>(false);
-
-  // pipeline.getGroup<GameGroup>().attachToStage<GameGroup::PreTickStage>(updateChunkLoaders);
+  pipeline.getGroup<GameGroup>().attachToStage<GameGroup::PreTickStage>(updateUniqueTileTransforms);
   pipeline.getGroup<GamePerSecondGroup>().attachToStage<GamePerSecondGroup::TickStage>(updateChunkedTilemaps);
 
   world->addContext<TilemapManager>();
-  world->observe<ComponentRemovedEvent>(world->component<TileComponent>(), {}, [=](EntityPtr tile) {
+  world->observe<ComponentRemovedEvent>(world->component<TileComponent>(), world->set<UniqueTileComponent>(), [=](EntityPtr tile) {
     if(tile.has<TileComponent>()) {
-      auto tileComp = tile.get<TileComponent>();
-      if(tileComp->parent != 0 && world->isAlive(tileComp->parent)) {
-        EntityPtr tilemapEntity = world->getEntity(tileComp->parent);
+      auto uniqueTile = tile.get<UniqueTileComponent>();
+      if(uniqueTile->entity != 0 && world->isAlive(uniqueTile->entity)) {
+        EntityPtr tilemapEntity = world->getEntity(uniqueTile->entity);
         if(tilemapEntity.has<TilemapComponent>()) {
           TilemapManager& manager = world->getContext<TilemapManager>();
-          manager.removeTile(world, tileComp->parent, tileComp->layer, tileComp->pos, false);
+          manager.removeTile(world, uniqueTile->entity, uniqueTile->layer, uniqueTile->worldPos);
         }
       }
     }

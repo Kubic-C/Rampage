@@ -112,13 +112,13 @@ int RenderModule::onLoad() {
 
   enableVsync(false);
 
-  world->component<CameraInUseTag>(false);
-  world->component<CameraComponent>(false);
-  world->component<TextureMap3DComponent>(false);
-  world->component<TextureMapInUseTag>(false);
-  world->component<VertexArrayBufferComponent>(false);
-  world->component<InstanceBufferComponent>(false);
-  world->component<ShaderComponent>(false);
+  world->registerComponent<CameraInUseTag>();
+  world->registerComponent<CameraComponent>();
+  world->registerComponent<TextureMap3DComponent>();
+  world->registerComponent<TextureMapInUseTag>();
+  world->registerComponent<VertexArrayBufferComponent>();
+  world->registerComponent<InstanceBufferComponent>();
+  world->registerComponent<ShaderComponent>();
 
   return 0;
 }

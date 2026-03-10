@@ -174,6 +174,8 @@ int meshSprites(IWorldPtr world, float dt) {
   auto it = world->getWith(world->set<TransformComponent, SpriteComponent>());
   while (it->hasNext()) {
     EntityPtr entity = it->next();
+    if(entity.has<UniqueTileComponent>())
+      continue;
     auto transform = entity.get<TransformComponent>();
     auto sprite = entity.get<SpriteComponent>();
     if(!cameraViewRect.intersects(transform->pos, Vec2(tileSize)))
@@ -181,28 +183,53 @@ int meshSprites(IWorldPtr world, float dt) {
     meshSprite(*transform, *sprite, *va, *instances);
   }
 
-  it = world->getWith(world->set<TileComponent, SpriteComponent>());
+  it = world->getWith(world->set<TransformComponent, TilemapComponent>());
   while (it->hasNext()) {
     EntityPtr entity = it->next();
-    auto tile = entity.get<TileComponent>();
-    auto sprite = entity.get<SpriteComponent>();
+    auto tilemap = entity.get<TilemapComponent>();
+    auto tilemapTransform = entity.get<TransformComponent>();
 
-    b2BodyId bodyId = world->getEntity(tile->parent).get<BodyComponent>()->id;
-    Transform transform(
-      getWorldTilePosition(entity),
-      Rot(b2Body_GetRotation(bodyId)) + Rot(getTileDirectionToRadians(tile->rotation)));
-    if(!cameraViewRect.intersects(transform.pos, Vec2(tileSize)))
-      continue;
+    const TilemapComponent::ChunkLayerList& chunkLayers = tilemap->getChunkLayers();
+    for (size_t i = 0; i < TilemapComponent::LayerCount; i++) {
+      const auto& layer = chunkLayers[i];
+      for (const auto& [chunkPos, chunk] : layer) {
+        if (!cameraViewRect.intersects(tilemapTransform->getWorldPoint(getLocalChunkCenter(chunkPos)),
+                TileChunk::chunkTileSize))
+          continue;
 
-    meshSprite(transform, *sprite, *va, *instances);
+        for (size_t i = 0; i < TileChunk::chunkSize * TileChunk::chunkSize; i++) {
+          if (!chunk.hasTile(i))
+            continue;
 
-    if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F1]) {
-      if (!entity.has<ArrowComponent>())
-        continue;
-      Vec2 worldPos = transform.pos;
-      auto arrow = entity.get<ArrowComponent>();
+          Vec2 pos;
+          const Tile& tile = chunk.getTile(i);
+          EntityPtr tileEntity = world->getEntity(tile.tileId);
+          auto tileComp = tileEntity.get<TileComponent>();
+          if(tile.root != tile.ref.worldPos)
+            continue; // this is a subtile
+          if(tileEntity.has<MultiTileComponent>()) {
+            pos = tileEntity.get<MultiTileComponent>()->calculateCentroid(tile.root);
+          } else {
+            pos = getLocalTileCenter(
+                getTilePosFromChunk(chunkPos, TileChunk::convertFromIndex(i)));
+          }
+          auto spriteComp = tileEntity.get<SpriteComponent>();
+          Transform transform(tilemapTransform->getWorldPoint(pos), tilemapTransform->rot + Rot(getTileDirectionToRadians(tile.rotation)));
+          if(!cameraViewRect.intersects(transform.pos, Vec2(tileSize)))
+            continue;
+          meshSprite(transform, *spriteComp, *va, *instances);
 
-      drawLine(*shapeMeshComp, worldPos, worldPos + transform.rot.rotate(arrow->dir) * 0.5f, glm::vec3(1.0f, (float)arrow->generation / 255, 0.0f), 0.01f, 1.0f);
+          //if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_F1]) {
+          //  if (!entity.has<ArrowComponent>())
+          //    continue;
+          //  Vec2 worldPos = transform.pos;
+          //  auto arrow = entity.get<ArrowComponent>();
+
+          //  drawLine(*shapeMeshComp, worldPos, worldPos + transform.rot.rotate(arrow->dir) * 0.5f,
+          //           glm::vec3(1.0f, (float)arrow->generation / 255, 0.0f), 0.01f, 1.0f);
+          //}
+        }
+      }
     }
   }
 
@@ -254,7 +281,7 @@ EntityPtr createSpriteRenderEntity(IHost& host) {
   IWorldPtr world = host.getWorld();
   EntityPtr spriteRender = world->create();
 
-  world->component<SpriteRendererTag>(false);
+  world->registerComponent<SpriteRendererTag>();
   spriteRender.add<SpriteRendererTag>();
   spriteRender.add<VertexArrayBufferComponent>();
   spriteRender.add<InstanceBufferComponent>();

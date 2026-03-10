@@ -76,8 +76,8 @@
         {
           "type": "TransformComponent",
           "pos": {
-            "x": 0.0,
-            "y": 0.0
+            "x": -0.4,
+            "y": 0.5
           }
         },
         {
@@ -187,13 +187,16 @@
               "collisionMask": [
                 "All"
               ],
-              "density": 20,
+              "density": 10,
               "shape": {
                 "shapeType": "Circle",
                 "radius": 0.25
               }
             }
           ]
+        },
+        {
+          "type": "ChunkLoaderTag"
         }
       ]
     },
@@ -202,8 +205,7 @@
       "type": "Entity",
       "components": [
         {
-          "type": "TransformComponent",
-          "scale": 2.0
+          "type": "TransformComponent"
         },
         {
           "type": "SpriteComponent",
@@ -277,10 +279,13 @@
         },
         {
           "type": "SpawnerComponent",
-          "spawn": "BasicZombie",
+          "spawn": "FastZombie",
           "spawnableRadius": 2.0,
           "spawnCount": 10,
           "spawnRate": 1
+        },
+        {
+          "type": "UniqueTileComponent"
         }
       ]
     },
@@ -431,11 +436,7 @@
         },
         {
           "type": "TileComponent",
-          "layer": "Wall",
-          "material": {
-            "friction": 0.0,
-            "restitution": 1.0
-          }
+          "layer": "Wall"
         }
       ]
     },
@@ -597,63 +598,45 @@
           "occupiedPositions": [
             {
               "x": 0,
-              "y": 0,
-              "z": 0
+              "y": 0
             },
             {
               "x": 1,
-              "y": 0,
-              "z": 0
+              "y": 0
             },
             {
               "x": 2,
-              "y": 0,
-              "z": 0
+              "y": 0
             },
             {
               "x": 0,
-              "y": 1,
-              "z": 0
+              "y": 1
             },
             {
               "x": 1,
-              "y": 1,
-              "z": 0
+              "y": 1
             },
             {
               "x": 2,
-              "y": 1,
-              "z": 0
+              "y": 1
             },
             {
               "x": 0,
-              "y": 2,
-              "z": 0
+              "y": 2
             },
             {
               "x": 1,
-              "y": 2,
-              "z": 0
+              "y": 2
             },
             {
               "x": 2,
-              "y": 2,
-              "z": 0
+              "y": 2
             }
-          ],
-          "anchorPos": {
-            "x": 0,
-            "y": 0,
-            "z": 0
-          }
+          ]
         },
         {
           "type": "TileComponent",
-          "layer": "Wall",
-          "material": {
-            "friction": 0.0,
-            "restitution": 1.0
-          }
+          "layer": "Wall"
         },
         {
           "type": "HealthComponent",
@@ -662,6 +645,9 @@
         {
           "type": "ArrowComponent",
           "tileCost": 100
+        },
+        {
+          "type": "UniqueTileComponent"
         }
       ]
     },
@@ -707,7 +693,10 @@
         },
         {
           "type": "ArrowComponent",
-          "tileCost": 50
+          "tileCost": 20
+        },
+        {
+          "type": "UniqueTileComponent"
         }
       ]
     },
@@ -739,6 +728,9 @@
         {
           "type": "ArrowComponent",
           "tileCost": 10
+        },
+        {
+          "type": "UniqueTileComponent"
         }
       ]
     },
@@ -770,6 +762,9 @@
         {
           "type": "ArrowComponent",
           "tileCost": 25
+        },
+        {
+          "type": "UniqueTileComponent"
         }
       ]
     },
@@ -812,6 +807,9 @@
           "slotSize": 32,
           "windowBackgroundColor": [74, 27, 10, 200],
           "name": "Chest Inventory"
+        },
+        {
+          "type": "UniqueTileComponent"
         }
       ]
     },
@@ -925,30 +923,21 @@
           "occupiedPositions": [
             {
               "x": 0,
-              "y": 0,
-              "z": 0
+              "y": 0
             },
             {
               "x": 1,
-              "y": 0,
-              "z": 0
+              "y": 0
             },
             {
               "x": 0,
-              "y": 1,
-              "z": 0
+              "y": 1
             },
             {
               "x": 1,
-              "y": 1,
-              "z": 0
+              "y": 1
             }
-          ],
-          "anchorPos": {
-            "x": 0,
-            "y": 0,
-            "z": 0
-          }
+          ]
         },
         {
           "type": "TileComponent",
@@ -972,6 +961,9 @@
         {
           "type": "ArrowComponent",
           "tileCost": 80
+        },
+        {
+          "type": "UniqueTileComponent"
         }
       ]
     },

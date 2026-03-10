@@ -22,8 +22,8 @@ int CoreModule::onLoad() {
   world->addContext<AppStats>();
   world->addContext<DoExit>();
 
-  world->component<TransformComponent>(false);
-  world->component<SDL_Event>(false);
+  world->registerComponent<TransformComponent>();
+  world->registerComponent<SDL_Event>();
 
   auto& pipeline = m_host->getPipeline();
   pipeline.createGroup<GameGroup>(60)

@@ -72,7 +72,7 @@ void InventoryManager::dropItem(IWorldPtr world, EntityId itemId, Vec2 dropPosit
     b2BodyDef bodyDef = b2DefaultBodyDef();
     bodyDef.type = b2_dynamicBody;
     bodyDef.position = {offsetPos.x, offsetPos.y};
-    bodyDef.userData = entityToB2Data(droppedItem);
+    bodyDef.userData = EntityBox2dUserData::create(droppedItem);
     bodyDef.linearDamping = 1;
     bodyDef.angularDamping = 0.5;
     bodyComp->id = b2CreateBody(world->getContext<b2WorldId>(), &bodyDef);
@@ -81,7 +81,7 @@ void InventoryManager::dropItem(IWorldPtr world, EntityId itemId, Vec2 dropPosit
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     shapeDef.filter.categoryBits = Item | Friendly;
     shapeDef.filter.maskBits = Friendly | Static;
-    shapeDef.userData = entityToB2Data(droppedItem);
+    shapeDef.userData = EntityBox2dUserData::create(droppedItem);
     b2CreateCircleShape(bodyComp->id, &shapeDef, &circle);  
     b2Body_EnableContactEvents(bodyComp->id, true);
 
@@ -150,8 +150,8 @@ bool canPlace(EntityPtr itemEntity, Vec2 placePosition) {
     return false; // Invalid item entity in slot
   }
 
-  EntityPtr tileAt = getTopTileAtPos(world, placePosition);
-  if (tileAt.isNull()) {
+  TileRef tileAt = getTopTileAtPos(world, placePosition);
+  if (tileAt.entity == NullEntityId) {
     return false; // No tile at placement position
   }
 
@@ -160,7 +160,7 @@ bool canPlace(EntityPtr itemEntity, Vec2 placePosition) {
     return true;
 
   WorldLayer tileToCloneLayer = entityToClone.get<TileComponent>()->layer;
-  WorldLayer tileAtLayer = tileAt.get<TileComponent>()->layer;
+  WorldLayer tileAtLayer = tileAt.layer;
   if(tileToCloneLayer <= tileAtLayer || 
      tileToCloneLayer == WorldLayer::Invalid)
     return false;
@@ -179,15 +179,14 @@ bool InventoryManager::placeItem(IWorldPtr world, EntityId itemId, Vec2 placePos
   EntityId entityToPlaceId;
   EntityPtr entityToClone = world->getEntity(itemEntity.get<ItemPlaceableComponent>()->entityId);
   if(entityToClone.has<TileComponent>()) {
-    EntityPtr existingTileEntity = getTileAtPos(world, placePosition);
-    WorldLayer layer = entityToClone.get<TileComponent>()->layer;
-    EntityPtr tilemapEntity = world->getEntity(existingTileEntity.get<TileComponent>()->parent);
-    if(!tmMgr.canInsert(world, tilemapEntity.id(), layer, existingTileEntity.get<TileComponent>()->pos, entityToClone)) {
+    TileRef exisitingTile = getTileAtPos(world, placePosition);
+    EntityPtr tilemapEntity = world->getEntity(exisitingTile.tilemap);
+    if(!tmMgr.canInsert(world, tilemapEntity.id(), exisitingTile.worldPos, TileDirection::Right, entityToClone)) {
       return false; // Can't place on this tile
     }
   
-    entityToPlaceId = world->clone(entityToClone).id();
-    tmMgr.insertTile(world, tilemapEntity.id(), layer, existingTileEntity.get<TileComponent>()->pos, entityToPlaceId);
+    tmMgr.insertTile(world, tilemapEntity.id(), exisitingTile.worldPos, TileDirection::Right, entityToClone);
+    entityToPlaceId = tilemapEntity.get<TilemapComponent>()->getTile(entityToClone.get<TileComponent>()->layer, exisitingTile.worldPos).tileId;
   } else {
     entityToPlaceId = world->clone(entityToClone).id();
     EntityPtr entityToPlace = world->getEntity(entityToPlaceId);
@@ -197,16 +196,15 @@ bool InventoryManager::placeItem(IWorldPtr world, EntityId itemId, Vec2 placePos
   }
 
   EntityPtr entityToPlace = world->getEntity(entityToPlaceId);
+  if(!entityToPlace.has<UniqueTileComponent>() && entityToPlace.has<TileComponent>())
+    return true;
+
   entityToPlace.remove<AssetTag>(); // Asset tag is usually in placeable componetns
   entityToPlace.add<ItemPlacedTag>();
   entityToPlace.add<ItemStackComponent>();
   auto stackComp = entityToPlace.get<ItemStackComponent>();
   stackComp->itemId = itemId;
   stackComp->count = pickableCount;
-
-  if(entityToPlace.has<TileComponent>()) {
-    auto tileComp = entityToPlace.get<TileComponent>();
-  }
 
   return true;
 }
@@ -656,28 +654,24 @@ int updateInventoryViews(IWorldPtr world, float dt) {
     viewComp->update(entity, world->getContext<tgui::Gui>());
   }
   world->endDefer();
-
+ 
   return 0;
 }
 
 // Helper: check if a part has an opening in a world-space direction
-bool acceptsInputFrom(EntityPtr partEntity, TileDirection worldDir) {
-  auto part = partEntity.get<ConveyorPartComponent>();
-  auto tile = partEntity.get<TileComponent>();
+bool acceptsInputFrom(RefT<ConveyorPartComponent> part, TileDirection tileRot, TileDirection worldDir) {
   for(TileDirection localDir : part->inputDirections) {
-    if(getRotateTileDirection(localDir, static_cast<int>(tile->rotation)) == worldDir)
+    if(getRotateTileDirection(localDir, static_cast<int>(tileRot)) == worldDir)
       return true;
   }
   return false;
 }
 
 // Get all world-space open directions for a part
-std::vector<TileDirection> getWorldDirections(EntityPtr partEntity) {
-  auto part = partEntity.get<ConveyorPartComponent>();
-  auto tile = partEntity.get<TileComponent>();
+std::vector<TileDirection> getWorldDirections(RefT<ConveyorPartComponent> part, TileDirection tileRot) {
   std::vector<TileDirection> dirs;
   for(TileDirection localDir : part->inputDirections) {
-    dirs.push_back(getRotateTileDirection(localDir, static_cast<int>(tile->rotation)));
+    dirs.push_back(getRotateTileDirection(localDir, static_cast<int>(tileRot)));
   }
   return dirs;
 }
@@ -690,8 +684,8 @@ void updateConveyorPart(IWorldPtr world, EntityPtr entity) {
   if(conveyorPart->conveyorId != 0)
     return;
 
-  auto tileComp = entity.get<TileComponent>();
-  auto tilemapComp = world->getEntity(tileComp->parent).get<TilemapComponent>();
+  auto uniqueTile = entity.get<UniqueTileComponent>();
+  auto tilemap = world->getEntity(uniqueTile->entity).get<TilemapComponent>();
 
   // BFS to find all connected conveyor parts
   std::vector<EntityId> parts;
@@ -703,26 +697,28 @@ void updateConveyorPart(IWorldPtr world, EntityPtr entity) {
 
   while(queueIdx < parts.size()) {
     EntityPtr cur = world->getEntity(parts[queueIdx++]);
+    auto uniqueTile = cur.get<UniqueTileComponent>();
+    Tile& curTile = tilemap->getTile(uniqueTile->layer, uniqueTile->worldPos);
 
     // Check in each of this part's open directions
-    for(TileDirection worldDir : getWorldDirections(cur)) {
+    for(TileDirection worldDir : getWorldDirections(cur.get<ConveyorPartComponent>(), curTile.rotation)) {
       auto curTile = cur.get<TileComponent>();
-      glm::ivec2 neighborPos = curTile->pos + tileDirectionPos[worldDir];
+      glm::ivec2 neighborPos = uniqueTile->worldPos + tileDirectionPos[worldDir];
 
-      if(!tilemapComp->containsTileAtAnyLayer(neighborPos))
+      if(!tilemap->containsTileAtAnyLayer(neighborPos))
         continue;
 
-      WorldLayer layer = tilemapComp->getLayerOfTopTile(neighborPos);
-      EntityPtr neighborEntity = world->getEntity(tilemapComp->getTile(layer, neighborPos));
-      EntityPtr neighborAnchor = tmMgr.getAnchorTile(world, neighborEntity);
+      WorldLayer layer = tilemap->getLayerOfTopTile(neighborPos);
+      const Tile& neighborTile = tmMgr.getAnchorTile(world, tilemap->getTile(layer, neighborPos));
+      auto neighborEntity = world->getEntity(neighborTile.tileId);
 
-      if(!neighborAnchor.has<ConveyorPartComponent>() || visited.count(neighborAnchor.id()))
+      if(!neighborEntity.has<ConveyorPartComponent>() || visited.count(neighborEntity))
         continue;
 
       // Connected if neighbor also has an opening facing back toward us
-      if(acceptsInputFrom(neighborAnchor, getOppositeDirection(worldDir))) {
-        visited.insert(neighborAnchor.id());
-        parts.push_back(neighborAnchor.id());
+      if(acceptsInputFrom(neighborEntity.get<ConveyorPartComponent>(), neighborTile.rotation, getOppositeDirection(worldDir))) {
+        visited.insert(neighborEntity);
+        parts.push_back(neighborEntity);
       }
     }
   }
@@ -741,14 +737,15 @@ void updateConveyorPart(IWorldPtr world, EntityPtr entity) {
   size_t minConnections = SIZE_MAX;
   for(EntityId partId : parts) {
     EntityPtr part = world->getEntity(partId);
-    auto partTile = part.get<TileComponent>();
+    auto uniqueTile = part.get<UniqueTileComponent>();
+    Tile& curTile = tilemap->getTile(uniqueTile->layer, uniqueTile->worldPos);
     size_t connections = 0;
 
-    for(TileDirection worldDir : getWorldDirections(part)) {
-      glm::ivec2 neighborPos = partTile->pos + tileDirectionPos[worldDir];
+    for(TileDirection worldDir : getWorldDirections(part.get<ConveyorPartComponent>(), curTile.rotation)) {
+      glm::ivec2 neighborPos = uniqueTile->worldPos + tileDirectionPos[worldDir];
       for(EntityId otherId : parts) {
         if(otherId == partId) continue;
-        if(world->getEntity(otherId).get<TileComponent>()->pos == neighborPos) {
+        if(world->getEntity(otherId).get<UniqueTileComponent>()->worldPos == neighborPos) {
           connections++;
           break;
         }
@@ -774,50 +771,50 @@ void updateConveyorPart(IWorldPtr world, EntityPtr entity) {
     auto [curId, curDist] = walkQueue[walkIdx++];
     EntityPtr walkEntity = world->getEntity(curId);
     auto walkPart = walkEntity.get<ConveyorPartComponent>();
-    auto walkTile = walkEntity.get<TileComponent>();
+    auto walkUniqueTile = walkEntity.get<UniqueTileComponent>();
+    Tile& walkTile = tilemap->getTile(walkUniqueTile->layer, walkUniqueTile->worldPos);
 
     float newDist = curDist + walkPart->virtualDistanceIncrease + 0.5f;
 
     // Check all neighbors for inventories
-    for(TileDirection worldDir : getWorldDirections(walkEntity)) {
-      auto walkTile = walkEntity.get<TileComponent>();
-      glm::ivec2 neighborPos = walkTile->pos + tileDirectionPos[worldDir];
+    for(TileDirection worldDir : getWorldDirections(walkPart, walkTile.rotation)) {
+      glm::ivec2 neighborPos = walkUniqueTile->worldPos + tileDirectionPos[worldDir];
 
-      if(!tilemapComp->containsTileAtAnyLayer(neighborPos))
+      if(!tilemap->containsTileAtAnyLayer(neighborPos))
         continue;
 
-      WorldLayer layer = tilemapComp->getLayerOfTopTile(neighborPos);
-      EntityPtr neighborEntity = world->getEntity(tilemapComp->getTile(layer, neighborPos));
-      EntityPtr neighborAnchor = tmMgr.getAnchorTile(world, neighborEntity);
+      WorldLayer layer = tilemap->getLayerOfTopTile(neighborPos);
+      const Tile& neighborTile = tmMgr.getAnchorTile(world, tilemap->getTile(layer, neighborPos));
+      EntityPtr neighborEntity = world->getEntity(neighborTile.tileId);
 
-      if(!neighborAnchor.has<InventoryComponent>()) continue;
+      if(!neighborEntity.has<InventoryComponent>()) continue;
 
       bool alreadyRegistered = false;
       for(auto& inv : conveyor->inventories) {
-        if(inv.inventoryId == neighborAnchor.id()) {
+        if(inv.inventoryId == neighborEntity.id()) {
           alreadyRegistered = true;
           break;
         }
       }
       if(!alreadyRegistered) {
-        conveyor->inventories.push_back({neighborAnchor.id(), newDist});
+        conveyor->inventories.push_back({neighborEntity.id(), newDist});
       }
     }
 
     // Follow open directions to next parts in the group
-    for(TileDirection worldDir : getWorldDirections(walkEntity)) {
-      glm::ivec2 nextPos = walkTile->pos + tileDirectionPos[worldDir];
+    for(TileDirection worldDir : getWorldDirections(walkPart, walkTile.rotation)) {
+      glm::ivec2 nextPos = walkUniqueTile->worldPos + tileDirectionPos[worldDir];
 
-      if(!tilemapComp->containsTileAtAnyLayer(nextPos))
+      if(!tilemap->containsTileAtAnyLayer(nextPos))
         continue;
 
-      WorldLayer nextLayer = tilemapComp->getLayerOfTopTile(nextPos);
-      EntityPtr nextEntity = world->getEntity(tilemapComp->getTile(nextLayer, nextPos));
-      EntityPtr nextAnchor = tmMgr.getAnchorTile(world, nextEntity);
+      WorldLayer layer = tilemap->getLayerOfTopTile(nextPos);
+      const Tile& nextTile = tmMgr.getAnchorTile(world, tilemap->getTile(layer, nextPos));
+      EntityPtr nextEntity = world->getEntity(nextTile.tileId);
 
-      if(nextAnchor.has<ConveyorPartComponent>() && visited.count(nextAnchor.id()) && !walked.count(nextAnchor.id())) {
-        walked.insert(nextAnchor.id());
-        walkQueue.push_back({nextAnchor.id(), newDist});
+      if(nextEntity.has<ConveyorPartComponent>() && visited.count(nextEntity.id()) && !walked.count(nextEntity.id())) {
+        walked.insert(nextEntity.id());
+        walkQueue.push_back({nextEntity.id(), newDist});
       }
     }
   }
@@ -830,15 +827,18 @@ int updateConveyors(IWorldPtr world, float dt) {
   auto invMgr = world->getContext<InventoryManager>();
 
   // Phase 0: Invalidate conveyors whose parts have been rotated or where no inventories have been found.
-  auto rotIt = world->getWith(world->set<TileComponent, ConveyorPartComponent>());
+  auto rotIt = world->getWith(world->set<TileComponent, UniqueTileComponent, ConveyorPartComponent>());
   while(rotIt->hasNext()) {
     EntityPtr entity = rotIt->next();
     auto part = entity.get<ConveyorPartComponent>();
-    auto tile = entity.get<TileComponent>();
-    if(part->conveyorId != NullEntityId && (part->cachedRotation != tile->rotation || world->getEntity(part->conveyorId).get<ConveyorComponent>()->inventories.empty())) {
+    auto uniqueTileComponent = entity.get<UniqueTileComponent>();
+    auto tilemap = world->getEntity(uniqueTileComponent->entity).get<TilemapComponent>();
+    Tile& tile = tilemap->getTile(*uniqueTileComponent);
+
+    if(part->conveyorId != NullEntityId && (part->cachedRotation != tile.rotation || world->getEntity(part->conveyorId).get<ConveyorComponent>()->inventories.empty())) {
       observeConveyorPartRemoved(entity);
     }
-    part->cachedRotation = tile->rotation;
+    part->cachedRotation = tile.rotation;
   }
 
   // Phase 1: Initialize conveyors for unassigned parts
@@ -883,8 +883,9 @@ void updatePort(IWorldPtr world, EntityPtr entity) {
   auto invMgr = world->getContext<InventoryManager>();
 
   auto port = entity.get<PortComponent>();
-  auto tileComp = entity.get<TileComponent>();
-  auto tilemapComp = world->getEntity(tileComp->parent).get<TilemapComponent>();
+  auto uniqueTile = entity.get<UniqueTileComponent>();
+  auto tilemap = world->getEntity(uniqueTile->entity).get<TilemapComponent>();
+  Tile& tile = tilemap->getTile(*uniqueTile);
 
   if(!port->isOn)
     return;
@@ -893,25 +894,25 @@ void updatePort(IWorldPtr world, EntityPtr entity) {
     return;
 
   // 1) find or update the importing inventory, if any.
-  glm::ivec2 portPos = tileComp->pos;
-  glm::ivec2 behindPort = tileComp->pos - tileDirectionPos[tileComp->rotation];
-  if(!tilemapComp->containsTileAtAnyLayer(behindPort))
+  glm::ivec2 portPos = uniqueTile->worldPos;
+  glm::ivec2 behindPort = uniqueTile->worldPos - tileDirectionPos[tile.rotation];
+  if(!tilemap->containsTileAtAnyLayer(behindPort))
     return;
-  EntityPtr tileBehind = world->getEntity(tilemapComp->getTile(tilemapComp->getLayerOfTopTile(behindPort), behindPort));
-  EntityPtr importTile = tmMgr.getAnchorTile(world, tileBehind);
+  const Tile& tileBehind = tilemap->getTile(tilemap->getLayerOfTopTile(behindPort), behindPort);
+  EntityPtr importTile = world->getEntity(tmMgr.getAnchorTile(world, tileBehind).tileId);
   if(importTile.has<InventoryComponent>()) {
     port->importingInventory = importTile;
   } else
     return;
 
   // 2) find or update the exporting conveyor.
-  glm::ivec2 inFrontOfPort = tileComp->pos + tileDirectionPos[tileComp->rotation];
-  if(!tilemapComp->containsTileAtAnyLayer(inFrontOfPort))
+  glm::ivec2 inFrontOfPort = uniqueTile->worldPos + tileDirectionPos[tile.rotation];
+  if(!tilemap->containsTileAtAnyLayer(inFrontOfPort))
     return;
-  EntityPtr tileInFront = world->getEntity(tilemapComp->getTile(tilemapComp->getLayerOfTopTile(inFrontOfPort), inFrontOfPort));
-  EntityPtr exportTile = tmMgr.getAnchorTile(world, tileInFront);
+  const Tile& tileInFront = tmMgr.getAnchorTile(world, tilemap->getTile(tilemap->getLayerOfTopTile(inFrontOfPort), inFrontOfPort));
+  EntityPtr exportTile = world->getEntity(tileInFront.tileId);
   if(exportTile.has<ConveyorPartComponent>() &&
-     acceptsInputFrom(exportTile, getOppositeDirection(tileComp->rotation))) {
+     acceptsInputFrom(exportTile.get<ConveyorPartComponent>(), tileInFront.rotation, getOppositeDirection(tile.rotation))) {
     EntityId partConveyorId = exportTile.get<ConveyorPartComponent>()->conveyorId;
     if(partConveyorId != NullEntityId) {
       port->exportingConveyor = partConveyorId;
@@ -1002,6 +1003,8 @@ void observeConveyorPartRemoved(EntityPtr entity) {
   IWorldPtr world = entity.world();
   auto& invMgr = world->getContext<InventoryManager>();
   auto conveyorPart = entity.get<ConveyorPartComponent>();
+  auto uniqueTile = entity.get<UniqueTileComponent>();
+  auto tilemapTransform = world->getEntity(uniqueTile->entity).get<TransformComponent>();
   EntityId conveyorId = conveyorPart->conveyorId;
   if(conveyorId == NullEntityId)
     return;
@@ -1014,7 +1017,7 @@ void observeConveyorPartRemoved(EntityPtr entity) {
   if(conveyorEntity.has<ConveyorComponent>()) {
     auto conveyor = conveyorEntity.get<ConveyorComponent>();
     for(auto& transit : conveyor->itemsInTransit) {
-      invMgr.dropItem(world, transit.stack.itemId, getWorldTilePosition(entity), transit.stack.count);
+      invMgr.dropItem(world, transit.stack.itemId, tilemapTransform->getWorldPoint(getLocalTileCenter(uniqueTile->worldPos)), transit.stack.count);
     }
     conveyor->itemsInTransit.clear();
   }

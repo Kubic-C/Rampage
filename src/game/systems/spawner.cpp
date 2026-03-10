@@ -51,27 +51,6 @@ int updateSpawners(IWorldPtr world, float dt) {
   }
   world->endDefer();
 
-  it = world->getWith(world->set<TileComponent, SpawnerComponent>());
-  world->beginDefer();
-  while (it->hasNext()) {
-    EntityPtr e = it->next();
-
-    auto spawner = e.get<SpawnerComponent>();
-    Vec2 pos = getWorldTilePosition(e);
-
-    spawner->timeSinceLastSpawn -= dt;
-    if (spawner->timeSinceLastSpawn <= 0) {
-      spawner->timeSinceLastSpawn = spawner->spawnRate;
-
-      for (u32 i = 0; i < spawner->spawnCount; i++) {
-        Vec2 point = getUniformCircularPoint(spawner->spawnableRadius);
-
-        spawned.push_back({spawner->spawn, point + pos});
-      }
-    }
-  }
-  world->endDefer();
-
   for (SpawnAt& spawn : spawned) {
     EntityPtr e = world->clone(spawn.id);
     e.get<TransformComponent>()->pos = spawn.pos;

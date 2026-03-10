@@ -31,6 +31,44 @@
               "oneOf": [
                 {
                   "properties": {
+                    "type": { "const": "VectorTilemapPathfinding" },
+                    "oldTarget": {
+                      "type": "object",
+                      "properties": {
+                        "x": { "type": "integer" },
+                        "y": { "type": "integer" }
+                      }
+                    },
+                    "curGen": { "type": "integer", "minimum": 0 },
+                    "nodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "tilePos": {
+                            "type": "object",
+                            "properties": {
+                              "x": { "type": "integer" },
+                              "y": { "type": "integer" }
+                            }
+                          },
+                          "dir": {
+                            "type": "object",
+                            "properties": {
+                              "x": { "type": "number" },
+                              "y": { "type": "number" }
+                            }
+                          },
+                          "cost": { "type": "number" },
+                          "gen": { "type": "integer", "minimum": 0 }
+                        }
+                      }
+                    }
+                  },
+                  "required": [ "type" ]
+                },
+                {
+                  "properties": {
                     "type": {
                       "const": "TransformComponent"
                     },
@@ -141,6 +179,16 @@
                   "properties": {
                     "type": {
                       "const": "SeekPrimaryTargetTag"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                },
+                {
+                  "properties": {
+                    "type": {
+                      "const": "UniqueTileComponent"
                     }
                   },
                   "required": [
@@ -359,38 +407,16 @@
                     "type": {
                       "const": "TileComponent"
                     },
+                    "unique": {
+                      "type": "boolean",
+                      "default": false
+                    },
                     "collidable": {
                       "type": "boolean"
                     },
-                    "pos": {
-                      "type": "object",
-                      "properties": {
-                        "x": {
-                          "type": "integer"
-                        },
-                        "y": {
-                          "type": "integer"
-                        }
-                      }
-                    },
                     "layer": {
                       "type": "string",
-                      "enum": ["Top", "Item", "Wall", "Floor"]
-                    },
-                    "rotation": {
-                      "type": "string",
-                      "enum": ["Up", "Right", "Down", "Left"]
-                    },
-                    "material": {
-                      "type": "object",
-                      "properties": {
-                        "friction": {
-                          "type": "number"
-                        },
-                        "restitution": {
-                          "type": "number"
-                        }
-                      }
+                      "enum": [ "Top", "Item", "Wall", "Floor" ]
                     }
                   },
                   "required": [
@@ -402,32 +428,9 @@
                     "type": {
                       "const": "ArrowComponent"
                     },
-                    "dir": {
-                      "type": "object",
-                      "properties": {
-                        "x": {
-                          "type": "number"
-                        },
-                        "y": {
-                          "type": "number"
-                        }
-                      }
-                    },
-                    "cost": {
-                      "type": "number"
-                    },
-                    "generation": {
-                      "type": "integer",
-                      "minimum": 0
-                    },
-                    "tileCost": {
-                      "type": "integer",
-                      "minimum": 0
-                    }
+                    "tileCost": { "type": "integer", "minimum": 0 }
                   },
-                  "required": [
-                    "type"
-                  ]
+                  "required": [ "type" ]
                 },
                 {
                   "properties": {
@@ -445,17 +448,6 @@
                           "y": {
                             "type": "integer"
                           }
-                        }
-                      }
-                    },
-                    "anchorPos": {
-                      "type": "object",
-                      "properties": {
-                        "x": {
-                          "type": "integer"
-                        },
-                        "y": {
-                          "type": "integer"
                         }
                       }
                     }

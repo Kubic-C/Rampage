@@ -23,6 +23,11 @@ struct Vec2I16 {
     y @1 :Int16;
 }
 
+struct Vec2I32 {
+    x @0 :Int32;
+    y @1 :Int32;
+}
+
 struct Vec3I32 {
     x @0 :Int32;
     y @1 :Int32;
@@ -44,6 +49,19 @@ struct ArrowComponent {
     cost @1 :Float32;
     generation @2 :UInt32;
     tileCost @3 :UInt32;
+}
+
+struct VectorTilemapPathfindingNode {
+    pos @0 :Vec2I32;
+    dir @1 :Vec2F32;
+    cost @2 :Float32;
+    gen @3 :UInt32;
+}
+
+struct VectorTilemapPathfinding {
+    oldTarget @0 :Vec2I32;
+    curGen @1 :UInt32;
+    nodes @2 :List(VectorTilemapPathfindingNode);
 }
 
 struct ItemStack {
@@ -109,18 +127,6 @@ struct ItemStackComponent {
     itemId @1 :UInt32;
 }
 
-struct ItemAttrIcon {
-    name @0 :Text;
-}
-
-struct ItemAttrStackCost {
-    stackCost @0 :UInt8;
-}
-
-struct ItemAttrTileComponent {
-    assetId @0 :UInt32;
-}
-
 struct PlayerComponent {
     mouse @0 :Vec2F32;
     accel @1 :Float32;
@@ -168,20 +174,24 @@ struct SpriteComponent {
 
 struct MultiTileComponent {
     occupiedPositions @0 :List(Vec3I32);
-    anchorPos @1 :Vec3I32;
 }
 
 struct TileComponent {
-    pos @0 :Vec3I32;
-    parent @1 :UInt32 = 0;
-    material @2 :SurfaceMaterial;
-    collidable @3 :Bool = true;
-    rotation @4 :UInt8 = 0;
+    unique @0 :Bool;
+    collidable @1 :Bool;
+    layer @2 :UInt8;
+}
+
+struct UniqueTileComponent {
+    tilePos @0 :Vec3I32;
+    parent @1 :UInt32;
 }
 
 struct TileEntry {
     pos @0 :Vec3I32;
-    entityId @1 :UInt32;
+    root @1 :Vec2I32;
+    entityId @2 :UInt32;
+    enabled @3 :Bool;
 }
 
 struct TilemapComponent {

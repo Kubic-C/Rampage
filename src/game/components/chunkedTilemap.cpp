@@ -7,7 +7,6 @@ void ChunkedTilemapComponent::serialize(capnp::MessageBuilder& builder, Ref comp
   auto self = component.cast<ChunkedTilemapComponent>();
 
   chunkedTilemapBuilder.setSeed(static_cast<u32>(self->seed));
-  chunkedTilemapBuilder.setChunkSize(static_cast<u32>(self->chunkSize));
   chunkedTilemapBuilder.setLoadRadius(static_cast<u32>(self->loadRadius));
   auto chunksBuilder = chunkedTilemapBuilder.initChunks(self->chunks.size());
   size_t i = 0;
@@ -32,7 +31,6 @@ void ChunkedTilemapComponent::deserialize(capnp::MessageReader& reader, const Id
   auto self = component.cast<ChunkedTilemapComponent>();
 
   self->seed = chunkedTilemapReader.getSeed();
-  self->chunkSize = chunkedTilemapReader.getChunkSize();
   self->loadRadius = chunkedTilemapReader.getLoadRadius();
   for(const auto& pos : chunkedTilemapReader.getChunks()) {
     self->chunks.insert(glm::ivec2(pos.getX(), pos.getY()));
@@ -48,9 +46,6 @@ void ChunkedTilemapComponent::fromJson(Ref component, AssetLoader loader, const 
 
   if(compJson->hasSeed()) {
     self->seed = compJson->getSeed();
-  }
-  if(compJson->hasChunkSize()) {
-    self->chunkSize = compJson->getChunkSize();
   }
   if(compJson->hasLoadRadius()) {
     self->loadRadius = compJson->getLoadRadius();

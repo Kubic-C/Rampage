@@ -136,7 +136,7 @@ public:
   virtual ~IWorld() = default;
 
   virtual IHost& getHost() = 0;
-  virtual std::shared_ptr<IWorld> getTopWorld() = 0;
+  virtual IWorld* getTopWorld() = 0;
 
   virtual void addContext(ContextId id, u8* bytes, std::function<void(u8*)> destroy) noexcept = 0;
   virtual u8* getContext(ContextId id) = 0;
@@ -178,7 +178,7 @@ public:
   virtual const ComponentSet& setOf(EntityId entity) = 0;
 
   virtual IPool* getPool(ComponentId id) = 0;
-  virtual ComponentId component(ComponentId compId, bool isRegistered, const std::string_view& name, 
+  virtual ComponentId registerComponent(ComponentId compId, const std::string_view& name, 
     size_t size, NewPoolFunc newPoolFunc, FromJsonFunc fromJsonFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
     SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) noexcept = 0;
 
@@ -190,7 +190,12 @@ public:
   virtual Deserializer& getDeserializer() = 0;
 
   template <typename T>
-  ComponentId component(bool isRegistered = true) noexcept {
+  ComponentId component() noexcept {
+    return m_componentIdMgr.id<T>();
+  }
+
+  template <typename T>
+  ComponentId registerComponent() noexcept {
     constexpr size_t size = getComponentSize<T>();
     constexpr FromJsonFunc fromJsonFunc = getFromJsonFunc<T>();
     constexpr ComponentCopyCtor copyCtor = getCopyCtor<T>();
@@ -198,10 +203,12 @@ public:
     constexpr SerializeFunc serializeFunc = getSerializeFunc<T>();
     constexpr DeserializeFunc deserializeFunc = getDeserializeFunc<T>();
 
-    static_assert(size == 0 || (copyCtor != nullptr && moveCtor != nullptr), 
-      "Components with data must be copyable and movable");
+    static_assert(size == 0 || (copyCtor != nullptr && moveCtor != nullptr),
+                  "Components with data must be copyable and movable");
 
-    return component(m_componentIdMgr.id<T>(), isRegistered, getTypeName<T>(), size, &SparsePool<T>::createPool, fromJsonFunc, copyCtor, moveCtor, serializeFunc, deserializeFunc);
+    return registerComponent(m_componentIdMgr.id<T>(), getTypeName<T>(), size,
+                     &SparsePool<T>::createPool, fromJsonFunc, copyCtor, moveCtor, serializeFunc,
+                     deserializeFunc);
   }
 
   template <typename... Params>
@@ -272,6 +279,6 @@ protected:
   static inline StaticIdManager<u32> m_componentIdMgr;
 };
 
-using IWorldPtr = std::shared_ptr<IWorld>;
+using IWorldPtr = IWorld*;
 
 RAMPAGE_END

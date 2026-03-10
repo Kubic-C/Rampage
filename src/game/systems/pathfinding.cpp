@@ -13,11 +13,6 @@
 
 RAMPAGE_START
 
-struct PathfindingContext {
-  u32 currentGeneration = 1;
-  glm::ivec2 oldTarget = {0, 0};
-};
-
 constexpr std::array<glm::ivec2, 8> directions = {
     {{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}}};
 
@@ -29,18 +24,22 @@ const std::array<glm::vec2, 8> normalizedDirs = {
 
 const std::array<float, 8> costs = {1, 1, 1, 1, sqrtf(2), sqrtf(2), sqrtf(2), sqrtf(2)};
 
-ArrowComponent* getTopArrow(IWorldPtr world, RefT<TilemapComponent> tilemap, const glm::ivec2& gridPos) {
+bool hasTopArrow(IWorldPtr world, RefT<TilemapComponent> tilemap, const glm::ivec2& gridPos) {
   WorldLayer layer = tilemap->getLayerOfTopTile(gridPos);
   if (layer == WorldLayer::Invalid)
-    return nullptr;
+    return false;
+  EntityId tileId = tilemap->getTile(layer, gridPos).tileId;
+  EntityPtr tileEntity = world->getEntity(tileId);
+  return tileEntity.has<ArrowComponent>();
+}
 
-  EntityId tileId = tilemap->getTile(layer, gridPos);
+RefT<ArrowComponent> getTopArrow(IWorldPtr world, RefT<TilemapComponent> tilemap, const glm::ivec2& gridPos) {
+  WorldLayer layer = tilemap->getLayerOfTopTile(gridPos);
+
+  EntityId tileId = tilemap->getTile(layer, gridPos).tileId;
   EntityPtr tileEntity = world->getEntity(tileId);
   
-  if (tileEntity.has<ArrowComponent>())
-    return &*tileEntity.get<ArrowComponent>();
-
-  return nullptr;
+  return tileEntity.get<ArrowComponent>();
 }
 
 bool isTileBlocked(IWorldPtr world, RefT<TilemapComponent> tilemap, const glm::ivec2& gridPos) {
@@ -48,7 +47,7 @@ bool isTileBlocked(IWorldPtr world, RefT<TilemapComponent> tilemap, const glm::i
   if (layer == WorldLayer::Invalid)
     return true;
 
-  EntityId tileId = tilemap->getTile(layer, gridPos);
+  EntityId tileId = tilemap->getTile(layer, gridPos).tileId;
   EntityPtr tileEntity = world->getEntity(tileId);
 
   if (tileEntity.has<TileComponent>())
@@ -57,29 +56,31 @@ bool isTileBlocked(IWorldPtr world, RefT<TilemapComponent> tilemap, const glm::i
   return true;
 }
 
-void updateFlowField(IWorldPtr world, EntityPtr map, PathfindingContext& context) {
+void updateFlowField(IWorldPtr world, EntityPtr map) {
   auto mapTransform = map.get<TransformComponent>();
   auto tilemap = map.get<TilemapComponent>();
+  auto pathfinding = map.get<VectorTilemapPathfinding>();
   EntityPtr player = world->getFirstWith(world->set<TransformComponent, PrimaryTargetTag>());
   auto playerTransform = player.get<TransformComponent>();
 
   // Max tile-space Chebyshev distance for the flow field radius
-  static constexpr int maxTileDistance = 1000;
+  static constexpr int maxTileDistance = 50;
 
   Vec2 localMapPos = mapTransform->getLocalPoint(playerTransform->pos);
   glm::ivec2 localTilePos = getNearestTile(localMapPos);
-  ArrowComponent* startArrow = getTopArrow(world, tilemap, localTilePos);
-  if (!startArrow)
+  if (!hasTopArrow(world, tilemap, localTilePos))
     return;
-  startArrow->dir = glm::normalize(playerTransform->pos -
+  auto startArrow = getTopArrow(world, tilemap, localTilePos);
+  pathfinding->nodes[localTilePos].dir =
+      glm::normalize(playerTransform->pos -
                                    mapTransform->getWorldPoint(getLocalTileCenter(localTilePos)));
 
-  if (context.oldTarget == localTilePos)
+  if (pathfinding->oldTarget == localTilePos)
     return;
 
-  context.oldTarget = localTilePos;
-  if (++context.currentGeneration == 0)
-    context.currentGeneration = 1;
+  pathfinding->oldTarget = localTilePos;
+  if (++pathfinding->curGen == 0)
+    pathfinding->curGen = 1;
 
   struct Node {
     float cost;
@@ -89,16 +90,16 @@ void updateFlowField(IWorldPtr world, EntityPtr map, PathfindingContext& context
 
   std::priority_queue<Node, std::vector<Node>, std::greater<Node>> openList;
 
-  startArrow->cost = 0;
-  startArrow->generation = context.currentGeneration;
+  pathfinding->nodes[localTilePos].cost = 0;
+  pathfinding->nodes[localTilePos].gen = pathfinding->curGen;
   openList.push({0, localTilePos});
 
   while (!openList.empty()) {
     auto [currentCost, current] = openList.top();
     openList.pop();
 
-    ArrowComponent* currentArrow = getTopArrow(world, tilemap, current);
-    if (currentArrow->cost < currentCost)
+    auto curArrow = getTopArrow(world, tilemap, current);
+    if (pathfinding->nodes[current].cost < currentCost)
       continue; // Stale entry — a shorter path was already found
 
     for (int i = 0; i < directions.size(); ++i) {
@@ -111,40 +112,40 @@ void updateFlowField(IWorldPtr world, EntityPtr map, PathfindingContext& context
           continue;
       }
 
-      ArrowComponent* neighborArrow = getTopArrow(world, tilemap, neighbor);
-      if (!neighborArrow)
+      if (!hasTopArrow(world, tilemap, neighbor))
         continue;
 
+      auto neighborArrow = getTopArrow(world, tilemap, neighbor);
       float newCost = currentCost + costs[i] + neighborArrow->tileCost;
-      if (neighborArrow->generation == context.currentGeneration && neighborArrow->cost <= newCost)
+      if (pathfinding->nodes[neighbor].gen == pathfinding->curGen && pathfinding->nodes[neighbor].cost <= newCost)
         continue;
 
       glm::ivec2 diff = glm::abs(neighbor - localTilePos);
       int tileDistance = glm::max(diff.x, diff.y);
-      if (tileDistance > maxTileDistance && neighborArrow->generation != 0)
+      if (tileDistance > maxTileDistance && pathfinding->nodes[neighbor].gen != 0)
         continue;
 
-      neighborArrow->cost = newCost;
-      neighborArrow->dir = -normalizedDirs[i];
-      neighborArrow->generation = context.currentGeneration;
+      pathfinding->nodes[neighbor].cost = newCost;
+      pathfinding->nodes[neighbor].dir = -normalizedDirs[i];
+      pathfinding->nodes[neighbor].gen = pathfinding->curGen;
       openList.push({newCost, neighbor});
     }
   }
 }
 
 int updatePathfinding(IWorldPtr world, float deltaTime) {
-  auto& context = world->getContext<PathfindingContext>();
-
   EntityPtr player = world->getFirstWith(world->set<TransformComponent, PrimaryTargetTag>());
-  if (!player.isNull()) {
-    auto playerTransform = player.get<TransformComponent>();
-    EntityPtr onTile = getTileAtPos(world, playerTransform->pos);
-    if(onTile.isNull())
-      return 0;
-    auto tileComp = onTile.get<TileComponent>();
-    EntityPtr tm = world->getEntity(tileComp->parent);
-    updateFlowField(world, tm, context);
-  }
+  if (player.isNull())
+    return 0;
+
+  auto playerTransform = player.get<TransformComponent>();
+  TileRef onTile = getTileAtPos(world, playerTransform->pos);
+  if (onTile.entity == NullEntityId)
+    return 0;
+  EntityPtr tilemapEntity = world->getEntity(onTile.tilemap);
+  if (!tilemapEntity.has<VectorTilemapPathfinding>())
+    return 0;
+  updateFlowField(world, tilemapEntity);
 
   return 0;
 }
@@ -156,21 +157,21 @@ int updatePathfindingMovement(IWorldPtr world, float deltaTime) {
     RefT<TransformComponent> seekerTransform = seeker.get<TransformComponent>();
     RefT<BodyComponent> seekerBody = seeker.get<BodyComponent>();
 
-    EntityPtr onTile = getTileAtPos(world, seekerTransform->pos);
-    if(onTile.isNull())
+    TileRef onTile = getTileAtPos(world, seekerTransform->pos);
+    if(onTile.entity == NullEntityId)
       continue;
-    auto tileComp = onTile.get<TileComponent>();
-    EntityPtr tilemapEntity = world->getEntity(tileComp->parent);
+    EntityPtr tilemapEntity = world->getEntity(onTile.tilemap);
     auto mapTransform = tilemapEntity.get<TransformComponent>();
-    auto tilemap = tilemapEntity.get<TilemapComponent>();
+    if (!tilemapEntity.has<VectorTilemapPathfinding>())
+      continue;
+    auto pathfinding = tilemapEntity.get<VectorTilemapPathfinding>();
 
     Vec2 localMapPos = mapTransform->getLocalPoint(seekerTransform->pos);
     glm::ivec2 localTilePos = getNearestTile(localMapPos);
-    ArrowComponent* arrow = getTopArrow(world, tilemap, localTilePos);
-    if (!arrow)
+    if (!pathfinding->nodes.contains(onTile.worldPos))
       continue;
 
-    Vec2 actualDir = mapTransform->rot.rotate(arrow->dir);
+    Vec2 actualDir = mapTransform->rot.rotate(pathfinding->nodes[onTile.worldPos].dir);
     float massSpeed = glm::min(5.0f / b2Body_GetMass(seekerBody->id), 0.75f);
     b2Body_ApplyLinearImpulseToCenter(seekerBody->id, Vec2(actualDir * massSpeed), true);
     seekerTransform->rot = atan2(actualDir.y, actualDir.x);
@@ -195,9 +196,6 @@ void observeContactDamageCollision(EntityPtr enemy) {
 void loadPathfindingSystems(IHost& host) {
   Pipeline& pipeline = host.getPipeline();
   IWorldPtr world = host.getWorld();
-
-  world->addContext<PathfindingContext>();
-  auto& context = world->getContext<PathfindingContext>();
 
   world->observe<OnCollisionBeginEvent>(world->component<LastCollisionData>(),
                 world->set<ContactDamageComponent>(), observeContactDamageCollision);

@@ -138,13 +138,6 @@ using ContextId = u32;
 static constexpr EntityId NullEntityId = 0;
 static constexpr ComponentId NullComponentId = 0;
 
-/**
- * Ensures a stable, incremental ID, regardless of Compilation Unit.
- * Works across dynamic libraries.
- *
- * The main object is owned by the host process and then
- * shared among its processes.
- */
 template <typename IntT>
 class StaticIdManager {
   template <typename T>

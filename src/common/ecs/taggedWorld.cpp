@@ -169,10 +169,12 @@ IPool* TaggedEntityWorld::getPool(ComponentId id) {
   return m_realWorld->getPool(id);
 }
 
-ComponentId TaggedEntityWorld::component(ComponentId compId, bool isRegistered, const std::string_view& name,
+ComponentId TaggedEntityWorld::registerComponent(ComponentId compId,
+                                                 const std::string_view& name,
   size_t size, NewPoolFunc newPoolFunc, FromJsonFunc fromJsonFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
   SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) noexcept {
-  return m_realWorld->component(compId, isRegistered, name, size, newPoolFunc, fromJsonFunc, copyCtor, moveCtor, serializeFunc, deserializeFunc);
+  return m_realWorld->registerComponent(compId, name, size, newPoolFunc, fromJsonFunc, copyCtor,
+                                        moveCtor, serializeFunc, deserializeFunc);
 }
 
 void TaggedEntityWorld::observe(ComponentId eventType, ComponentId comp, const ComponentSet& with, ObserverCallback callback) {

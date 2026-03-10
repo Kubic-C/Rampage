@@ -18,8 +18,8 @@ public:
   virtual ~TaggedEntityWorld() = default;
   
   static IWorldPtr create(IWorldPtr realWorld, ComponentId componentId) {
-    IWorldPtr world = std::make_shared<TaggedEntityWorld>(realWorld, componentId, PrivateConstructorTag{});
-    std::static_pointer_cast<TaggedEntityWorld>(world)->m_self = world;
+    TaggedEntityWorld* world = new TaggedEntityWorld(realWorld, componentId, PrivateConstructorTag{});
+    world->m_self = world;
     return world;
   }
 
@@ -67,7 +67,7 @@ public:
   virtual const ComponentSet& setOf(EntityId entity) override;
 
   virtual IPool* getPool(ComponentId id) override;
-  virtual ComponentId component(ComponentId compId, bool isRegistered, const std::string_view& name,
+  virtual ComponentId registerComponent(ComponentId compId, const std::string_view& name,
     size_t size, NewPoolFunc newPoolFunc, FromJsonFunc fromJsonFunc, ComponentCopyCtor copyCtor, ComponentMoveCtor moveCtor,
     SerializeFunc serializeFunc, DeserializeFunc deserializeFunc) noexcept override;
 

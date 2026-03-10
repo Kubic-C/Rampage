@@ -2,7 +2,11 @@
 
 RAMPAGE_START
 
-ComponentSet::ComponentSet(const std::vector<ComponentId>& ids) : m_comps(ids) {
+ComponentSet::ComponentSet(const std::vector<ComponentId, alloc::ComponentSetAllocator>& ids)
+    : m_comps(ids) {}
+
+
+ComponentSet::ComponentSet(const std::vector<ComponentId>& ids) : m_comps(ids.begin(), ids.end()) {
   std::sort(m_comps.begin(), m_comps.end());
 }
 
@@ -65,7 +69,7 @@ ComponentSetId ComponentSet::getSetId() const {
   return hashValue;
 }
 
-const std::vector<ComponentId>& ComponentSet::list() const {
+const std::vector<ComponentId, alloc::ComponentSetAllocator>& ComponentSet::list() const {
   return m_comps;
 }
 
@@ -133,11 +137,11 @@ ComponentSetId ComponentSetBuilder::getSetId() const {
   return hashValue;
 }
 
-const std::vector<ComponentId>& ComponentSetBuilder::list() const {
+const std::vector<ComponentId, alloc::ComponentSetAllocator>& ComponentSetBuilder::list() const {
   return m_comps;
 }
 
-std::vector<ComponentId>& ComponentSetBuilder::list() {
+std::vector<ComponentId, alloc::ComponentSetAllocator>& ComponentSetBuilder::list() {
   return m_comps;
 }
 

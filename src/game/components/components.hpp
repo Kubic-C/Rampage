@@ -18,40 +18,42 @@
 RAMPAGE_START
 
 inline void registerGameComponents(IWorldPtr world) {
-  world->component<BodyComponent>(false); // <- loaded first.
-  world->component<ArrowComponent>(false);
-  world->component<OnCollisionBeginEvent>(false);
-  world->component<OnCollisionEndEvent>(false);
-  world->component<HealthComponent>(false);
-  world->component<LifetimeComponent>(false);
-  world->component<BulletDamageComponent>(false);
-  world->component<ContactDamageComponent>(false);
-  world->component<PlayerComponent>(false);
-  world->component<CircleRenderComponent>(false);
-  world->component<RectangleRenderComponent>(false);
-  world->component<SpawnerComponent>(false);
-  world->component<SpriteComponent>(false);
-  world->component<MultiTileComponent>(false);
-  world->component<TileComponent>(false);
-  world->component<TilemapComponent>(false);
-  world->component<ChunkedTilemapComponent>(false);
-  world->component<TurretComponent>(false);
-  world->component<WorldMapTag>(false);
-  world->component<SeekPrimaryTargetTag>(false);
-  world->component<PrimaryTargetTag>(false);
-  world->component<LastCollisionData>(false);
-  world->component<InventoryComponent>(false);
-  world->component<ItemComponent>(false);
-  world->component<InventoryViewComponent>(false);
-  world->component<ItemStackComponent>(false);
-  world->component<ItemPlaceableComponent>(false);
-  world->component<ItemPlacedTag>(false);
-  world->component<ItemDroppedTag>(false);
-  world->component<OwnedByComponent>(false);
-  world->component<ConveyorPartComponent>(false);
-  world->component<PortComponent>(false);
-  world->component<ConveyorComponent>(false);
-  world->component<ChunkLoaderTag>(false);
+  world->registerComponent<BodyComponent>(); // <- loaded first.
+  world->registerComponent<ArrowComponent>();
+  world->registerComponent<VectorTilemapPathfinding>();
+  world->registerComponent<OnCollisionBeginEvent>();
+  world->registerComponent<OnCollisionEndEvent>();
+  world->registerComponent<HealthComponent>();
+  world->registerComponent<LifetimeComponent>();
+  world->registerComponent<BulletDamageComponent>();
+  world->registerComponent<ContactDamageComponent>();
+  world->registerComponent<PlayerComponent>();
+  world->registerComponent<CircleRenderComponent>();
+  world->registerComponent<RectangleRenderComponent>();
+  world->registerComponent<SpawnerComponent>();
+  world->registerComponent<SpriteComponent>();
+  world->registerComponent<MultiTileComponent>();
+  world->registerComponent<TileComponent>();
+  world->registerComponent<TilemapComponent>();
+  world->registerComponent<ChunkedTilemapComponent>();
+  world->registerComponent<TurretComponent>();
+  world->registerComponent<WorldMapTag>();
+  world->registerComponent<SeekPrimaryTargetTag>();
+  world->registerComponent<PrimaryTargetTag>();
+  world->registerComponent<LastCollisionData>();
+  world->registerComponent<InventoryComponent>();
+  world->registerComponent<ItemComponent>();
+  world->registerComponent<InventoryViewComponent>();
+  world->registerComponent<ItemStackComponent>();
+  world->registerComponent<ItemPlaceableComponent>();
+  world->registerComponent<ItemPlacedTag>();
+  world->registerComponent<ItemDroppedTag>();
+  world->registerComponent<OwnedByComponent>();
+  world->registerComponent<ConveyorPartComponent>();
+  world->registerComponent<PortComponent>();
+  world->registerComponent<ConveyorComponent>();
+  world->registerComponent<ChunkLoaderTag>();
+  world->registerComponent<UniqueTileComponent>();
 }
 
 RAMPAGE_END

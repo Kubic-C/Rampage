@@ -169,11 +169,11 @@ EntityPtr createShapeRender(IHost& host) {
   IWorldPtr world = host.getWorld();
   EntityPtr shapeRender = world->create();
 
-  world->component<ShapeRendererTag>(false);
-  world->component<VertexArrayBuffer>(false);
-  world->component<Shader>(false);
-  world->component<ShapeMeshComponent>(false);
-  world->component<CircleMeshComponent>(false);
+  world->registerComponent<ShapeRendererTag>();
+  world->registerComponent<VertexArrayBuffer>();
+  world->registerComponent<Shader>();
+  world->registerComponent<ShapeMeshComponent>();
+  world->registerComponent<CircleMeshComponent>();
 
   shapeRender.add<ShapeRendererTag>();
   shapeRender.add<VertexArrayBuffer>();
