@@ -207,18 +207,18 @@ public:
 
     std::vector<b2ShapeId> shapes;
 
-    if (evtMod.isKeyPressed(Key::LeftControl)) {
+    if (evtMod.isKeyHeld(Key::LeftControl)) {
       TileRef tileRef = getTileAtPos(m_world, evtMod.getMouseWorldPos());
-      if (tileRef.entity != NullEntityId) {
+      if (tileRef.entity != NullEntityId && tileRef.layer != WorldLayer::Floor) {
         tmMgr.removeTile(m_world, tileRef.tilemap, tileRef.layer, tileRef.worldPos);
       }
     }
 
-    auto it = m_world->getWith(m_world->set<TilemapComponent>());
-    while (it->hasNext()) {
-     EntityPtr tmEntity = it->next();
-     tmMgr.checkAndHandleBreakage(m_world, tmEntity);
-    }
+    //auto it = m_world->getWith(m_world->set<TilemapComponent>());
+    //while (it->hasNext()) {
+    // EntityPtr tmEntity = it->next();
+    // tmMgr.checkAndHandleBreakage(m_world, tmEntity);
+    //}
 
     if (evtMod.isKeyPressed(Key::P)) {
       TileRef tileRef = getTileAtPos(m_world, evtMod.getMouseWorldPos());
@@ -235,13 +235,6 @@ public:
         EntityPtr player = it->next();
         auto invView = player.get<InventoryViewComponent>();
         invView->isVisible = true;
-      }
-
-      for (int i = 0; i < 1000; i++) {
-        EntityPtr e = m_world->create();
-        e.add<TransformComponent>();
-        e.add<SpriteComponent>();
-        e.disable();
       }
     }
 

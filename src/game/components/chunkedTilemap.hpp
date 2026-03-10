@@ -25,7 +25,7 @@ struct ChunkedTilemapComponent {
   // Seed for chunk generation. Can be used to generate the same world consistently.
   size_t seed = 5;
   // loading radius, in chunks.
-  size_t loadRadius = 1;
+  size_t loadRadius = 4;
   // The tilemap for each chunk, keyed by chunk coordinates.
   Set<glm::ivec2> chunks; // if contained within set, chunk is already loaded.
   // Loaded chunks

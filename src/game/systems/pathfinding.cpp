@@ -79,8 +79,7 @@ void updateFlowField(IWorldPtr world, EntityPtr map) {
     return;
 
   pathfinding->oldTarget = localTilePos;
-  if (++pathfinding->curGen == 0)
-    pathfinding->curGen = 1;
+  ++pathfinding->curGen;
 
   struct Node {
     float cost;
