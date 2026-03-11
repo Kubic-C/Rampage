@@ -1172,6 +1172,9 @@
           "type": "PortComponent",
           "ticksPerUpdate": 20,
           "isOn": true
+        },
+        {
+          "type": "UniqueTileComponent"
         }
       ]
     },
@@ -1207,8 +1210,11 @@
         },
         {
           "type": "ConveyorPartComponent",
-          "inputDirections": ["Left", "Up"],
+          "inputDirections": [ "Left", "Up" ],
           "virtualDistanceIncrease": 0.5
+        },
+        {
+          "type": "UniqueTileComponent"
         }
       ]
     },
@@ -1244,8 +1250,11 @@
         },
         {
           "type": "ConveyorPartComponent",
-          "inputDirections": ["Left", "Right"],
+          "inputDirections": [ "Left", "Right" ],
           "virtualDistanceIncrease": 0.5
+        },
+        {
+          "type": "UniqueTileComponent"
         }
       ]
     },
@@ -1281,8 +1290,11 @@
         },
         {
           "type": "ConveyorPartComponent",
-          "inputDirections": ["Left", "Right", "Up"],
+          "inputDirections": [ "Left", "Right", "Up" ],
           "virtualDistanceIncrease": 0.5
+        },
+        {
+          "type": "UniqueTileComponent"
         }
       ]
     },
@@ -1318,8 +1330,11 @@
         },
         {
           "type": "ConveyorPartComponent",
-          "inputDirections": ["Up", "Right", "Down", "Left"],
+          "inputDirections": [ "Up", "Right", "Down", "Left" ],
           "virtualDistanceIncrease": 0.5
+        },
+        {
+          "type": "UniqueTileComponent"
         }
       ]
     },

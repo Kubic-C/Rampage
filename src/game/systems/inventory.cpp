@@ -989,7 +989,7 @@ int updatePorts(IWorldPtr world, float dt) {
   auto tmMgr = world->getContext<TilemapManager>();
   auto invMgr = world->getContext<InventoryManager>();
 
-  auto it = world->getWith(world->set<TileComponent, PortComponent>());
+  auto it = world->getWith(world->set<TileComponent, UniqueTileComponent, PortComponent>());
   while(it->hasNext()) {
     EntityPtr entity = it->next();
 
