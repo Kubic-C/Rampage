@@ -1,39 +1,36 @@
 #pragma once
 
-#include "opengl/opengl.hpp"
-#include <filesystem>
-#include "../common/ecs/ecs.hpp"
+#include "../common/common.hpp"
+#include "stb_image.h"
 
 RAMPAGE_START
 
-using VertexArrayBufferComponent = VertexArrayBuffer;
-
-using ShaderComponent = Shader;
-
-template <typename VertexType, size_t verticePerRender, size_t verticesPerSubdata>
-using MeshBufferComponent = Mesh<VertexType, verticePerRender, verticesPerSubdata>;
 
 struct InstanceBufferComponent {
   size_t capacity = 0;
   size_t count = 0;
   void* instances = nullptr; // Pointer to mapped Instance Buffer
-  VertexBuffer indexBuffer; // Per-Instance Element/Indicies
-  VertexBuffer meshBuffer; // Per-Instance Mesh
-  VertexBuffer instanceBuffer; // List of Instances
+  bgfx::VertexBufferHandle indexBuffer; // Per-Instance Element/Indicies
+  bgfx::VertexBufferHandle meshBuffer; // Per-Instance Mesh
+  bgfx::VertexBufferHandle instanceBuffer; // List of Instances
 };
 
 struct TextureMap3DComponent {
   u32 lastFreeTexture = 0;
   Map<std::string, u32> textureIds;
-  TextureArray texArray;
-  Sampler sampler;
+  const u16 width = 16;
+  const u16 height = 16;
+  bgfx::TextureHandle texArray;
+  
+  TextureMap3DComponent() {
+    texArray = bgfx::createTexture3D(width, height, 256, true, bgfx::TextureFormat::RGBA32F, 
+      BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_UVW_MIRROR);
 
-  void initDefaultTexture() {
     // Create a 32x32 checkerboard of black and purple
     const int size = 32;
     const int boxSize = 16;  // 16x16 pixel boxes
     const int channels = 4; // RGBA
-    u8* data = new u8[size * size * channels];
+    const bgfx::Memory* mem = bgfx::alloc(size * size * channels);
     
     // Fill with checkerboard pattern
     for (int y = 0; y < size; ++y) {
@@ -44,38 +41,28 @@ struct TextureMap3DComponent {
         
         int idx = (y * size + x) * channels;
         if (isRed) {
-          data[idx + 0] = 255;     // R - Red
-          data[idx + 1] = 0;     // G
-          data[idx + 2] = 0;     // B
-          data[idx + 3] = 255;   // A
+          mem->data[idx + 0] = 255;     // R - Red
+          mem->data[idx + 1] = 0;     // G
+          mem->data[idx + 2] = 0;     // B
+          mem->data[idx + 3] = 255;   // A
         } else {
-          data[idx + 0] = 128;   // R - Purple
-          data[idx + 1] = 0;     // G
-          data[idx + 2] = 128;   // B
-          data[idx + 3] = 255;   // A
+          mem->data[idx + 0] = 128;   // R - Purple
+          mem->data[idx + 1] = 0;     // G
+          mem->data[idx + 2] = 128;   // B
+          mem->data[idx + 3] = 255;   // A
         }
       }
     }
-    
-    texArray.subWholeImage(0, data);
-    delete[] data;
+
+    bgfx::updateTexture3D(texArray, 0, 0, 0, 0, size, size, 1, mem);
     
     textureIds["unknown"] = 0;
-  }
-
-  TextureMap3DComponent() : texArray(32, 32, 1024) {
-    sampler.parameter(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    sampler.parameter(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    sampler.parameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
-    sampler.parameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    initDefaultTexture();
   }
 
   inline bool isValidImageFile(const std::string& path) {
     int x, y, n;
     int ok = stbi_info(path.c_str(), &x, &y, &n);
-    return ok != 0 && x == texArray.getWidth() && y == texArray.getHeight();
+    return ok != 0 && x == width && y == height;
   }
 
   u32 loadSprite(const std::string& path) {
@@ -109,7 +96,8 @@ struct TextureMap3DComponent {
     if (!data)
       return false;
 
-    texArray.subWholeImage(index, data);
+    const bgfx::Memory* mem = bgfx::copy(data, width * height * channels);
+    bgfx::updateTexture3D(texArray, 0, 0, 0, index, width, height, 1, mem);
     stbi_image_free(data);
 
     return true;

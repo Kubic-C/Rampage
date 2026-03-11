@@ -27,9 +27,9 @@
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
 
-/* SDL/OpenGL */
+/* BGFX */
 #include <SDL3/SDL.h>
-#include <glad/gl.h>
+#include <bgfx/bgfx.h>
 
 /* TGUI */
 #include <TGUI/Backend/SDL-TTF-OpenGL3.hpp>

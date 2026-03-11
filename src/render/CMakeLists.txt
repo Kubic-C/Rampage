@@ -6,12 +6,6 @@ target_sources(RRender PUBLIC
   "camera.cpp"
   "stb_image.h"
   "stb_image.c"
-  "opengl/util.cpp"
-  "opengl/util.hpp"
-  "opengl/vertexArrayBuffer.hpp"
-  "opengl/vertexBuffer.hpp"
-  "opengl/shader.hpp"
-  "opengl/textureArray.hpp"
-  "opengl/mesh.hpp")
+  "render.hpp")
 
 target_link_libraries(RRender PUBLIC RCommon)

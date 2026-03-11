@@ -33,7 +33,7 @@ endif()
 set(BOX2D_SAMPLES OFF)
 set(BOX2D_UNIT_TESTS OFF)
 add_subdirectory("box2d")
-add_subdirectory("glad/cmake")
+add_subdirectory("bgfx.cmake")
 add_subdirectory("glm")
 
 set(SDL_TESTS OFF)

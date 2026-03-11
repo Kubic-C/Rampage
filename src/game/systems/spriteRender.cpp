@@ -162,7 +162,7 @@ void meshSprite(const Transform& transform, const SpriteComponent& sprite, Verte
 
 int meshSprites(IWorldPtr world, float dt) {
   EntityPtr spriteRender = world->getFirstWith(world->set<SpriteRendererTag>());
-  auto va = spriteRender.get<VertexArrayBufferComponent>();
+  auto va = spriteRender.get<VertexLayoutComponent>();
   auto instances = spriteRender.get<InstanceBufferComponent>();
   auto shapeMeshComp = world->getFirstWith(world->set<ShapeMeshComponent>()).get<ShapeMeshComponent>();
   auto& renderMgr = world->getContext<RenderModule>();
@@ -239,7 +239,7 @@ int meshSprites(IWorldPtr world, float dt) {
 int renderSprites(IWorldPtr world, float dt) {
   EntityPtr spriteRender = world->getFirstWith(world->set<SpriteRendererTag>());
   auto activeTextureMap = world->getFirstWith(world->set<TextureMapInUseTag>()).get<TextureMap3DComponent>();
-  auto va = spriteRender.get<VertexArrayBufferComponent>();
+  auto va = spriteRender.get<VertexLayoutComponent>();
   auto instances = spriteRender.get<InstanceBufferComponent>();
   auto shader = spriteRender.get<ShaderComponent>();
 
@@ -283,11 +283,11 @@ EntityPtr createSpriteRenderEntity(IHost& host) {
 
   world->registerComponent<SpriteRendererTag>();
   spriteRender.add<SpriteRendererTag>();
-  spriteRender.add<VertexArrayBufferComponent>();
+  spriteRender.add<VertexLayoutComponent>();
   spriteRender.add<InstanceBufferComponent>();
   spriteRender.add<ShaderComponent>();
 
-  auto va = spriteRender.get<VertexArrayBufferComponent>();
+  auto va = spriteRender.get<VertexLayoutComponent>();
   auto instances = spriteRender.get<InstanceBufferComponent>();
   auto shader = spriteRender.get<ShaderComponent>();
 

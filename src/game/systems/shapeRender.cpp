@@ -6,8 +6,6 @@
 
 RAMPAGE_START
 
-struct ShapeRendererTag : SerializableTag, JsonableTag {};
-
 const char* triangleVertexShaderSource = R"###(
         #version 400 core
         layout(location = 0) in vec3 a_pos;
@@ -32,6 +30,7 @@ const char* triangleFragShaderSource = R"###(
             fragColor = vec4(color, 1.0);
         })###";
 
+        
 std::vector<ShapeVertex> generateCircleVertices(int resolution) {
   std::vector<ShapeVertex> circleMesh;
 
@@ -54,7 +53,16 @@ std::vector<ShapeVertex> generateCircleVertices(int resolution) {
   return circleMesh;
 }
 
-void drawRectangle(ShapeMeshComponent& mesh, const Transform& transform, glm::vec3 color, float hw, float hh,
+struct ShapeRenderContext {
+  bgfx::VertexLayout layout;
+  bgfx::DynamicVertexBufferHandle buffer;
+  bgfx::ProgramHandle shader;
+
+  size_t vertexCount = 0;
+  std::vector<ShapeVertex> mesh;
+};
+
+void drawRectangle(IWorldPtr world, const Transform& transform, glm::vec3 color, float hw, float hh,
                    float z) {
   const glm::vec3 rect[4] = {glm::vec3(-hw, -hh, z), glm::vec3(hw, -hh, z), glm::vec3(hw, hh, z),
                              glm::vec3(-hw, hh, z)};
@@ -70,7 +78,7 @@ void drawRectangle(ShapeMeshComponent& mesh, const Transform& transform, glm::ve
   mesh.addMesh(&vertices[3]);
 }
 
-void drawLine(ShapeMeshComponent& mesh, glm::vec2 from, glm::vec2 to, glm::vec3 color, float hw,
+void drawLine(IWorldPtr world, glm::vec2 from, glm::vec2 to, glm::vec3 color, float hw,
               float z) {
   float l = glm::length(to - from);
   glm::vec2 dir = glm::normalize(to - from);
@@ -89,8 +97,8 @@ void drawLine(ShapeMeshComponent& mesh, glm::vec2 from, glm::vec2 to, glm::vec3 
   mesh.addMesh(vertices);
   mesh.addMesh(&vertices[3]);
 }
-
-void drawHollowCircle(ShapeMeshComponent& mesh, const Transform& transform, glm::vec3 color, float r,
+  
+void drawHollowCircle(IWorldPtr world, const Transform& transform, glm::vec3 color, float r,
                       int resolution, float thickness, float z) {
   int count = 0;
   const float anglePerTriangle = glm::pi<float>() * 2 / resolution;
@@ -107,7 +115,7 @@ void drawHollowCircle(ShapeMeshComponent& mesh, const Transform& transform, glm:
   }
 }
 
-void drawCircle(ShapeMeshComponent& mesh, const std::vector<ShapeVertex>& circleMesh, const Transform& transform,
+void drawCircle(IWorldPtr world, const std::vector<ShapeVertex>& circleMesh, const Transform& transform,
                 glm::vec3 color, float r, float z) {
   for (int i = 0; i < circleMesh.size(); i += 3) {
     ShapeVertex copy[3];
@@ -133,7 +141,7 @@ int meshShapes(IWorldPtr world, float dt) {
     auto circle = e.get<CircleRenderComponent>();
     auto transform = e.get<TransformComponent>();
 
-    drawCircle(*shapeMesh, circleMesh->vertices,
+    drawCircle(world, circleMesh->vertices,
                Transform(transform->getWorldPoint(circle->offset), transform->rot), circle->color,
                circle->radius, circle->z);
   }
@@ -144,7 +152,7 @@ int meshShapes(IWorldPtr world, float dt) {
     auto rect = e.get<RectangleRenderComponent>();
     Transform transform = e.get<TransformComponent>().copy();
 
-    drawRectangle(*shapeMesh, transform, rect->color, rect->hw, rect->hh, rect->z);
+    drawRectangle(world, transform, rect->color, rect->hw, rect->hh, rect->z);
   }
 
   return 0;
@@ -152,53 +160,21 @@ int meshShapes(IWorldPtr world, float dt) {
 
 int renderShapes(IWorldPtr world, float dt) {
   EntityPtr shapeRender = world->getFirstWith(world->set<ShapeRendererTag>());
-  auto va = shapeRender.get<VertexArrayBuffer>();
-  auto shader = shapeRender.get<Shader>();
-  auto mesh = shapeRender.get<ShapeMeshComponent>();
-
-  shader->use();
-  shader->setMat4("u_vp", world->getContext<RenderModule>().getViewProj());
-  va->bind();
-  glDrawArrays(GL_TRIANGLES, 0, mesh->verticesToRender);
-  mesh->reset();
 
   return 0;
 }
 
-EntityPtr createShapeRender(IHost& host) {
+void createShapeRender(IHost& host) {
   IWorldPtr world = host.getWorld();
-  EntityPtr shapeRender = world->create();
+  world->addContext<ShapeRenderContext>();
+  auto& shapeRender = world->getContext<ShapeRenderContext>();
 
-  world->registerComponent<ShapeRendererTag>();
-  world->registerComponent<VertexArrayBuffer>();
-  world->registerComponent<Shader>();
-  world->registerComponent<ShapeMeshComponent>();
-  world->registerComponent<CircleMeshComponent>();
+  shapeRender.layout.begin()
+      .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+      .add(bgfx::Attrib::Color0, 3, bgfx::AttribType::Float)
+      .end();
 
-  shapeRender.add<ShapeRendererTag>();
-  shapeRender.add<VertexArrayBuffer>();
-  shapeRender.add<Shader>();
-  shapeRender.add<ShapeMeshComponent>();
-  shapeRender.add<CircleMeshComponent>();
-
-  auto va = shapeRender.get<VertexArrayBuffer>();
-  auto shader = shapeRender.get<Shader>();
-  auto mesh = shapeRender.get<ShapeMeshComponent>();
-  auto circleMesh = shapeRender.get<CircleMeshComponent>();
-
-  va->addVertexArrayAttrib(mesh->buffer, 0, 3, GL_FLOAT, GL_FALSE, sizeof(ShapeVertex), 0);
-  va->addVertexArrayAttrib(mesh->buffer, 1, 3, GL_FLOAT, GL_FALSE, sizeof(ShapeVertex), offsetof(ShapeVertex, color));
-
-  std::string resultStr;
-  if (!shader->loadShaderStr(triangleVertexShaderSource, triangleFragShaderSource, resultStr)) {
-    host.log("Shader Compilation Error:\n%s\n", resultStr.c_str());
-    world->destroy(shapeRender);
-    return EntityPtr(world, 0);
-  }
-
-  circleMesh->vertices = generateCircleVertices(12);
-
-  return shapeRender;
+  shapeRender.  
 }
 
 bool loadShapeRender(IHost& host) {
@@ -207,6 +183,7 @@ bool loadShapeRender(IHost& host) {
   EntityPtr shapeRender = createShapeRender(host);
   if (shapeRender.isNull())
     return false;
+
 
   pipeline.getGroup<RenderGroup>().attachToStage<RenderGroup::PreRenderStage>(meshShapes);
   pipeline.getGroup<RenderGroup>().attachToStage<RenderGroup::OnRenderStage>(renderShapes);

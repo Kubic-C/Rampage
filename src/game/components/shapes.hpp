@@ -10,8 +10,6 @@ struct ShapeVertex {
   glm::vec3 color;
 };
 
-using ShapeMeshComponent = Mesh<ShapeVertex, 3, 3>;
-
 struct CircleMeshComponent {
   std::vector<ShapeVertex> vertices;
 };

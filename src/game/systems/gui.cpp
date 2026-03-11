@@ -6,9 +6,12 @@
 RAMPAGE_START
 
 int renderGui(IWorldPtr world, float deltaTime) {
-  glDisable(GL_DEPTH_TEST);
+  auto& render = world->getContext<RenderModule>();
+
+  bgfx::setState(render.getRenderStateDefault() & ~(BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_WRITE_Z));
   world->getContext<tgui::Gui>().draw();
-  glEnable(GL_DEPTH_TEST);
+  bgfx::setState(render.getRenderStateDefault());
+
 
   return 0;
 }

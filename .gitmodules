@@ -1,9 +1,6 @@
 [submodule "deps/glm"]
 	path = deps/glm
 	url = https://github.com/g-truc/glm
-[submodule "deps/glad"]
-	path = deps/glad
-	url = https://github.com/Dav1dde/glad
 [submodule "deps/TGUI"]
 	path = deps/TGUI
 	url = https://github.com/texus/TGUI/
@@ -82,3 +79,6 @@
 [submodule "deps/json"]
 	path = deps/json
 	url = https://github.com/nlohmann/json
+[submodule "deps/bgfx.cmake"]
+	path = deps/bgfx.cmake
+	url = https://github.com/bkaradzic/bgfx.cmake

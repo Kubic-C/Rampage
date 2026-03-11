@@ -2,34 +2,28 @@
 
 #include "../event/module.hpp"
 #include "camera.hpp"
-#include "opengl/opengl.hpp"
 #include "stb_image.h"
 #include "render.hpp"
+#include <SDL3/SDL_system.h>
 
 RAMPAGE_START
 
-static constexpr int MinimumMajorGLVersion = 4;
-static constexpr int MinimumMinorGLVersion = 0;
-static void setNecessaryGLAttributes() {
-#ifndef NDEBUG
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-#endif
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, MinimumMajorGLVersion);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, MinimumMinorGLVersion);
-}
-
 int clearWindow(IWorldPtr world, float dt) {
-  auto render = world->getContext<RenderModule>();
+  auto& render = world->getContext<RenderModule>();
 
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glm::ivec2 screenDim = render.getWindowSize();
+  bgfx::setViewRect(0, 0, 0, screenDim.x, screenDim.y);
+  bgfx::touch(0); // Ensure view 0 is cleared even if no draw calls are submitted
+  
   return 0;
 }
 
 int swapBuffers(IWorldPtr world, float dt) {
   auto window = world->getContext<SDL_Window*>();
 
-  return SDL_GL_SwapWindow(window);
+  bgfx::frame();
+
+  return 0;
 }
 
 void observeResizeEvent(EntityPtr sdlEventEntity) {
@@ -38,10 +32,10 @@ void observeResizeEvent(EntityPtr sdlEventEntity) {
 
   switch (static_cast<Event>(sdlEvent->type)) {
   case Event::WindowResized:
-    glViewport(0, 0, sdlEvent->window.data1, sdlEvent->window.data2);
+    bgfx::setViewRect(0, 0, 0, sdlEvent->window.data1, sdlEvent->window.data2);
     break;
   default:
-    break;
+    break; 
   }
 }
 
@@ -50,9 +44,8 @@ int RenderModule::onLoad() {
 
   /* Window and render setup */
   SDL_Init(SDL_INIT_VIDEO);
-  setNecessaryGLAttributes();
   SDL_Window* window =
-      SDL_CreateWindow(m_host->getTitle().data(), 800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+      SDL_CreateWindow(m_host->getTitle().data(), 800, 600,  SDL_WINDOW_RESIZABLE);
   if (!window) {
     m_host->log(1, "Failed to create window. SDL_GetError(): %s\n", SDL_GetError());
     return -1;
@@ -63,20 +56,20 @@ int RenderModule::onLoad() {
     if (data != nullptr) {
       SDL_SetWindowIcon(window, SDL_CreateSurfaceFrom(x, y, SDL_PIXELFORMAT_RGBA32, data, x * 4));
     }
-  }
+  } 
   world->addContext<SDL_Window*>(window);
 
-  /* OpengGL Context */
-  world->addContext<SDL_GLContext>(SDL_GL_CreateContext(window));
-  if (!world->getContext<SDL_GLContext>()) {
-    m_host->log(-2, "Failed to create context. SDL_GetError(): %s\n", SDL_GetError());
-    return -2;
-  }
+  SDL_PropertiesID properties = SDL_GetWindowProperties(window);
+  
 
-  if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress)) {
-    m_host->log(-3, "Failed to load OpenGL Context: %i %i", MinimumMajorGLVersion, MinimumMinorGLVersion);
-    return -3;
-  }
+  bgfx::Init init;
+  init.type = bgfx::RendererType::OpenGL;
+  init.vendorId = BGFX_PCI_ID_NONE;
+  init.platformData.nwh = SDL_GetPointerProperty(properties, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
+  init.resolution.width = 800;
+  init.resolution.height = 600;
+  init.resolution.reset = BGFX_RESET_VSYNC;
+  bgfx::init(init);
 
   /* Basic state */
 #ifndef NDEBUG
@@ -88,13 +81,9 @@ int RenderModule::onLoad() {
     return -1;
   }
 
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  // glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA,
-  // GL_DST_ALPHA);
+  bgfx::setState(getRenderStateDefault());
+  bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x000000FF, 1.0f, 0);
 
-  glEnable(GL_DEPTH_TEST);
-  glClearColor(0, 0, 0, 0);
 
   auto& pipeline = m_host->getPipeline();
   Pipeline::Group& group = pipeline.createGroup<RenderGroup>(9999999999.0f)
@@ -111,12 +100,12 @@ int RenderModule::onLoad() {
   world->observe<SDL_Event>(world->component<SDL_Event>(), {}, observeResizeEvent);
 
   enableVsync(false);
-
+  
   world->registerComponent<CameraInUseTag>();
   world->registerComponent<CameraComponent>();
   world->registerComponent<TextureMap3DComponent>();
   world->registerComponent<TextureMapInUseTag>();
-  world->registerComponent<VertexArrayBufferComponent>();
+  world->registerComponent<VertexLayoutComponent>();
   world->registerComponent<InstanceBufferComponent>();
   world->registerComponent<ShaderComponent>();
 
@@ -207,6 +196,18 @@ glm::vec2 RenderModule::getScreenCoords(const glm::ivec2& worldCoords) const {
   screenCoords.y = screenSize.y - screenCoords.y;
 
   return screenCoords;
+}
+
+u64 RenderModule::getRenderStateDefault() {
+  return       
+      BGFX_STATE_DEPTH_TEST_LESS | 
+      BGFX_STATE_WRITE_Z |
+      BGFX_STATE_WRITE_RGB |
+      BGFX_STATE_WRITE_A |
+      BGFX_STATE_BLEND_FUNC(
+          BGFX_STATE_BLEND_SRC_ALPHA,
+          BGFX_STATE_BLEND_INV_SRC_ALPHA
+      );
 }
 
 RAMPAGE_END

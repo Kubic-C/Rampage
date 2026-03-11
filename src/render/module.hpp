@@ -35,6 +35,7 @@ public:
   bool doesCameraExists() const;
   glm::vec2 getWorldCoords(const glm::ivec2& screenCoords) const;
   glm::vec2 getScreenCoords(const glm::ivec2& worldCoords) const;
+  u64 getRenderStateDefault();
 };
 
 RAMPAGE_END

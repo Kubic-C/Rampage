@@ -1,5 +1,3 @@
-glad_add_library(GLAD STATIC REPRODUCIBLE API gl:core=4.0)
-
 add_library(RCommon STATIC
   "empty.cpp")
 
@@ -19,7 +17,7 @@ target_link_libraries(RCommon PUBLIC
   SDL3::SDL3
   TGUI::TGUI
   box2d::box2d
-  GLAD)
+  bgfx)
 
 # ECS
 target_sources(
