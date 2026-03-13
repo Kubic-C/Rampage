@@ -1,7 +1,7 @@
 add_library(RGame STATIC "module.hpp" "module.cpp")
 set_property(TARGET RGame PROPERTY CXX_STANDARD 20)
 
-target_link_libraries(RGame PUBLIC RCommon TGUI::TGUI)
+target_link_libraries(RGame PUBLIC RCommon)
 
 target_sources(
   RGame PUBLIC
@@ -64,8 +64,6 @@ target_sources(
   "systems/pathfinding.hpp"
   "systems/health.cpp"
   "systems/health.hpp"
-  "systems/gui.cpp"
-  "systems/gui.hpp"
   "systems/turret.cpp"
   "systems/turret.hpp"
   "systems/shapeRender.cpp"

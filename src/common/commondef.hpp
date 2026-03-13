@@ -31,20 +31,24 @@
 #include <SDL3/SDL.h>
 #include <bgfx/bgfx.h>
 
-/* TGUI */
-#include <TGUI/Backend/SDL-TTF-OpenGL3.hpp>
-#include <TGUI/TGUI.hpp>
-
 /* BOX2D */
 #include <box2d/box2d.h>
 
 /* OpenGL Mathematics (GLM) */
-#define GLM_ENABLE_EXPERIMENTAL
+///////////////////////////////////////////////////////////////////////////////////
+// Clip control, define GLM_FORCE_DEPTH_ZERO_TO_ONE before including GLM
+// to use a clip space between 0 to 1.
+// Coordinate system, define GLM_FORCE_LEFT_HANDED before including GLM
+// to use left handed coordinate system by default.
+#define GLM_FORCE_LEFT_HANDED 1 
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE 1
+#define GLM_ENABLE_EXPERIMENTAL 1
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/vector_angle.hpp>
+#include <glm/gtx/matrix_major_storage.hpp>
 
 /* JSON */
 #include <nlohmann/json.hpp>

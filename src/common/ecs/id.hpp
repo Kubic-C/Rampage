@@ -182,6 +182,10 @@ class StrongId {
 public:
   using IntegerType = IntT;
 
+  static constexpr StrongId<Tag, IntT> null() {
+    return StrongId<Tag, IntT>(0);
+  }
+
   explicit constexpr StrongId(IntT v = 0) : m_value(v) {}
   constexpr IntT value() const { return m_value; }
 

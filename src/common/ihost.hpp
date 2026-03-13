@@ -15,6 +15,7 @@ public:
   virtual ~IHost() = default;
   virtual void log(int ec, const char* format, ...) = 0;
   virtual void log(const char* format, ...) = 0;
+  virtual void log(const char* format, va_list args) = 0;
   virtual void setLogFuncs(const TraceFunc trace, const TraceErrorFunc traceErr) = 0;
 
   virtual std::mutex& getHostMutex() = 0;

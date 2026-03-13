@@ -10,6 +10,7 @@ target_link_libraries(RHost PUBLIC
   RCore
   RRender
   REvent
+  RGui
   RGame)
 
 target_sources(RHost PUBLIC

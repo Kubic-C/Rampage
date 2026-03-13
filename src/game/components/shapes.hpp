@@ -1,17 +1,12 @@
 #pragma once
 
 #include "../../common/common.hpp"
-#include "../../render/render.hpp"
 
 RAMPAGE_START
 
 struct ShapeVertex {
   glm::vec3 pos;
   glm::vec3 color;
-};
-
-struct CircleMeshComponent {
-  std::vector<ShapeVertex> vertices;
 };
 
 struct CircleRenderComponent {

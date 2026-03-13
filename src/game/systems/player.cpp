@@ -14,7 +14,7 @@ RAMPAGE_START
 
 void updatePlayer(EntityPtr e, float dt) {
   IWorldPtr world = e.world();
-  auto& render = world->getContext<RenderModule>();
+  auto& render = world->getContext<Render2D>();
   auto& eventMgr = world->getContext<EventModule>();
   auto& invMgr = world->getContext<InventoryManager>();
   auto assetLoader = world->getAssetLoader();
@@ -24,19 +24,36 @@ void updatePlayer(EntityPtr e, float dt) {
   auto player = e.get<PlayerComponent>();
   auto camera = e.get<CameraComponent>();
 
+  /* Zoom */
+  if (eventMgr.isKeyHeld(Key::Z))
+    camera->zoom += 0.1f;
+  if (eventMgr.isKeyHeld(Key::X))
+    camera->zoom -= 0.1f;
+
+  /* Camera Rotation */
+  if (eventMgr.isKeyHeld(Key::Q))
+    camera->rot += 0.1f;
+  if (eventMgr.isKeyHeld(Key::E))
+    camera->rot -= 0.1f;
+
+  /* Cursor */
+  player->mouse = eventMgr.getMouseWorldPos();
+  glm::vec2 dir = glm::normalize(player->mouse - transform->pos);
+  transform->rot = Rot(atan2(dir.y, dir.x) - glm::half_pi<float>());
+
   /* Linear Movement */
   float mass = b2Body_GetMass(body->id);
   if (eventMgr.isKeyHeld(Key::A))
-    b2Body_ApplyLinearImpulseToCenter(body->id, fast2DRotate({mass * -player->accel, 0.0f}, camera->m_rot),
+    b2Body_ApplyLinearImpulseToCenter(body->id, transform->rot.rotate({mass * -player->accel, 0.0f}),
                                       true);
   if (eventMgr.isKeyHeld(Key::D))
-    b2Body_ApplyLinearImpulseToCenter(body->id, fast2DRotate({mass * player->accel, 0.0f}, camera->m_rot),
+    b2Body_ApplyLinearImpulseToCenter(body->id, transform->rot.rotate({mass * player->accel, 0.0f}),
                                       true);
   if (eventMgr.isKeyHeld(Key::W))
-    b2Body_ApplyLinearImpulseToCenter(body->id, fast2DRotate({0.0f, mass * player->accel}, camera->m_rot),
+    b2Body_ApplyLinearImpulseToCenter(body->id, transform->rot.rotate({0.0f, mass * player->accel}),
                                       true);
   if (eventMgr.isKeyHeld(Key::S))
-    b2Body_ApplyLinearImpulseToCenter(body->id, fast2DRotate({0.0f, mass * -player->accel}, camera->m_rot),
+    b2Body_ApplyLinearImpulseToCenter(body->id, transform->rot.rotate({0.0f, mass * -player->accel}),
                                       true);
 
   float maxSpeed = player->maxSpeed;
@@ -47,24 +64,6 @@ void updatePlayer(EntityPtr e, float dt) {
     vel = glm::normalize(vel) * maxSpeed;
     b2Body_SetLinearVelocity(body->id, (Vec2)vel);
   }
-
-  /* Zoom */
-  if (eventMgr.isKeyHeld(Key::Z))
-    camera->safeZoom(10);
-  if (eventMgr.isKeyHeld(Key::X))
-    camera->safeZoom(-10);
-
-  /* Camera Rotation */
-  if (eventMgr.isKeyHeld(Key::Q))
-    camera->m_rot += 0.1f;
-  if (eventMgr.isKeyHeld(Key::E))
-    camera->m_rot -= 0.1f;
-
-  /* Cursor */
-  Vec2 mouseScreen = eventMgr.getMouseCoords();
-  player->mouse = render.getWorldCoords(mouseScreen);
-  glm::vec2 dir = glm::normalize((Vec2)b2Body_GetPosition(body->id) - player->mouse);
-  transform->rot = Rot(atan2(dir.y, dir.x));
 
   u32 contactCap = b2Body_GetContactCapacity(body->id);
   std::vector<b2ContactData> contacts(contactCap);

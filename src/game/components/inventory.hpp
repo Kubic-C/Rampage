@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../common/common.hpp"
+#include "../../gui/module.hpp"
 #include "items.hpp"
 
 RAMPAGE_START
@@ -102,27 +103,27 @@ struct InventoryViewComponent {
   Vec2 padding = Vec2(5, 5);
   float slotSize = 48.0f;
   float rounding = 0.0f;
-  tgui::Color windowBackgroundColor = tgui::Color(150, 150, 150, 150);
-  tgui::Color borderColor = tgui::Color(120, 120, 120);
-  tgui::Color emptySlotColor = tgui::Color::Black;
-  tgui::Color textColor = tgui::Color::White;
-  tgui::Color hoverSlotColor = tgui::Color(200, 100, 100, 200);
-  tgui::Color dragHoverSlotColor = tgui::Color(100, 200, 100, 200);
+  glm::vec4 windowBackgroundColor = glm::vec4(150, 150, 150, 150);
+  glm::vec4 borderColor = glm::vec4(120, 120, 120, 255);
+  glm::vec4 emptySlotColor = glm::vec4(0, 0, 0, 255);
+  glm::vec4 textColor = glm::vec4(255, 255, 255, 255);
+  glm::vec4 hoverSlotColor = glm::vec4(200, 100, 100, 200);
+  glm::vec4 dragHoverSlotColor = glm::vec4(100, 200, 100, 200);
 
-  static void update(EntityPtr inventoryEntity, tgui::Gui& gui);
+  static void update(EntityPtr inventoryEntity, const gui::Gui::Ptr& gui);
 
 private:
-  tgui::ChildWindow::Ptr window;
-  std::vector<tgui::Panel::Ptr> slotBackgrounds;
-  std::vector<tgui::Picture::Ptr> slotPictures;
-  std::vector<tgui::Label::Ptr> slotLabels;
+  gui::ChildWindow::Ptr window;
+  std::vector<gui::Panel::Ptr> slotBackgrounds;
+  std::vector<gui::Picture::Ptr> slotPictures;
+  std::vector<gui::Label::Ptr> slotLabels;
 
   // Tooltip panel and widgets
-  tgui::Panel::Ptr tooltipPanel;
-  tgui::Picture::Ptr tooltipIcon;
-  tgui::Label::Ptr tooltipName;
-  tgui::Label::Ptr tooltipDescription;
-  tgui::Label::Ptr tooltipUnique;
+  gui::Panel::Ptr tooltipPanel;
+  gui::Picture::Ptr tooltipIcon;
+  gui::Label::Ptr tooltipName;
+  gui::Label::Ptr tooltipDescription;
+  gui::Label::Ptr tooltipUnique;
 
   // Track grid size changes to rebuild UI when inventory dimensions change
   u32 prevVisualChecksum = 0;

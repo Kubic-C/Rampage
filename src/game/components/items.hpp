@@ -31,7 +31,7 @@ struct ItemComponent {
   u32 maxStackSize = 64;      // Max items per stack (only for non-unique)
   u32 stackCost = 1;          // Weight/cost per item
   bool isUnique = false;      // If true, each instance is a separate entity
-  tgui::Texture icon;         // UI icon for rendering
+  TextureId icon;         // UI icon for rendering
 
   size_t getTotalStackCost(size_t count) const {
     return stackCost * count;

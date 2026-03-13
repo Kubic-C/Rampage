@@ -1,8 +1,5 @@
 #pragma once
 
-#include <box2d/box2d.h>
-#include <glm/glm.hpp>
-
 #include "commondef.hpp"
 
 struct Vec2 : glm::vec2 {
@@ -15,8 +12,6 @@ struct Vec2 : glm::vec2 {
   Vec2(const glm::vec2& other) : glm::vec2(other) {}
 
   Vec2(const b2Vec2& other) : glm::vec2(other.x, other.y) {}
-  
-  Vec2(const tgui::Vector2f& other) : glm::vec2(other.x, other.y) {}
 
   Vec2& operator=(const b2Vec2& other) {
     x = other.x;
@@ -30,14 +25,6 @@ struct Vec2 : glm::vec2 {
 
   operator b2Vec2() const {
     return b2();
-  }
-
-  tgui::Vector2f tgui() const {
-    return tgui::Vector2f(x, y);
-  }
-
-  operator tgui::Vector2f() const {
-    return tgui();
   }
 };
 
@@ -89,6 +76,42 @@ struct Rot : b2Rot {
     dif.s = s * other.c + c * other.s;
     dif.c = c * other.c - s * other.s;
     return dif;
+  }
+
+  Rot& operator-=(const Rot& other) {
+    float newS = s * other.c - c * other.s;
+    float newC = c * other.c + s * other.s;
+    s = newS;
+    c = newC;
+    return *this;
+  }
+
+  Rot& operator+=(const Rot& other) {
+    float newS = s * other.c + c * other.s;
+    float newC = c * other.c - s * other.s;
+    s = newS;
+    c = newC;
+    return *this;
+  }
+
+  Rot& operator-=(float angle) {
+    float sinA = glm::sin(angle);
+    float cosA = glm::cos(angle);
+    float newS = s * cosA - c * sinA;
+    float newC = c * cosA + s * sinA;
+    s = newS;
+    c = newC;
+    return *this;
+  }
+
+  Rot& operator+=(float angle) {
+    float sinA = glm::sin(angle);
+    float cosA = glm::cos(angle);
+    float newS = s * cosA + c * sinA;
+    float newC = c * cosA - s * sinA;
+    s = newS;
+    c = newC;
+    return *this;
   }
 
   Vec2 rotate(const Vec2& vec) const {
@@ -151,18 +174,6 @@ inline bool isApprox(Vec2 value1, Vec2 value2, float max) {
 
 inline float angleOf(const Vec2& vec) {
   return atan2(vec.y, vec.x);
-}
-
-inline Vec2 fast2DRotate(const Vec2& vec, float angle) {
-  Vec2 rotVec;
-
-  float cs = glm::cos(angle);
-  float sn = glm::sin(angle);
-
-  rotVec.x = vec.x * cs - vec.y * sn;
-  rotVec.y = vec.x * sn + vec.y * cs;
-
-  return rotVec;
 }
 
 template <typename T>

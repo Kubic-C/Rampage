@@ -2,7 +2,6 @@
 #include "../../core/module.hpp"
 #include "../components/body.hpp"
 #include "../components/sprite.hpp"
-#include "../../render/render.hpp"
 #include "../components/shapes.hpp"
 #include "tilemap.hpp"
 
@@ -21,7 +20,7 @@ RefT<InventoryComponent> InventoryManager::createInventory(IWorldPtr world, Enti
 }
 
 void InventoryManager::dropItem(IWorldPtr world, EntityId itemId, Vec2 dropPosition, u32 count) {
-  auto texMap = world->getFirstWith(world->set<TextureMapInUseTag>()).get<TextureMap3DComponent>();
+  auto& render = world->getContext<Render2D>();
 
   EntityPtr itemEntity = world->getEntity(itemId); 
   auto itemComp = itemEntity.get<ItemComponent>();
@@ -87,7 +86,7 @@ void InventoryManager::dropItem(IWorldPtr world, EntityId itemId, Vec2 dropPosit
 
     auto spriteComp = droppedItem.get<SpriteComponent>();
     spriteComp->scaling = 0.5f;
-    u32 texIndex = texMap->getSprite(getFilename(std::string(itemComp->icon.getId())));
+    TileTextureId texIndex = render.createTileTexture(render.getTexturePath(itemComp->icon));
     SpriteComponent::SubSprite subSprite;
     subSprite.addLayer(texIndex, Vec2(0), 0, WorldLayer::Item);
     spriteComp->subSprites.push_back({subSprite});
@@ -651,7 +650,7 @@ int updateInventoryViews(IWorldPtr world, float dt) {
   while(it->hasNext()) {
     EntityPtr entity = it->next();
     auto viewComp = entity.get<InventoryViewComponent>();
-    viewComp->update(entity, world->getContext<tgui::Gui>());
+    viewComp->update(entity, world->getContext<gui::Gui::Ptr>());
   }
   world->endDefer();
  

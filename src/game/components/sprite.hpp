@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../common/common.hpp"
+#include "../../render/module.hpp"
 
 RAMPAGE_START
 
@@ -49,7 +50,6 @@ inline float getLayerZ(WorldLayer layer) {
     case WorldLayer::Top:
       return WorldLayerTopZ;
     default:
-      assert(false && "Invalid world layer!");
       return WorldLayerInvalidZ;
   }
 }
@@ -57,11 +57,11 @@ inline float getLayerZ(WorldLayer layer) {
 struct SpriteLayer {
   SpriteLayer() = default;
 
-  SpriteLayer(u16 texIndex, glm::vec2 offset, float rot, WorldLayer layer) :
+  SpriteLayer(TileTextureId texIndex, glm::vec2 offset, float rot, WorldLayer layer) :
       texIndex(texIndex), offset(offset), rot(rot), layer(layer) {}
 
   // The texture index of the sprite
-  u16 texIndex = 0;
+  TileTextureId texIndex = TileTextureId(0);
   // The offset of the sprite, also used as the center of rotation.
   glm::vec2 offset = {0.0f, 0.0f};
   // The rotation of the sprite.
@@ -87,7 +87,7 @@ struct SpriteComponent {
       }
     }
 
-    void addLayer(u32 texIndex, glm::vec2 offset = Vec2(0), float rot = 0,
+    void addLayer(TileTextureId texIndex, glm::vec2 offset = Vec2(0), float rot = 0,
                   WorldLayer layer = WorldLayer::Invalid) {
       assert(layerCount < maxSpriteLayers && "Too many sprite layers!");
       if (layer == WorldLayer::Invalid) {

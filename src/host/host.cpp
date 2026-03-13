@@ -5,6 +5,7 @@
 #include "../game/module.hpp"
 #include "../log/module.hpp"
 #include "../render/module.hpp"
+#include "../gui/module.hpp"
 
 #include "../common/ecs/world.hpp"
 
@@ -96,6 +97,7 @@ Host::Host() : m_status(Status::Ok), m_world(EntityWorld::createWorld(*this)), m
   addModule<LogModule>();
   addModule<RenderModule>();
   addModule<EventModule>();
+  addModule<GuiModule>();
   addModule<GameModule>();
 
   sortModulesByDependencies();

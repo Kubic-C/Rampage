@@ -110,10 +110,10 @@ Vec2 EventModule::getMouseCoords() const {
 }
 
 Vec2 EventModule::getMouseWorldPos() const {
-  auto renderModule = m_host->getWorld()->getContext<RenderModule>();
+  auto& render2D = m_host->getWorld()->getContext<Render2D>();
 
   Vec2 mouseCoords = getMouseCoords();
-  return renderModule.getWorldCoords(mouseCoords);
+  return render2D.getWorldCoords(mouseCoords);
 }
 
 NODISCARD bool EventModule::isMouseButtonPressed(MouseButton button) const {

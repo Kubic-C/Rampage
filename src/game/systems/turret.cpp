@@ -113,8 +113,8 @@ void updateTurret(EntityPtr e, float dt, TurretContext& context) {
       bullet.id = turret->summon;
       float totalRot = turret->rot + transform->rot;
       bullet.pos = transform->pos +
-          fast2DRotate(right, totalRot) * tileSize.x; // Spawn bullet at the end of the turret's barrel
-      bullet.shootVelocity = fast2DRotate(right, totalRot) * turret->muzzleVelocity;
+          Rot(totalRot).rotate(right) * tileSize.x; // Spawn bullet at the end of the turret's barrel
+      bullet.shootVelocity = Rot(totalRot).rotate(right) * turret->muzzleVelocity;
       bullet.radius = turret->bulletRadius;
       bullet.health = turret->bulletHealth;
       bullet.damage = turret->bulletDamage;

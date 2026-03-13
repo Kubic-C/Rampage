@@ -35,6 +35,13 @@ public:
     va_end(args);
   }
 
+  void log(const char* format, va_list args) override {
+    if (m_funcs.trace)
+      m_funcs.trace(format, args);
+    else
+      vprintf(format, args);
+  }
+
   std::mutex& getHostMutex() override {
     return m_mutex;
   }

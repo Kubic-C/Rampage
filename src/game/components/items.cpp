@@ -27,13 +27,14 @@ void ItemPlaceableComponent::fromJson(Ref component, AssetLoader loader, const J
 void ItemComponent::serialize(capnp::MessageBuilder& builder, Ref component) {
   auto itemBuilder = builder.initRoot<Schema::ItemComponent>();
   auto self = component.cast<ItemComponent>();
+  auto& render = component.getWorld()->getContext<Render2D>();
 
   itemBuilder.setName(self->name);
   itemBuilder.setDescription(self->description);
   itemBuilder.setMaxStackSize(self->maxStackSize);
   itemBuilder.setStackCost(self->stackCost);
   itemBuilder.setIsUnique(self->isUnique);
-  itemBuilder.setIconPath((std::string)self->icon.getId()); // Assuming TGUI's Texture has a method to get the original file path
+  itemBuilder.setIconPath(render.getTexturePath(self->icon)); // Assuming TGUI's Texture has a method to get the original file path
 }
 
 void ItemComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id, Ref component) {
@@ -48,13 +49,14 @@ void ItemComponent::deserialize(capnp::MessageReader& reader, const IdMapper& id
   
   std::string pathStr = itemReader.getIconPath().cStr();
   if (std::filesystem::exists(pathStr)) {
-    self->icon = tgui::Texture(pathStr); // Load texture from path
+    self->icon = component.getWorld()->getContext<Render2D>().createTexture(pathStr); // Load texture from path
   }
 }
 
 void ItemComponent::fromJson(Ref component, AssetLoader loader, const JSchema::JsonValue& jsonValue) {
   auto self = component.cast<ItemComponent>();
   auto compJson = jsonValue.as<JSchema::ItemComponent>();
+  auto& render = component.getWorld()->getContext<Render2D>();
 
   if (compJson->hasName())
     self->name = compJson->getName();
@@ -75,7 +77,7 @@ void ItemComponent::fromJson(Ref component, AssetLoader loader, const JSchema::J
   if (compJson->hasIconAsset()) {
     std::string pathStr = compJson->getIconAsset();
     if (std::filesystem::exists(pathStr)) {
-      self->icon = tgui::Texture(pathStr); // Load texture from path
+      self->icon = render.createTexture(pathStr); // Load texture from path
     } else {
       component.getWorld()->getHost().log("Could not load icon asset for ItemComponent: %s for %s", pathStr.c_str(), self->name.c_str());
     }
