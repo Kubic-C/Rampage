@@ -27,9 +27,8 @@
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
 
-/* BGFX */
+/* SDL3 */
 #include <SDL3/SDL.h>
-#include <bgfx/bgfx.h>
 
 /* BOX2D */
 #include <box2d/box2d.h>

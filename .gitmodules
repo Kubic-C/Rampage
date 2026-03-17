@@ -76,6 +76,6 @@
 [submodule "deps/json"]
 	path = deps/json
 	url = https://github.com/nlohmann/json
-[submodule "deps/bgfx.cmake"]
-	path = deps/bgfx.cmake
-	url = https://github.com/bkaradzic/bgfx.cmake
+[submodule "deps/VulkanMemoryAllocator"]
+	path = deps/VulkanMemoryAllocator
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator

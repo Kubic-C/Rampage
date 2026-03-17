@@ -13,4 +13,13 @@ target_sources(RRender PUBLIC
   "camera.hpp"
   "camera.cpp")
 
-target_link_libraries(RRender PUBLIC RCommon bx)
+target_link_libraries(RRender PUBLIC RCommon)
+
+# Find Vulkan
+find_package(Vulkan REQUIRED)
+
+# Include Vulkan headers
+target_include_directories(RRender PUBLIC ${Vulkan_INCLUDE_DIRS})
+
+# Link Vulkan library
+target_link_libraries(RRender PUBLIC ${Vulkan_LIBRARIES} VulkanMemoryAllocator)

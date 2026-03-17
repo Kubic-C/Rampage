@@ -68,13 +68,15 @@ public:
   void submit(const DrawHollowCircleCmd& cmd);
   void submit(const DrawLightCmd& cmd);
   void end();
-  
+
   glm::vec2 getWindowSize() const;
 
   TextureId createTexture(const std::string& path);
   TileTextureId createTileTexture(const std::string& path);
   std::string getTexturePath(TextureId textureId) const;
   std::string getTileTexturePath(TileTextureId textureId) const;
+
+  void resize(const glm::ivec2& size);
 
 private:
   IHost& m_host;

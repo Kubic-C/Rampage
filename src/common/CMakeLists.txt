@@ -15,8 +15,7 @@ target_link_libraries(RCommon PUBLIC
   CapnProto::capnp
   box2d::box2d
   SDL3::SDL3
-  box2d::box2d
-  bgfx)
+  box2d::box2d)
 
 # ECS
 target_sources(

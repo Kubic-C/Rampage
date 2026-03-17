@@ -33,7 +33,6 @@ endif()
 set(BOX2D_SAMPLES OFF)
 set(BOX2D_UNIT_TESTS OFF)
 add_subdirectory("box2d")
-add_subdirectory("bgfx.cmake")
 add_subdirectory("glm")
 
 set(SDL_TESTS OFF)
@@ -45,3 +44,5 @@ set(SDLTTF_VENDORED ON)
 add_subdirectory("SDL_ttf")
 
 add_subdirectory("json")
+
+add_subdirectory("VulkanMemoryAllocator")

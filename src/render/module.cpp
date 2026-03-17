@@ -38,10 +38,11 @@ int swapBuffers(IWorldPtr world, float dt) {
 void observeResizeEvent(EntityPtr sdlEventEntity) {
   IWorldPtr world = sdlEventEntity.world();
   auto sdlEvent = sdlEventEntity.get<SDL_Event>();
+  auto& render = world->getContext<Render2D>();
 
   switch (static_cast<Event>(sdlEvent->type)) {
   case Event::WindowResized:
-    bgfx::reset(sdlEvent->window.data1, sdlEvent->window.data2, BGFX_RESET_VSYNC);
+    render.resize({sdlEvent->window.data1, sdlEvent->window.data2});
     break;
   default:
     break; 
@@ -54,7 +55,7 @@ int RenderModule::onLoad() {
   /* Window and render setup */
   SDL_Init(SDL_INIT_VIDEO);
   SDL_Window* window =
-      SDL_CreateWindow(m_host->getTitle().data(), 600, 600,  SDL_WINDOW_RESIZABLE);
+      SDL_CreateWindow(m_host->getTitle().data(), 600, 600,  SDL_WINDOW_RESIZABLE | SDL_WINDOW_VULKAN);
   if (!window) {
     m_host->log(1, "Failed to create window. SDL_GetError(): %s\n", SDL_GetError());
     return -1;
