@@ -1,5 +1,5 @@
 #include "render2D.hpp"
-#include "internal.hpp"
+#include "internal/internal.hpp"
 
 RAMPAGE_START
 
@@ -87,9 +87,8 @@ void Render2D::clearCmds() {
 
 void Render2D::begin() {
   InternalRender2D& internal = *reinterpret_cast<InternalRender2D*>(m_renderData);
-  internal.tileRender.reset();
+  internal.tileRender->reset();
   internal.shapeRender->reset();
-  internal.lightRender.reset();
 }
 
 void Render2D::submit(const DrawTileCmd& cmd) {
@@ -118,12 +117,11 @@ void Render2D::submit(const DrawHollowCircleCmd& cmd) {
 
 void Render2D::end() {
   InternalRender2D& internal = *reinterpret_cast<InternalRender2D*>(m_renderData);
-  internal.tileRender.process(m_tileCmds);
+  internal.tileRender->process(m_tileCmds);
   internal.shapeRender->process(m_rectangleCmds);
   internal.shapeRender->process(m_circleCmds);
   internal.shapeRender->process(m_lineCmds);
   internal.shapeRender->process(m_hollowCircleCmds);
-  internal.lightRender.process(m_lightCmds);
   
   internal.draw(getViewProj());
 
