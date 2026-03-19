@@ -38,4 +38,65 @@ private:
   vk::RenderPass m_renderPass{};
 };
 
+class GraphicsBuffer {
+  GraphicsBuffer(const GraphicsBuffer& buffer) = delete;
+
+public:
+  GraphicsBuffer() = default;
+
+  GraphicsBuffer(VmaAllocator allocator, const VkBufferCreateInfo& bufferCreateInfo, const VmaAllocationCreateInfo& allocationCreateInfo) {
+    m_allocator = allocator;
+    VkResult result = vmaCreateBuffer(allocator, &bufferCreateInfo, &allocationCreateInfo, &m_buffer, &m_allocation, nullptr);
+    if(result != VK_SUCCESS) {
+      *this = GraphicsBuffer();
+    } 
+  }
+
+  ~GraphicsBuffer() {
+    destroy();
+  }
+
+  GraphicsBuffer(GraphicsBuffer&& buffer) {
+    m_allocator = buffer.m_allocator;
+    m_buffer = buffer.m_buffer;
+    m_allocation = buffer.m_allocation;
+    buffer.m_allocator = nullptr;
+    buffer.m_buffer = nullptr;
+    buffer.m_allocation = nullptr;
+  }
+
+  GraphicsBuffer& operator=(GraphicsBuffer&& buffer) {
+    m_allocator = buffer.m_allocator;
+    m_buffer = buffer.m_buffer;
+    m_allocation = buffer.m_allocation;
+    buffer.m_allocator = nullptr;
+    buffer.m_buffer = nullptr;
+    buffer.m_allocation = nullptr;
+    return *this;
+  }
+
+  void destroy() {
+    if(m_buffer) {
+      vmaDestroyBuffer(m_allocator, m_buffer, m_allocation);
+    }
+  }
+
+  bool isValid() {
+    return m_buffer != nullptr;
+  }
+
+  operator VkBuffer() {
+    return m_buffer;
+  }
+
+  operator VmaAllocation() {
+    return m_allocation;
+  }
+  
+private:
+  VmaAllocator m_allocator = nullptr;
+  VkBuffer m_buffer = nullptr;
+  VmaAllocation m_allocation = nullptr;
+};
+
 RAMPAGE_END

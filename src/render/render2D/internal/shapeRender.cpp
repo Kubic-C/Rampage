@@ -51,8 +51,6 @@ void ShapeRender::addLine(const DrawLineCmd& cmd) {
 ShapeRender::ShapeRender(VulkanContext& context)
   : VulkanRender(context) {
   generateCircleMesh(36); 
-  auto device = context.getDevice();
-
   vk::DescriptorSetLayoutBinding uboLayoutBinding{};
   uboLayoutBinding.binding = 0; // matches layout(binding = 0) in GLSL
   uboLayoutBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
@@ -62,7 +60,7 @@ ShapeRender::ShapeRender(VulkanContext& context)
   vk::DescriptorSetLayoutCreateInfo layoutInfo{};
   layoutInfo.bindingCount = 1;
   layoutInfo.pBindings = &uboLayoutBinding;
-  m_descSetLayout = device.createDescriptorSetLayout(layoutInfo);
+  m_descSetLayout = m_device.createDescriptorSetLayout(layoutInfo);
 }
 
 ShapeRender::~ShapeRender() {
