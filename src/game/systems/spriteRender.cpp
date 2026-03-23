@@ -14,10 +14,12 @@ void submitSprite(const Transform& transform, const SpriteComponent& sprite, Ren
       for(const SpriteLayer& layer : subSprite.layers) {
         DrawTileCmd cmd;
         cmd.texture = layer.texIndex;
-        cmd.pos = transform.pos + layer.offset;
+        cmd.localOffset = layer.offset;
+        cmd.pos = transform.pos;
         cmd.rot = transform.rot.radians() + layer.rot;
         cmd.z = getLayerZ(layer.layer);
-        cmd.size = Vec2(tileSize) * sprite.scaling;
+        cmd.size = glm::ivec2(1, 1);
+        cmd.scale = sprite.scaling;
         render.submit(cmd);
       }
     }
@@ -89,7 +91,7 @@ bool loadSpriteRender(IHost& host) {
   Pipeline& pipeline = host.getPipeline();
   IWorldPtr world = host.getWorld();
 
-  // pipeline.getGroup<RenderGroup>().attachToStage<RenderGroup::OnRenderStage>(renderSprites);
+  pipeline.getGroup<RenderGroup>().attachToStage<RenderGroup::OnRenderStage>(renderSprites);
 
   return true;
 }

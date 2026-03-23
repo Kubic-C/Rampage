@@ -13,7 +13,7 @@ struct NeededDescriptorType {
 class VulkanRender {
 public:
   VulkanRender(VulkanContext& context)
-    : m_allocator(context.getAllocator()), m_device(context.getDevice()) {}
+    : m_host(context.getHost()), m_allocator(context.getAllocator()), m_device(context.getDevice()), m_utilityQueue(context.getGraphicsQueue()), m_utilityCmdPool(context.getCommandPool()) {}
 
   static constexpr u32 maxSetsPerRenderRender = 5;
 
@@ -23,8 +23,11 @@ public:
   virtual bool recreatePipeline(const std::shared_ptr<SwapchainRenderTargets>& renderTargets) = 0;
 
 protected:
+  IHost& m_host;
   VmaAllocator m_allocator;
   vk::Device m_device;
+  vk::Queue m_utilityQueue;
+  vk::CommandPool m_utilityCmdPool;
 };
 
 inline vk::DescriptorPool createDescriptorPoolFromRenders(VulkanContext& context, const std::vector<std::shared_ptr<VulkanRender>> renders) {

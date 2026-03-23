@@ -6,7 +6,7 @@ RAMPAGE_START
 Render2D::Render2D(IHost& host, SDL_Window* window) : m_host(host) {
   m_window = window;
 
-  m_renderData = new InternalRender2D(window, false);
+  m_renderData = new InternalRender2D(host, window, true);
   if(((InternalRender2D*)m_renderData)->getStatus() != Status::Ok) {
     throw std::runtime_error("Internal render returned non-ok status\n");
   }
@@ -135,19 +135,27 @@ glm::vec2 Render2D::getWindowSize() const {
 }
 
 TextureId Render2D::createTexture(const std::string& path) {
+  InternalRender2D& internal = *reinterpret_cast<InternalRender2D*>(m_renderData);
+  
   return TextureId::null();
 }
 
 TileTextureId Render2D::createTileTexture(const std::string& path) {
-  return TileTextureId::null();
+  InternalRender2D& internal = *reinterpret_cast<InternalRender2D*>(m_renderData);
+
+  return internal.tileRender->loadSprite(path);
 }
 
 std::string Render2D::getTexturePath(TextureId textureId) const {
+  InternalRender2D& internal = *reinterpret_cast<InternalRender2D*>(m_renderData);
+
   return "";
 }
 
 std::string Render2D::getTileTexturePath(TileTextureId textureId) const {
-  return "";
+  InternalRender2D& internal = *reinterpret_cast<InternalRender2D*>(m_renderData);
+
+  return internal.tileRender->getSpritePath(textureId);
 }
 
 void Render2D::resize(const glm::ivec2& size) {

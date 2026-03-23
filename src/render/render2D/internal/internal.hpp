@@ -9,7 +9,7 @@ RAMPAGE_START
 
 class InternalRender2D {
 public:
-  InternalRender2D(SDL_Window* window, bool enableValidationLayers);
+  InternalRender2D(IHost& host, SDL_Window* window, bool enableValidationLayers);
 
   Status getStatus() const;
   void reset(const glm::ivec2& size);

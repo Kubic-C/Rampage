@@ -9,6 +9,7 @@ GraphicsPipelineBuilder::GraphicsPipelineBuilder(vk::Device device)
   m_rasterizer.polygonMode = vk::PolygonMode::eFill;
   m_rasterizer.cullMode = vk::CullModeFlagBits::eBack;
   m_rasterizer.frontFace = vk::FrontFace::eCounterClockwise;
+  m_rasterizer.lineWidth = 1.0f;
 
   m_multisampling.rasterizationSamples = vk::SampleCountFlagBits::e1;
 }

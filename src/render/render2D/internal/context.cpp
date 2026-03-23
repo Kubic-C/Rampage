@@ -2,8 +2,8 @@
 
 RAMPAGE_START
 
-VulkanContext::VulkanContext(SDL_Window* window, bool enableValidationLayers)
-  : m_window(window) {
+VulkanContext::VulkanContext(IHost& host, SDL_Window* window, bool enableValidationLayers)
+  : m_host(host), m_window(window) {
   if(enableValidationLayers && !isValidationLayersSupported()) {
     markCriticalError();
     return;
@@ -102,7 +102,6 @@ VulkanContext::~VulkanContext() {
     vmaDestroyAllocator(m_allocator);
   }
 
-
   m_device.destroyCommandPool(m_commandPool);
   m_device.destroy();
   m_instance.destroy();
@@ -164,10 +163,9 @@ std::shared_ptr<Swapchain> VulkanContext::createSwapchain(u32 width, u32 height,
   // COLOR ATTACHMENTS
   swapchain->images = m_device.getSwapchainImagesKHR(swapchain->swapchain);
 
-  vk::SemaphoreCreateInfo semaphoreInfo{};
 
-  swapchain->m_imageAvailableSemaphore = m_device.createSemaphore(semaphoreInfo);
-  swapchain->m_renderFinishedSemaphore = m_device.createSemaphore(semaphoreInfo);
+  vk::SemaphoreCreateInfo semaphoreInfo;
+  swapchain->imageAvailableSemaphore = m_device.createSemaphore(semaphoreInfo);
 
   return swapchain;
 }
@@ -300,6 +298,9 @@ std::shared_ptr<SwapchainRenderTargets> VulkanContext::createSwapchainRenderTarg
 
     vk::FenceCreateInfo fenceInfo;
     frame.fence = m_device.createFence(fenceInfo);
+
+    vk::SemaphoreCreateInfo semaphoreInfo;
+    frame.renderFinishedSemaphore = m_device.createSemaphore(semaphoreInfo);
   }
 
   return renderTargets;

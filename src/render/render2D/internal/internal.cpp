@@ -5,9 +5,9 @@
 
 RAMPAGE_START
 
-InternalRender2D::InternalRender2D(SDL_Window* window, bool enableValidationLayers) 
+InternalRender2D::InternalRender2D(IHost& host, SDL_Window* window, bool enableValidationLayers) 
   : m_window(window) {
-  m_context = std::make_unique<VulkanContext>(window, enableValidationLayers);
+  m_context = std::make_unique<VulkanContext>(host, window, enableValidationLayers);
   if(m_context->getStatus() != Status::Ok) {
     markCriticalError();
     return;
@@ -64,7 +64,7 @@ void InternalRender2D::draw(const glm::mat4& vp, const glm::vec4& clearRGBA) {
 
   // Target Selection
   u32 imageIndex;
-  vk::Result acquireResult = device.acquireNextImageKHR(m_swapchain->swapchain, UINT64_MAX, m_swapchain->m_imageAvailableSemaphore, nullptr, &imageIndex);
+  vk::Result acquireResult = device.acquireNextImageKHR(m_swapchain->swapchain, UINT64_MAX, m_swapchain->imageAvailableSemaphore, nullptr, &imageIndex);
   if(acquireResult != vk::Result::eSuccess) {
     throw std::runtime_error("Coudln't acquire image!");
   }
@@ -101,32 +101,32 @@ void InternalRender2D::draw(const glm::mat4& vp, const glm::vec4& clearRGBA) {
   };
   vk::SubmitInfo submitInfo{};
   submitInfo.waitSemaphoreCount = 1;
-  submitInfo.pWaitSemaphores = &m_swapchain->m_imageAvailableSemaphore;
+  submitInfo.pWaitSemaphores = &m_swapchain->imageAvailableSemaphore;
   submitInfo.pWaitDstStageMask = waitStages;
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers = &frame.cmdBuffer;
   submitInfo.signalSemaphoreCount = 1;
-  submitInfo.pSignalSemaphores = &m_swapchain->m_renderFinishedSemaphore;
+  submitInfo.pSignalSemaphores = &m_renderTargets->frames[imageIndex].renderFinishedSemaphore;
 
   m_context->getGraphicsQueue().submit(submitInfo, frame.fence);
   
+  std::vector<vk::Fence> fences = {frame.fence};
+  m_context->getDevice().waitForFences(fences, true, UINT64_MAX);
+  m_context->getDevice().resetFences(fences);
+
   // Swap buffers
   vk::PresentInfoKHR presentInfo{};
   presentInfo.swapchainCount = 1;
   presentInfo.pSwapchains = &m_swapchain->swapchain;
   presentInfo.pImageIndices = &imageIndex;
   presentInfo.waitSemaphoreCount = 1;
-  presentInfo.pWaitSemaphores = &m_swapchain->m_renderFinishedSemaphore;
+  presentInfo.pWaitSemaphores = &m_renderTargets->frames[imageIndex].renderFinishedSemaphore;
   vk::Result result = m_context->getPresentQueue().presentKHR(presentInfo);
   if(result == vk::Result::eErrorOutOfDateKHR) {
     int width, height;
     SDL_GetWindowSize(m_window, &width, &height);
     reset({width, height});
   }
-
-  std::vector<vk::Fence> fences = {frame.fence};
-  m_context->getDevice().waitForFences(fences, true, UINT64_MAX);
-  m_context->getDevice().resetFences(fences);
 }
 
 RAMPAGE_END

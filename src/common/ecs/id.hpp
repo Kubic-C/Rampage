@@ -198,6 +198,8 @@ public:
 
   StrongId operator++() { return StrongId(++m_value); }
   StrongId operator++(int) { StrongId temp(*this); ++m_value; return temp; }
+  StrongId operator--() { return StrongId(--m_value); }
+  StrongId operator--(int) { StrongId temp(*this); --m_value; return temp; }
 };
 
 class IdMapper {

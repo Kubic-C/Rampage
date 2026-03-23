@@ -10,18 +10,15 @@ struct Swapchain {
   ~Swapchain() {
     if(swapchain)
       device.destroySwapchainKHR(swapchain);
-    if(m_imageAvailableSemaphore)
-      device.destroy(m_imageAvailableSemaphore);
-    if(m_renderFinishedSemaphore)
-      device.destroy(m_renderFinishedSemaphore);
+    if(imageAvailableSemaphore)
+      device.destroy(imageAvailableSemaphore);
   }
 
   vk::Extent2D extent;
   vk::SwapchainKHR swapchain;
   vk::Format imageFormat;
   std::vector<vk::Image> images;
-  vk::Semaphore m_imageAvailableSemaphore;
-  vk::Semaphore m_renderFinishedSemaphore;
+  vk::Semaphore imageAvailableSemaphore;
 
   vk::Device device;
 };
@@ -35,6 +32,7 @@ struct SwapchainRenderTargets {
     vk::Framebuffer framebuffer;
     vk::CommandBuffer cmdBuffer;
     vk::Fence fence;
+    vk::Semaphore renderFinishedSemaphore;
   };
   
   ~SwapchainRenderTargets() {
@@ -53,6 +51,8 @@ struct SwapchainRenderTargets {
       device.freeCommandBuffers(pool, {frame.cmdBuffer});
       if(frame.fence)
         device.destroyFence(frame.fence);
+      if(frame.renderFinishedSemaphore)
+        device.destroy(frame.renderFinishedSemaphore);
     }
   }
 
@@ -74,7 +74,8 @@ public:
   std::vector<const char*> neededExtensions = {};
 
   std::vector<const char*> neededDeviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+    VK_KHR_SWAPCHAIN_MAINTENANCE_1_EXTENSION_NAME
   };
 
   std::array<vk::PresentModeKHR, 3> neededPresentModes = {
@@ -94,14 +95,14 @@ public:
     vk::PhysicalDeviceMemoryProperties memoryProps;
   };
 
-  VulkanContext(SDL_Window* window, bool enableValidationLayers);
+  VulkanContext(IHost& host, SDL_Window* window, bool enableValidationLayers);
   ~VulkanContext();
 
   Status getStatus() const {
     return m_status;
   }
 
-  vk::Device& getDevice() {
+  vk::Device getDevice() {
     return m_device;
   }
 
@@ -109,12 +110,20 @@ public:
     return m_allocator;
   }
 
-  vk::Queue& getGraphicsQueue() {
+  vk::Queue getGraphicsQueue() {
     return m_graphicsQueue;
   }
 
-  vk::Queue& getPresentQueue() {
+  vk::Queue getPresentQueue() {
     return m_presentQueue;
+  }
+
+  vk::CommandPool getCommandPool() {
+    return m_commandPool;
+  }
+
+  IHost& getHost() {
+    return m_host;
   }
 
   std::shared_ptr<Swapchain> createSwapchain(u32 width, u32 height, vk::PresentModeKHR presentMode);
@@ -131,6 +140,7 @@ private:
   }
 
   Status m_status = Status::Ok;
+  IHost& m_host;
   SDL_Window* m_window;
   vk::Instance m_instance;
   VkSurfaceKHR m_surface;

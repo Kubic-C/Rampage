@@ -8,7 +8,7 @@ struct TextureType {};
 struct TileTextureType {};
 
 using TextureId = StrongId<TextureType, u32>;
-using TileTextureId = StrongId<TileTextureType, u32>;
+using TileTextureId = StrongId<TileTextureType, u16>;
 
 
 // struct DrawSpriteCmd {
@@ -25,8 +25,10 @@ struct DrawBaseCmd {
 
 struct DrawTileCmd : public DrawBaseCmd {
   TileTextureId texture = TileTextureId::null();
+  glm::vec2 localOffset = {0, 0};
   glm::vec2 pos = {0, 0};
   glm::ivec2 size = {1, 1};
+  float scale = 1.0f;
   float rot = 0;
 };
 

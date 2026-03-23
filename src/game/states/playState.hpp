@@ -124,45 +124,44 @@ public:
     //   //   tmMgr.insertTile(m_world, tm.id(), glm::ivec2(length * 2, y), TileDirection::Right, assetLoader.getAsset("PermaHighStoneTile"));
     //   // }
 
-    //   EntityPtr chunkLoader = m_world->create();
-    //   chunkLoader.add<ChunkedTilemapComponent>();
-    //   chunkLoader.add<TilemapComponent>();
-    //   chunkLoader.add<VectorTilemapPathfinding>();
-    //   chunkLoader.add<TransformComponent>();
-    //   chunkLoader.add<BodyComponent>();
+      EntityPtr chunkLoader = m_world->create();
+      chunkLoader.add<ChunkedTilemapComponent>();
+      chunkLoader.add<TilemapComponent>();
+      chunkLoader.add<VectorTilemapPathfinding>();
+      chunkLoader.add<TransformComponent>();
+      chunkLoader.add<BodyComponent>();
 
-    //   auto bodyComp = chunkLoader.get<BodyComponent>();
-    //   b2BodyDef bodyDef = b2DefaultBodyDef();
-    //   bodyDef.type = b2_staticBody;
-    //   bodyComp->id = b2CreateBody(physicsWorld, &bodyDef);
+      auto bodyComp = chunkLoader.get<BodyComponent>();
+      b2BodyDef bodyDef = b2DefaultBodyDef();
+      bodyDef.type = b2_staticBody;
+      bodyComp->id = b2CreateBody(physicsWorld, &bodyDef);
 
-    //   auto chunkedTilemap = chunkLoader.get<ChunkedTilemapComponent>();
-    //   chunkedTilemap->generator = [](IWorldPtr world, const GeneratorChunkInfo& info) {
-    //     auto assetLoader = world->getAssetLoader();
-    //     TilemapManager& tmMgr = world->getContext<TilemapManager>();
-    //     auto tm = world->getEntity(info.tilemapEntity);
+      auto chunkedTilemap = chunkLoader.get<ChunkedTilemapComponent>();
+      chunkedTilemap->generator = [](IWorldPtr world, const GeneratorChunkInfo& info) {
+        auto assetLoader = world->getAssetLoader();
+        TilemapManager& tmMgr = world->getContext<TilemapManager>();
+        auto tm = world->getEntity(info.tilemapEntity);
 
-    //     for (int x = info.minTilePos.x; x < info.maxTilePos.x; ++x) {
-    //       for (int y = info.minTilePos.y; y < info.maxTilePos.y; ++y) {
+        for (int x = info.minTilePos.x; x < info.maxTilePos.x; ++x) {
+          for (int y = info.minTilePos.y; y < info.maxTilePos.y; ++y) {
 
-    //         glm::ivec2 tilePos(x, y);
-    //         float n = noise2d<int>(x, y, info.seed);
+            glm::ivec2 tilePos(x, y);
+            float n = noise2d<int>(x, y, info.seed);
 
-    //         std::string tile;
-    //         if(n > 0.5f)
-    //           tile = "PermaHighStoneTile";
-    //         else if (n > 0.25f)
-    //           tile = "GrassFloorTile";
-    //         else if (n > -0.08f)      // ← this is the beach zone
-    //           tile = "SandFloorTile";
-    //         else
-    //           tile = "WaterFloorTile";
+            std::string tile;
+            if(n > 0.5f)
+              tile = "PermaHighStoneTile";
+            else if (n > 0.25f)
+              tile = "GrassFloorTile";
+            else if (n > -0.08f)      // ← this is the beach zone
+              tile = "SandFloorTile";
+            else
+              tile = "WaterFloorTile";
 
-    //         tmMgr.insertTile(world, tm, tilePos, TileDirection::Right, assetLoader.getAsset(tile));
-    //       }
-    //     }
-    //   };
-    // }
+            tmMgr.insertTile(world, tm, tilePos, TileDirection::Right, assetLoader.getAsset(tile));
+          }
+        }
+      };
   }
 
   static float isAllowed(b2ShapeId shapeId, b2Vec2 point, b2Vec2 normal, float fraction, void* context) {
